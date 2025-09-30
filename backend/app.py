@@ -16,9 +16,9 @@ def _env_or_none(name: str):
 database_url = _env_or_none('DATABASE_URL') or _env_or_none('DATABASE_PUBLIC_URL') or 'postgresql://username:password@localhost/boilerfuel'
 if database_url.startswith('postgres://'):
     database_url = database_url.replace('postgres://', 'postgresql://', 1)
-if database_url.startswith('postgresql://') and '+psycopg' not in database_url:
-    # Prefer the psycopg v3 driver which ships reliable wheels for Python 3.13
-    database_url = database_url.replace('postgresql://', 'postgresql+psycopg://', 1)
+if database_url.startswith('postgresql://') and '+psycopg2' not in database_url:
+    # Use psycopg2 driver
+    database_url = database_url.replace('postgresql://', 'postgresql+psycopg2://', 1)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 sslmode = os.getenv('DATABASE_SSLMODE')

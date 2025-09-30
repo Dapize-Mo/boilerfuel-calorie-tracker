@@ -15,8 +15,8 @@ def main():
     url = os.getenv('DATABASE_URL', 'postgresql://localhost/boilerfuel')
     if url.startswith('postgres://'):
         url = url.replace('postgres://', 'postgresql://', 1)
-    if url.startswith('postgresql://') and '+psycopg' not in url:
-        url = url.replace('postgresql://', 'postgresql+psycopg://', 1)
+    if url.startswith('postgresql://') and '+psycopg2' not in url:
+        url = url.replace('postgresql://', 'postgresql+psycopg2://', 1)
     sslmode = os.getenv('DATABASE_SSLMODE')
     if sslmode:
         sep = '&' if '?' in url else '?'
