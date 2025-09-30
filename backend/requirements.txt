@@ -6,6 +6,6 @@ beautifulsoup4==4.11.1
 pytest==7.1.2
 psycopg[binary]==3.2.3
 gunicorn==21.2.0
-SQLAlchemy==2.0.32
+SQLAlchemy==1.4.52
 # Flask 2.2 is not fully compatible with Werkzeug 3.x; pin to <3 to avoid runtime errors
 Werkzeug<3.0
