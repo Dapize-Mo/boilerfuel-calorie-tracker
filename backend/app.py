@@ -5,8 +5,15 @@ from flask_jwt_extended import JWTManager
 
 app = Flask(__name__)
 
+def _env_or_none(name: str):
+    val = os.getenv(name)
+    # Treat unresolved template references like {{ Postgres.DATABASE_URL }} as unset
+    if val and ('{{' in val or '}}' in val or val.strip().startswith('{{')):
+        return None
+    return val
+
 # Configuration
-database_url = os.getenv('DATABASE_URL', 'postgresql://username:password@localhost/boilerfuel')
+database_url = _env_or_none('DATABASE_URL') or _env_or_none('DATABASE_PUBLIC_URL') or 'postgresql://username:password@localhost/boilerfuel'
 if database_url.startswith('postgres://'):
     database_url = database_url.replace('postgres://', 'postgresql://', 1)
 if database_url.startswith('postgresql://') and '+psycopg' not in database_url:
