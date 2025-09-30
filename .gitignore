@@ -1,0 +1,21 @@
+# Node
+node_modules/
+.next/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Env
+.env*
+frontend/.env.local
+backend/.env
+
+# Python
+__pycache__/
+*.pyc
+
+# IDE
+.vscode/
+.DS_Store
