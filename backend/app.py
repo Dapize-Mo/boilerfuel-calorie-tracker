@@ -55,5 +55,41 @@ def add_food():
 def health_check():
     return jsonify({'status': 'ok'}), 200
 
+@app.route('/init-db', methods=['POST'])
+def init_database():
+    """Initialize database schema and seed data - run once after deployment"""
+    try:
+        # Create all tables
+        db.create_all()
+        
+        # Check if we already have data
+        existing_foods = Food.query.count()
+        if existing_foods > 0:
+            return jsonify({'message': f'Database already initialized with {existing_foods} foods'}), 200
+        
+        # Add sample seed data
+        sample_foods = [
+            {'name': 'Grilled Chicken Breast', 'calories': 165, 'macros': {'protein': 31, 'carbs': 0, 'fat': 3.6}},
+            {'name': 'Brown Rice (1 cup)', 'calories': 216, 'macros': {'protein': 5, 'carbs': 45, 'fat': 1.8}},
+            {'name': 'Broccoli (1 cup)', 'calories': 25, 'macros': {'protein': 3, 'carbs': 5, 'fat': 0.3}},
+            {'name': 'Salmon Fillet', 'calories': 206, 'macros': {'protein': 22, 'carbs': 0, 'fat': 12}},
+            {'name': 'Oatmeal (1 cup)', 'calories': 147, 'macros': {'protein': 6, 'carbs': 25, 'fat': 3}}
+        ]
+        
+        for food_data in sample_foods:
+            food = Food(name=food_data['name'], calories=food_data['calories'], macros=food_data['macros'])
+            db.session.add(food)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Database initialized successfully!',
+            'foods_added': len(sample_foods)
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': f'Database initialization failed: {str(e)}'}), 500
+
 if __name__ == '__main__':
     app.run(debug=True)
