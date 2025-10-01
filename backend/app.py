@@ -1,4 +1,5 @@
 import os
+from urllib.parse import quote_plus
 from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager
@@ -12,20 +13,58 @@ def _env_or_none(name: str):
         return None
     return val
 
+def _build_db_url_from_parts():
+    """Build a Postgres URL from discrete POSTGRES_* env vars if provided."""
+    host = _env_or_none('POSTGRES_HOST') or _env_or_none('PGHOST')
+    port = _env_or_none('POSTGRES_PORT') or _env_or_none('PGPORT') or '5432'
+    user = _env_or_none('POSTGRES_USER') or _env_or_none('PGUSER')
+    password = _env_or_none('POSTGRES_PASSWORD') or _env_or_none('PGPASSWORD')
+    dbname = _env_or_none('POSTGRES_DB') or _env_or_none('POSTGRES_DATABASE') or _env_or_none('PGDATABASE')
+    if host and user and password and dbname:
+        # URL encode username/password in case they contain special chars
+        return f"postgresql://{quote_plus(user)}:{quote_plus(password)}@{host}:{port}/{quote_plus(dbname)}"
+    return None
+
+def _preferred_database_url():
+    """Resolve a usable database URL across common providers (Railway, etc)."""
+    # Common provider envs (in priority order)
+    candidates = [
+        'DATABASE_URL',
+        'DATABASE_PUBLIC_URL',  # some platforms expose a public variant
+        'RAILWAY_DATABASE_URL', # Railway sometimes exposes this
+        'POSTGRES_URL',         # Railway/others sometimes use this
+    ]
+    for key in candidates:
+        val = _env_or_none(key)
+        if val:
+            return val
+    # Try assembling from discrete POSTGRES_* parts
+    assembled = _build_db_url_from_parts()
+    if assembled:
+        return assembled
+    # Fallback to local
+    return 'postgresql://username:password@localhost/boilerfuel'
+
 # Configuration
-database_url = _env_or_none('DATABASE_URL') or _env_or_none('DATABASE_PUBLIC_URL') or 'postgresql://username:password@localhost/boilerfuel'
+database_url = _preferred_database_url()
 if database_url.startswith('postgres://'):
     database_url = database_url.replace('postgres://', 'postgresql://', 1)
 if database_url.startswith('postgresql://') and '+psycopg2' not in database_url:
     # Use psycopg2 driver
     database_url = database_url.replace('postgresql://', 'postgresql+psycopg2://', 1)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = database_url
-sslmode = os.getenv('DATABASE_SSLMODE')
+# Apply SSL mode if specified or if we're clearly on a hosted environment without explicit sslmode
+sslmode = os.getenv('DATABASE_SSLMODE') or os.getenv('PGSSLMODE')
 if sslmode:
-    # Append sslmode to the connection string if not present
     separator = '&' if '?' in database_url else '?'
-    app.config['SQLALCHEMY_DATABASE_URI'] = f"{database_url}{separator}sslmode={sslmode}"
+    database_url = f"{database_url}{separator}sslmode={sslmode}"
+else:
+    # Heuristic: if not localhost and no sslmode present, default to require on hosted envs
+    if 'sslmode=' not in database_url and not any(h in database_url for h in ['localhost', '127.0.0.1']):
+        separator = '&' if '?' in database_url else '?'
+        database_url = f"{database_url}{separator}sslmode=require"
+
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'change-me')
 
