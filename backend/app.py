@@ -10,7 +10,8 @@ app = Flask(__name__)
 def _env_or_none(name: str):
     val = os.getenv(name)
     # Treat unresolved template references like {{ Postgres.DATABASE_URL }} as unset
-    if val and ('{{' in val or '}}' in val or val.strip().startswith('{{')):
+    # but allow Railway-style variables like ${{Postgres.DATABASE_URL}}
+    if val and ('{{' in val or '}}' in val) and not val.startswith('${{'):
         return None
     return val
 
