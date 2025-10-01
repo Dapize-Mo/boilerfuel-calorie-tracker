@@ -4,16 +4,15 @@ BoilerFuel helps Purdue students browse dining hall menus, log meals, and track 
 
 ## Features
 
-- **Menu Browser:** Browse daily menus grouped by meal with live search and nutrient details.
-- **Dashboard:** View logged foods and aggregated calorie/macro totals for the current day.
-- **Authentication:** Email + password signup and login backed by JWT tokens stored client-side.
-- **Meal Logging:** Record servings for any menu item and instantly recalculate totals.
-- **Data Pipeline:** Scraper ingests menu data into PostgreSQL; REST API exposes meals and logs.
-- **CI Pipeline:** GitHub Actions workflow installs dependencies, runs tests, and builds the frontend.
+- **Public food catalog:** Students can browse and filter menu items served on campus.
+- **Privacy-first dashboard:** Meals are logged in cookies stored locally in each browser—no personal accounts required.
+- **Admin-only management:** A single admin password unlocks CRUD access to the shared food catalog.
+- **Seeding utility:** Quickly bootstrap the database with sample foods via an authenticated endpoint.
+- **Next.js + Flask stack:** Modern frontend paired with a lightweight API, ready for local dev or hosted deployment.
 
 ## Project Structure
 
-```
+```text
 boilerfuel-calorie-tracker/
 ├── start_services.sh
 ├── backend/
@@ -65,18 +64,19 @@ boilerfuel-calorie-tracker/
 Copy the provided examples and adjust values for your setup:
 
 ```powershell
-cp frontend/.env.example frontend/.env.local
-cp backend/.env.example backend/.env
+Copy-Item frontend/.env.example frontend/.env.local
+Copy-Item backend/.env.example backend/.env
 ```
 
-Update database connection strings and JWT secrets accordingly.
+Key variables to update:
 
-To skip the login flow while prototyping, set the following in `frontend/.env.local`:
-
-```bash
-NEXT_PUBLIC_BYPASS_AUTH=true
-# NEXT_PUBLIC_BYPASS_EMAIL=your.name@example.com  # optional
-```
+- `backend/.env`
+   - `DATABASE_URL` (or discrete `POSTGRES_*` vars) with your PostgreSQL connection string
+   - `JWT_SECRET_KEY` with a strong random value
+   - `ADMIN_PASSWORD` with an admin-only shared secret
+   - `FRONTEND_ORIGIN` pointing to the Next.js site (default `http://localhost:3000`)
+- `frontend/.env.local`
+   - `NEXT_PUBLIC_API_URL` pointing to the Flask backend (default `http://127.0.0.1:5000`)
 
 Restart the frontend dev server after changing environment variables so the new values take effect.
 
@@ -116,7 +116,7 @@ Restart the frontend dev server after changing environment variables so the new 
    npm run dev
    ```
 
-Visit <http://localhost:3000> to use the app. The frontend proxies API requests to the Flask server via the configured environment variables.
+Visit <http://localhost:3000> to use the app. The dashboard stores logs locally, while the admin page lets you update the shared food list once you enter the configured admin password.
 
 ## Testing & Quality Checks
 
