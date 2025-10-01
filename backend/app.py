@@ -38,8 +38,9 @@ def _preferred_database_url():
             if '://' in val:
                 masked = val.split('://')[0] + '://***masked***'
             else:
-                masked = val
+                masked = val[:20] + '***' if len(val) > 20 else val
             print(f"[DEBUG] {key} = {masked}")
+    print(f"[DEBUG] Total environment variables found: {len([k for k in os.environ if 'DATABASE' in k or 'POSTGRES' in k or 'PG' in k])}")
     
     # Common provider envs (in priority order)
     candidates = [
