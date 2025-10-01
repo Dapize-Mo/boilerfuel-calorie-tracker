@@ -103,19 +103,34 @@ class Food(db.Model):
 # API Endpoints
 @app.route('/api/foods', methods=['GET'])
 def get_foods():
-    foods = Food.query.all()
-    return jsonify([{'id': food.id, 'name': food.name, 'calories': food.calories, 'macros': food.macros} for food in foods])
+    try:
+        foods = Food.query.all()
+        return jsonify([{'id': food.id, 'name': food.name, 'calories': food.calories, 'macros': food.macros} for food in foods])
+    except Exception as e:
+        return jsonify({'error': f'Failed to fetch foods: {str(e)}'}), 500
 
 @app.route('/api/foods', methods=['POST'])
 def add_food():
-    data = request.get_json()
-    new_food = Food()
-    new_food.name = data['name']
-    new_food.calories = data['calories']
-    new_food.macros = data['macros']
-    db.session.add(new_food)
-    db.session.commit()
-    return jsonify({'message': 'Food added successfully!'}), 201
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No JSON data provided'}), 400
+        
+        required_fields = ['name', 'calories', 'macros']
+        for field in required_fields:
+            if field not in data:
+                return jsonify({'error': f'Missing required field: {field}'}), 400
+        
+        new_food = Food()
+        new_food.name = data['name']
+        new_food.calories = data['calories']
+        new_food.macros = data['macros']
+        db.session.add(new_food)
+        db.session.commit()
+        return jsonify({'message': 'Food added successfully!'}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': f'Failed to add food: {str(e)}'}), 500
 
 
 @app.route('/health', methods=['GET'])
@@ -132,7 +147,7 @@ def ready_check():
         # Do not leak details; logs will have stack traces if debug is enabled
         return jsonify({'app': 'ok', 'db': 'error'}), 500
 
-@app.route('/init-db', methods=['POST'])
+@app.route('/init-db', methods=['GET', 'POST'])
 def init_database():
     """Initialize database schema and seed data - run once after deployment"""
     try:
@@ -144,13 +159,13 @@ def init_database():
         if existing_foods > 0:
             return jsonify({'message': f'Database already initialized with {existing_foods} foods'}), 200
         
-        # Add sample seed data
+        # Add sample seed data that matches the SQL schema (uses 'fats' not 'fat')
         sample_foods = [
-            {'name': 'Grilled Chicken Breast', 'calories': 165, 'macros': {'protein': 31, 'carbs': 0, 'fat': 3.6}},
-            {'name': 'Brown Rice (1 cup)', 'calories': 216, 'macros': {'protein': 5, 'carbs': 45, 'fat': 1.8}},
-            {'name': 'Broccoli (1 cup)', 'calories': 25, 'macros': {'protein': 3, 'carbs': 5, 'fat': 0.3}},
-            {'name': 'Salmon Fillet', 'calories': 206, 'macros': {'protein': 22, 'carbs': 0, 'fat': 12}},
-            {'name': 'Oatmeal (1 cup)', 'calories': 147, 'macros': {'protein': 6, 'carbs': 25, 'fat': 3}}
+            {'name': 'Grilled Chicken Breast', 'calories': 165, 'macros': {'protein': 31, 'carbs': 0, 'fats': 3.6}},
+            {'name': 'Brown Rice (1 cup)', 'calories': 216, 'macros': {'protein': 5, 'carbs': 45, 'fats': 1.8}},
+            {'name': 'Broccoli (1 cup)', 'calories': 25, 'macros': {'protein': 3, 'carbs': 5, 'fats': 0.3}},
+            {'name': 'Salmon Fillet', 'calories': 206, 'macros': {'protein': 22, 'carbs': 0, 'fats': 12}},
+            {'name': 'Oatmeal (1 cup)', 'calories': 147, 'macros': {'protein': 6, 'carbs': 25, 'fats': 3}}
         ]
         
         for food_data in sample_foods:
