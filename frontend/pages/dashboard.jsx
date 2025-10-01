@@ -162,6 +162,7 @@ export default function Dashboard() {
         clearTimeout(activitySuccessTimeout.current);
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const foodsById = useMemo(() => {
@@ -544,7 +545,7 @@ export default function Dashboard() {
           </section>
 
           <section className="rounded-lg bg-slate-900 p-6">
-            <h2 className="mb-4 text-2xl font-bold">Today's Activities</h2>
+            <h2 className="mb-4 text-2xl font-bold">Today&apos;s Activities</h2>
             {todaysActivityLogs.length === 0 ? (
               <p className="text-slate-400">No activities logged yet today.</p>
             ) : (
