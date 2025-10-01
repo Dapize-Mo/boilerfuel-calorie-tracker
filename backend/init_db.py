@@ -1,12 +1,13 @@
 import os
-from sqlalchemy import create_engine, text
+from sqlalchemy.engine.create import create_engine
+from sqlalchemy.sql.expression import text
 from sqlalchemy.engine.url import make_url
 
 
 def run_sql_file(engine, path: str):
     with open(path, 'r', encoding='utf-8') as f:
         sql = f.read()
-    with engine.begin() as conn:
+    with engine.begin() as conn:  # type: ignore
         for statement in [s.strip() for s in sql.split(';') if s.strip()]:
             conn.execute(text(statement))
 
@@ -33,12 +34,12 @@ def main():
     # CREATE DATABASE cannot run inside a transaction
     admin_engine = create_engine(admin_url)
     try:
-        with admin_engine.connect() as conn:
+        with admin_engine.connect() as conn:  # type: ignore
             exists = conn.execute(text("SELECT 1 FROM pg_database WHERE datname = :name"), {"name": target_db}).scalar() is not None
             if not exists:
                 # Some managed services do not grant CREATE DATABASE; ignore failure.
                 try:
-                    conn.execution_options(isolation_level="AUTOCOMMIT").execute(text(f'CREATE DATABASE "{target_db}"'))
+                    conn.execution_options(isolation_level="AUTOCOMMIT").execute(text(f'CREATE DATABASE "{target_db}"'))  # type: ignore
                 except Exception as e:
                     print(f"[warn] Could not create database '{target_db}': {e}. Continuing...")
     except Exception as e:

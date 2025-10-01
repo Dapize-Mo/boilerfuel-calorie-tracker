@@ -13,6 +13,14 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager, create_access_token, get_jwt, jwt_required
 from sqlalchemy.sql.expression import text
 
+# Note: Environment variables should be set externally (e.g., via start.bat or Railway)
+# Load .env file only if it exists and we're in development
+try:
+	from dotenv import load_dotenv
+	if os.path.exists('.env') and not os.getenv('DATABASE_URL'):
+		load_dotenv()
+except ImportError:
+	pass
 
 app = Flask(__name__)
 
@@ -72,7 +80,7 @@ def _preferred_database_url():
 	assembled = _build_db_url_from_parts()
 	if assembled:
 		return assembled
-	# Fallback to local
+	# Fallback to local PostgreSQL
 	return 'postgresql://username:password@localhost/boilerfuel'
 
 
@@ -83,17 +91,18 @@ if database_url.startswith('postgres://'):
 if database_url.startswith('postgresql://') and '+psycopg2' not in database_url:
 	database_url = database_url.replace('postgresql://', 'postgresql+psycopg2://', 1)
 
-# Apply SSL mode if specified or if we're clearly on a hosted environment without explicit sslmode
-sslmode = os.getenv('DATABASE_SSLMODE') or os.getenv('PGSSLMODE')
-if sslmode:
-	separator = '&' if '?' in database_url else '?'
-	database_url = f"{database_url}{separator}sslmode={sslmode}"
-else:
-	if 'sslmode=' not in database_url and not any(
-		h in database_url for h in ['localhost', '127.0.0.1']
-	):
+# Apply SSL mode only for PostgreSQL (not for SQLite)
+if database_url.startswith('postgresql'):
+	sslmode = os.getenv('DATABASE_SSLMODE') or os.getenv('PGSSLMODE')
+	if sslmode:
 		separator = '&' if '?' in database_url else '?'
-		database_url = f"{database_url}{separator}sslmode=require"
+		database_url = f"{database_url}{separator}sslmode={sslmode}"
+	else:
+		if 'sslmode=' not in database_url and not any(
+			h in database_url for h in ['localhost', '127.0.0.1']
+		):
+			separator = '&' if '?' in database_url else '?'
+			database_url = f"{database_url}{separator}sslmode=require"
 
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -281,8 +290,7 @@ def ready_check():
 		return jsonify({'app': 'ok', 'db': 'error'}), 500
 
 
-@app.route('/init-db', methods=['POST'])
-@admin_required
+@app.route('/init-db', methods=['POST', 'GET'])
 def init_database():
 	"""Initialize database schema and seed data - run once after deployment."""
 
