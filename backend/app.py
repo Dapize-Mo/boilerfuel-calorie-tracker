@@ -1,8 +1,9 @@
 import os
-from urllib.parse import quote_plus
+from urllib.parse import quote_plus, urlparse, urlunparse
 from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager
+from sqlalchemy import text
 
 app = Flask(__name__)
 
@@ -68,6 +69,26 @@ app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'change-me')
 
+# Log a sanitized DB URL at startup to assist debugging in hosted logs
+try:
+    parsed = urlparse(database_url)
+    # Rebuild netloc with redacted password
+    username = parsed.username or ''
+    password = '***' if parsed.password else None
+    host = parsed.hostname or ''
+    port = f":{parsed.port}" if parsed.port else ''
+    if username and password is not None:
+        netloc = f"{username}:{password}@{host}{port}"
+    elif username:
+        netloc = f"{username}@{host}{port}"
+    else:
+        netloc = f"{host}{port}"
+    sanitized = urlunparse((parsed.scheme, netloc, parsed.path or '', parsed.params or '', parsed.query or '', parsed.fragment or ''))
+    print(f"[startup] SQLALCHEMY_DATABASE_URI -> {sanitized}")
+except Exception as _e:
+    # Non-fatal; just don't log if parsing fails
+    pass
+
 # Initialize extensions
 db = SQLAlchemy(app)
 jwt = JWTManager(app)
@@ -100,6 +121,16 @@ def add_food():
 @app.route('/health', methods=['GET'])
 def health_check():
     return jsonify({'status': 'ok'}), 200
+
+@app.route('/ready', methods=['GET'])
+def ready_check():
+    """Liveness/Readiness: verifies DB connectivity with a simple query."""
+    try:
+        db.session.execute(text('SELECT 1'))
+        return jsonify({'app': 'ok', 'db': 'ok'}), 200
+    except Exception as e:
+        # Do not leak details; logs will have stack traces if debug is enabled
+        return jsonify({'app': 'ok', 'db': 'error'}), 500
 
 @app.route('/init-db', methods=['POST'])
 def init_database():
