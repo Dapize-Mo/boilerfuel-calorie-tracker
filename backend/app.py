@@ -1,11 +1,15 @@
 import os
+from datetime import datetime, timedelta
 from urllib.parse import quote_plus, urlparse, urlunparse
 from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
-from flask_jwt_extended import JWTManager
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+from flask_cors import CORS
 from sqlalchemy import text
+import bcrypt
 
 app = Flask(__name__)
+CORS(app)
 
 def _env_or_none(name: str):
     val = os.getenv(name)
@@ -97,11 +101,38 @@ db = SQLAlchemy(app)
 jwt = JWTManager(app)
 
 # Models
+class User(db.Model):
+    __tablename__ = 'users'
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(255), unique=True, nullable=False)
+    password_hash = db.Column(db.String(255), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def set_password(self, password):
+        """Hash and set the password"""
+        self.password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+    def check_password(self, password):
+        """Check if the provided password matches the hash"""
+        return bcrypt.checkpw(password.encode('utf-8'), self.password_hash.encode('utf-8'))
+
 class Food(db.Model):
+    __tablename__ = 'foods'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     calories = db.Column(db.Integer, nullable=False)
     macros = db.Column(db.JSON, nullable=False)
+
+class MealLog(db.Model):
+    __tablename__ = 'meal_logs'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    food_id = db.Column(db.Integer, db.ForeignKey('foods.id'), nullable=False)
+    servings = db.Column(db.Float, nullable=False, default=1.0)
+    logged_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    user = db.relationship('User', backref=db.backref('meal_logs', lazy=True))
+    food = db.relationship('Food', backref=db.backref('meal_logs', lazy=True))
 
 # API Endpoints
 @app.route('/api/foods', methods=['GET'])
@@ -134,6 +165,240 @@ def add_food():
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': f'Failed to add food: {str(e)}'}), 500
+
+# Authentication Endpoints
+@app.route('/api/register', methods=['POST'])
+def register():
+    """Register a new user"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No JSON data provided'}), 400
+        
+        email = data.get('email', '').strip()
+        password = data.get('password', '')
+        
+        if not email or not password:
+            return jsonify({'error': 'Email and password are required'}), 400
+        
+        # Check if user already exists
+        existing_user = User.query.filter_by(email=email).first()
+        if existing_user:
+            return jsonify({'error': 'Email already registered'}), 400
+        
+        # Create new user
+        new_user = User(email=email)
+        new_user.set_password(password)
+        db.session.add(new_user)
+        db.session.commit()
+        
+        # Generate JWT token
+        access_token = create_access_token(identity=new_user.id, expires_delta=timedelta(days=7))
+        
+        return jsonify({
+            'message': 'User registered successfully',
+            'token': access_token,
+            'user': {
+                'id': new_user.id,
+                'email': new_user.email
+            }
+        }), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': f'Registration failed: {str(e)}'}), 500
+
+@app.route('/api/login', methods=['POST'])
+def login():
+    """Login user and return JWT token"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No JSON data provided'}), 400
+        
+        email = data.get('email', '').strip()
+        password = data.get('password', '')
+        
+        if not email or not password:
+            return jsonify({'error': 'Email and password are required'}), 400
+        
+        # Find user
+        user = User.query.filter_by(email=email).first()
+        if not user or not user.check_password(password):
+            return jsonify({'error': 'Invalid email or password'}), 401
+        
+        # Generate JWT token
+        access_token = create_access_token(identity=user.id, expires_delta=timedelta(days=7))
+        
+        return jsonify({
+            'message': 'Login successful',
+            'token': access_token,
+            'user': {
+                'id': user.id,
+                'email': user.email
+            }
+        }), 200
+    except Exception as e:
+        return jsonify({'error': f'Login failed: {str(e)}'}), 500
+
+@app.route('/api/user', methods=['GET'])
+@jwt_required()
+def get_current_user():
+    """Get current user information"""
+    try:
+        user_id = get_jwt_identity()
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        return jsonify({
+            'id': user.id,
+            'email': user.email,
+            'created_at': user.created_at.isoformat()
+        }), 200
+    except Exception as e:
+        return jsonify({'error': f'Failed to get user: {str(e)}'}), 500
+
+# Meal Logging Endpoints
+@app.route('/api/logs', methods=['GET'])
+@jwt_required()
+def get_logs():
+    """Get meal logs for current user"""
+    try:
+        user_id = get_jwt_identity()
+        
+        # Optional: filter by date
+        date_str = request.args.get('date')  # Expected format: YYYY-MM-DD
+        
+        query = MealLog.query.filter_by(user_id=user_id)
+        
+        if date_str:
+            try:
+                date = datetime.strptime(date_str, '%Y-%m-%d')
+                next_date = date + timedelta(days=1)
+                query = query.filter(MealLog.logged_at >= date, MealLog.logged_at < next_date)
+            except ValueError:
+                return jsonify({'error': 'Invalid date format. Use YYYY-MM-DD'}), 400
+        else:
+            # Default to today
+            today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+            tomorrow = today + timedelta(days=1)
+            query = query.filter(MealLog.logged_at >= today, MealLog.logged_at < tomorrow)
+        
+        logs = query.order_by(MealLog.logged_at.desc()).all()
+        
+        result = []
+        for log in logs:
+            result.append({
+                'id': log.id,
+                'food': {
+                    'id': log.food.id,
+                    'name': log.food.name,
+                    'calories': log.food.calories,
+                    'macros': log.food.macros
+                },
+                'servings': log.servings,
+                'logged_at': log.logged_at.isoformat()
+            })
+        
+        return jsonify(result), 200
+    except Exception as e:
+        return jsonify({'error': f'Failed to fetch logs: {str(e)}'}), 500
+
+@app.route('/api/logs', methods=['POST'])
+@jwt_required()
+def add_log():
+    """Add a new meal log"""
+    try:
+        user_id = get_jwt_identity()
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({'error': 'No JSON data provided'}), 400
+        
+        food_id = data.get('food_id')
+        servings = data.get('servings', 1.0)
+        
+        if not food_id:
+            return jsonify({'error': 'food_id is required'}), 400
+        
+        # Verify food exists
+        food = Food.query.get(food_id)
+        if not food:
+            return jsonify({'error': 'Food not found'}), 404
+        
+        # Create log
+        new_log = MealLog(user_id=user_id, food_id=food_id, servings=servings)
+        db.session.add(new_log)
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Meal logged successfully',
+            'log': {
+                'id': new_log.id,
+                'food': {
+                    'id': food.id,
+                    'name': food.name,
+                    'calories': food.calories,
+                    'macros': food.macros
+                },
+                'servings': new_log.servings,
+                'logged_at': new_log.logged_at.isoformat()
+            }
+        }), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': f'Failed to add log: {str(e)}'}), 500
+
+@app.route('/api/daily-totals', methods=['GET'])
+@jwt_required()
+def get_daily_totals():
+    """Get aggregated daily totals for current user"""
+    try:
+        user_id = get_jwt_identity()
+        
+        # Optional: filter by date
+        date_str = request.args.get('date')  # Expected format: YYYY-MM-DD
+        
+        if date_str:
+            try:
+                date = datetime.strptime(date_str, '%Y-%m-%d')
+                next_date = date + timedelta(days=1)
+            except ValueError:
+                return jsonify({'error': 'Invalid date format. Use YYYY-MM-DD'}), 400
+        else:
+            # Default to today
+            date = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+            next_date = date + timedelta(days=1)
+        
+        # Get all logs for the date
+        logs = MealLog.query.filter_by(user_id=user_id).filter(
+            MealLog.logged_at >= date,
+            MealLog.logged_at < next_date
+        ).all()
+        
+        # Calculate totals
+        total_calories = 0
+        total_protein = 0
+        total_carbs = 0
+        total_fats = 0
+        
+        for log in logs:
+            total_calories += log.food.calories * log.servings
+            macros = log.food.macros
+            total_protein += macros.get('protein', 0) * log.servings
+            total_carbs += macros.get('carbs', 0) * log.servings
+            total_fats += macros.get('fats', 0) * log.servings
+        
+        return jsonify({
+            'date': date.strftime('%Y-%m-%d'),
+            'calories': round(total_calories, 1),
+            'protein': round(total_protein, 1),
+            'carbs': round(total_carbs, 1),
+            'fats': round(total_fats, 1),
+            'meal_count': len(logs)
+        }), 200
+    except Exception as e:
+        return jsonify({'error': f'Failed to get daily totals: {str(e)}'}), 500
 
 
 @app.route('/health', methods=['GET'])
