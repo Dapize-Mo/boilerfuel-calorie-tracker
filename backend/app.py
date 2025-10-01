@@ -158,6 +158,17 @@ class Food(db.Model):
 	)
 
 
+class Activity(db.Model):
+	__tablename__ = 'activities'
+
+	id = db.Column(db.Integer, primary_key=True)
+	name = db.Column(db.String(255), nullable=False)
+	calories_per_hour = db.Column(db.Integer, nullable=False)
+	created_at = db.Column(
+		db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
+	)
+
+
 def admin_enabled() -> bool:
 	return bool(app.config.get('ADMIN_PASSWORD'))
 
@@ -274,6 +285,72 @@ def delete_food(food_id: int):
 		return jsonify({'error': f'Failed to delete food: {exc}'}), 500
 
 
+@app.route('/api/activities', methods=['GET'])
+def get_activities():
+	query = Activity.query.order_by(Activity.name.asc())
+	search = request.args.get('q')
+	if search:
+		like = f"%{search.strip()}%"
+		query = query.filter(Activity.name.ilike(like))
+	activities = query.all()
+	return (
+		jsonify([
+			{
+				'id': activity.id,
+				'name': activity.name,
+				'calories_per_hour': activity.calories_per_hour,
+			}
+			for activity in activities
+		]),
+		200,
+	)
+
+
+@app.route('/api/activities', methods=['POST'])
+@admin_required
+def add_activity():
+	data = request.get_json() or {}
+
+	required_fields = ['name', 'calories_per_hour']
+	for field in required_fields:
+		if field not in data:
+			return jsonify({'error': f'Missing required field: {field}'}), 400
+
+	try:
+		activity = Activity(
+			name=str(data['name']).strip(),
+			calories_per_hour=int(data['calories_per_hour']),
+		)
+		db.session.add(activity)
+		db.session.commit()
+		return jsonify({
+			'message': 'Activity added successfully!',
+			'activity': {
+				'id': activity.id,
+				'name': activity.name,
+				'calories_per_hour': activity.calories_per_hour,
+			},
+		}), 201
+	except Exception as exc:  # pragma: no cover - defensive guard
+		db.session.rollback()
+		return jsonify({'error': f'Failed to add activity: {exc}'}), 500
+
+
+@app.route('/api/activities/<int:activity_id>', methods=['DELETE'])
+@admin_required
+def delete_activity(activity_id: int):
+	activity = Activity.query.get(activity_id)
+	if not activity:
+		return jsonify({'error': 'Activity not found'}), 404
+	try:
+		db.session.delete(activity)
+		db.session.commit()
+		return jsonify({'message': 'Activity deleted'}), 200
+	except Exception as exc:  # pragma: no cover
+		db.session.rollback()
+		return jsonify({'error': f'Failed to delete activity: {exc}'}), 500
+
+
 @app.route('/health', methods=['GET'])
 def health_check():
 	return jsonify({'status': 'ok'}), 200
@@ -298,9 +375,10 @@ def init_database():
 		db.create_all()
 
 		existing_foods = Food.query.count()
-		if existing_foods > 0:
+		existing_activities = Activity.query.count()
+		if existing_foods > 0 or existing_activities > 0:
 			return (
-				jsonify({'message': f'Database already initialized with {existing_foods} foods'}),
+				jsonify({'message': f'Database already initialized with {existing_foods} foods and {existing_activities} activities'}),
 				200,
 			)
 
@@ -320,9 +398,31 @@ def init_database():
 			)
 			db.session.add(food)
 
+		sample_activities = [
+			{'name': 'Running', 'calories_per_hour': 600},
+			{'name': 'Walking', 'calories_per_hour': 280},
+			{'name': 'Cycling', 'calories_per_hour': 500},
+			{'name': 'Swimming', 'calories_per_hour': 450},
+			{'name': 'Weight Training', 'calories_per_hour': 365},
+			{'name': 'Yoga', 'calories_per_hour': 180},
+			{'name': 'Basketball', 'calories_per_hour': 440},
+			{'name': 'Elliptical', 'calories_per_hour': 400},
+		]
+
+		for activity_data in sample_activities:
+			activity = Activity(
+				name=activity_data['name'],
+				calories_per_hour=activity_data['calories_per_hour'],
+			)
+			db.session.add(activity)
+
 		db.session.commit()
 
-		return jsonify({'message': 'Database initialized successfully!', 'foods_added': len(sample_foods)}), 201
+		return jsonify({
+			'message': 'Database initialized successfully!',
+			'foods_added': len(sample_foods),
+			'activities_added': len(sample_activities)
+		}), 201
 	except Exception as exc:  # pragma: no cover - defensive guard
 		db.session.rollback()
 		return jsonify({'error': f'Database initialization failed: {exc}'}), 500

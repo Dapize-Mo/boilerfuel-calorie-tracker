@@ -99,6 +99,21 @@ export async function deleteFood(foodId) {
   return apiCall(`/api/foods/${foodId}`, { method: 'DELETE' }, { requireAdmin: true });
 }
 
+export async function createActivity(activity) {
+  return apiCall(
+    '/api/activities',
+    {
+      method: 'POST',
+      body: JSON.stringify(activity),
+    },
+    { requireAdmin: true }
+  );
+}
+
+export async function deleteActivity(activityId) {
+  return apiCall(`/api/activities/${activityId}`, { method: 'DELETE' }, { requireAdmin: true });
+}
+
 export function logoutAdmin() {
   clearAdminToken();
 }

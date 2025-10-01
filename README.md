@@ -1,13 +1,15 @@
 # BoilerFuel Calorie Tracker
 
-BoilerFuel helps Purdue students browse dining hall menus, log meals, and track daily macros. The project is split into a Next.js frontend and a Flask backend with a PostgreSQL database and a simple scraping utility.
+BoilerFuel helps Purdue students browse dining hall menus, log meals, track gym activities, and monitor daily macros and net calories. The project is split into a Next.js frontend and a Flask backend with a PostgreSQL database and a simple scraping utility.
 
 ## Features
 
 - **Public food catalog:** Students can browse and filter menu items served on campus.
-- **Privacy-first dashboard:** Meals are logged in cookies stored locally in each browser—no personal accounts required.
-- **Admin-only management:** A single admin password unlocks CRUD access to the shared food catalog.
-- **Seeding utility:** Quickly bootstrap the database with sample foods via an authenticated endpoint.
+- **Activity tracking:** Log gym and exercise activities to track calories burned throughout the day.
+- **Net calorie tracking:** Dashboard shows calories consumed, calories burned, and net calories for the day.
+- **Privacy-first dashboard:** Meals and activities are logged in cookies stored locally in each browser—no personal accounts required.
+- **Admin-only management:** A single admin password unlocks CRUD access to the shared food and activity catalogs.
+- **Seeding utility:** Quickly bootstrap the database with sample foods and activities via an authenticated endpoint.
 - **Next.js + Flask stack:** Modern frontend paired with a lightweight API, ready for local dev or hosted deployment.
 
 ## Project Structure
