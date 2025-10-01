@@ -29,18 +29,7 @@ def _build_db_url_from_parts():
 
 def _preferred_database_url():
     """Resolve a usable database URL across common providers (Railway, etc)."""
-    # Debug: Print all environment variables for troubleshooting
-    print("[DEBUG] Environment variables:")
-    for key in os.environ:
-        if 'DATABASE' in key or 'POSTGRES' in key or 'PG' in key:
-            val = os.environ[key]
-            # Mask password for security
-            if '://' in val:
-                masked = val.split('://')[0] + '://***masked***'
-            else:
-                masked = val[:20] + '***' if len(val) > 20 else val
-            print(f"[DEBUG] {key} = {masked}")
-    print(f"[DEBUG] Total environment variables found: {len([k for k in os.environ if 'DATABASE' in k or 'POSTGRES' in k or 'PG' in k])}")
+    # Database configuration resolved successfully
     
     # Common provider envs (in priority order)
     candidates = [
@@ -52,15 +41,12 @@ def _preferred_database_url():
     for key in candidates:
         val = _env_or_none(key)
         if val:
-            print(f"[DEBUG] Using database URL from {key}")
             return val
     # Try assembling from discrete POSTGRES_* parts
     assembled = _build_db_url_from_parts()
     if assembled:
-        print(f"[DEBUG] Using assembled database URL")
         return assembled
     # Fallback to local
-    print(f"[DEBUG] Falling back to localhost database")
     return 'postgresql://username:password@localhost/boilerfuel'
 
 # Configuration
