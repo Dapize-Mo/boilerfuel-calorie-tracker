@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 import {
   adminLogin,
   apiCall,
+  createActivity,
   createFood,
+  deleteActivity,
   deleteFood,
   logoutAdmin,
   verifyAdminSession,
@@ -16,14 +18,23 @@ const initialFoodState = {
   fats: '',
 };
 
+const initialActivityState = {
+  name: '',
+  calories_per_hour: '',
+};
+
 export default function AdminPage() {
   const [authenticated, setAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [foods, setFoods] = useState([]);
+  const [activities, setActivities] = useState([]);
   const [foodForm, setFoodForm] = useState(initialFoodState);
+  const [activityForm, setActivityForm] = useState(initialActivityState);
   const [foodError, setFoodError] = useState('');
   const [foodSuccess, setFoodSuccess] = useState('');
+  const [activityError, setActivityError] = useState('');
+  const [activitySuccess, setActivitySuccess] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -32,6 +43,7 @@ export default function AdminPage() {
       if (sessionOk) {
         setAuthenticated(true);
         await loadFoods();
+        await loadActivities();
       }
       setLoading(false);
     }
@@ -44,6 +56,15 @@ export default function AdminPage() {
       setFoods(data || []);
     } catch (error) {
       setFoodError(error.message || 'Failed to load foods');
+    }
+  }
+
+  async function loadActivities() {
+    try {
+      const data = await apiCall('/api/activities');
+      setActivities(data || []);
+    } catch (error) {
+      setActivityError(error.message || 'Failed to load activities');
     }
   }
 
@@ -61,6 +82,7 @@ export default function AdminPage() {
       setAuthenticated(true);
       setPassword('');
       await loadFoods();
+      await loadActivities();
     } catch (error) {
       setLoginError(error.message || 'Login failed');
     }
@@ -108,10 +130,48 @@ export default function AdminPage() {
     }
   }
 
+  async function handleAddActivity(event) {
+    event.preventDefault();
+    setActivityError('');
+    setActivitySuccess('');
+
+    const { name, calories_per_hour } = activityForm;
+    if (!name || !calories_per_hour) {
+      setActivityError('All fields are required.');
+      return;
+    }
+
+    const payload = {
+      name: name.trim(),
+      calories_per_hour: Number(calories_per_hour),
+    };
+
+    try {
+      await createActivity(payload);
+      setActivitySuccess('Activity added!');
+      setActivityForm(initialActivityState);
+      await loadActivities();
+      setTimeout(() => setActivitySuccess(''), 2000);
+    } catch (error) {
+      setActivityError(error.message || 'Failed to add activity');
+    }
+  }
+
+  async function handleDeleteActivity(activityId) {
+    setActivityError('');
+    try {
+      await deleteActivity(activityId);
+      await loadActivities();
+    } catch (error) {
+      setActivityError(error.message || 'Failed to delete activity');
+    }
+  }
+
   function handleLogout() {
     logoutAdmin();
     setAuthenticated(false);
     setFoods([]);
+    setActivities([]);
   }
 
   if (loading) {
@@ -163,9 +223,9 @@ export default function AdminPage() {
       <div className="mx-auto flex max-w-5xl flex-col gap-6">
         <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-4xl font-bold">Admin Menu Manager</h1>
+            <h1 className="text-4xl font-bold">Admin Food & Activity Manager</h1>
             <p className="text-slate-400">
-              Add or remove food items available to the public dashboard.
+              Manage foods and activities available to the public dashboard.
             </p>
           </div>
           <button
@@ -286,6 +346,87 @@ export default function AdminPage() {
                   <button
                     type="button"
                     onClick={() => handleDeleteFood(food.id)}
+                    className="rounded bg-red-500/10 px-3 py-1 text-sm font-semibold text-red-400 hover:bg-red-500/20"
+                  >
+                    Delete
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        <section className="rounded-lg bg-slate-900 p-6">
+          <h2 className="mb-4 text-2xl font-bold">Add Activity</h2>
+          {activityError && (
+            <div className="mb-4 rounded border border-red-500 bg-red-500/10 px-4 py-3 text-red-400">
+              {activityError}
+            </div>
+          )}
+          {activitySuccess && (
+            <div className="mb-4 rounded border border-green-500 bg-green-500/10 px-4 py-3 text-green-400">
+              {activitySuccess}
+            </div>
+          )}
+          <form onSubmit={handleAddActivity} className="grid gap-4 md:grid-cols-2">
+            <div>
+              <label htmlFor="activity-name" className="mb-2 block text-sm font-medium">
+                Activity Name
+              </label>
+              <input
+                id="activity-name"
+                type="text"
+                value={activityForm.name}
+                onChange={(event) =>
+                  setActivityForm({ ...activityForm, name: event.target.value })
+                }
+                className="w-full rounded border border-slate-700 bg-slate-800 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                placeholder="e.g., Running"
+              />
+            </div>
+            <div>
+              <label htmlFor="calories-per-hour" className="mb-2 block text-sm font-medium">
+                Calories per Hour
+              </label>
+              <input
+                id="calories-per-hour"
+                type="number"
+                value={activityForm.calories_per_hour}
+                onChange={(event) =>
+                  setActivityForm({ ...activityForm, calories_per_hour: event.target.value })
+                }
+                className="w-full rounded border border-slate-700 bg-slate-800 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                placeholder="e.g., 600"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <button
+                type="submit"
+                className="w-full rounded bg-orange-500 px-4 py-2 font-semibold text-slate-900 hover:bg-orange-600"
+              >
+                Add Activity
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <section className="rounded-lg bg-slate-900 p-6">
+          <h2 className="mb-4 text-2xl font-bold">Current Activities</h2>
+          {activities.length === 0 ? (
+            <p className="text-slate-400">No activities available yet.</p>
+          ) : (
+            <ul className="space-y-3">
+              {activities.map((activity) => (
+                <li key={activity.id} className="flex items-start justify-between gap-4 rounded bg-slate-800 p-4">
+                  <div>
+                    <p className="font-semibold">{activity.name}</p>
+                    <p className="text-sm text-slate-400">
+                      {activity.calories_per_hour} cal/hour
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteActivity(activity.id)}
                     className="rounded bg-red-500/10 px-3 py-1 text-sm font-semibold text-red-400 hover:bg-red-500/20"
                   >
                     Delete
