@@ -199,6 +199,18 @@ export default function Dashboard() {
     return map;
   }, [foods]);
 
+  const foodsByStation = useMemo(() => {
+    const grouped = {};
+    foods.forEach((food) => {
+      const station = food.station || 'Other Items';
+      if (!grouped[station]) {
+        grouped[station] = [];
+      }
+      grouped[station].push(food);
+    });
+    return grouped;
+  }, [foods]);
+
   const activitiesById = useMemo(() => {
     const map = new Map();
     activities.forEach((activity) => {
@@ -310,6 +322,24 @@ export default function Dashboard() {
     successTimeout.current = window.setTimeout(() => setSuccess(''), 2500);
   }
 
+  function handleQuickAdd(foodId, servingAmount = 1) {
+    const newLog = {
+      id: Date.now(),
+      foodId: Number(foodId),
+      servings: servingAmount,
+      timestamp: new Date().toISOString(),
+    };
+
+    const nextLogs = [newLog, ...logs];
+    persistLogs(nextLogs);
+    setSuccess('Meal added!');
+
+    if (successTimeout.current) {
+      clearTimeout(successTimeout.current);
+    }
+    successTimeout.current = window.setTimeout(() => setSuccess(''), 2500);
+  }
+
   function handleRemoveLog(logId) {
     const nextLogs = logs.filter((log) => log.id !== logId);
     persistLogs(nextLogs);
@@ -406,102 +436,91 @@ export default function Dashboard() {
           )}
         </section>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          <section className="rounded-lg bg-slate-900 p-6">
-            <h2 className="mb-4 text-2xl font-bold">Log a Meal</h2>
-            {formError && (
-              <div className="mb-4 rounded border border-red-500 bg-red-500/10 px-4 py-3 text-red-400">
-                {formError}
-              </div>
-            )}
-            {success && (
-              <div className="mb-4 rounded border border-green-500 bg-green-500/10 px-4 py-3 text-green-400">
-                {success}
-              </div>
-            )}
-            <form onSubmit={handleAddLog} className="space-y-4">
-              {diningCourts.length > 0 && (
-                <div>
-                  <label htmlFor="dining-court" className="mb-2 block text-sm font-medium">
-                    Dining Court
-                  </label>
-                  <select
-                    id="dining-court"
-                    value={selectedDiningCourt}
-                    onChange={(event) => {
-                      setSelectedDiningCourt(event.target.value);
-                      setSelectedFood(''); // Reset food selection when court changes
-                    }}
-                    className="w-full rounded border border-slate-700 bg-slate-800 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500"
-                  >
-                    <option value="">All Dining Courts</option>
-                    {diningCourts.map((court) => (
-                      <option key={court} value={court}>
-                        {court.charAt(0).toUpperCase() + court.slice(1)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-              <div>
-                <label htmlFor="food" className="mb-2 block text-sm font-medium">
-                  Food Item
-                  {selectedDiningCourt && (
-                    <span className="ml-2 text-xs text-slate-400">
-                      ({foods.length} items available)
-                    </span>
-                  )}
-                </label>
-                <select
-                  id="food"
-                  value={selectedFood}
-                  onChange={(event) => setSelectedFood(event.target.value)}
-                  required
-                  className="w-full rounded border border-slate-700 bg-slate-800 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500"
-                >
-                  <option value="">
-                    {selectedDiningCourt 
-                      ? `Select a food from ${selectedDiningCourt}...` 
-                      : 'Select a food...'}
-                  </option>
-                  {foods.length === 0 && (
-                    <option disabled value="">
-                      {selectedDiningCourt 
-                        ? 'No foods available for this dining court' 
-                        : 'No foods available yet'}
-                    </option>
-                  )}
-                  {foods.map((food) => (
-                    <option key={food.id} value={food.id}>
-                      {food.name} ({food.calories} cal)
-                      {food.station ? ` - ${food.station}` : ''}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label htmlFor="servings" className="mb-2 block text-sm font-medium">
-                  Servings
-                </label>
-                <input
-                  id="servings"
-                  type="number"
-                  min="0.1"
-                  step="0.1"
-                  value={servings}
-                  onChange={(event) => setServings(event.target.value)}
-                  className="w-full rounded border border-slate-700 bg-slate-800 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500"
-                />
-              </div>
-              <button
-                type="submit"
-                className="w-full rounded bg-yellow-500 px-4 py-2 font-semibold text-slate-900 hover:bg-yellow-600"
+        <section className="rounded-lg bg-slate-900 p-6 mb-6">
+          <h2 className="mb-4 text-2xl font-bold">Select Menu Items</h2>
+          {success && (
+            <div className="mb-4 rounded border border-green-500 bg-green-500/10 px-4 py-3 text-green-400">
+              {success}
+            </div>
+          )}
+          {diningCourts.length > 0 && (
+            <div className="mb-4">
+              <label htmlFor="dining-court" className="mb-2 block text-sm font-medium">
+                Dining Court
+              </label>
+              <select
+                id="dining-court"
+                value={selectedDiningCourt}
+                onChange={(event) => {
+                  setSelectedDiningCourt(event.target.value);
+                }}
+                className="w-full rounded border border-slate-700 bg-slate-800 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500"
               >
-                Save Meal Locally
-              </button>
-            </form>
-          </section>
+                <option value="">All Dining Courts</option>
+                {diningCourts.map((court) => (
+                  <option key={court} value={court}>
+                    {court.charAt(0).toUpperCase() + court.slice(1)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
+          {foods.length === 0 ? (
+            <p className="text-slate-400">
+              {selectedDiningCourt 
+                ? 'No foods available for this dining court' 
+                : 'No foods available yet'}
+            </p>
+          ) : (
+            <div className="space-y-6">
+              {Object.entries(foodsByStation).sort(([a], [b]) => a.localeCompare(b)).map(([station, stationFoods]) => (
+                <div key={station} className="rounded-lg bg-slate-800 p-4">
+                  <h3 className="text-xl font-bold mb-3 text-yellow-500 uppercase tracking-wide">
+                    {station}
+                  </h3>
+                  <div className="space-y-2">
+                    {stationFoods.map((food) => {
+                      const macros = food.macros || {};
+                      return (
+                        <div
+                          key={food.id}
+                          className="flex items-center justify-between bg-slate-700 rounded px-4 py-3 hover:bg-slate-600 transition-colors"
+                        >
+                          <div className="flex-1">
+                            <div className="font-semibold text-white">{food.name}</div>
+                            <div className="text-sm text-slate-300">
+                              {food.calories} cal
+                              {(macros.protein || macros.carbs || macros.fats) && (
+                                <span className="ml-2">
+                                  • P: {Math.round(macros.protein || 0)}g
+                                  • C: {Math.round(macros.carbs || 0)}g
+                                  • F: {Math.round(macros.fats || 0)}g
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 ml-4">
+                            <button
+                              type="button"
+                              onClick={() => handleQuickAdd(food.id, 1)}
+                              className="rounded bg-green-600 hover:bg-green-700 text-white font-bold w-10 h-10 flex items-center justify-center transition-colors"
+                              title="Add 1 serving"
+                            >
+                              +
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <div className="grid gap-6 md:grid-cols-2">
           <section className="rounded-lg bg-slate-900 p-6">
             <h2 className="mb-4 text-2xl font-bold">Log an Activity</h2>
             {activityFormError && (
