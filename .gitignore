@@ -30,3 +30,4 @@ scraper/test_api.py
 .DS_Store
 *.db
 /tmp/
+.vercel
