@@ -1,10 +1,16 @@
 import Link from 'next/link';
+import Head from 'next/head';
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-slate-950 text-white flex items-center justify-center p-6">
-      <section className="max-w-2xl space-y-6 text-center">
-        <h1 className="text-4xl font-bold">BoilerFuel Calorie Tracker</h1>
+    <>
+      <Head>
+        <title>BoilerFuel Calorie Tracker - Home</title>
+        <meta name="description" content="Track dining hall meals, calculate macros, and keep your data private" />
+      </Head>
+      <main className="min-h-screen bg-slate-950 text-white flex items-center justify-center p-6">
+        <section className="max-w-2xl space-y-6 text-center">
+          <h1 className="text-4xl font-bold">BoilerFuel Calorie Tracker</h1>
         <p className="text-lg text-slate-300">
           Log dining hall meals, calculate macros, and keep everything private by storing your data
           locally in your browser. Admins can update the shared food list to keep the menu fresh.
@@ -23,7 +29,23 @@ export default function Home() {
             Admin login
           </Link>
         </div>
+        <div className="flex items-center justify-center gap-4 mt-6 text-sm">
+          <Link
+            href="/about"
+            className="text-slate-400 hover:text-yellow-400 transition-colors"
+          >
+            About
+          </Link>
+          <span className="text-slate-600">•</span>
+          <Link
+            href="/changelog"
+            className="text-slate-400 hover:text-yellow-400 transition-colors"
+          >
+            Changelog
+          </Link>
+        </div>
       </section>
     </main>
+    </>
   );
 }

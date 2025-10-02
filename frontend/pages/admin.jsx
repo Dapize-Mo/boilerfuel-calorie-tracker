@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import Head from 'next/head';
 import {
   adminLogin,
   apiCall,
@@ -231,17 +232,27 @@ export default function AdminPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
-        <div className="text-xl">Checking session...</div>
-      </main>
+      <>
+        <Head>
+          <title>Loading... - Admin Panel</title>
+        </Head>
+        <main className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
+          <div className="text-xl">Checking session...</div>
+        </main>
+      </>
     );
   }
 
   if (!authenticated) {
     return (
-      <main className="min-h-screen bg-slate-950 text-white flex items-center justify-center p-6">
-        <section className="w-full max-w-md rounded-lg bg-slate-900 p-8 shadow-xl">
-          <h1 className="mb-6 text-3xl font-bold text-center">Admin Login</h1>
+      <>
+        <Head>
+          <title>Admin Login - BoilerFuel</title>
+          <meta name="description" content="Admin login for BoilerFuel calorie tracker" />
+        </Head>
+        <main className="min-h-screen bg-slate-950 text-white flex items-center justify-center p-6">
+          <section className="w-full max-w-md rounded-lg bg-slate-900 p-8 shadow-xl">
+            <h1 className="mb-6 text-3xl font-bold text-center">Admin Login</h1>
           {loginError && (
             <div className="mb-4 rounded border border-red-500 bg-red-500/10 px-4 py-3 text-red-400">
               {loginError}
@@ -268,11 +279,11 @@ export default function AdminPage() {
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? (
-                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
                     </svg>
                   ) : (
-                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                     </svg>
@@ -289,15 +300,30 @@ export default function AdminPage() {
           </form>
         </section>
       </main>
+      </>
     );
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 text-white p-6">
-      <div className="mx-auto flex max-w-5xl flex-col gap-6">
-        <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h1 className="text-4xl font-bold">Admin Food & Activity Manager</h1>
+    <>
+      <Head>
+        <title>Admin Panel - BoilerFuel</title>
+        <meta name="description" content="Manage foods and activities for BoilerFuel calorie tracker" />
+      </Head>
+      <main className="min-h-screen bg-slate-950 text-white p-6">
+        <div className="mx-auto flex max-w-5xl flex-col gap-6">
+          {/* Navigation */}
+          <nav className="flex items-center gap-4 text-sm text-slate-400">
+            <a href="/" className="hover:text-yellow-400 transition-colors">← Home</a>
+            <span className="text-slate-600">|</span>
+            <a href="/dashboard" className="hover:text-yellow-400 transition-colors">Dashboard</a>
+            <span className="text-slate-600">|</span>
+            <a href="/about" className="hover:text-yellow-400 transition-colors">About</a>
+          </nav>
+
+          <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h1 className="text-4xl font-bold">Admin Food & Activity Manager</h1>
             <p className="text-slate-400">
               Manage foods and activities available to the public dashboard.
             </p>
@@ -533,5 +559,6 @@ export default function AdminPage() {
         </section>
       </div>
     </main>
+    </>
   );
 }

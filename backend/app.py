@@ -188,6 +188,7 @@ class Food(db.Model):
 	macros = db.Column(db.JSON, nullable=False)
 	dining_court = db.Column(db.String(100), nullable=True)
 	station = db.Column(db.String(255), nullable=True)
+	meal_time = db.Column(db.String(50), nullable=True)  # breakfast, lunch, dinner
 	created_at = db.Column(
 		db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
 	)
@@ -268,6 +269,11 @@ def get_foods():
 	if dining_court:
 		query = query.filter(Food.dining_court == dining_court)
 	
+	# Filter by meal time if specified
+	meal_time = request.args.get('meal_time')
+	if meal_time:
+		query = query.filter(Food.meal_time == meal_time)
+	
 	foods = query.all()
 	return (
 		jsonify([
@@ -278,6 +284,7 @@ def get_foods():
 				'macros': food.macros or {},
 				'dining_court': food.dining_court,
 				'station': food.station,
+				'meal_time': food.meal_time,
 			}
 			for food in foods
 		]),

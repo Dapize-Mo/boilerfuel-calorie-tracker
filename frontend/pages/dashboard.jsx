@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import Head from 'next/head';
 
 import { apiCall } from '../utils/auth';
 import { deleteCookie, readCookie, writeCookie } from '../utils/cookies';
@@ -105,6 +106,7 @@ export default function Dashboard() {
   const [activities, setActivities] = useState([]);
   const [diningCourts, setDiningCourts] = useState([]);
   const [selectedDiningCourt, setSelectedDiningCourt] = useState('');
+  const [selectedMealTime, setSelectedMealTime] = useState('');
   const [logs, setLogs] = useState(() => parseLogsCookie());
   const [activityLogs, setActivityLogs] = useState(() => parseActivityLogsCookie());
   const [selectedFood, setSelectedFood] = useState('');
@@ -169,9 +171,14 @@ export default function Dashboard() {
 
     async function loadFoods() {
       try {
-        const url = selectedDiningCourt 
-          ? `/api/foods?dining_court=${encodeURIComponent(selectedDiningCourt)}`
-          : '/api/foods';
+        const params = new URLSearchParams();
+        if (selectedDiningCourt) {
+          params.append('dining_court', selectedDiningCourt);
+        }
+        if (selectedMealTime) {
+          params.append('meal_time', selectedMealTime);
+        }
+        const url = params.toString() ? `/api/foods?${params.toString()}` : '/api/foods';
         const data = await apiCall(url);
         if (!isMounted) return;
         setFoods(Array.isArray(data) ? data : []);
@@ -187,7 +194,7 @@ export default function Dashboard() {
     return () => {
       isMounted = false;
     };
-  }, [selectedDiningCourt]);
+  }, [selectedDiningCourt, selectedMealTime]);
 
   const foodsById = useMemo(() => {
     const map = new Map();
@@ -392,30 +399,47 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
-        <div className="text-xl">Loading menu...</div>
-      </main>
+      <>
+        <Head>
+          <title>Loading... - BoilerFuel Dashboard</title>
+        </Head>
+        <main className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
+          <div className="text-xl">Loading menu...</div>
+        </main>
+      </>
     );
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 text-white p-6">
-      <div className="mx-auto max-w-6xl space-y-6">
-        <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h1 className="text-4xl font-bold">BoilerFuel Dashboard</h1>
-            <p className="text-slate-400">Track meals and activities—all data stays on this device only.</p>
-          </div>
-          <button
-            type="button"
-            onClick={handleClearLogs}
-            className="self-start rounded bg-slate-800 px-4 py-2 text-sm font-semibold text-slate-200 hover:bg-slate-700"
-          >
-            Clear all logs
-          </button>
-        </header>
+    <>
+      <Head>
+        <title>BoilerFuel Dashboard - Track Your Meals</title>
+        <meta name="description" content="Track your meals and activities with BoilerFuel calorie tracker" />
+      </Head>
+      <main className="min-h-screen bg-slate-950 text-white p-6">
+        <div className="mx-auto max-w-6xl space-y-6">
+          {/* Navigation */}
+          <nav className="flex items-center gap-4 text-sm text-slate-400">
+            <a href="/" className="hover:text-yellow-400 transition-colors">← Home</a>
+            <span className="text-slate-600">|</span>
+            <a href="/about" className="hover:text-yellow-400 transition-colors">About</a>
+            <span className="text-slate-600">|</span>
+            <a href="/changelog" className="hover:text-yellow-400 transition-colors">Changelog</a>
+          </nav>
 
-        {menuError && (
+          <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h1 className="text-4xl font-bold">BoilerFuel Dashboard</h1>
+              <p className="text-slate-400">Track meals and activities—all data stays on this device only.</p>
+            </div>
+            <button
+              type="button"
+              onClick={handleClearLogs}
+              className="self-start rounded bg-slate-800 px-4 py-2 text-sm font-semibold text-slate-200 hover:bg-slate-700"
+            >
+              Clear all logs
+            </button>
+          </header>        {menuError && (
           <div className="rounded border border-red-500 bg-red-500/10 px-4 py-3 text-red-400">
             {menuError}
           </div>
@@ -443,33 +467,84 @@ export default function Dashboard() {
               {success}
             </div>
           )}
-          {diningCourts.length > 0 && (
-            <div className="mb-4">
-              <label htmlFor="dining-court" className="mb-2 block text-sm font-medium">
-                Dining Court
+          
+          <div className="grid gap-4 mb-4 md:grid-cols-2">
+            {diningCourts.length > 0 && (
+              <div>
+                <label htmlFor="dining-court" className="mb-2 block text-sm font-medium text-slate-300">
+                  Dining Court
+                </label>
+                <select
+                  id="dining-court"
+                  value={selectedDiningCourt}
+                  onChange={(event) => {
+                    setSelectedDiningCourt(event.target.value);
+                  }}
+                  className="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all"
+                >
+                  <option value="">All Dining Courts</option>
+                  {diningCourts.map((court) => (
+                    <option key={court} value={court}>
+                      {court.charAt(0).toUpperCase() + court.slice(1)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            
+            <div>
+              <label htmlFor="meal-time" className="mb-2 block text-sm font-medium text-slate-300">
+                Meal Time
               </label>
               <select
-                id="dining-court"
-                value={selectedDiningCourt}
+                id="meal-time"
+                value={selectedMealTime}
                 onChange={(event) => {
-                  setSelectedDiningCourt(event.target.value);
+                  setSelectedMealTime(event.target.value);
                 }}
-                className="w-full rounded border border-slate-700 bg-slate-800 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                className="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all"
               >
-                <option value="">All Dining Courts</option>
-                {diningCourts.map((court) => (
-                  <option key={court} value={court}>
-                    {court.charAt(0).toUpperCase() + court.slice(1)}
-                  </option>
-                ))}
+                <option value="">All Meal Times</option>
+                <option value="breakfast">🌅 Breakfast</option>
+                <option value="lunch">☀️ Lunch</option>
+                <option value="dinner">🌙 Dinner</option>
               </select>
+            </div>
+          </div>
+
+          {(selectedDiningCourt || selectedMealTime) && (
+            <div className="mb-4 flex flex-wrap gap-2 items-center">
+              <span className="text-sm text-slate-400">Filtering by:</span>
+              {selectedDiningCourt && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-yellow-500/20 border border-yellow-500/50 px-3 py-1 text-sm font-medium text-yellow-300">
+                  📍 {selectedDiningCourt.charAt(0).toUpperCase() + selectedDiningCourt.slice(1)}
+                </span>
+              )}
+              {selectedMealTime && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/20 border border-blue-500/50 px-3 py-1 text-sm font-medium text-blue-300">
+                  {selectedMealTime === 'breakfast' && '🌅'}
+                  {selectedMealTime === 'lunch' && '☀️'}
+                  {selectedMealTime === 'dinner' && '🌙'}
+                  {' '}{selectedMealTime.charAt(0).toUpperCase() + selectedMealTime.slice(1)}
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedDiningCourt('');
+                  setSelectedMealTime('');
+                }}
+                className="text-sm text-slate-400 hover:text-yellow-400 underline transition-colors"
+              >
+                Clear filters
+              </button>
             </div>
           )}
 
           {foods.length === 0 ? (
             <p className="text-slate-400">
-              {selectedDiningCourt 
-                ? 'No foods available for this dining court' 
+              {selectedDiningCourt || selectedMealTime
+                ? 'No foods available for the selected filters' 
                 : 'No foods available yet'}
             </p>
           ) : (
@@ -684,6 +759,7 @@ export default function Dashboard() {
         </div>
       </div>
     </main>
+    </>
   );
 }
 
