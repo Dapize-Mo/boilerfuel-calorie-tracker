@@ -147,7 +147,7 @@ export default function About() {
                 <li>Data stays on your device only</li>
               </ul>
               <p className="text-sm text-slate-400 mt-4">
-                <strong>Note:</strong> Because data is stored locally, it won't sync across devices. If you clear 
+                <strong>Note:</strong> Because data is stored locally, it won&apos;t sync across devices. If you clear 
                 your browser cookies, your logs will be deleted.
               </p>
             </div>

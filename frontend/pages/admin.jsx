@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import Head from 'next/head';
+import Link from 'next/link';
 import {
   adminLogin,
   apiCall,
@@ -314,11 +315,11 @@ export default function AdminPage() {
         <div className="mx-auto flex max-w-5xl flex-col gap-6">
           {/* Navigation */}
           <nav className="flex items-center gap-4 text-sm text-slate-400">
-            <a href="/" className="hover:text-yellow-400 transition-colors">← Home</a>
+            <Link href="/" className="hover:text-yellow-400 transition-colors">← Home</Link>
             <span className="text-slate-600">|</span>
-            <a href="/dashboard" className="hover:text-yellow-400 transition-colors">Dashboard</a>
+            <Link href="/dashboard" className="hover:text-yellow-400 transition-colors">Dashboard</Link>
             <span className="text-slate-600">|</span>
-            <a href="/about" className="hover:text-yellow-400 transition-colors">About</a>
+            <Link href="/about" className="hover:text-yellow-400 transition-colors">About</Link>
           </nav>
 
           <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
