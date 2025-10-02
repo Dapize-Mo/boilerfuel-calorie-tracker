@@ -543,5 +543,29 @@ def scrape_menus():
 		return jsonify({'error': f'Scraping failed: {str(exc)}'}), 500
 
 
+@app.route('/api/admin/clear-placeholders', methods=['DELETE'])
+@admin_required
+def clear_placeholders():
+	"""Delete placeholder/test food items (items without a dining_court)."""
+	try:
+		# Find and delete foods without a dining_court
+		placeholders = Food.query.filter_by(dining_court=None).all()
+		count = len(placeholders)
+		
+		for food in placeholders:
+			db.session.delete(food)
+		
+		db.session.commit()
+		
+		return jsonify({
+			'message': f'Successfully deleted {count} placeholder items',
+			'deleted_count': count
+		}), 200
+		
+	except Exception as exc:
+		db.session.rollback()
+		return jsonify({'error': f'Failed to delete placeholders: {str(exc)}'}), 500
+
+
 if __name__ == '__main__':
 	app.run(debug=True)
