@@ -455,10 +455,163 @@ def init_database():
 		return jsonify({'error': f'Database initialization failed: {exc}'}), 500
 
 
+import threading
+
+# Global variable to track scraping status
+scraping_status = {
+	'in_progress': False,
+	'last_result': None,
+	'last_error': None
+}
+
+def run_scraper_background():
+	"""Background function to run the scraper without blocking the HTTP request."""
+	global scraping_status
+	
+	try:
+		# Import scraper functions
+		import sys
+		import os
+		scraper_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'scraper')
+		if scraper_path not in sys.path:
+			sys.path.insert(0, scraper_path)
+		
+		from menu_scraper import scrape_all_dining_courts
+		
+		with app.app_context():
+			# Scrape menus with caching enabled
+			items = scrape_all_dining_courts(use_cache=True)
+			
+			if not items:
+				scraping_status['in_progress'] = False
+				scraping_status['last_error'] = 'No menu items found'
+				return
+			
+			# Save to database with smart updates
+			added_count = 0
+			updated_count = 0
+			skipped_count = 0
+			
+			for item in items:
+				# Skip items with no nutrition data
+				if item['calories'] == 0 and item['protein'] == 0 and item['carbs'] == 0 and item['fats'] == 0:
+					skipped_count += 1
+					continue
+				
+				# Check if item already exists
+				existing = Food.query.filter_by(
+					name=item['name'],
+					dining_court=item.get('dining_court')
+				).first()
+				
+				if existing:
+					# Update if existing item has no nutrition data
+					if existing.calories == 0 and item['calories'] > 0:
+						existing.calories = item['calories']
+						existing.macros = {
+							'protein': item['protein'],
+							'carbs': item['carbs'],
+							'fats': item['fats']
+						}
+						existing.station = item.get('station')
+						updated_count += 1
+					else:
+						skipped_count += 1
+				else:
+					# Add new food item
+					food = Food(
+						name=item['name'],
+						calories=item['calories'],
+						macros={
+							'protein': item['protein'],
+							'carbs': item['carbs'],
+							'fats': item['fats']
+						},
+						dining_court=item.get('dining_court'),
+						station=item.get('station')
+					)
+					db.session.add(food)
+					added_count += 1
+			
+			db.session.commit()
+			
+			scraping_status['in_progress'] = False
+			scraping_status['last_result'] = {
+				'items_added': added_count,
+				'items_updated': updated_count,
+				'items_skipped': skipped_count,
+				'total_scraped': len(items)
+			}
+			scraping_status['last_error'] = None
+			
+	except Exception as exc:
+		try:
+			db.session.rollback()
+		except:
+			pass
+		scraping_status['in_progress'] = False
+		scraping_status['last_error'] = str(exc)
+		import traceback
+		traceback.print_exc()
+
 @app.route('/api/scrape-menus', methods=['POST'])
 @admin_required
 def scrape_menus():
-	"""Scrape Purdue dining court menus and add to database using the new scraper with caching."""
+	"""Start scraping Purdue dining court menus in the background."""
+	global scraping_status
+	
+	if scraping_status['in_progress']:
+		return jsonify({'error': 'Scraping already in progress'}), 409
+	
+	# Start scraping in background thread
+	scraping_status['in_progress'] = True
+	scraping_status['last_result'] = None
+	scraping_status['last_error'] = None
+	
+	thread = threading.Thread(target=run_scraper_background, daemon=True)
+	thread.start()
+	
+	return jsonify({
+		'message': 'Scraping started in background. Check /api/scrape-status for progress.'
+	}), 202
+
+@app.route('/api/scrape-status', methods=['GET'])
+@admin_required
+def scrape_status():
+	"""Check the status of the scraping operation."""
+	global scraping_status
+	
+	if scraping_status['in_progress']:
+		return jsonify({
+			'status': 'in_progress',
+			'message': 'Scraping is currently running...'
+		}), 200
+	elif scraping_status['last_error']:
+		return jsonify({
+			'status': 'error',
+			'error': scraping_status['last_error']
+		}), 500
+	elif scraping_status['last_result']:
+		result = scraping_status['last_result']
+		message = f"Menu scraping complete! Added {result['items_added']} new items"
+		if result['items_updated'] > 0:
+			message += f", updated {result['items_updated']} items"
+		
+		return jsonify({
+			'status': 'complete',
+			'message': message,
+			**result
+		}), 200
+	else:
+		return jsonify({
+			'status': 'idle',
+			'message': 'No scraping operation has been run yet'
+		}), 200
+
+@app.route('/api/scrape-menus-sync', methods=['POST'])
+@admin_required
+def scrape_menus_sync():
+	"""Scrape Purdue dining court menus synchronously (original blocking version)."""
 	try:
 		# Import scraper functions
 		import sys
