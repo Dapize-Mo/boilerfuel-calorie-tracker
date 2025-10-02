@@ -184,9 +184,13 @@ export default function AdminPage() {
     setScrapeSuccess('');
 
     try {
-      const response = await apiCall('/api/scrape-menus', {
-        method: 'POST',
-      });
+      const response = await apiCall(
+        '/api/scrape-menus',
+        {
+          method: 'POST',
+        },
+        { requireAdmin: true }
+      );
       setScrapeSuccess(
         `Successfully scraped ${response.items_added} new items! (${response.items_skipped} duplicates skipped)`
       );
