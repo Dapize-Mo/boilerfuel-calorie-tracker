@@ -26,6 +26,39 @@ app = Flask(__name__)
 
 # Allow the frontend (Next.js) to communicate with the API during development/hosting
 cors_origin = os.getenv('FRONTEND_ORIGIN', '*')
+
+# If FRONTEND_ORIGIN is set, also allow Vercel preview deployments
+if cors_origin and cors_origin != '*':
+	# Split by comma to support multiple origins
+	allowed_origins = [origin.strip() for origin in cors_origin.split(',')]
+else:
+	allowed_origins = cors_origin
+
+def is_vercel_domain(origin):
+	"""Check if origin is from Vercel (includes preview deployments)"""
+	if not origin:
+		return False
+	return origin.startswith('https://') and '.vercel.app' in origin
+
+# Custom CORS handler to allow Vercel preview URLs
+@app.after_request
+def after_request(response):
+	origin = request.headers.get('Origin')
+	
+	# Check if origin is allowed
+	if cors_origin == '*':
+		response.headers['Access-Control-Allow-Origin'] = '*'
+	elif isinstance(allowed_origins, list):
+		if origin in allowed_origins or is_vercel_domain(origin):
+			response.headers['Access-Control-Allow-Origin'] = origin
+	elif origin == allowed_origins or is_vercel_domain(origin):
+		response.headers['Access-Control-Allow-Origin'] = origin
+	
+	response.headers['Access-Control-Allow-Credentials'] = 'true'
+	response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+	response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+	return response
+
 CORS(
 	app,
 	resources={r"/api/*": {"origins": cors_origin}},
