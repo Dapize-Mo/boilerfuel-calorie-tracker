@@ -184,21 +184,47 @@ export default function AdminPage() {
     setScrapeSuccess('');
 
     try {
-      const response = await apiCall(
+      // Start the scraping process
+      await apiCall(
         '/api/scrape-menus',
         {
           method: 'POST',
         },
         { requireAdmin: true }
       );
-      setScrapeSuccess(
-        `Successfully scraped ${response.items_added} new items! (${response.items_skipped} duplicates skipped)`
-      );
-      await loadFoods();
-      setTimeout(() => setScrapeSuccess(''), 5000);
+      
+      // Poll for status
+      const pollStatus = async () => {
+        try {
+          const response = await apiCall(
+            '/api/scrape-status',
+            { method: 'GET' },
+            { requireAdmin: true }
+          );
+          
+          if (response.status === 'in_progress') {
+            setScrapeSuccess('Scraping in progress...');
+            setTimeout(pollStatus, 2000); // Check again in 2 seconds
+          } else if (response.status === 'complete') {
+            setScrapeSuccess(response.message);
+            await loadFoods();
+            setTimeout(() => setScrapeSuccess(''), 10000);
+            setScrapeLoading(false);
+          } else if (response.status === 'error') {
+            setScrapeError(response.error || 'Failed to scrape menus');
+            setScrapeLoading(false);
+          }
+        } catch (error) {
+          setScrapeError(error.message || 'Failed to check scrape status');
+          setScrapeLoading(false);
+        }
+      };
+      
+      // Start polling
+      pollStatus();
+      
     } catch (error) {
-      setScrapeError(error.message || 'Failed to scrape menus');
-    } finally {
+      setScrapeError(error.message || 'Failed to start scraping');
       setScrapeLoading(false);
     }
   }
