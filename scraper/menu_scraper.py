@@ -221,7 +221,7 @@ def scrape_purdue_menu_api(dining_court='Wiley', date_str=None, nutrition_cache=
                 
                 # Small delay to avoid rate limiting
                 if (idx + 1) % 10 == 0:
-                    time.sleep(0.5)
+                    time.sleep(0.1)  # Reduced from 0.5 to 0.1
             
             menu_items.append({
                 'name': item_info['name'],
