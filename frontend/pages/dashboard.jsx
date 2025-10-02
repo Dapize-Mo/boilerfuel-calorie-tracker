@@ -103,6 +103,8 @@ function isSameDay(timestamp, todayStart) {
 export default function Dashboard() {
   const [foods, setFoods] = useState([]);
   const [activities, setActivities] = useState([]);
+  const [diningCourts, setDiningCourts] = useState([]);
+  const [selectedDiningCourt, setSelectedDiningCourt] = useState('');
   const [logs, setLogs] = useState(() => parseLogsCookie());
   const [activityLogs, setActivityLogs] = useState(() => parseActivityLogsCookie());
   const [selectedFood, setSelectedFood] = useState('');
@@ -121,18 +123,14 @@ export default function Dashboard() {
   useEffect(() => {
     let isMounted = true;
 
-    async function loadFoods() {
+    async function loadDiningCourts() {
       try {
-        const data = await apiCall('/api/foods');
+        const data = await apiCall('/api/dining-courts');
         if (!isMounted) return;
-        setFoods(Array.isArray(data) ? data : []);
+        setDiningCourts(Array.isArray(data) ? data : []);
       } catch (error) {
-        if (!isMounted) return;
-        setMenuError(error?.message || 'Failed to load menu items.');
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+        // Not critical if this fails
+        console.error('Failed to load dining courts:', error);
       }
     }
 
@@ -150,8 +148,9 @@ export default function Dashboard() {
       }
     }
 
-    loadFoods();
+    loadDiningCourts();
     loadActivities();
+    setLoading(false);
 
     return () => {
       isMounted = false;
@@ -164,6 +163,31 @@ export default function Dashboard() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadFoods() {
+      try {
+        const url = selectedDiningCourt 
+          ? `/api/foods?dining_court=${encodeURIComponent(selectedDiningCourt)}`
+          : '/api/foods';
+        const data = await apiCall(url);
+        if (!isMounted) return;
+        setFoods(Array.isArray(data) ? data : []);
+        setMenuError('');
+      } catch (error) {
+        if (!isMounted) return;
+        setMenuError(error?.message || 'Failed to load menu items.');
+      }
+    }
+
+    loadFoods();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedDiningCourt]);
 
   const foodsById = useMemo(() => {
     const map = new Map();
@@ -396,9 +420,37 @@ export default function Dashboard() {
               </div>
             )}
             <form onSubmit={handleAddLog} className="space-y-4">
+              {diningCourts.length > 0 && (
+                <div>
+                  <label htmlFor="dining-court" className="mb-2 block text-sm font-medium">
+                    Dining Court
+                  </label>
+                  <select
+                    id="dining-court"
+                    value={selectedDiningCourt}
+                    onChange={(event) => {
+                      setSelectedDiningCourt(event.target.value);
+                      setSelectedFood(''); // Reset food selection when court changes
+                    }}
+                    className="w-full rounded border border-slate-700 bg-slate-800 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                  >
+                    <option value="">All Dining Courts</option>
+                    {diningCourts.map((court) => (
+                      <option key={court} value={court}>
+                        {court.charAt(0).toUpperCase() + court.slice(1)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div>
                 <label htmlFor="food" className="mb-2 block text-sm font-medium">
                   Food Item
+                  {selectedDiningCourt && (
+                    <span className="ml-2 text-xs text-slate-400">
+                      ({foods.length} items available)
+                    </span>
+                  )}
                 </label>
                 <select
                   id="food"
@@ -407,11 +459,22 @@ export default function Dashboard() {
                   required
                   className="w-full rounded border border-slate-700 bg-slate-800 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500"
                 >
-                  <option value="">Select a food...</option>
-                  {foods.length === 0 && <option disabled value="">No foods available yet</option>}
+                  <option value="">
+                    {selectedDiningCourt 
+                      ? `Select a food from ${selectedDiningCourt}...` 
+                      : 'Select a food...'}
+                  </option>
+                  {foods.length === 0 && (
+                    <option disabled value="">
+                      {selectedDiningCourt 
+                        ? 'No foods available for this dining court' 
+                        : 'No foods available yet'}
+                    </option>
+                  )}
                   {foods.map((food) => (
                     <option key={food.id} value={food.id}>
                       {food.name} ({food.calories} cal)
+                      {food.station ? ` - ${food.station}` : ''}
                     </option>
                   ))}
                 </select>
@@ -518,6 +581,15 @@ export default function Dashboard() {
                           <p className="text-sm text-slate-400">
                             {servingsValue} {servingsValue === 1 ? 'serving' : 'servings'}
                           </p>
+                          {(food.dining_court || food.station) && (
+                            <p className="text-xs text-slate-500 mt-1">
+                              {food.dining_court && (
+                                <span className="capitalize">{food.dining_court}</span>
+                              )}
+                              {food.dining_court && food.station && ' • '}
+                              {food.station}
+                            </p>
+                          )}
                         </div>
                         <div className="text-right">
                           <p className="font-semibold text-yellow-500">

@@ -36,6 +36,9 @@ export default function AdminPage() {
   const [activityError, setActivityError] = useState('');
   const [activitySuccess, setActivitySuccess] = useState('');
   const [loading, setLoading] = useState(true);
+  const [scrapeLoading, setScrapeLoading] = useState(false);
+  const [scrapeError, setScrapeError] = useState('');
+  const [scrapeSuccess, setScrapeSuccess] = useState('');
 
   useEffect(() => {
     async function bootstrap() {
@@ -174,6 +177,27 @@ export default function AdminPage() {
     setActivities([]);
   }
 
+  async function handleScrapeMenus() {
+    setScrapeLoading(true);
+    setScrapeError('');
+    setScrapeSuccess('');
+
+    try {
+      const response = await apiCall('/api/scrape-menus', {
+        method: 'POST',
+      });
+      setScrapeSuccess(
+        `Successfully scraped ${response.items_added} new items! (${response.items_skipped} duplicates skipped)`
+      );
+      await loadFoods();
+      setTimeout(() => setScrapeSuccess(''), 5000);
+    } catch (error) {
+      setScrapeError(error.message || 'Failed to scrape menus');
+    } finally {
+      setScrapeLoading(false);
+    }
+  }
+
   if (loading) {
     return (
       <main className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
@@ -228,14 +252,35 @@ export default function AdminPage() {
               Manage foods and activities available to the public dashboard.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="self-start rounded bg-slate-800 px-4 py-2 font-semibold text-slate-200 hover:bg-slate-700"
-          >
-            Logout
-          </button>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={handleScrapeMenus}
+              disabled={scrapeLoading}
+              className="self-start rounded bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {scrapeLoading ? 'Scraping...' : 'Scrape Purdue Menus'}
+            </button>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="self-start rounded bg-slate-800 px-4 py-2 font-semibold text-slate-200 hover:bg-slate-700"
+            >
+              Logout
+            </button>
+          </div>
         </header>
+
+        {scrapeError && (
+          <div className="rounded border border-red-500 bg-red-500/10 px-4 py-3 text-red-400">
+            {scrapeError}
+          </div>
+        )}
+        {scrapeSuccess && (
+          <div className="rounded border border-green-500 bg-green-500/10 px-4 py-3 text-green-400">
+            {scrapeSuccess}
+          </div>
+        )}
 
         <section className="rounded-lg bg-slate-900 p-6">
           <h2 className="mb-4 text-2xl font-bold">Add Food</h2>

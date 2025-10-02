@@ -31,5 +31,10 @@ CREATE TABLE IF NOT EXISTS foods (
     name VARCHAR(255) NOT NULL,
     calories INT NOT NULL,
     macros JSONB NOT NULL,
+    dining_court VARCHAR(100),
+    station VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Create index for faster filtering by dining court
+CREATE INDEX IF NOT EXISTS idx_foods_dining_court ON foods(dining_court);

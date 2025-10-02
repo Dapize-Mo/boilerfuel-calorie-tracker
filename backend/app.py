@@ -153,6 +153,8 @@ class Food(db.Model):
 	name = db.Column(db.String(255), nullable=False)
 	calories = db.Column(db.Integer, nullable=False)
 	macros = db.Column(db.JSON, nullable=False)
+	dining_court = db.Column(db.String(100), nullable=True)
+	station = db.Column(db.String(255), nullable=True)
 	created_at = db.Column(
 		db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
 	)
@@ -207,6 +209,19 @@ def admin_session():
 	return jsonify({'status': 'ok'}), 200
 
 
+@app.route('/api/dining-courts', methods=['GET'])
+def get_dining_courts():
+	"""Get list of available dining courts from the foods table."""
+	try:
+		result = db.session.execute(
+			text('SELECT DISTINCT dining_court FROM foods WHERE dining_court IS NOT NULL ORDER BY dining_court')
+		)
+		courts = [row[0] for row in result if row[0]]
+		return jsonify(courts), 200
+	except Exception as exc:
+		return jsonify({'error': f'Failed to fetch dining courts: {exc}'}), 500
+
+
 @app.route('/api/foods', methods=['GET'])
 def get_foods():
 	query = Food.query.order_by(Food.name.asc())
@@ -214,6 +229,12 @@ def get_foods():
 	if search:
 		like = f"%{search.strip()}%"
 		query = query.filter(Food.name.ilike(like))
+	
+	# Filter by dining court if specified
+	dining_court = request.args.get('dining_court')
+	if dining_court:
+		query = query.filter(Food.dining_court == dining_court)
+	
 	foods = query.all()
 	return (
 		jsonify([
@@ -222,6 +243,8 @@ def get_foods():
 				'name': food.name,
 				'calories': food.calories,
 				'macros': food.macros or {},
+				'dining_court': food.dining_court,
+				'station': food.station,
 			}
 			for food in foods
 		]),
@@ -253,6 +276,8 @@ def add_food():
 				'carbs': float(macros['carbs']),
 				'fats': float(macros['fats']),
 			},
+			dining_court=data.get('dining_court'),
+			station=data.get('station'),
 		)
 		db.session.add(food)
 		db.session.commit()
@@ -263,6 +288,8 @@ def add_food():
 				'name': food.name,
 				'calories': food.calories,
 				'macros': food.macros,
+				'dining_court': food.dining_court,
+				'station': food.station,
 			},
 		}), 201
 	except Exception as exc:  # pragma: no cover - defensive guard
@@ -426,6 +453,70 @@ def init_database():
 	except Exception as exc:  # pragma: no cover - defensive guard
 		db.session.rollback()
 		return jsonify({'error': f'Database initialization failed: {exc}'}), 500
+
+
+@app.route('/api/scrape-menus', methods=['POST'])
+@admin_required
+def scrape_menus():
+	"""Scrape Purdue dining court menus and add to database."""
+	try:
+		# Import scraper functions
+		import sys
+		import os
+		scraper_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'scraper')
+		if scraper_path not in sys.path:
+			sys.path.insert(0, scraper_path)
+		
+		from menu_scraper import scrape_all_dining_courts
+		
+		# Scrape menus
+		items = scrape_all_dining_courts()
+		
+		if not items:
+			return jsonify({'error': 'No menu items found'}), 404
+		
+		# Save to database
+		added_count = 0
+		skipped_count = 0
+		
+		for item in items:
+			# Check if item already exists (avoid duplicates)
+			existing = Food.query.filter_by(
+				name=item['name'],
+				dining_court=item.get('dining_court')
+			).first()
+			
+			if existing:
+				skipped_count += 1
+				continue
+			
+			# Add new food item
+			food = Food(
+				name=item['name'],
+				calories=item['calories'],
+				macros={
+					'protein': item['protein'],
+					'carbs': item['carbs'],
+					'fats': item['fats']
+				},
+				dining_court=item.get('dining_court'),
+				station=item.get('station')
+			)
+			db.session.add(food)
+			added_count += 1
+		
+		db.session.commit()
+		
+		return jsonify({
+			'message': 'Menu scraping complete!',
+			'items_added': added_count,
+			'items_skipped': skipped_count,
+			'total_scraped': len(items)
+		}), 201
+		
+	except Exception as exc:
+		db.session.rollback()
+		return jsonify({'error': f'Scraping failed: {exc}'}), 500
 
 
 if __name__ == '__main__':
