@@ -17,6 +17,14 @@ backend/.env
 __pycache__/
 *.pyc
 
+# Debug/test scripts
+clear_placeholders_api.py
+delete_placeholders.py
+scraper/debug_scraper.py
+scraper/debug_page.html
+scraper/show_stats.py
+scraper/test_api.py
+
 # IDE
 .vscode/
 .DS_Store
