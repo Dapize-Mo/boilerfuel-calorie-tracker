@@ -458,7 +458,7 @@ def init_database():
 @app.route('/api/scrape-menus', methods=['POST'])
 @admin_required
 def scrape_menus():
-	"""Scrape Purdue dining court menus and add to database."""
+	"""Scrape Purdue dining court menus and add to database using the new scraper with caching."""
 	try:
 		# Import scraper functions
 		import sys
@@ -469,54 +469,78 @@ def scrape_menus():
 		
 		from menu_scraper import scrape_all_dining_courts
 		
-		# Scrape menus
-		items = scrape_all_dining_courts()
+		# Scrape menus with caching enabled
+		items = scrape_all_dining_courts(use_cache=True)
 		
 		if not items:
 			return jsonify({'error': 'No menu items found'}), 404
 		
-		# Save to database
+		# Save to database with smart updates
 		added_count = 0
+		updated_count = 0
 		skipped_count = 0
 		
 		for item in items:
-			# Check if item already exists (avoid duplicates)
+			# Skip items with no nutrition data
+			if item['calories'] == 0 and item['protein'] == 0 and item['carbs'] == 0 and item['fats'] == 0:
+				skipped_count += 1
+				continue
+			
+			# Check if item already exists
 			existing = Food.query.filter_by(
 				name=item['name'],
 				dining_court=item.get('dining_court')
 			).first()
 			
 			if existing:
-				skipped_count += 1
-				continue
-			
-			# Add new food item
-			food = Food(
-				name=item['name'],
-				calories=item['calories'],
-				macros={
-					'protein': item['protein'],
-					'carbs': item['carbs'],
-					'fats': item['fats']
-				},
-				dining_court=item.get('dining_court'),
-				station=item.get('station')
-			)
-			db.session.add(food)
-			added_count += 1
+				# Update if existing item has no nutrition data
+				if existing.calories == 0 and item['calories'] > 0:
+					existing.calories = item['calories']
+					existing.macros = {
+						'protein': item['protein'],
+						'carbs': item['carbs'],
+						'fats': item['fats']
+					}
+					existing.station = item.get('station')
+					updated_count += 1
+				else:
+					skipped_count += 1
+			else:
+				# Add new food item
+				food = Food(
+					name=item['name'],
+					calories=item['calories'],
+					macros={
+						'protein': item['protein'],
+						'carbs': item['carbs'],
+						'fats': item['fats']
+					},
+					dining_court=item.get('dining_court'),
+					station=item.get('station')
+				)
+				db.session.add(food)
+				added_count += 1
 		
 		db.session.commit()
 		
+		message = f'Menu scraping complete! Added {added_count} new items'
+		if updated_count > 0:
+			message += f', updated {updated_count} items'
+		
 		return jsonify({
-			'message': 'Menu scraping complete!',
+			'message': message,
 			'items_added': added_count,
+			'items_updated': updated_count,
 			'items_skipped': skipped_count,
 			'total_scraped': len(items)
 		}), 201
 		
 	except Exception as exc:
 		db.session.rollback()
-		return jsonify({'error': f'Scraping failed: {exc}'}), 500
+		import traceback
+		error_details = traceback.format_exc()
+		print(f"Scraping error: {error_details}")
+		return jsonify({'error': f'Scraping failed: {str(exc)}'}), 500
 
 
 if __name__ == '__main__':
