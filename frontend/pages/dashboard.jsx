@@ -423,6 +423,8 @@ export default function Dashboard() {
           <nav className="flex items-center gap-4 text-sm text-slate-400">
             <Link href="/" className="hover:text-yellow-400 transition-colors">← Home</Link>
             <span className="text-slate-600">|</span>
+            <Link href="/gym" className="hover:text-yellow-400 transition-colors">💪 Gym</Link>
+            <span className="text-slate-600">|</span>
             <Link href="/about" className="hover:text-yellow-400 transition-colors">About</Link>
             <span className="text-slate-600">|</span>
             <Link href="/changelog" className="hover:text-yellow-400 transition-colors">Changelog</Link>
@@ -599,61 +601,6 @@ export default function Dashboard() {
         </section>
 
         <div className="grid gap-6 md:grid-cols-2">
-          <section className="rounded-lg bg-slate-900 p-6">
-            <h2 className="mb-4 text-2xl font-bold">Log an Activity</h2>
-            {activityFormError && (
-              <div className="mb-4 rounded border border-red-500 bg-red-500/10 px-4 py-3 text-red-400">
-                {activityFormError}
-              </div>
-            )}
-            {activitySuccess && (
-              <div className="mb-4 rounded border border-green-500 bg-green-500/10 px-4 py-3 text-green-400">
-                {activitySuccess}
-              </div>
-            )}
-            <form onSubmit={handleAddActivity} className="space-y-4">
-              <div>
-                <label htmlFor="activity" className="mb-2 block text-sm font-medium">
-                  Activity
-                </label>
-                <select
-                  id="activity"
-                  value={selectedActivity}
-                  onChange={(event) => setSelectedActivity(event.target.value)}
-                  required
-                  className="w-full rounded border border-slate-700 bg-slate-800 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500"
-                >
-                  <option value="">Select an activity...</option>
-                  {activities.length === 0 && <option disabled value="">No activities available yet</option>}
-                  {activities.map((activity) => (
-                    <option key={activity.id} value={activity.id}>
-                      {activity.name} ({activity.calories_per_hour} cal/hr)
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label htmlFor="duration" className="mb-2 block text-sm font-medium">
-                  Duration (minutes)
-                </label>
-                <input
-                  id="duration"
-                  type="number"
-                  min="1"
-                  step="1"
-                  value={duration}
-                  onChange={(event) => setDuration(event.target.value)}
-                  className="w-full rounded border border-slate-700 bg-slate-800 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500"
-                />
-              </div>
-              <button
-                type="submit"
-                className="w-full rounded bg-orange-500 px-4 py-2 font-semibold text-slate-900 hover:bg-orange-600"
-              >
-                Save Activity Locally
-              </button>
-            </form>
-          </section>
 
           <section className="rounded-lg bg-slate-900 p-6">
             <h2 className="mb-4 text-2xl font-bold">Today’s Meals</h2>
@@ -714,12 +661,28 @@ export default function Dashboard() {
           </section>
 
           <section className="rounded-lg bg-slate-900 p-6">
-            <h2 className="mb-4 text-2xl font-bold">Today&apos;s Activities</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold">Today&apos;s Activities</h2>
+              <Link 
+                href="/gym"
+                className="text-sm bg-orange-500 hover:bg-orange-600 text-slate-900 font-semibold px-4 py-2 rounded transition-colors"
+              >
+                💪 Full Gym Dashboard
+              </Link>
+            </div>
             {todaysActivityLogs.length === 0 ? (
-              <p className="text-slate-400">No activities logged yet today.</p>
+              <div className="text-center py-8">
+                <p className="text-slate-400 mb-4">No activities logged yet today.</p>
+                <Link 
+                  href="/gym"
+                  className="inline-block text-orange-400 hover:text-orange-300 underline"
+                >
+                  Go to Gym Dashboard to log activities
+                </Link>
+              </div>
             ) : (
               <div className="space-y-3">
-                {todaysActivityLogs.map((log) => {
+                {todaysActivityLogs.slice(0, 3).map((log) => {
                   const activity = activitiesById.get(log.activityId);
                   if (!activity) {
                     return null;
@@ -741,21 +704,19 @@ export default function Dashboard() {
                           <p className="font-semibold text-orange-500">
                             {caloriesBurned} cal burned
                           </p>
-                          <p className="text-sm text-slate-400">
-                            {activity.calories_per_hour} cal/hr
-                          </p>
                         </div>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveActivityLog(log.id)}
-                        className="mt-3 text-sm text-slate-400 hover:text-red-400"
-                      >
-                        Remove
-                      </button>
                     </article>
                   );
                 })}
+                {todaysActivityLogs.length > 3 && (
+                  <Link 
+                    href="/gym"
+                    className="block text-center py-3 text-sm text-orange-400 hover:text-orange-300 underline"
+                  >
+                    View all {todaysActivityLogs.length} activities in Gym Dashboard
+                  </Link>
+                )}
               </div>
             )}
           </section>

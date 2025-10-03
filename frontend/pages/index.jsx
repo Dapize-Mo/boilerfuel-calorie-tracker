@@ -23,6 +23,12 @@ export default function Home() {
             Open dashboard
           </Link>
           <Link
+            href="/gym"
+            className="w-full rounded bg-orange-500 px-5 py-3 text-center font-semibold text-slate-900 shadow hover:bg-orange-600 sm:w-auto"
+          >
+            💪 Gym Dashboard
+          </Link>
+          <Link
             href="/admin"
             className="w-full rounded border border-slate-500 px-5 py-3 text-center font-semibold text-slate-200 hover:border-yellow-500 hover:text-yellow-400 sm:w-auto"
           >
