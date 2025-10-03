@@ -5,8 +5,8 @@ Your Railway deployment should be working now. Here's how to test it manually:
 ## Step 1: Find Your Railway URL
 
 1. Go to your Railway dashboard
-2. Click on your "jubilant-mindfulness" project
-3. Look for the public URL (it should be something like `https://jubilant-mindfulness-production-34d2.up.railway.app`)
+2. Click on your backend service/project
+3. Look for the public URL (it should be something like `https://your-backend.up.railway.app`)
 
 ## Step 2: Test Each Endpoint
 

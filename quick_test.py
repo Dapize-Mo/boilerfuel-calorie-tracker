@@ -17,10 +17,10 @@ def test_railway_db():
     print("4. Run this script again")
     print()
     
-    # Let's try some common Railway URL patterns based on your project
+    # Let's try some common Railway URL patterns
     possible_urls = [
-        "https://jubilant-mindfulness-production.up.railway.app",
-        "https://web-production-26f5.up.railway.app",
+        "https://your-backend-production.up.railway.app",
+        "https://web-production-xxxx.up.railway.app",
         "https://boilerfuel-calorie-tracker.up.railway.app",
     ]
     

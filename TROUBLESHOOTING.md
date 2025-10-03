@@ -3,7 +3,7 @@
 ## Current Issues Detected:
 
 ### 1. Backend Returns 500 Error ⚠️
-Your Railway backend at `https://jubilant-mindfulness-production-34d2.up.railway.app` is returning Internal Server Error (500).
+Your Railway backend (e.g., `https://your-backend.up.railway.app`) may be returning Internal Server Error (500).
 
 **Fix:**
 1. Go to Railway dashboard → Your project → Logs
@@ -21,7 +21,7 @@ The Vercel deployment needs the backend API URL set as an environment variable.
 2. Select your project → Settings → Environment Variables
 3. Add a new variable:
    - **Variable name:** `NEXT_PUBLIC_API_URL`
-   - **Value:** `https://jubilant-mindfulness-production-34d2.up.railway.app`
+   - **Value:** `https://your-backend.up.railway.app` (your Railway backend URL)
    - **Environments:** Check all (Production, Preview, Development)
 4. Click "Save"
 5. Go to Deployments tab → Click the latest deployment → Click "Redeploy"
@@ -33,17 +33,17 @@ Backend needs to allow requests from your Vercel domain.
 1. Go to Railway dashboard → Your backend service → Variables
 2. Update or add:
    - **Variable name:** `FRONTEND_ORIGIN`
-   - **Value:** `https://frontend-khaki-seven-44.vercel.app`
+   - **Value:** `https://your-app.vercel.app` (your Vercel frontend URL)
 3. Click "Deploy" to redeploy
 
 ## Quick Test Commands:
 
 ```powershell
 # Test if backend is running
-Invoke-WebRequest -Uri "https://jubilant-mindfulness-production-34d2.up.railway.app/api/foods"
+Invoke-WebRequest -Uri "https://your-backend.up.railway.app/api/foods"
 
 # Test if backend accepts requests from Vercel
-Invoke-WebRequest -Uri "https://jubilant-mindfulness-production-34d2.up.railway.app/api/foods" -Headers @{"Origin"="https://frontend-khaki-seven-44.vercel.app"}
+Invoke-WebRequest -Uri "https://your-backend.up.railway.app/api/foods" -Headers @{"Origin"="https://your-app.vercel.app"}
 ```
 
 ## Step-by-Step Fix:
@@ -51,7 +51,7 @@ Invoke-WebRequest -Uri "https://jubilant-mindfulness-production-34d2.up.railway.
 ### Step 1: Check Railway Backend Logs
 ```
 1. Go to Railway dashboard
-2. Click on your backend service (jubilant-mindfulness)
+2. Click on your backend service
 3. Click "Logs" or "Runtime Log"
 4. Look for error messages
 ```
@@ -67,15 +67,15 @@ Ensure these are set in Railway:
 - ✅ `DATABASE_SSLMODE=require`
 - ✅ `JWT_SECRET_KEY` (any secret string)
 - ✅ `ADMIN_PASSWORD` (your admin password)
-- ✅ `FRONTEND_ORIGIN=https://frontend-khaki-seven-44.vercel.app`
+- ✅ `FRONTEND_ORIGIN=https://your-app.vercel.app` (your Vercel URL)
 
 ### Step 3: Set Vercel Environment Variable
 1. Vercel Dashboard → Your Project → Settings → Environment Variables
-2. Add: `NEXT_PUBLIC_API_URL=https://jubilant-mindfulness-production-34d2.up.railway.app`
+2. Add: `NEXT_PUBLIC_API_URL=https://your-backend.up.railway.app` (your Railway backend URL)
 3. Redeploy
 
 ### Step 4: Test Your Live Site
-Visit: `https://frontend-khaki-seven-44.vercel.app`
+Visit your Vercel deployment URL (e.g., `https://your-app.vercel.app`)
 
 Open browser Developer Tools (F12) → Console tab
 Look for errors like:
@@ -94,7 +94,7 @@ Look for errors like:
 
 - ❌ Backend returning 500 error
 - ⚠️ Need to add environment variable to Vercel
-- ⚠️ Need to update FRONTEND_ORIGIN in Railway
+- ⚠️ Update FRONTEND_ORIGIN in Railway to match your Vercel URL
 
 ## Next Steps:
 
