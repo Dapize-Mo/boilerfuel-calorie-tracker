@@ -2,7 +2,10 @@ from __future__ import annotations
 
 # pyright: reportGeneralTypeIssues=false, reportAttributeAccessIssue=false
 
+import sys
 import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'scraper')))
+from scraper import menu_scraper
 from datetime import datetime, timezone, timedelta
 from functools import wraps
 from urllib.parse import quote_plus, urlparse, urlunparse
@@ -13,7 +16,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager, create_access_token, get_jwt, jwt_required
 from sqlalchemy.sql.expression import text
 
-# Note: Environment variables should be set externally (e.g., via start.bat or Railway)
+# Note: Environment variables should be set externally (e.g., via start.bat or your hosting provider)
 # Load .env file only if it exists and we're in development
 try:
 	from dotenv import load_dotenv
@@ -69,7 +72,7 @@ CORS(
 def _env_or_none(name: str):
 	val = os.getenv(name)
 	# Treat unresolved template references like {{ Postgres.DATABASE_URL }} as unset
-	# but allow Railway-style variables like ${{Postgres.DATABASE_URL}}
+	# allow platform variables like ${{Postgres.DATABASE_URL}}
 	if val and ('{{' in val or '}}' in val) and not val.startswith('${{'):
 		return None
 	return val
@@ -97,13 +100,12 @@ def _build_db_url_from_parts():
 
 
 def _preferred_database_url():
-	"""Resolve a usable database URL across common providers (Railway, etc)."""
+	"""Resolve a usable database URL across common providers."""
 
 	candidates = [
 		'DATABASE_URL',
 		'DATABASE_PUBLIC_URL',  # some platforms expose a public variant
-		'RAILWAY_DATABASE_URL',  # Railway sometimes exposes this
-		'POSTGRES_URL',  # Railway/others sometimes use this
+		'POSTGRES_URL',
 	]
 	for key in candidates:
 		val = _env_or_none(key)
@@ -173,6 +175,10 @@ except Exception:
 	pass
 
 
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'scraper')))
+from scraper import menu_scraper
 # Initialize extensions
 db: SQLAlchemy = SQLAlchemy(app)
 jwt = JWTManager(app)
@@ -507,7 +513,6 @@ scraping_status = {
 def run_scraper_background():
 	"""Background function to run the scraper without blocking the HTTP request."""
 	global scraping_status
-	
 	try:
 		# Import scraper functions
 		import sys
@@ -515,35 +520,34 @@ def run_scraper_background():
 		scraper_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'scraper')
 		if scraper_path not in sys.path:
 			sys.path.insert(0, scraper_path)
-		
-		from menu_scraper import scrape_all_dining_courts
-		
+		from scraper.menu_scraper import scrape_all_dining_courts
+
 		with app.app_context():
 			# Scrape menus with caching enabled
 			items = scrape_all_dining_courts(use_cache=True)
-			
+
 			if not items:
 				scraping_status['in_progress'] = False
 				scraping_status['last_error'] = 'No menu items found'
 				return
-			
+
 			# Save to database with smart updates
 			added_count = 0
 			updated_count = 0
 			skipped_count = 0
-			
+
 			for item in items:
 				# Skip items with no nutrition data
 				if item['calories'] == 0 and item['protein'] == 0 and item['carbs'] == 0 and item['fats'] == 0:
 					skipped_count += 1
 					continue
-				
+
 				# Check if item already exists
 				existing = Food.query.filter_by(
 					name=item['name'],
 					dining_court=item.get('dining_court')
 				).first()
-				
+
 				if existing:
 					# Update if existing item has no nutrition data
 					if existing.calories == 0 and item['calories'] > 0:
@@ -572,9 +576,9 @@ def run_scraper_background():
 					)
 					db.session.add(food)
 					added_count += 1
-			
+
 			db.session.commit()
-			
+
 			scraping_status['in_progress'] = False
 			scraping_status['last_result'] = {
 				'items_added': added_count,
@@ -583,17 +587,16 @@ def run_scraper_background():
 				'total_scraped': len(items)
 			}
 			scraping_status['last_error'] = None
-			
+
 	except Exception as exc:
 		try:
 			db.session.rollback()
-		except:
+		except Exception:
 			pass
 		scraping_status['in_progress'] = False
 		scraping_status['last_error'] = str(exc)
 		import traceback
 		traceback.print_exc()
-
 @app.route('/api/scrape-menus', methods=['POST'])
 @admin_required
 def scrape_menus():
@@ -659,32 +662,31 @@ def scrape_menus_sync():
 		scraper_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'scraper')
 		if scraper_path not in sys.path:
 			sys.path.insert(0, scraper_path)
-		
-		from menu_scraper import scrape_all_dining_courts
-		
+		from scraper.menu_scraper import scrape_all_dining_courts
+
 		# Scrape menus with caching enabled
 		items = scrape_all_dining_courts(use_cache=True)
-		
+
 		if not items:
 			return jsonify({'error': 'No menu items found'}), 404
-		
+
 		# Save to database with smart updates
 		added_count = 0
 		updated_count = 0
 		skipped_count = 0
-		
+
 		for item in items:
 			# Skip items with no nutrition data
 			if item['calories'] == 0 and item['protein'] == 0 and item['carbs'] == 0 and item['fats'] == 0:
 				skipped_count += 1
 				continue
-			
+
 			# Check if item already exists
 			existing = Food.query.filter_by(
 				name=item['name'],
 				dining_court=item.get('dining_court')
 			).first()
-			
+
 			if existing:
 				# Update if existing item has no nutrition data
 				if existing.calories == 0 and item['calories'] > 0:
@@ -713,13 +715,13 @@ def scrape_menus_sync():
 				)
 				db.session.add(food)
 				added_count += 1
-		
+
 		db.session.commit()
-		
+
 		message = f'Menu scraping complete! Added {added_count} new items'
 		if updated_count > 0:
 			message += f', updated {updated_count} items'
-		
+
 		return jsonify({
 			'message': message,
 			'items_added': added_count,
@@ -727,7 +729,7 @@ def scrape_menus_sync():
 			'items_skipped': skipped_count,
 			'total_scraped': len(items)
 		}), 201
-		
+
 	except Exception as exc:
 		db.session.rollback()
 		import traceback

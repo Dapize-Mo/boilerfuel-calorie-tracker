@@ -131,7 +131,7 @@ CI runs these checks automatically on every push and pull request.
 ## Deployment Notes
 
 - Frontend is ready for Vercel or any Node hosting provider; ensure environment variables match backend.
-- Backend can be deployed on services like Railway/Render; set `DATABASE_URL` and `JWT_SECRET_KEY`.
+- Backend can be deployed on services like Render/Fly/Heroku; set `DATABASE_URL` and `JWT_SECRET_KEY`.
 - Add a scheduled job to run the scraper regularly (e.g., GitHub Actions cron or external scheduler).
 
 ## Next Steps

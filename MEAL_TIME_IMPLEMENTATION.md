@@ -86,13 +86,13 @@ GET /api/foods?meal_time=breakfast
 .\add_meal_time.ps1
 ```
 
-**Option B - For Railway/Production:**
+**Option B - For Production Database:**
 ```powershell
-# Connect to Railway database
-railway run psql $DATABASE_URL -f db/add_meal_time.sql
+# Connect to your production database via CLI
+psql $DATABASE_URL -f db/add_meal_time.sql
 
-# Or use the Python script
-railway run python add_meal_time_migration.py
+# Or use the Python script with your production DATABASE_URL set
+python add_meal_time_migration.py
 ```
 
 ### Step 2: Add Sample Data (Optional)
@@ -115,7 +115,7 @@ git add .
 git commit -m "Add meal time filter feature"
 git push
 
-# Railway will auto-deploy backend
+# Most platforms will auto-deploy backend on push
 # Vercel will auto-deploy frontend
 ```
 

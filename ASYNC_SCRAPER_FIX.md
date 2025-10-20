@@ -1,10 +1,10 @@
 # Async Scraper Fix
 
 ## Problem
-The menu scraper was timing out on Railway because:
-1. Railway has a **30-second timeout** for HTTP requests (platform limitation)
+The menu scraper was timing out in production because:
+1. Many platforms have a **30-second timeout** for HTTP requests (platform limitation)
 2. Scraping all 5 dining courts takes **30-60 seconds** total
-3. Even with increased gunicorn timeout, Railway's platform timeout took precedence
+3. Even with increased gunicorn timeout, platform timeouts often take precedence
 
 ## Solution
 Made the scraper **asynchronous** using background threading:
@@ -59,7 +59,7 @@ Responses:
 ✅ No more timeouts - scraping runs as long as needed
 ✅ Immediate user feedback - button click returns instantly
 ✅ Real-time progress - frontend polls for updates
-✅ Works within Railway's 30s HTTP timeout limit
+✅ Works within typical 30s HTTP timeout limits
 ✅ Faster scraping - removed unnecessary delays
 
 ## Files Modified
@@ -71,7 +71,7 @@ Responses:
 
 ## Testing
 
-1. Deploy to Railway
+1. Deploy to production
 2. Log into admin panel
 3. Click "Scrape Purdue Menus"
 4. Should see "Scraping in progress..." message

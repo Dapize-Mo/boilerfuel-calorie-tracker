@@ -115,7 +115,7 @@ Version history page with:
 - [ ] Commit changes to Git
 - [ ] Push to repository
 - [ ] Verify Vercel deployment (frontend)
-- [ ] Verify Railway deployment (backend)
+- [ ] Verify backend deployment
 - [ ] Test production site
 
 ## 🎯 User Journey

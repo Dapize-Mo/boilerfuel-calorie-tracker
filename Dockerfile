@@ -12,5 +12,5 @@ RUN pip install --no-cache-dir -r /app/backend/requirements.txt
 # Copy project
 COPY . /app
 
-# Default command binds to $PORT provided by Railway
+# Default command binds to $PORT provided by hosting platform
 CMD ["sh", "-c", "gunicorn app:app --chdir backend --bind 0.0.0.0:$PORT"]

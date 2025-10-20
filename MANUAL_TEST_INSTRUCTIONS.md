@@ -1,12 +1,12 @@
 # Manual Database Test Instructions
 
-Your Railway deployment should be working now. Here's how to test it manually:
+Your backend deployment should be working now. Here's how to test it manually:
 
-## Step 1: Find Your Railway URL
+## Step 1: Find Your Backend URL
 
-1. Go to your Railway dashboard
+1. Go to your hosting provider dashboard (Render/Fly/Heroku/etc.)
 2. Click on your backend service/project
-3. Look for the public URL (it should be something like `https://your-backend.up.railway.app`)
+3. Look for the public URL (e.g., `https://your-backend.example.com`)
 
 ## Step 2: Test Each Endpoint
 
@@ -59,12 +59,12 @@ curl -X POST {YOUR_URL}/api/foods \
 
 - 500 errors = Server/database issues
 - 404 errors = Wrong URL or deployment issues
-- Connection timeouts = Railway deployment not running
+- Connection timeouts = Backend deployment not running
 
 ## Troubleshooting
 
 - If `/init-db` returns "already initialized", that's normal on subsequent calls
 - If `/api/foods` returns `[]` (empty array), run `/init-db` first
-- Check Railway logs for detailed error information
+- Check your hosting provider's logs for detailed error information
 
-Replace `{YOUR_URL}` with your actual Railway URL and test each endpoint!
+Replace `{YOUR_URL}` with your actual backend URL and test each endpoint!

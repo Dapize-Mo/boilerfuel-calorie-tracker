@@ -34,7 +34,7 @@ npm install -g vercel
    - Click "Environment Variables"
    - Add the following:
      - **Name:** `NEXT_PUBLIC_API_URL`
-     - **Value:** Your backend API URL (e.g., `https://your-backend.railway.app`)
+   - **Value:** Your backend API URL (e.g., `https://api.your-domain.com`)
      - **Environments:** Production, Preview, Development (check all)
    
    - (Optional) Add `NEXT_PUBLIC_BYPASS_AUTH`:
@@ -68,7 +68,7 @@ npm install -g vercel
    ```powershell
    vercel env add NEXT_PUBLIC_API_URL
    ```
-   - Enter the value: Your backend API URL (e.g., `https://your-backend.railway.app`)
+   - Enter the value: Your backend API URL (e.g., `https://api.your-domain.com`)
    - Select environments: Production, Preview, Development (use arrow keys and space to select)
 
 5. Deploy to production:

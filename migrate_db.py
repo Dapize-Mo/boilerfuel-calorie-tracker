@@ -1,7 +1,7 @@
 ﻿import os
 import psycopg2
 
-# Get DATABASE_URL from Railway environment
+# Get DATABASE_URL from environment (supports any host)
 database_url = os.getenv('DATABASE_URL') or os.getenv('DATABASE_PUBLIC_URL')
 
 if not database_url:

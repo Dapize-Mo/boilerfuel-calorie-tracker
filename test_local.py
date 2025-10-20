@@ -84,7 +84,7 @@ def test_local_db():
                 print(f"Add food: {response.status_code} - {response.get_json()}")
             
             print("\n🎉 All local tests passed! Your database code is working correctly.")
-            print("The issue is likely just with the Railway URL or deployment status.")
+            print("The issue is likely just with the backend URL or deployment status.")
             
     except Exception as e:
         print(f"❌ Error during local testing: {e}")

@@ -173,7 +173,7 @@ export default function About() {
                 <ul className="text-sm text-slate-400 space-y-1">
                   <li>• Flask (Python)</li>
                   <li>• PostgreSQL Database</li>
-                  <li>• Deployed on Railway</li>
+                  <li>• Deployed on a cloud platform</li>
                 </ul>
               </div>
             </div>

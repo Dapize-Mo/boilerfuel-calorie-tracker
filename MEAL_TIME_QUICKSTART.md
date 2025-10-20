@@ -79,8 +79,8 @@ Result: Complete menu
 # If you have a local database
 .\add_meal_time.ps1
 
-# OR for Railway
-railway run python add_meal_time_migration.py
+# OR for production (ensure DATABASE_URL is set)
+python add_meal_time_migration.py
 ```
 
 **2. (Optional) Add sample data:**

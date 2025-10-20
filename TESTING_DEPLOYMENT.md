@@ -29,18 +29,9 @@ Vercel automatically creates preview deployments for all branches. Here's how to
    - Enable "Automatic Deployments" for all branches
    - Each push to `testing` will auto-deploy to the testing URL
 
-### Option 2: Railway (If using Railway)
+### Option 2: Alternative Hosting
 
-1. **Create a Second Service for Testing**
-   - In Railway dashboard, create a new service
-   - Connect to the same GitHub repo
-   - Set the branch to `testing` instead of `master`
-   - Use the same environment variables and database
-
-2. **Or Use Railway Environments**
-   - Create a new environment called "Testing"
-   - Set it to deploy from the `testing` branch
-   - Production environment stays on `master`
+Use a platform like Render, Fly.io, or a VPS to host a second backend for testing, or point your frontend preview to a staging API URL via environment variables.
 
 ## Workflow
 
@@ -121,7 +112,7 @@ Both will use the same database, so data is shared. The only difference is the U
 ## Troubleshooting
 
 **If testing deployment isn't showing up:**
-- Check your hosting dashboard (Vercel/Railway) for deployment logs
+- Check your hosting dashboard (e.g., Vercel) for deployment logs
 - Ensure branch deployments are enabled in project settings
 - Verify the branch was pushed: `git branch -a`
 

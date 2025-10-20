@@ -34,9 +34,12 @@ python add_meal_time_migration.py
 psql -U your_username -d your_database -f db/add_meal_time.sql
 ```
 
-### For Railway/Production
+### For Production Database
 ```powershell
-# Connect to your Railway database and run:
+### For Production Database
+
+# Connect to your production database and run:
+
 psql $DATABASE_URL -f db/add_meal_time.sql
 ```
 
