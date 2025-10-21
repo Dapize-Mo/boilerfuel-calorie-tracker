@@ -1,10 +1,21 @@
-// Use same-origin API by default so the frontend can deploy with free serverless routes on Vercel.
-const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
-const ADMIN_TOKEN_KEY = 'boilerfuel_admin_token';
-
 function isBrowser() {
   return typeof window !== 'undefined';
 }
+
+// Determine API base at call time. In production, force same-origin to avoid
+// accidentally calling localhost or old backends via env overrides.
+function getApiBase() {
+  // On the client
+  if (isBrowser()) {
+    const isProd = process.env.NODE_ENV === 'production';
+    if (isProd) return '';
+    // In development allow override
+    return process.env.NEXT_PUBLIC_API_URL || '';
+  }
+  // On the server (SSR/build), just return the env if present
+  return process.env.NEXT_PUBLIC_API_URL || '';
+}
+const ADMIN_TOKEN_KEY = 'boilerfuel_admin_token';
 
 export function getAdminToken() {
   if (!isBrowser()) return null;
@@ -22,7 +33,8 @@ export function clearAdminToken() {
 }
 
 export async function apiCall(endpoint, options = {}, { requireAdmin = false } = {}) {
-  const url = `${API_URL}${endpoint}`;
+  const base = getApiBase();
+  const url = `${base}${endpoint}`;
   const token = getAdminToken();
 
   const headers = {
