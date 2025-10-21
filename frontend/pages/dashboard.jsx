@@ -433,9 +433,9 @@ export default function Dashboard() {
         <Head>
           <title>Loading... - BoilerFuel Dashboard</title>
         </Head>
-        <main className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
+        <div className="min-h-[50vh] flex items-center justify-center">
           <div className="text-xl">Loading menu...</div>
-        </main>
+        </div>
       </>
     );
   }
@@ -446,18 +446,9 @@ export default function Dashboard() {
         <title>BoilerFuel Dashboard - Track Your Meals</title>
         <meta name="description" content="Track your meals and activities with BoilerFuel calorie tracker" />
       </Head>
-      <main className="min-h-screen bg-slate-950 text-white p-6">
+      <div>
         <div className="mx-auto max-w-6xl space-y-6">
-          {/* Navigation */}
-          <nav className="flex items-center gap-4 text-sm text-slate-400">
-            <Link href="/" className="hover:text-yellow-400 transition-colors">← Home</Link>
-            <span className="text-slate-600">|</span>
-            <Link href="/gym" className="hover:text-yellow-400 transition-colors">💪 Gym</Link>
-            <span className="text-slate-600">|</span>
-            <Link href="/about" className="hover:text-yellow-400 transition-colors">About</Link>
-            <span className="text-slate-600">|</span>
-            <Link href="/changelog" className="hover:text-yellow-400 transition-colors">Changelog</Link>
-          </nav>
+          {/* Global header provides navigation */}
 
           <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
@@ -471,7 +462,8 @@ export default function Dashboard() {
             >
               Clear all logs
             </button>
-          </header>        {menuError && (
+          </header>
+        {menuError && (
           <div className="rounded border border-red-500 bg-red-500/10 px-4 py-3 text-red-400">
             {menuError}
           </div>
@@ -769,7 +761,7 @@ export default function Dashboard() {
           </section>
         </div>
       </div>
-    </main>
+  </div>
     </>
   );
 }
