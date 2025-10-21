@@ -90,15 +90,43 @@ function startOfToday() {
   return today;
 }
 
-function isSameDay(timestamp, todayStart) {
+function startOfDate(dateString) {
+  const date = new Date(dateString);
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
+function formatDateForInput(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function formatDateDisplay(dateString) {
+  const date = new Date(dateString);
+  const today = startOfToday();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  
+  if (formatDateForInput(date) === formatDateForInput(today)) {
+    return 'Today';
+  } else if (formatDateForInput(date) === formatDateForInput(yesterday)) {
+    return 'Yesterday';
+  } else {
+    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+  }
+}
+
+function isSameDay(timestamp, selectedDateStart) {
   if (!timestamp) {
     return false;
   }
   const date = new Date(timestamp);
   return (
-    date.getFullYear() === todayStart.getFullYear() &&
-    date.getMonth() === todayStart.getMonth() &&
-    date.getDate() === todayStart.getDate()
+    date.getFullYear() === selectedDateStart.getFullYear() &&
+    date.getMonth() === selectedDateStart.getMonth() &&
+    date.getDate() === selectedDateStart.getDate()
   );
 }
 
@@ -108,6 +136,7 @@ export default function Dashboard() {
   const [diningCourts, setDiningCourts] = useState([]);
   const [selectedDiningCourt, setSelectedDiningCourt] = useState('');
   const [selectedMealTime, setSelectedMealTime] = useState('');
+  const [selectedDate, setSelectedDate] = useState(() => formatDateForInput(startOfToday()));
   const [logs, setLogs] = useState(() => parseLogsCookie());
   const [activityLogs, setActivityLogs] = useState(() => parseActivityLogsCookie());
   const [selectedFood, setSelectedFood] = useState('');
@@ -229,20 +258,20 @@ export default function Dashboard() {
     return map;
   }, [activities]);
 
-  const todayStart = useMemo(() => startOfToday(), []);
+  const selectedDateStart = useMemo(() => startOfDate(selectedDate), [selectedDate]);
 
-  const todaysLogs = useMemo(
-    () => logs.filter((log) => isSameDay(log.timestamp, todayStart)),
-    [logs, todayStart]
+  const selectedDayLogs = useMemo(
+    () => logs.filter((log) => isSameDay(log.timestamp, selectedDateStart)),
+    [logs, selectedDateStart]
   );
 
-  const todaysActivityLogs = useMemo(
-    () => activityLogs.filter((log) => isSameDay(log.timestamp, todayStart)),
-    [activityLogs, todayStart]
+  const selectedDayActivityLogs = useMemo(
+    () => activityLogs.filter((log) => isSameDay(log.timestamp, selectedDateStart)),
+    [activityLogs, selectedDateStart]
   );
 
   const totals = useMemo(() => {
-    const consumed = todaysLogs.reduce(
+    const consumed = selectedDayLogs.reduce(
       (acc, log) => {
         const food = foodsById.get(log.foodId);
         if (!food) {
@@ -261,7 +290,7 @@ export default function Dashboard() {
       { calories: 0, protein: 0, carbs: 0, fats: 0 }
     );
 
-    const burned = todaysActivityLogs.reduce((total, log) => {
+    const burned = selectedDayActivityLogs.reduce((total, log) => {
       const activity = activitiesById.get(log.activityId);
       if (!activity) {
         return total;
@@ -275,7 +304,7 @@ export default function Dashboard() {
       burned,
       net: consumed.calories - burned,
     };
-  }, [todaysLogs, todaysActivityLogs, foodsById, activitiesById]);
+  }, [selectedDayLogs, selectedDayActivityLogs, foodsById, activitiesById]);
 
   function persistLogs(nextLogs) {
     setLogs(nextLogs);
@@ -449,9 +478,27 @@ export default function Dashboard() {
         )}
 
         <section className="rounded-lg bg-slate-900 p-6">
-          <h2 className="mb-4 text-2xl font-bold">Today’s Totals</h2>
-          {todaysLogs.length === 0 && todaysActivityLogs.length === 0 ? (
-            <p className="text-slate-400">No meals or activities logged yet today.</p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+            <h2 className="text-2xl font-bold">Daily Totals</h2>
+            <div className="flex items-center gap-3">
+              <label htmlFor="date-picker" className="text-sm font-medium text-slate-300">
+                View Date:
+              </label>
+              <input
+                type="date"
+                id="date-picker"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                max={formatDateForInput(startOfToday())}
+                className="rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all"
+              />
+              <span className="text-sm font-semibold text-yellow-400">
+                {formatDateDisplay(selectedDate)}
+              </span>
+            </div>
+          </div>
+          {selectedDayLogs.length === 0 && selectedDayActivityLogs.length === 0 ? (
+            <p className="text-slate-400">No meals or activities logged for this date.</p>
           ) : (
             <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
               <StatCard label="Calories In" value={Math.round(totals.calories)} accent="text-yellow-500" />
@@ -603,12 +650,12 @@ export default function Dashboard() {
         <div className="grid gap-6 md:grid-cols-2">
 
           <section className="rounded-lg bg-slate-900 p-6">
-            <h2 className="mb-4 text-2xl font-bold">Today’s Meals</h2>
-            {todaysLogs.length === 0 ? (
-              <p className="text-slate-400">No meals logged yet today.</p>
+            <h2 className="mb-4 text-2xl font-bold">Meals for {formatDateDisplay(selectedDate)}</h2>
+            {selectedDayLogs.length === 0 ? (
+              <p className="text-slate-400">No meals logged for this date.</p>
             ) : (
               <div className="space-y-3">
-                {todaysLogs.map((log) => {
+                {selectedDayLogs.map((log) => {
                   const food = foodsById.get(log.foodId);
                   if (!food) {
                     return null;
@@ -662,7 +709,7 @@ export default function Dashboard() {
 
           <section className="rounded-lg bg-slate-900 p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold">Today&apos;s Activities</h2>
+              <h2 className="text-2xl font-bold">Activities for {formatDateDisplay(selectedDate)}</h2>
               <Link 
                 href="/gym"
                 className="text-sm bg-orange-500 hover:bg-orange-600 text-slate-900 font-semibold px-4 py-2 rounded transition-colors"
@@ -670,9 +717,9 @@ export default function Dashboard() {
                 💪 Full Gym Dashboard
               </Link>
             </div>
-            {todaysActivityLogs.length === 0 ? (
+            {selectedDayActivityLogs.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-slate-400 mb-4">No activities logged yet today.</p>
+                <p className="text-slate-400 mb-4">No activities logged for this date.</p>
                 <Link 
                   href="/gym"
                   className="inline-block text-orange-400 hover:text-orange-300 underline"
@@ -682,7 +729,7 @@ export default function Dashboard() {
               </div>
             ) : (
               <div className="space-y-3">
-                {todaysActivityLogs.slice(0, 3).map((log) => {
+                {selectedDayActivityLogs.slice(0, 3).map((log) => {
                   const activity = activitiesById.get(log.activityId);
                   if (!activity) {
                     return null;
@@ -709,12 +756,12 @@ export default function Dashboard() {
                     </article>
                   );
                 })}
-                {todaysActivityLogs.length > 3 && (
+                {selectedDayActivityLogs.length > 3 && (
                   <Link 
                     href="/gym"
                     className="block text-center py-3 text-sm text-orange-400 hover:text-orange-300 underline"
                   >
-                    View all {todaysActivityLogs.length} activities in Gym Dashboard
+                    View all {selectedDayActivityLogs.length} activities in Gym Dashboard
                   </Link>
                 )}
               </div>
