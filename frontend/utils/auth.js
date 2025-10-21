@@ -1,9 +1,15 @@
-// Use same-origin API by default so the frontend can deploy with free serverless routes on Vercel.
-const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
+// In production, force same-origin calls so the deployed Next.js API routes are used.
+// Only allow overriding the API base in development via NEXT_PUBLIC_API_URL.
 const ADMIN_TOKEN_KEY = 'boilerfuel_admin_token';
 
 function isBrowser() {
   return typeof window !== 'undefined';
+}
+
+function getApiBase() {
+  const isProd = process.env.NODE_ENV === 'production';
+  if (isProd) return '';
+  return process.env.NEXT_PUBLIC_API_URL || '';
 }
 
 export function getAdminToken() {
@@ -22,7 +28,7 @@ export function clearAdminToken() {
 }
 
 export async function apiCall(endpoint, options = {}, { requireAdmin = false } = {}) {
-  const url = `${API_URL}${endpoint}`;
+  const url = `${getApiBase()}${endpoint}`;
   const token = getAdminToken();
 
   const headers = {
