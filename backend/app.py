@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import sys
 import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'scraper')))
-from scraper import menu_scraper
+# Add parent directory to path to import scraper module
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from datetime import datetime, timezone, timedelta
 from functools import wraps
 from urllib.parse import quote_plus, urlparse, urlunparse

@@ -1,4 +1,5 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000';
+// Use same-origin API by default so the frontend can deploy with free serverless routes on Vercel.
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 const ADMIN_TOKEN_KEY = 'boilerfuel_admin_token';
 
 function isBrowser() {

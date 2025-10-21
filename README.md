@@ -130,12 +130,46 @@ CI runs these checks automatically on every push and pull request.
 
 ## Deployment Notes
 
-- Frontend is ready for Vercel or any Node hosting provider; ensure environment variables match backend.
-- Backend can be deployed on services like Render/Fly/Heroku; set `DATABASE_URL` and `JWT_SECRET_KEY`.
-- Add a scheduled job to run the scraper regularly (e.g., GitHub Actions cron or external scheduler).
 
 ## Next Steps
 
-- Add rate limiting + password complexity rules.
-- Expand tests to cover authentication and logging edge cases.
-- Implement pagination/history for past days' totals.
+
+## Free-only deployment (no Render/Railway)
+
+This repo now supports a free stack using Vercel for both the frontend and API, plus a free Postgres and a scheduled scraper on GitHub Actions:
+
+- Frontend + API: Next.js on Vercel (serverless API routes in `frontend/pages/api/*`)
+- Database: Neon, Supabase, or Vercel Postgres (free hobby tier)
+- Scraper: GitHub Actions workflow (`.github/workflows/scrape.yml`) runs daily and writes to the DB
+
+Steps:
+
+1. Create a free Postgres
+
+   - Neon: create a project and copy the connection string (starts with postgresql://)
+   - Supabase: create a project, Settings → Database → Connection string
+   - Vercel Postgres: add the Integration to your Vercel project (gives POSTGRES_URL envs)
+
+2. Configure environment variables
+
+   - On Vercel project → Settings → Environment Variables:
+   - DATABASE_URL (or POSTGRES_URL): your Postgres connection string
+   - ADMIN_PASSWORD: a secret used for admin login
+   - JWT_SECRET_KEY: any random secret (optional; falls back to ADMIN_PASSWORD)
+
+3. Deploy
+
+   - Push to your repo; Vercel will build and the API routes will deploy with the app
+   - The frontend uses same-origin API by default; no separate API host needed
+
+4. Enable scheduled scraping (optional)
+
+   - In GitHub: Settings → Secrets and variables → Actions → New repository secret
+   - Name: DATABASE_URL, Value: same connection string as above
+   - The daily job runs via `.github/workflows/scrape.yml` and fills `foods` from Purdue menus
+
+Notes
+
+- Admin endpoints require the bearer token from `/api/admin/login` (password = ADMIN_PASSWORD)
+- Tables are created automatically on first API call; schema matches `foods` and `activities`
+- Selenium is not used in serverless; the heavy scraping runs in GitHub Actions
