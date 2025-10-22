@@ -187,13 +187,19 @@ export default function AdminPage() {
 
     try {
       // Start the scraping process
-      await apiCall(
+      const startResp = await apiCall(
         '/api/scrape-menus',
         {
           method: 'POST',
         },
         { requireAdmin: true }
       );
+      // If the API indicates scraping is handled externally (stub), surface that and stop.
+      if (startResp && startResp.message && !startResp.status) {
+        setScrapeSuccess(startResp.message);
+        setScrapeLoading(false);
+        return;
+      }
       
       // Poll for status
       const pollStatus = async () => {
