@@ -35,7 +35,7 @@ function Header({ open, setOpen }) {
           </Link>
 
           <nav className="hidden lg:flex items-center gap-6 text-sm">
-            <HeaderLink href="/dashboard">Dashboard</HeaderLink>
+            <HeaderLink href="/">Home</HeaderLink>
             <HeaderLink href="/food-dashboard">Food</HeaderLink>
             <HeaderLink href="/gym">Gym</HeaderLink>
             <HeaderLink href="/about">About</HeaderLink>
@@ -70,7 +70,7 @@ function Header({ open, setOpen }) {
         <div className="border-t border-white/10 bg-slate-900/70 lg:hidden">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-3">
             <div className="grid gap-2 text-sm">
-              <MobileLink href="/dashboard" onClick={() => setOpen(false)}>Dashboard</MobileLink>
+              <MobileLink href="/" onClick={() => setOpen(false)}>Home</MobileLink>
               <MobileLink href="/food-dashboard" onClick={() => setOpen(false)}>Food</MobileLink>
               <MobileLink href="/gym" onClick={() => setOpen(false)}>Gym</MobileLink>
               <MobileLink href="/about" onClick={() => setOpen(false)}>About</MobileLink>
