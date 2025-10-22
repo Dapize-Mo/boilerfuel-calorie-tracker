@@ -802,6 +802,7 @@ export default function Dashboard() {
                   <option value="">All Meal Times</option>
                   <option value="breakfast">🌅 Breakfast</option>
                   <option value="lunch">☀️ Lunch</option>
+                  <option value="late lunch">🕒 Late Lunch</option>
                   <option value="dinner">🌙 Dinner</option>
                 </select>
               </div>
@@ -819,8 +820,9 @@ export default function Dashboard() {
                   <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/20 border border-blue-500/50 px-3 py-1 text-sm font-medium text-blue-300">
                     {selectedMealTime === 'breakfast' && '🌅'}
                     {selectedMealTime === 'lunch' && '☀️'}
+                    {selectedMealTime === 'late lunch' && '🕒'}
                     {selectedMealTime === 'dinner' && '🌙'}
-                    {' '}{selectedMealTime.charAt(0).toUpperCase() + selectedMealTime.slice(1)}
+                    {' '}{selectedMealTime.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
                   </span>
                 )}
                 <button
@@ -867,6 +869,11 @@ export default function Dashboard() {
                                   <div className="font-semibold text-white text-sm">{food.name}</div>
                                   <div className="text-xs text-slate-300 mt-1">
                                     {food.calories} cal
+                                    {food.meal_time && (
+                                      <span className="ml-2 px-2 py-0.5 rounded bg-blue-900 text-blue-200 font-semibold text-[0.7rem] align-middle">
+                                        {food.meal_time.charAt(0).toUpperCase() + food.meal_time.slice(1)}
+                                      </span>
+                                    )}
                                     {(macros.protein || macros.carbs || macros.fats) && (
                                       <span className="block mt-0.5">
                                         P: {Math.round(macros.protein || 0)}g

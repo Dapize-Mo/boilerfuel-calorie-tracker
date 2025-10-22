@@ -155,7 +155,19 @@ def scrape_purdue_menu_api(dining_court='Wiley', date_str=None, nutrition_cache=
         # First pass: collect all items
         if 'Meals' in data:
             for meal in data['Meals']:
-                meal_name = meal.get('Name', 'Unknown')
+                meal_name_raw = meal.get('Name', 'Unknown')
+                # Normalize meal name for consistency
+                meal_name = meal_name_raw.strip().lower().replace('_', ' ')
+                if meal_name in ['late lunch', 'latelunch', 'late-lunch']:
+                    meal_name = 'late lunch'
+                elif meal_name in ['breakfast']:
+                    meal_name = 'breakfast'
+                elif meal_name in ['lunch']:
+                    meal_name = 'lunch'
+                elif meal_name in ['dinner']:
+                    meal_name = 'dinner'
+                else:
+                    meal_name = meal_name_raw.strip()
                 
                 for station in meal.get('Stations', []):
                     station_name = station.get('Name', 'Unknown')
@@ -306,7 +318,19 @@ def scrape_purdue_menu(dining_court='Wiley', date=None, driver=None):
             print(f"  Found {len(meal_sections)} meal sections")
             
             for meal_section in meal_sections:
-                meal_name = extract_text_from_heading(meal_section)
+                meal_name_raw = extract_text_from_heading(meal_section)
+                # Normalize meal name for consistency
+                meal_name = meal_name_raw.strip().lower().replace('_', ' ')
+                if meal_name in ['late lunch', 'latelunch', 'late-lunch']:
+                    meal_name = 'late lunch'
+                elif meal_name in ['breakfast']:
+                    meal_name = 'breakfast'
+                elif meal_name in ['lunch']:
+                    meal_name = 'lunch'
+                elif meal_name in ['dinner']:
+                    meal_name = 'dinner'
+                else:
+                    meal_name = meal_name_raw.strip()
                 
                 # Find stations
                 stations = meal_section.find_all(class_=re.compile(r'station|category', re.I))
@@ -541,6 +565,7 @@ def save_to_database(menu_items, database_url=None):
                 macros JSONB NOT NULL,
                 dining_court VARCHAR(100),
                 station VARCHAR(255),
+                meal_time VARCHAR(50),
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
@@ -558,8 +583,8 @@ def save_to_database(menu_items, database_url=None):
             
             # Check if item already exists
             cursor.execute(
-                "SELECT id, calories FROM foods WHERE name = %s AND dining_court = %s",
-                (item['name'], item.get('dining_court'))
+                "SELECT id, calories FROM foods WHERE name = %s AND dining_court = %s AND meal_time = %s",
+                (item['name'], item.get('dining_court'), item.get('meal_period'))
             )
             
             existing = cursor.fetchone()
@@ -572,7 +597,7 @@ def save_to_database(menu_items, database_url=None):
                     cursor.execute(
                         """
                         UPDATE foods 
-                        SET calories = %s, macros = %s, station = %s, updated_at = CURRENT_TIMESTAMP
+                        SET calories = %s, macros = %s, station = %s, meal_time = %s, updated_at = CURRENT_TIMESTAMP
                         WHERE id = %s
                         """,
                         (
@@ -583,6 +608,7 @@ def save_to_database(menu_items, database_url=None):
                                 'fats': item['fats']
                             }),
                             item.get('station'),
+                            item.get('meal_period'),
                             existing_id
                         )
                     )
@@ -593,8 +619,8 @@ def save_to_database(menu_items, database_url=None):
                 # Insert new food item
                 cursor.execute(
                     """
-                    INSERT INTO foods (name, calories, macros, dining_court, station)
-                    VALUES (%s, %s, %s, %s, %s)
+                    INSERT INTO foods (name, calories, macros, dining_court, station, meal_time)
+                    VALUES (%s, %s, %s, %s, %s, %s)
                     """,
                     (
                         item['name'],
@@ -605,7 +631,8 @@ def save_to_database(menu_items, database_url=None):
                             'fats': item['fats']
                         }),
                         item.get('dining_court'),
-                        item.get('station')
+                        item.get('station'),
+                        item.get('meal_period')
                     )
                 )
                 added_count += 1

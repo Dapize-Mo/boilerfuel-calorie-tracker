@@ -200,7 +200,7 @@ class Food(db.Model):
 	macros = db.Column(db.JSON, nullable=False)
 	dining_court = db.Column(db.String(100), nullable=True)
 	station = db.Column(db.String(255), nullable=True)
-	meal_time = db.Column(db.String(50), nullable=True)  # breakfast, lunch, dinner
+	meal_time = db.Column(db.String(50), nullable=True)  # breakfast, lunch, late lunch, dinner
 	created_at = db.Column(
 		db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
 	)
@@ -320,6 +320,20 @@ def add_food():
 			return jsonify({'error': f"Macros must include '{macro_key}'"}), 400
 
 	try:
+		# Normalize meal_time if provided
+		meal_time = data.get('meal_time')
+		if meal_time:
+			meal_time = meal_time.strip().lower().replace('_', ' ')
+			if meal_time in ['late lunch', 'latelunch', 'late-lunch']:
+				meal_time = 'late lunch'
+			elif meal_time in ['breakfast']:
+				meal_time = 'breakfast'
+			elif meal_time in ['lunch']:
+				meal_time = 'lunch'
+			elif meal_time in ['dinner']:
+				meal_time = 'dinner'
+			# else leave as is
+
 		food = Food(
 			name=str(data['name']).strip(),
 			calories=int(data['calories']),
@@ -330,6 +344,7 @@ def add_food():
 			},
 			dining_court=data.get('dining_court'),
 			station=data.get('station'),
+			meal_time=meal_time,
 		)
 		db.session.add(food)
 		db.session.commit()
