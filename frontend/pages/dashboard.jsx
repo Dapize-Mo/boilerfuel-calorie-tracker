@@ -555,7 +555,7 @@ export default function Dashboard() {
               </div>
               <div className="mt-6 space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-400">Today's meals logged:</span>
+                  <span className="text-slate-400">Today&apos;s meals logged:</span>
                   <span className="text-white font-semibold">{selectedDayLogs.length}</span>
                 </div>
                 <div className="flex justify-between text-sm">
@@ -584,7 +584,7 @@ export default function Dashboard() {
               </div>
               <div className="mt-6 space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-400">Today's activities:</span>
+                  <span className="text-slate-400">Today&apos;s activities:</span>
                   <span className="text-white font-semibold">{selectedDayActivityLogs.length}</span>
                 </div>
                 <div className="flex justify-between text-sm">
