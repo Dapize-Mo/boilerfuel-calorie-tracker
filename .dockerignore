@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.pyc
+node_modules/
+frontend/.next/
+.git/
+.github/
+*.log
+.DS_Store
+*.sqlite*
+env/
+venv/
+dist/
+build/
+coverage/

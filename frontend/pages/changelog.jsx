@@ -1,0 +1,272 @@
+import Link from 'next/link';
+import Head from 'next/head';
+
+export default function Changelog() {
+  return (
+    <>
+      <Head>
+        <title>Changelog - BoilerFuel</title>
+        <meta name="description" content="BoilerFuel version history and updates" />
+      </Head>
+      <main className="min-h-screen bg-slate-950 text-white p-6">
+        <div className="mx-auto max-w-4xl space-y-8">
+          {/* Navigation */}
+          <nav className="flex items-center gap-4 text-sm">
+            <Link href="/" className="text-slate-400 hover:text-yellow-400 transition-colors">
+              ← Home
+            </Link>
+            <span className="text-slate-600">|</span>
+            <Link href="/dashboard" className="text-slate-400 hover:text-yellow-400 transition-colors">
+              Dashboard
+            </Link>
+            <span className="text-slate-600">|</span>
+            <Link href="/about" className="text-slate-400 hover:text-yellow-400 transition-colors">
+              About
+            </Link>
+          </nav>
+
+          {/* Header */}
+          <header className="border-b border-slate-800 pb-6">
+            <h1 className="text-4xl font-bold mb-2">Changelog</h1>
+            <p className="text-xl text-slate-400">Version history and updates</p>
+          </header>
+
+          {/* Version 1.3.0 */}
+          <section className="rounded-lg bg-slate-900 p-6 space-y-4">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-2xl font-bold text-yellow-500">Version 1.3.0</h2>
+                <p className="text-sm text-slate-400">October 2, 2025</p>
+              </div>
+              <span className="rounded-full bg-green-500/20 text-green-400 px-3 py-1 text-xs font-semibold">
+                Latest
+              </span>
+            </div>
+            <div className="space-y-3 text-slate-300">
+              <h3 className="font-bold text-white">✨ New Features</h3>
+              <ul className="space-y-2 ml-4">
+                <li className="flex items-start gap-2">
+                  <span className="text-yellow-500">•</span>
+                  <span><strong>Meal Time Filter:</strong> Filter foods by breakfast 🌅, lunch ☀️, or dinner 🌙</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-yellow-500">•</span>
+                  <span><strong>Enhanced Filter UI:</strong> Side-by-side dining court and meal time selectors with improved styling</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-yellow-500">•</span>
+                  <span><strong>Active Filter Pills:</strong> Visual indicators showing active filters with clear button</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-yellow-500">•</span>
+                  <span><strong>About Page:</strong> Learn more about BoilerFuel and how it works</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-yellow-500">•</span>
+                  <span><strong>Changelog Page:</strong> Track all updates and improvements</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-yellow-500">•</span>
+                  <span><strong>Home Button:</strong> Easy navigation back to the home page from anywhere</span>
+                </li>
+              </ul>
+              
+              <h3 className="font-bold text-white mt-4">♿ Accessibility</h3>
+              <ul className="space-y-2 ml-4">
+                <li className="flex items-start gap-2">
+                  <span className="text-green-500">•</span>
+                  <span>Added proper page titles to all pages</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-green-500">•</span>
+                  <span>Set HTML lang attribute for screen readers</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-green-500">•</span>
+                  <span>Improved ARIA labels for decorative elements</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-green-500">•</span>
+                  <span>Enhanced focus indicators for better keyboard navigation</span>
+                </li>
+              </ul>
+
+              <h3 className="font-bold text-white mt-4">🎨 UI Improvements</h3>
+              <ul className="space-y-2 ml-4">
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-500">•</span>
+                  <span>Responsive grid layout for filters (stacks on mobile)</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-500">•</span>
+                  <span>Color-coded filter pills (yellow for dining court, blue for meal time)</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-500">•</span>
+                  <span>Improved empty state messages based on active filters</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-500">•</span>
+                  <span>Better visual hierarchy with emojis and icons</span>
+                </li>
+              </ul>
+
+              <h3 className="font-bold text-white mt-4">🔧 Technical Updates</h3>
+              <ul className="space-y-2 ml-4">
+                <li className="flex items-start gap-2">
+                  <span className="text-purple-500">•</span>
+                  <span>Added meal_time column to database schema</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-purple-500">•</span>
+                  <span>Database indexes for improved query performance</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-purple-500">•</span>
+                  <span>API now supports meal_time filtering parameter</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-purple-500">•</span>
+                  <span>Migration scripts for database updates</span>
+                </li>
+              </ul>
+            </div>
+          </section>
+
+          {/* Version 1.2.0 */}
+          <section className="rounded-lg bg-slate-900 p-6 space-y-4">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-300">Version 1.2.0</h2>
+                <p className="text-sm text-slate-400">September 2025</p>
+              </div>
+            </div>
+            <div className="space-y-3 text-slate-300">
+              <h3 className="font-bold text-white">✨ New Features</h3>
+              <ul className="space-y-2 ml-4">
+                <li className="flex items-start gap-2">
+                  <span className="text-yellow-500">•</span>
+                  <span><strong>Dining Court Filter:</strong> Filter menu items by specific dining locations</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-yellow-500">•</span>
+                  <span><strong>Station Grouping:</strong> Foods organized by dining hall stations (Grill, Salad Bar, etc.)</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-yellow-500">•</span>
+                  <span><strong>Quick Add Button:</strong> One-click meal logging with + button</span>
+                </li>
+              </ul>
+              
+              <h3 className="font-bold text-white mt-4">🎨 UI Improvements</h3>
+              <ul className="space-y-2 ml-4">
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-500">•</span>
+                  <span>Card-based layout for station grouping</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-500">•</span>
+                  <span>Improved visual hierarchy with colors</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-500">•</span>
+                  <span>Better mobile responsiveness</span>
+                </li>
+              </ul>
+            </div>
+          </section>
+
+          {/* Version 1.1.0 */}
+          <section className="rounded-lg bg-slate-900 p-6 space-y-4">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-300">Version 1.1.0</h2>
+                <p className="text-sm text-slate-400">August 2025</p>
+              </div>
+            </div>
+            <div className="space-y-3 text-slate-300">
+              <h3 className="font-bold text-white">✨ New Features</h3>
+              <ul className="space-y-2 ml-4">
+                <li className="flex items-start gap-2">
+                  <span className="text-yellow-500">•</span>
+                  <span><strong>Activity Tracking:</strong> Log workouts and exercises</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-yellow-500">•</span>
+                  <span><strong>Calories Burned:</strong> Calculate net calories (consumed - burned)</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-yellow-500">•</span>
+                  <span><strong>Activity Database:</strong> Pre-populated with common exercises and calorie rates</span>
+                </li>
+              </ul>
+              
+              <h3 className="font-bold text-white mt-4">🔧 Improvements</h3>
+              <ul className="space-y-2 ml-4">
+                <li className="flex items-start gap-2">
+                  <span className="text-green-500">•</span>
+                  <span>Separate activity log storage using cookies</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-green-500">•</span>
+                  <span>Admin panel support for managing activities</span>
+                </li>
+              </ul>
+            </div>
+          </section>
+
+          {/* Version 1.0.0 */}
+          <section className="rounded-lg bg-slate-900 p-6 space-y-4">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-300">Version 1.0.0</h2>
+                <p className="text-sm text-slate-400">July 2025</p>
+              </div>
+              <span className="rounded-full bg-blue-500/20 text-blue-400 px-3 py-1 text-xs font-semibold">
+                Initial Release
+              </span>
+            </div>
+            <div className="space-y-3 text-slate-300">
+              <h3 className="font-bold text-white">🚀 Initial Features</h3>
+              <ul className="space-y-2 ml-4">
+                <li className="flex items-start gap-2">
+                  <span className="text-yellow-500">•</span>
+                  <span><strong>Food Logging:</strong> Track meals with calories and macros</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-yellow-500">•</span>
+                  <span><strong>Daily Totals:</strong> View calories, protein, carbs, and fats</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-yellow-500">•</span>
+                  <span><strong>Local Storage:</strong> Privacy-first approach with cookie-based storage</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-yellow-500">•</span>
+                  <span><strong>Admin Panel:</strong> Manage food database</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-yellow-500">•</span>
+                  <span><strong>Menu Scraper:</strong> Automated dining hall menu updates</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-yellow-500">•</span>
+                  <span><strong>Responsive Design:</strong> Works on desktop and mobile</span>
+                </li>
+              </ul>
+            </div>
+          </section>
+
+          {/* Footer */}
+          <footer className="text-center text-sm text-slate-500 pt-8 pb-4">
+            <p>
+              <Link href="/about" className="text-slate-400 hover:text-yellow-400 transition-colors">
+                Learn more about BoilerFuel
+              </Link>
+            </p>
+          </footer>
+        </div>
+      </main>
+    </>
+  );
+}
