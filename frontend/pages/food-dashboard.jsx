@@ -184,9 +184,12 @@ function isSameDay(timestamp, selectedDateStart) {
   );
 }
 
-export default function Dashboard() {
+export default function FoodDashboard() {
   const [foods, setFoods] = useState([]);
   const [activities, setActivities] = useState([]);
+  const [diningCourts, setDiningCourts] = useState([]);
+  const [selectedDiningCourt, setSelectedDiningCourt] = useState('');
+  const [selectedMealTime, setSelectedMealTime] = useState('');
   const [selectedDate, setSelectedDate] = useState(() => formatDateForInput(startOfToday()));
   const [logs, setLogs] = useState(() => parseLogsCookie());
   const [activityLogs, setActivityLogs] = useState(() => parseActivityLogsCookie());
@@ -195,30 +198,39 @@ export default function Dashboard() {
   const [editingGoals, setEditingGoals] = useState(false);
   const [goalForm, setGoalForm] = useState(() => parseGoalsCookie());
   const [loading, setLoading] = useState(true);
+  const [menuError, setMenuError] = useState('');
+  const [success, setSuccess] = useState('');
   const successTimeout = useRef(null);
 
   useEffect(() => {
     let isMounted = true;
 
-    async function loadData() {
+    async function loadDiningCourts() {
       try {
-        const [foodsData, activitiesData] = await Promise.all([
-          apiCall('/api/foods'),
-          apiCall('/api/activities')
-        ]);
+        const data = await apiCall('/api/dining-courts');
         if (!isMounted) return;
-        setFoods(Array.isArray(foodsData) ? foodsData : []);
-        setActivities(Array.isArray(activitiesData) ? activitiesData : []);
+        setDiningCourts(Array.isArray(data) ? data : []);
       } catch (error) {
-        console.error('Failed to load data:', error);
-      } finally {
-        if (isMounted) {
-          setLoading(false);
+        console.error('Failed to load dining courts:', error);
+      }
+    }
+
+    async function loadActivities() {
+      try {
+        const data = await apiCall('/api/activities');
+        if (!isMounted) return;
+        setActivities(Array.isArray(data) ? data : []);
+      } catch (error) {
+        if (!isMounted) return;
+        if (!menuError) {
+          setMenuError(error?.message || 'Failed to load activities.');
         }
       }
     }
 
-    loadData();
+    loadDiningCourts();
+    loadActivities();
+    setLoading(false);
 
     return () => {
       isMounted = false;
@@ -228,6 +240,36 @@ export default function Dashboard() {
     };
   }, []);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadFoods() {
+      try {
+        const params = new URLSearchParams();
+        if (selectedDiningCourt) {
+          params.append('dining_court', selectedDiningCourt);
+        }
+        if (selectedMealTime) {
+          params.append('meal_time', selectedMealTime);
+        }
+        const url = params.toString() ? `/api/foods?${params.toString()}` : '/api/foods';
+        const data = await apiCall(url);
+        if (!isMounted) return;
+        setFoods(Array.isArray(data) ? data : []);
+        setMenuError('');
+      } catch (error) {
+        if (!isMounted) return;
+        setMenuError(error?.message || 'Failed to load menu items.');
+      }
+    }
+
+    loadFoods();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedDiningCourt, selectedMealTime]);
+
   const foodsById = useMemo(() => {
     const map = new Map();
     foods.forEach((food) => {
@@ -236,6 +278,18 @@ export default function Dashboard() {
       }
     });
     return map;
+  }, [foods]);
+
+  const foodsByStation = useMemo(() => {
+    const grouped = {};
+    foods.forEach((food) => {
+      const station = food.station || 'Other Items';
+      if (!grouped[station]) {
+        grouped[station] = [];
+      }
+      grouped[station].push(food);
+    });
+    return grouped;
   }, [foods]);
 
   const activitiesById = useMemo(() => {
@@ -301,6 +355,24 @@ export default function Dashboard() {
     };
   }, [selectedDayLogs, selectedDayActivityLogs, foodsById, activitiesById]);
 
+  function persistLogs(nextLogs) {
+    setLogs(nextLogs);
+    if (nextLogs.length === 0) {
+      deleteCookie(LOG_COOKIE_KEY);
+    } else {
+      writeCookie(LOG_COOKIE_KEY, JSON.stringify(nextLogs));
+    }
+  }
+
+  function persistActivityLogs(nextLogs) {
+    setActivityLogs(nextLogs);
+    if (nextLogs.length === 0) {
+      deleteCookie(ACTIVITY_LOG_COOKIE_KEY);
+    } else {
+      writeCookie(ACTIVITY_LOG_COOKIE_KEY, JSON.stringify(nextLogs));
+    }
+  }
+
   function persistGoals(nextGoals) {
     setGoals(nextGoals);
     writeCookie(GOALS_COOKIE_KEY, JSON.stringify(nextGoals));
@@ -309,6 +381,38 @@ export default function Dashboard() {
   function persistUserPrefs(nextPrefs) {
     setUserPrefs(nextPrefs);
     writeCookie(USER_PREFS_COOKIE_KEY, JSON.stringify(nextPrefs));
+  }
+
+  function handleQuickAdd(foodId, servingAmount = 1) {
+    const newLog = {
+      id: Date.now(),
+      foodId: Number(foodId),
+      servings: servingAmount,
+      timestamp: new Date().toISOString(),
+    };
+
+    const nextLogs = [newLog, ...logs];
+    persistLogs(nextLogs);
+    setSuccess('Meal added!');
+
+    if (successTimeout.current) {
+      clearTimeout(successTimeout.current);
+    }
+    successTimeout.current = window.setTimeout(() => setSuccess(''), 2500);
+  }
+
+  function handleRemoveLog(logId) {
+    const nextLogs = logs.filter((log) => log.id !== logId);
+    persistLogs(nextLogs);
+  }
+
+  function handleRemoveActivityLog(logId) {
+    const nextLogs = activityLogs.filter((log) => log.id !== logId);
+    persistActivityLogs(nextLogs);
+  }
+
+  function handleClearLogs() {
+    persistLogs([]);
   }
 
   function handleSaveGoals(event) {
@@ -338,7 +442,7 @@ export default function Dashboard() {
     return (
       <>
         <Head>
-          <title>Loading... - BoilerFuel Dashboard</title>
+          <title>Loading... - BoilerFuel Food Tracker</title>
         </Head>
         <div className="min-h-[50vh] flex items-center justify-center">
           <div className="text-xl">Loading menu...</div>
@@ -350,8 +454,8 @@ export default function Dashboard() {
   return (
     <>
       <Head>
-        <title>BoilerFuel Dashboard - Overview</title>
-        <meta name="description" content="Your health and fitness overview with BoilerFuel" />
+        <title>Food Tracker - BoilerFuel</title>
+        <meta name="description" content="Track your meals with BoilerFuel calorie tracker" />
       </Head>
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
         <div className="mx-auto max-w-7xl px-4 py-8 space-y-8">
@@ -360,15 +464,36 @@ export default function Dashboard() {
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
                 <div className="flex items-center gap-3">
-                  <span className="text-4xl">🎯</span>
+                  <span className="text-4xl">🍽️</span>
                   <h1 className="text-4xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
-                    Dashboard Overview
+                    Food Tracker
                   </h1>
                 </div>
-                <p className="text-slate-400 mt-2">Your daily nutrition and fitness summary—all data stays on this device only.</p>
+                <p className="text-slate-400 mt-2">Track your meals and nutrition—all data stays on this device only.</p>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={handleClearLogs}
+                  className="px-4 py-2 rounded-xl bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-300 font-semibold transition-all"
+                >
+                  Clear Food Logs
+                </button>
               </div>
             </div>
           </header>
+
+          {menuError && (
+            <div className="rounded-xl border border-red-500 bg-red-500/10 px-4 py-3 text-red-400">
+              {menuError}
+            </div>
+          )}
+
+          {success && (
+            <div className="rounded-xl border border-green-500 bg-green-500/10 px-4 py-3 text-green-400">
+              {success}
+            </div>
+          )}
 
           {/* Date Selector */}
           <div className="backdrop-blur-lg bg-white/5 rounded-2xl border border-white/10 p-6">
@@ -384,26 +509,14 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Stats Grid with Gradient Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+          {/* Food Stats Grid */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCardModern
-              label="Calories In"
+              label="Calories"
               value={Math.round(totals.calories)}
               goal={userPrefs.showGoals ? goals.calories : null}
               gradient="from-yellow-500 to-orange-500"
               icon="🔥"
-            />
-            <StatCardModern
-              label="Calories Out"
-              value={Math.round(totals.burned)}
-              gradient="from-orange-500 to-red-500"
-              icon="💪"
-            />
-            <StatCardModern
-              label="Net Calories"
-              value={Math.round(totals.net)}
-              gradient="from-cyan-500 to-blue-500"
-              icon="📊"
             />
             <StatCardModern
               label="Protein"
@@ -419,12 +532,19 @@ export default function Dashboard() {
               gradient="from-blue-500 to-indigo-500"
               icon="🍞"
             />
+            <StatCardModern
+              label="Fats"
+              value={`${Math.round(totals.fats)}g`}
+              goal={userPrefs.showGoals ? goals.fats : null}
+              gradient="from-purple-500 to-pink-500"
+              icon="🥑"
+            />
           </div>
 
           {/* Goals Section */}
           <div className="backdrop-blur-lg bg-white/5 rounded-2xl border border-white/10 p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-2xl font-bold text-white">🎯 Daily Goals</h3>
+              <h3 className="text-2xl font-bold text-white">🎯 Food Goals</h3>
               <div className="flex items-center gap-3">
                 <label className="flex items-center gap-2 text-sm cursor-pointer">
                   <input
@@ -450,7 +570,7 @@ export default function Dashboard() {
 
             {editingGoals ? (
               <form onSubmit={handleSaveGoals} className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                   <div>
                     <label className="block text-xs font-medium text-slate-400 mb-1">Calories</label>
                     <input
@@ -495,17 +615,6 @@ export default function Dashboard() {
                       className="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-white text-sm"
                     />
                   </div>
-                  <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1">Activity (min)</label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="5"
-                      value={goalForm.activityMinutes}
-                      onChange={(e) => setGoalForm({ ...goalForm, activityMinutes: e.target.value })}
-                      className="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-white text-sm"
-                    />
-                  </div>
                 </div>
                 <div className="flex gap-3">
                   <button
@@ -524,149 +633,151 @@ export default function Dashboard() {
                 </div>
               </form>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <GoalCardModern label="Calories" value={goals.calories} current={Math.round(totals.calories)} showProgress={userPrefs.showGoals} />
                 <GoalCardModern label="Protein" value={`${goals.protein}g`} current={`${Math.round(totals.protein)}g`} showProgress={userPrefs.showGoals} />
                 <GoalCardModern label="Carbs" value={`${goals.carbs}g`} current={`${Math.round(totals.carbs)}g`} showProgress={userPrefs.showGoals} />
                 <GoalCardModern label="Fats" value={`${goals.fats}g`} current={`${Math.round(totals.fats)}g`} showProgress={userPrefs.showGoals} />
-                <GoalCardModern label="Activity" value={`${goals.activityMinutes} min`} current={`${Math.round(totals.activityMinutes)} min`} showProgress={userPrefs.showGoals} />
               </div>
             )}
           </div>
 
-          {/* Quick Access Cards */}
-          <div className="grid gap-6 md:grid-cols-2">
-            {/* Food Tracker Card */}
-            <Link
-              href="/food-dashboard"
-              className="backdrop-blur-lg bg-white/5 rounded-2xl border border-white/10 p-8 hover:border-yellow-500/50 transition-all group"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-4">
-                  <span className="text-5xl">🍽️</span>
-                  <div>
-                    <h2 className="text-2xl font-bold text-white group-hover:text-yellow-400 transition-colors">Food Tracker</h2>
-                    <p className="text-slate-400">Track your meals and nutrition</p>
-                  </div>
-                </div>
-                <svg className="w-6 h-6 text-slate-400 group-hover:text-yellow-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </div>
-              <div className="mt-6 space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-400">Today's meals logged:</span>
-                  <span className="text-white font-semibold">{selectedDayLogs.length}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-400">Calories consumed:</span>
-                  <span className="text-yellow-400 font-semibold">{Math.round(totals.calories)} cal</span>
-                </div>
-              </div>
-            </Link>
+          {/* Food Section */}
+          <div className="backdrop-blur-lg bg-white/5 rounded-2xl border border-white/10 p-6">
+            <h2 className="text-2xl font-bold mb-6 text-white">🍽️ Food Menu</h2>
 
-            {/* Gym Tracker Card */}
-            <Link
-              href="/gym"
-              className="backdrop-blur-lg bg-white/5 rounded-2xl border border-white/10 p-8 hover:border-orange-500/50 transition-all group"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-4">
-                  <span className="text-5xl">💪</span>
-                  <div>
-                    <h2 className="text-2xl font-bold text-white group-hover:text-orange-400 transition-colors">Gym Tracker</h2>
-                    <p className="text-slate-400">Log your workouts and activities</p>
-                  </div>
+            <div className="grid gap-4 md:grid-cols-2 mb-6">
+              {diningCourts.length > 0 && (
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-300">Dining Court</label>
+                  <select
+                    value={selectedDiningCourt}
+                    onChange={(e) => setSelectedDiningCourt(e.target.value)}
+                    className="w-full rounded-xl border border-slate-600 bg-slate-800/80 px-4 py-2.5 text-white focus:ring-2 focus:ring-yellow-500"
+                  >
+                    <option value="">All Dining Courts</option>
+                    {diningCourts.map((court) => (
+                      <option key={court} value={court}>
+                        {court.charAt(0).toUpperCase() + court.slice(1)}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-                <svg className="w-6 h-6 text-slate-400 group-hover:text-orange-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
+              )}
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-300">Meal Time</label>
+                <select
+                  value={selectedMealTime}
+                  onChange={(e) => setSelectedMealTime(e.target.value)}
+                  className="w-full rounded-xl border border-slate-600 bg-slate-800/80 px-4 py-2.5 text-white focus:ring-2 focus:ring-yellow-500"
+                >
+                  <option value="">All Meal Times</option>
+                  <option value="breakfast">Breakfast</option>
+                  <option value="lunch">Lunch</option>
+                  <option value="late lunch">Late Lunch</option>
+                  <option value="dinner">Dinner</option>
+                </select>
               </div>
-              <div className="mt-6 space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-400">Today's activities:</span>
-                  <span className="text-white font-semibold">{selectedDayActivityLogs.length}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-400">Calories burned:</span>
-                  <span className="text-orange-400 font-semibold">{Math.round(totals.burned)} cal</span>
-                </div>
+            </div>
+
+            {foods.length === 0 ? (
+              <p className="text-slate-400">No foods available</p>
+            ) : (
+              <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+                {Object.entries(foodsByStation)
+                  .sort(([a], [b]) => a.localeCompare(b))
+                  .map(([station, stationFoods]) => (
+                    <div key={station} className="rounded-xl bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-yellow-500/30 overflow-hidden">
+                      <div className="bg-gradient-to-r from-yellow-600 to-orange-500 px-4 py-3">
+                        <h3 className="text-lg font-bold text-slate-900">{station}</h3>
+                      </div>
+                      <div className="p-4 space-y-2">
+                        {stationFoods.map((food) => {
+                          const macros = food.macros || {};
+                          return (
+                            <div
+                              key={food.id}
+                              className="bg-slate-700/50 backdrop-blur rounded-lg px-3 py-2 hover:bg-slate-600/50 transition-all border border-slate-600/30"
+                            >
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="flex-1">
+                                  <div className="font-semibold text-white text-sm">{food.name}</div>
+                                  <div className="text-xs text-slate-300 mt-1">
+                                    {food.calories} cal
+                                    {(macros.protein || macros.carbs || macros.fats) && (
+                                      <span className="block mt-0.5">
+                                        P: {Math.round(macros.protein || 0)}g
+                                        • C: {Math.round(macros.carbs || 0)}g
+                                        • F: {Math.round(macros.fats || 0)}g
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => handleQuickAdd(food.id, 1)}
+                                  className="rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold w-8 h-8 flex items-center justify-center transition-all shadow-lg"
+                                >
+                                  +
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
               </div>
-            </Link>
+            )}
           </div>
 
-          {/* Recent Activity Summary */}
-          <div className="grid gap-6 md:grid-cols-2">
-            {/* Recent Meals */}
-            <div className="backdrop-blur-lg bg-white/5 rounded-2xl border border-white/10 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-bold text-white">📝 Recent Meals</h3>
-                <Link href="/food-dashboard" className="text-sm text-yellow-400 hover:text-yellow-300">
-                  View all →
-                </Link>
-              </div>
-              {selectedDayLogs.length === 0 ? (
-                <p className="text-slate-400">No meals logged today.</p>
-              ) : (
-                <div className="space-y-3">
-                  {selectedDayLogs.slice(0, 3).map((log) => {
-                    const food = foodsById.get(log.foodId);
-                    if (!food) return null;
-                    const servingsValue = Number(log.servings) || 0;
-                    return (
-                      <div key={log.id} className="rounded-lg bg-slate-800/50 p-3 border border-slate-700">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <p className="font-semibold text-white text-sm">{food.name}</p>
-                            <p className="text-xs text-slate-400">{servingsValue} {servingsValue === 1 ? 'serving' : 'servings'}</p>
-                          </div>
-                          <p className="font-bold text-yellow-400 text-sm">{Math.round((food.calories || 0) * servingsValue)} cal</p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                  {selectedDayLogs.length > 3 && (
-                    <p className="text-center text-sm text-slate-400">+{selectedDayLogs.length - 3} more</p>
-                  )}
-                </div>
-              )}
-            </div>
+          {/* Meals Log */}
+          <div className="backdrop-blur-lg bg-white/5 rounded-2xl border border-white/10 p-6">
+            <h3 className="text-xl font-bold mb-4 text-white">📝 Logged Meals</h3>
+            {selectedDayLogs.length === 0 ? (
+              <p className="text-slate-400">No meals logged for this date.</p>
+            ) : (
+              <div className="grid gap-3 md:grid-cols-2">
+                {selectedDayLogs.map((log) => {
+                  const food = foodsById.get(log.foodId);
+                  if (!food) return null;
 
-            {/* Recent Activities */}
-            <div className="backdrop-blur-lg bg-white/5 rounded-2xl border border-white/10 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-bold text-white">🏋️ Recent Activities</h3>
-                <Link href="/gym" className="text-sm text-orange-400 hover:text-orange-300">
-                  View all →
-                </Link>
-              </div>
-              {selectedDayActivityLogs.length === 0 ? (
-                <p className="text-slate-400">No activities logged today.</p>
-              ) : (
-                <div className="space-y-3">
-                  {selectedDayActivityLogs.slice(0, 3).map((log) => {
-                    const activity = activitiesById.get(log.activityId);
-                    if (!activity) return null;
-                    const durationValue = Number(log.duration) || 0;
-                    const caloriesBurned = Math.round((activity.calories_per_hour * durationValue) / 60);
-                    return (
-                      <div key={log.id} className="rounded-lg bg-slate-800/50 p-3 border border-slate-700">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <p className="font-semibold text-white text-sm">{activity.name}</p>
-                            <p className="text-xs text-slate-400">{durationValue} {durationValue === 1 ? 'minute' : 'minutes'}</p>
-                          </div>
-                          <p className="font-bold text-orange-400 text-sm">{caloriesBurned} cal</p>
+                  const macros = food.macros || {};
+                  const servingsValue = Number(log.servings) || 0;
+
+                  return (
+                    <div key={log.id} className="rounded-xl bg-slate-800/50 backdrop-blur border border-slate-700 p-4 hover:border-yellow-500/50 transition-all">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-white">{food.name}</h4>
+                          <p className="text-sm text-slate-400">
+                            {servingsValue} {servingsValue === 1 ? 'serving' : 'servings'}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-yellow-400">
+                            {Math.round((food.calories || 0) * servingsValue)} cal
+                          </p>
+                          <p className="text-xs text-slate-400">
+                            P: {Math.round((macros.protein || 0) * servingsValue)}g
+                            • C: {Math.round((macros.carbs || 0) * servingsValue)}g
+                            • F: {Math.round((macros.fats || 0) * servingsValue)}g
+                          </p>
                         </div>
                       </div>
-                    );
-                  })}
-                  {selectedDayActivityLogs.length > 3 && (
-                    <p className="text-center text-sm text-slate-400">+{selectedDayActivityLogs.length - 3} more</p>
-                  )}
-                </div>
-              )}
-            </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveLog(log.id)}
+                        className="mt-3 text-sm text-slate-400 hover:text-red-400 transition-colors"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       </div>
