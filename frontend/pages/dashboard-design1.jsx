@@ -184,7 +184,7 @@ function isSameDay(timestamp, selectedDateStart) {
   );
 }
 
-export default function Dashboard() {
+export default function DashboardDesign1() {
   const [foods, setFoods] = useState([]);
   const [activities, setActivities] = useState([]);
   const [diningCourts, setDiningCourts] = useState([]);
@@ -455,8 +455,8 @@ export default function Dashboard() {
   return (
     <>
       <Head>
-        <title>BoilerFuel Dashboard - Track Your Meals</title>
-        <meta name="description" content="Track your meals and activities with BoilerFuel calorie tracker" />
+        <title>Design 1 - Modern Card Layout</title>
+        <meta name="description" content="Modern card-based dashboard design" />
       </Head>
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
         <div className="mx-auto max-w-7xl px-4 py-8 space-y-8">
@@ -465,19 +465,19 @@ export default function Dashboard() {
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
                 <div className="flex items-center gap-3">
-                  <span className="text-4xl">🔥</span>
+                  <span className="text-4xl">🎯</span>
                   <h1 className="text-4xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
-                    BoilerFuel Dashboard
+                    Design 1: Modern Cards
                   </h1>
                 </div>
-                <p className="text-slate-400 mt-2">Track meals and activities—all data stays on this device only.</p>
+                <p className="text-slate-400 mt-2">Sleek glass-morphism design with vibrant gradients</p>
               </div>
               <div className="flex gap-3">
                 <Link
                   href="/dashboard-selector"
-                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold transition-all shadow-lg"
+                  className="px-4 py-2 rounded-xl bg-slate-700/50 hover:bg-slate-600/50 border border-slate-600 text-white font-semibold transition-all"
                 >
-                  Try Other Designs
+                  ← Back to Selector
                 </Link>
                 <button
                   type="button"
