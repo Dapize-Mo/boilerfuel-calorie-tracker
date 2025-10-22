@@ -6,6 +6,39 @@ import { apiCall } from '../utils/auth';
 import { deleteCookie, readCookie, writeCookie } from '../utils/cookies';
 
 const ACTIVITY_LOG_COOKIE_KEY = 'boilerfuel_activity_logs_v1';
+const GOALS_COOKIE_KEY = 'boilerfuel_goals_v1';
+
+function parseGoalsCookie() {
+  const raw = readCookie(GOALS_COOKIE_KEY);
+  if (!raw) {
+    return {
+      calories: 2000,
+      protein: 150,
+      carbs: 250,
+      fats: 65,
+      activityMinutes: 30,
+    };
+  }
+
+  try {
+    const parsed = JSON.parse(raw);
+    return {
+      calories: Number(parsed?.calories) || 2000,
+      protein: Number(parsed?.protein) || 150,
+      carbs: Number(parsed?.carbs) || 250,
+      fats: Number(parsed?.fats) || 65,
+      activityMinutes: Number(parsed?.activityMinutes) || 30,
+    };
+  } catch (error) {
+    return {
+      calories: 2000,
+      protein: 150,
+      carbs: 250,
+      fats: 65,
+      activityMinutes: 30,
+    };
+  }
+}
 
 function parseActivityLogsCookie() {
   const raw = readCookie(ACTIVITY_LOG_COOKIE_KEY);
@@ -74,6 +107,7 @@ function getMonthStart(date) {
 export default function GymDashboard() {
   const [activities, setActivities] = useState([]);
   const [activityLogs, setActivityLogs] = useState(() => parseActivityLogsCookie());
+  const [goals, setGoals] = useState(() => parseGoalsCookie());
   const [selectedActivity, setSelectedActivity] = useState('');
   const [duration, setDuration] = useState('30');
   const [loading, setLoading] = useState(true);
@@ -341,6 +375,7 @@ export default function GymDashboard() {
               label="Total Duration" 
               value={stats.totalDuration} 
               unit="min"
+              goal={viewMode === 'today' ? goals.activityMinutes : null}
               icon="⏱️"
               accent="text-blue-500" 
             />
@@ -516,7 +551,10 @@ export default function GymDashboard() {
   );
 }
 
-function StatCard({ label, value, unit, icon, accent }) {
+function StatCard({ label, value, unit, icon, accent, goal }) {
+  const hasGoal = goal !== null && goal !== undefined;
+  const percentage = hasGoal && goal > 0 ? Math.min(100, (value / goal) * 100) : null;
+
   return (
     <div className="rounded-lg bg-slate-900 p-6 border-2 border-slate-800 hover:border-slate-700 transition-colors">
       <div className="flex items-center justify-between mb-2">
@@ -526,6 +564,20 @@ function StatCard({ label, value, unit, icon, accent }) {
       <p className={`text-4xl font-bold ${accent}`}>
         {value}{unit && <span className="text-xl ml-1">{unit}</span>}
       </p>
+      {hasGoal && percentage !== null && (
+        <div className="mt-3">
+          <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
+            <span>Daily Goal: {goal}{unit}</span>
+            <span>{Math.round(percentage)}%</span>
+          </div>
+          <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
+            <div
+              className={`h-full ${accent.replace('text-', 'bg-')} transition-all duration-300`}
+              style={{ width: `${percentage}%` }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
