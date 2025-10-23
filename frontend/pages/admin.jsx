@@ -42,6 +42,12 @@ export default function AdminPage() {
   const [scrapeError, setScrapeError] = useState('');
   const [scrapeSuccess, setScrapeSuccess] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterDiningCourt, setFilterDiningCourt] = useState('');
+  const [filterMealTime, setFilterMealTime] = useState('');
+  const [filterStation, setFilterStation] = useState('');
+  const [sortBy, setSortBy] = useState('name');
+  const [sortOrder, setSortOrder] = useState('asc');
 
   useEffect(() => {
     async function bootstrap() {
@@ -237,6 +243,52 @@ export default function AdminPage() {
     }
   }
 
+  // Filter and sort foods for database viewer
+  const filteredAndSortedFoods = foods
+    .filter((food) => {
+      const matchesSearch = !searchTerm || 
+        food.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesDiningCourt = !filterDiningCourt || 
+        food.dining_court === filterDiningCourt;
+      const matchesMealTime = !filterMealTime || 
+        food.meal_time === filterMealTime;
+      const matchesStation = !filterStation || 
+        food.station === filterStation;
+      return matchesSearch && matchesDiningCourt && matchesMealTime && matchesStation;
+    })
+    .sort((a, b) => {
+      let aVal, bVal;
+      if (sortBy === 'name') {
+        aVal = a.name.toLowerCase();
+        bVal = b.name.toLowerCase();
+      } else if (sortBy === 'calories') {
+        aVal = a.calories || 0;
+        bVal = b.calories || 0;
+      } else if (sortBy === 'protein') {
+        aVal = a.macros?.protein || 0;
+        bVal = b.macros?.protein || 0;
+      } else if (sortBy === 'dining_court') {
+        aVal = a.dining_court || '';
+        bVal = b.dining_court || '';
+      } else if (sortBy === 'station') {
+        aVal = a.station || '';
+        bVal = b.station || '';
+      } else {
+        return 0;
+      }
+      
+      if (sortOrder === 'asc') {
+        return aVal > bVal ? 1 : aVal < bVal ? -1 : 0;
+      } else {
+        return aVal < bVal ? 1 : aVal > bVal ? -1 : 0;
+      }
+    });
+
+  // Get unique values for filters
+  const uniqueDiningCourts = [...new Set(foods.map(f => f.dining_court).filter(Boolean))].sort();
+  const uniqueMealTimes = [...new Set(foods.map(f => f.meal_time).filter(Boolean))].sort();
+  const uniqueStations = [...new Set(foods.map(f => f.station).filter(Boolean))].sort();
+
   if (loading) {
     return (
       <>
@@ -364,6 +416,187 @@ export default function AdminPage() {
             {scrapeSuccess}
           </div>
         )}
+
+        {/* Database Viewer Section */}
+        <section className="rounded-lg bg-slate-900 p-6">
+          <h2 className="mb-6 text-3xl font-bold">📊 Database Viewer</h2>
+          
+          {/* Search and Filter Controls */}
+          <div className="mb-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div>
+              <label htmlFor="search" className="mb-2 block text-sm font-medium">
+                Search Foods
+              </label>
+              <input
+                id="search"
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search by name..."
+                className="w-full rounded border border-slate-700 bg-slate-800 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500"
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="filter-dining-court" className="mb-2 block text-sm font-medium">
+                Dining Court
+              </label>
+              <select
+                id="filter-dining-court"
+                value={filterDiningCourt}
+                onChange={(e) => setFilterDiningCourt(e.target.value)}
+                className="w-full rounded border border-slate-700 bg-slate-800 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500"
+              >
+                <option value="">All Courts</option>
+                {uniqueDiningCourts.map((court) => (
+                  <option key={court} value={court}>{court}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div>
+              <label htmlFor="filter-meal-time" className="mb-2 block text-sm font-medium">
+                Meal Time
+              </label>
+              <select
+                id="filter-meal-time"
+                value={filterMealTime}
+                onChange={(e) => setFilterMealTime(e.target.value)}
+                className="w-full rounded border border-slate-700 bg-slate-800 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500"
+              >
+                <option value="">All Times</option>
+                {uniqueMealTimes.map((time) => (
+                  <option key={time} value={time}>{time}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div>
+              <label htmlFor="filter-station" className="mb-2 block text-sm font-medium">
+                Station
+              </label>
+              <select
+                id="filter-station"
+                value={filterStation}
+                onChange={(e) => setFilterStation(e.target.value)}
+                className="w-full rounded border border-slate-700 bg-slate-800 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500"
+              >
+                <option value="">All Stations</option>
+                {uniqueStations.map((station) => (
+                  <option key={station} value={station}>{station}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Sort Controls */}
+          <div className="mb-6 flex flex-wrap gap-4 items-center">
+            <div className="flex items-center gap-2">
+              <label htmlFor="sort-by" className="text-sm font-medium">
+                Sort by:
+              </label>
+              <select
+                id="sort-by"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="rounded border border-slate-700 bg-slate-800 px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500"
+              >
+                <option value="name">Name</option>
+                <option value="calories">Calories</option>
+                <option value="protein">Protein</option>
+                <option value="dining_court">Dining Court</option>
+                <option value="station">Station</option>
+              </select>
+            </div>
+            
+            <button
+              type="button"
+              onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+              className="rounded border border-slate-700 bg-slate-800 px-3 py-1 text-sm hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            >
+              {sortOrder === 'asc' ? '↑ Ascending' : '↓ Descending'}
+            </button>
+
+            <div className="ml-auto text-sm text-slate-400">
+              Showing {filteredAndSortedFoods.length} of {foods.length} items
+            </div>
+          </div>
+
+          {/* Clear Filters Button */}
+          {(searchTerm || filterDiningCourt || filterMealTime || filterStation) && (
+            <div className="mb-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchTerm('');
+                  setFilterDiningCourt('');
+                  setFilterMealTime('');
+                  setFilterStation('');
+                }}
+                className="text-sm text-yellow-400 hover:text-yellow-300"
+              >
+                Clear all filters
+              </button>
+            </div>
+          )}
+
+          {/* Data Table */}
+          <div className="overflow-x-auto">
+            {filteredAndSortedFoods.length === 0 ? (
+              <p className="text-slate-400 text-center py-8">
+                {foods.length === 0 ? 'No foods in database yet.' : 'No foods match your filters.'}
+              </p>
+            ) : (
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-700 text-left">
+                    <th className="pb-3 pr-4 font-semibold">Name</th>
+                    <th className="pb-3 pr-4 font-semibold">Calories</th>
+                    <th className="pb-3 pr-4 font-semibold">Protein</th>
+                    <th className="pb-3 pr-4 font-semibold">Carbs</th>
+                    <th className="pb-3 pr-4 font-semibold">Fats</th>
+                    <th className="pb-3 pr-4 font-semibold">Dining Court</th>
+                    <th className="pb-3 pr-4 font-semibold">Meal Time</th>
+                    <th className="pb-3 pr-4 font-semibold">Station</th>
+                    <th className="pb-3 font-semibold">ID</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredAndSortedFoods.map((food, index) => (
+                    <tr 
+                      key={food.id}
+                      className={`border-b border-slate-800 hover:bg-slate-800/50 ${
+                        index % 2 === 0 ? 'bg-slate-900/50' : ''
+                      }`}
+                    >
+                      <td className="py-3 pr-4 font-medium">{food.name}</td>
+                      <td className="py-3 pr-4">{food.calories || 0}</td>
+                      <td className="py-3 pr-4">{food.macros?.protein || 0}g</td>
+                      <td className="py-3 pr-4">{food.macros?.carbs || 0}g</td>
+                      <td className="py-3 pr-4">{food.macros?.fats || 0}g</td>
+                      <td className="py-3 pr-4">
+                        <span className="inline-block rounded bg-slate-700 px-2 py-1 text-xs">
+                          {food.dining_court || 'N/A'}
+                        </span>
+                      </td>
+                      <td className="py-3 pr-4">
+                        <span className="inline-block rounded bg-slate-700 px-2 py-1 text-xs">
+                          {food.meal_time || 'N/A'}
+                        </span>
+                      </td>
+                      <td className="py-3 pr-4">
+                        <span className="inline-block rounded bg-slate-700 px-2 py-1 text-xs">
+                          {food.station || 'N/A'}
+                        </span>
+                      </td>
+                      <td className="py-3 text-slate-500 text-xs">{food.id}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </section>
 
         <section className="rounded-lg bg-slate-900 p-6">
           <h2 className="mb-4 text-2xl font-bold">Add Food</h2>
