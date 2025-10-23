@@ -41,6 +41,9 @@ export default function AdminPage() {
   const [scrapeLoading, setScrapeLoading] = useState(false);
   const [scrapeError, setScrapeError] = useState('');
   const [scrapeSuccess, setScrapeSuccess] = useState('');
+  const [clearLoading, setClearLoading] = useState(false);
+  const [clearError, setClearError] = useState('');
+  const [clearSuccess, setClearSuccess] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDiningCourt, setFilterDiningCourt] = useState('');
@@ -243,6 +246,40 @@ export default function AdminPage() {
     }
   }
 
+  async function handleClearDatabase() {
+    setClearLoading(true);
+    setClearError('');
+    setClearSuccess('');
+
+    // Confirm action
+    const confirmed = window.confirm(
+      '⚠️ Are you sure you want to clear ALL foods from the database? This action cannot be undone!'
+    );
+
+    if (!confirmed) {
+      setClearLoading(false);
+      return;
+    }
+
+    try {
+      const response = await apiCall(
+        '/api/clear-database',
+        {
+          method: 'POST',
+        },
+        { requireAdmin: true }
+      );
+      
+      setClearSuccess(response.message || 'Database cleared successfully!');
+      await loadFoods();
+      setTimeout(() => setClearSuccess(''), 5000);
+    } catch (error) {
+      setClearError(error.message || 'Failed to clear database');
+    } finally {
+      setClearLoading(false);
+    }
+  }
+
   // Filter and sort foods for database viewer
   const filteredAndSortedFoods = foods
     .filter((food) => {
@@ -394,7 +431,34 @@ export default function AdminPage() {
               disabled={scrapeLoading}
               className="self-start rounded bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {scrapeLoading ? 'Scraping...' : 'Scrape Purdue Menus'}
+              {scrapeLoading ? 'Scraping...' : 'Scrape Purdue Menus (Server)'}
+            </button>
+            <button
+              type="button"
+              onClick={async () => {
+                setScrapeLoading(true);
+                setScrapeError('');
+                setScrapeSuccess('');
+                try {
+                  const resp = await apiCall('/api/ci/trigger-scrape', { method: 'POST' }, { requireAdmin: true });
+                  setScrapeSuccess(resp?.message || 'Workflow dispatched');
+                } catch (e) {
+                  setScrapeError(e?.message || 'Failed to trigger GitHub Action');
+                } finally {
+                  setScrapeLoading(false);
+                }
+              }}
+              className="self-start rounded bg-indigo-600 px-4 py-2 font-semibold text-white hover:bg-indigo-700"
+            >
+              Trigger GitHub Action
+            </button>
+            <button
+              type="button"
+              onClick={handleClearDatabase}
+              disabled={clearLoading}
+              className="self-start rounded bg-red-600 px-4 py-2 font-semibold text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {clearLoading ? 'Clearing...' : '🗑️ Clear Database'}
             </button>
             <button
               type="button"
@@ -414,6 +478,17 @@ export default function AdminPage() {
         {scrapeSuccess && (
           <div className="rounded border border-green-500 bg-green-500/10 px-4 py-3 text-green-400">
             {scrapeSuccess}
+          </div>
+        )}
+        
+        {clearError && (
+          <div className="rounded border border-red-500 bg-red-500/10 px-4 py-3 text-red-400">
+            {clearError}
+          </div>
+        )}
+        {clearSuccess && (
+          <div className="rounded border border-green-500 bg-green-500/10 px-4 py-3 text-green-400">
+            {clearSuccess}
           </div>
         )}
 

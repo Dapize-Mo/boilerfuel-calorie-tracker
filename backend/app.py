@@ -15,6 +15,7 @@ from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager, create_access_token, get_jwt, jwt_required
 from sqlalchemy.sql.expression import text
+import requests
 
 # Note: Environment variables should be set externally (e.g., via start.bat or your hosting provider)
 # Load .env file only if it exists and we're in development
@@ -759,6 +760,57 @@ def scrape_menus_sync():
 		error_details = traceback.format_exc()
 		print(f"Scraping error: {error_details}")
 		return jsonify({'error': f'Scraping failed: {str(exc)}'}), 500
+
+
+# --- GitHub Actions trigger (workflow_dispatch) ---
+@app.route('/api/ci/trigger-scrape', methods=['POST'])
+@admin_required
+def trigger_github_action_scrape():
+	"""Trigger the GitHub Actions workflow that runs the scraper (workflow_dispatch).
+
+	Requires environment variables:
+	  - GITHUB_TOKEN: a PAT or GitHub App token with repo and workflow permissions
+	  - GITHUB_OWNER: repo owner (e.g. 'Dapize-Mo')
+	  - GITHUB_REPO: repo name (e.g. 'boilerfuel-calorie-tracker')
+	  - GITHUB_WORKFLOW_ID (optional): workflow file name or ID (default: 'scrape.yml')
+	  - GITHUB_REF (optional): branch ref (default: 'master')
+	"""
+	token = os.getenv('GITHUB_TOKEN')
+	owner = os.getenv('GITHUB_OWNER', 'Dapize-Mo')
+	repo = os.getenv('GITHUB_REPO', 'boilerfuel-calorie-tracker')
+	workflow_id = os.getenv('GITHUB_WORKFLOW_ID', 'scrape.yml')
+	git_ref = os.getenv('GITHUB_REF', 'master')
+
+	if not token:
+		return jsonify({'error': 'GITHUB_TOKEN not configured on server'}), 500
+
+	url = f"https://api.github.com/repos/{owner}/{repo}/actions/workflows/{workflow_id}/dispatches"
+	headers = {
+		'Authorization': f'Bearer {token}',
+		'Accept': 'application/vnd.github+json',
+		'X-GitHub-Api-Version': '2022-11-28'
+	}
+	try:
+		resp = requests.post(url, json={'ref': git_ref}, headers=headers, timeout=15)
+		if resp.status_code not in (201, 204):
+			return jsonify({'error': 'Failed to trigger workflow', 'status': resp.status_code, 'body': resp.text}), 502
+
+		# Try to fetch the latest workflow run to provide a link back to the user
+		runs_url = f"https://api.github.com/repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs?per_page=1"
+		runs = requests.get(runs_url, headers=headers, timeout=15)
+		run_url = None
+		if runs.ok:
+			data = runs.json() or {}
+			if (data.get('workflow_runs') or [])[:1]:
+				run = data['workflow_runs'][0]
+				run_url = run.get('html_url')
+
+		message = 'Workflow dispatched successfully.'
+		if run_url:
+			message += ' View run: ' + run_url
+		return jsonify({'message': message, 'run_url': run_url}), 202
+	except Exception as exc:  # pragma: no cover
+		return jsonify({'error': f'Exception triggering workflow: {exc}'}), 500
 
 
 @app.route('/api/admin/clear-placeholders', methods=['DELETE'])
