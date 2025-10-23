@@ -10,6 +10,34 @@ const ACTIVITY_LOG_COOKIE_KEY = 'boilerfuel_activity_logs_v1';
 const GOALS_COOKIE_KEY = 'boilerfuel_goals_v1';
 const USER_PREFS_COOKIE_KEY = 'boilerfuel_user_prefs_v1';
 
+// Helper function to format next available times
+function formatNextAvailable(nextAvailable) {
+  if (!nextAvailable || !Array.isArray(nextAvailable) || nextAvailable.length === 0) {
+    return null;
+  }
+
+  // Get upcoming occurrences (up to 3)
+  const upcoming = nextAvailable.slice(0, 3);
+  
+  return upcoming.map(item => {
+    const date = new Date(item.date);
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    let dayLabel;
+    if (date.toDateString() === today.toDateString()) {
+      dayLabel = 'Today';
+    } else if (date.toDateString() === tomorrow.toDateString()) {
+      dayLabel = 'Tomorrow';
+    } else {
+      dayLabel = item.day_name;
+    }
+    
+    return `${dayLabel} - ${item.meal_time}`;
+  }).join(', ');
+}
+
 function parseGoalsCookie() {
   const raw = readCookie(GOALS_COOKIE_KEY);
   if (!raw) {

@@ -201,6 +201,7 @@ class Food(db.Model):
 	dining_court = db.Column(db.String(100), nullable=True)
 	station = db.Column(db.String(255), nullable=True)
 	meal_time = db.Column(db.String(50), nullable=True)  # breakfast, lunch, late lunch, dinner
+	next_available = db.Column(db.JSON, nullable=True)  # Array of {date, day_name, meal_time} for next 7 days
 	created_at = db.Column(
 		db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
 	)
@@ -297,6 +298,7 @@ def get_foods():
 				'dining_court': food.dining_court,
 				'station': food.station,
 				'meal_time': food.meal_time,
+				'next_available': food.next_available or [],
 			}
 			for food in foods
 		]),
