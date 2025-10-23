@@ -736,6 +736,9 @@ export default function FoodDashboard() {
                       <div className="p-4 space-y-2">
                         {stationFoods.map((food) => {
                           const macros = food.macros || {};
+                          const nextAvail = food.next_available || [];
+                          const hasForecast = nextAvail.length > 0;
+                          
                           return (
                             <div
                               key={food.id}
@@ -743,7 +746,44 @@ export default function FoodDashboard() {
                             >
                               <div className="flex items-start justify-between gap-2">
                                 <div className="flex-1">
-                                  <div className="font-semibold text-white text-sm">{food.name}</div>
+                                  <div className="flex items-center gap-2">
+                                    <div className="font-semibold text-white text-sm">{food.name}</div>
+                                    {food.meal_time && hasForecast && (
+                                      <div className="relative group">
+                                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-500/20 text-purple-300 border border-purple-500/30 cursor-help">
+                                          {food.meal_time}
+                                        </span>
+                                        {/* Tooltip */}
+                                        <div className="absolute left-0 top-full mt-1 z-50 hidden group-hover:block w-64 p-3 bg-slate-900 border border-purple-500/50 rounded-lg shadow-xl">
+                                          <div className="text-xs font-semibold text-purple-300 mb-2">📅 7-Day Forecast</div>
+                                          <div className="space-y-1 max-h-48 overflow-y-auto">
+                                            {nextAvail.slice(0, 7).map((slot, idx) => {
+                                              const date = new Date(slot.date);
+                                              const today = new Date();
+                                              const tomorrow = new Date(today);
+                                              tomorrow.setDate(tomorrow.getDate() + 1);
+                                              
+                                              let dayLabel;
+                                              if (date.toDateString() === today.toDateString()) {
+                                                dayLabel = 'Today';
+                                              } else if (date.toDateString() === tomorrow.toDateString()) {
+                                                dayLabel = 'Tomorrow';
+                                              } else {
+                                                dayLabel = slot.day_name;
+                                              }
+                                              
+                                              return (
+                                                <div key={idx} className="text-xs text-slate-300 flex justify-between items-center py-1 border-b border-slate-700/50 last:border-0">
+                                                  <span className="font-medium">{dayLabel}</span>
+                                                  <span className="text-emerald-400">{slot.meal_time}</span>
+                                                </div>
+                                              );
+                                            })}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
                                   <div className="text-xs text-slate-300 mt-1">
                                     {food.calories} cal
                                     {(macros.protein || macros.carbs || macros.fats) && (
