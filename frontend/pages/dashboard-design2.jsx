@@ -144,8 +144,21 @@ function startOfToday() {
   return today;
 }
 
+// Parse a YYYY-MM-DD string as a local date (avoid UTC shifting)
+function parseLocalDate(dateString) {
+  if (!dateString) return startOfToday();
+  const parts = String(dateString).split('-').map(Number);
+  if (parts.length === 3 && parts.every(Number.isFinite)) {
+    const [y, m, d] = parts;
+    return new Date(y, m - 1, d, 0, 0, 0, 0);
+  }
+  const fallback = new Date(dateString);
+  fallback.setHours(0, 0, 0, 0);
+  return fallback;
+}
+
 function startOfDate(dateString) {
-  const date = new Date(dateString);
+  const date = parseLocalDate(dateString);
   date.setHours(0, 0, 0, 0);
   return date;
 }
@@ -158,7 +171,7 @@ function formatDateForInput(date) {
 }
 
 function formatDateDisplay(dateString) {
-  const date = new Date(dateString);
+  const date = parseLocalDate(dateString);
   const today = startOfToday();
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
