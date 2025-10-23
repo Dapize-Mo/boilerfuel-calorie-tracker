@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      SCRAPE_DAYS: 7
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -24,6 +25,40 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Preflight - show target DB host (masked)
+        shell: bash
+        run: |
+          python - <<'PY'
+          import os
+          from urllib.parse import urlparse
+          url = os.getenv('DATABASE_URL')
+          if not url:
+              raise SystemExit('DATABASE_URL is not set as a repository secret')
+          parsed = urlparse(url)
+          host = parsed.hostname
+          print(f"Target DB host: {host}")
+          print(f"Scrape days: {os.getenv('SCRAPE_DAYS','7')}")
+          PY
+
       - name: Run scraper and save to DB
         run: |
           python scripts/scrape_to_db.py
+
+      - name: Verify DB updated
+        shell: bash
+        run: |
+          python - <<'PY'
+          import os, psycopg2
+          url=os.getenv('DATABASE_URL')
+          if not url:
+              raise SystemExit('Missing DATABASE_URL after run')
+          conn=psycopg2.connect(url)
+          cur=conn.cursor()
+          cur.execute('SELECT COUNT(*) FROM foods WHERE next_available IS NOT NULL')
+          c=cur.fetchone()[0]
+          cur.close(); conn.close()
+          print(f"Foods with next_available: {c}")
+          # Treat 0 as failure so the workflow alerts us
+          if c == 0:
+              raise SystemExit('No rows with next_available; check scraper/API')
+          PY

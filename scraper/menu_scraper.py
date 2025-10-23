@@ -537,13 +537,20 @@ def scrape_all_dining_courts(date=None, use_cache=True, days_ahead=7):
             if not items:
                 print(f"    API failed, trying web scraping...")
                 # Fallback to Selenium scraping if API fails
-                driver = None
+                # In CI environments (like GitHub Actions), Chrome/ChromeDriver may not be available.
+                # Gracefully skip the fallback if the driver cannot be created.
                 try:
                     driver = create_driver()
-                    items = scrape_purdue_menu(court_id, None, driver)
-                finally:
-                    if driver:
-                        driver.quit()
+                    try:
+                        items = scrape_purdue_menu(court_id, None, driver)
+                    finally:
+                        try:
+                            driver.quit()
+                        except Exception:
+                            pass
+                except Exception as e:
+                    print(f"    Selenium fallback unavailable: {e}")
+                    print("    Skipping web scraping for this location/date and continuing...")
             
             # Track schedule for each item
             for item in items:
