@@ -742,12 +742,15 @@ export default function FoodDashboard() {
                           return (
                             <div
                               key={food.id}
-                              onClick={() => setSelectedFood(food)}
+                              onClick={() => {
+                                console.log('Card clicked:', food.name);
+                                setSelectedFood(food);
+                              }}
                               className="bg-slate-700/50 backdrop-blur rounded-lg px-3 py-2 hover:bg-slate-600/50 transition-all border border-slate-600/30 cursor-pointer"
                             >
                               <div className="flex items-start justify-between gap-2">
                                 <div className="flex-1">
-                                  <div className="flex items-center gap-2">
+                                  <div className="flex items-center gap-2 flex-wrap">
                                     <div className="font-semibold text-white text-sm">{food.name}</div>
                                     {food.meal_time && hasForecast && (
                                       <div className="relative group">
@@ -755,7 +758,7 @@ export default function FoodDashboard() {
                                           {food.meal_time}
                                         </span>
                                         {/* Tooltip */}
-                                        <div className="absolute left-0 top-full mt-1 z-50 hidden group-hover:block w-64 p-3 bg-slate-900 border border-purple-500/50 rounded-lg shadow-xl">
+                                        <div className="absolute left-0 top-full mt-1 z-50 hidden group-hover:block w-64 p-3 bg-slate-900 border border-purple-500/50 rounded-lg shadow-xl pointer-events-none">
                                           <div className="text-xs font-semibold text-purple-300 mb-2">📅 7-Day Forecast</div>
                                           <div className="space-y-1 max-h-48 overflow-y-auto">
                                             {nextAvail.slice(0, 7).map((slot, idx) => {
