@@ -8,42 +8,42 @@ export default function Changelog() {
         <title>Changelog - BoilerFuel</title>
         <meta name="description" content="BoilerFuel version history and updates" />
       </Head>
-      <main className="min-h-screen bg-slate-950 text-white p-6">
+      <main className="min-h-screen bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-white p-6">
         <div className="mx-auto max-w-4xl space-y-8">
           {/* Navigation */}
           <nav className="flex items-center gap-4 text-sm">
-            <Link href="/" className="text-slate-400 hover:text-yellow-400 transition-colors">
+            <Link href="/" className="text-slate-600 dark:text-slate-400 hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors">
               ← Home
             </Link>
-            <span className="text-slate-600">|</span>
-            <Link href="/dashboard" className="text-slate-400 hover:text-yellow-400 transition-colors">
+            <span className="text-slate-400 dark:text-slate-600">|</span>
+            <Link href="/dashboard" className="text-slate-600 dark:text-slate-400 hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors">
               Dashboard
             </Link>
-            <span className="text-slate-600">|</span>
-            <Link href="/about" className="text-slate-400 hover:text-yellow-400 transition-colors">
+            <span className="text-slate-400 dark:text-slate-600">|</span>
+            <Link href="/about" className="text-slate-600 dark:text-slate-400 hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors">
               About
             </Link>
           </nav>
 
           {/* Header */}
-          <header className="border-b border-slate-800 pb-6">
+          <header className="border-b border-slate-300 dark:border-slate-800 pb-6">
             <h1 className="text-4xl font-bold mb-2">Changelog</h1>
-            <p className="text-xl text-slate-400">Version history and updates</p>
+            <p className="text-xl text-slate-600 dark:text-slate-400">Version history and updates</p>
           </header>
 
           {/* Version 1.5.0 */}
-          <section className="rounded-lg bg-slate-900 p-6 space-y-4">
+          <section className="rounded-lg bg-white dark:bg-white dark:bg-slate-900 p-6 border border-slate-200 dark:border-transparent space-y-4 border border-slate-200 dark:border-transparent">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-bold text-yellow-500">Version 1.5.0</h2>
-                <p className="text-sm text-slate-400">October 24, 2025</p>
+                <h2 className="text-2xl font-bold text-yellow-600 dark:text-yellow-500">Version 1.5.0</h2>
+                <p className="text-sm text-slate-600 dark:text-slate-400">October 24, 2025</p>
               </div>
-              <span className="rounded-full bg-green-500/20 text-green-400 px-3 py-1 text-xs font-semibold">
+              <span className="rounded-full bg-green-500/20 text-green-600 dark:text-green-400 px-3 py-1 text-xs font-semibold">
                 Latest
               </span>
             </div>
-            <div className="space-y-3 text-slate-300">
-              <h3 className="font-bold text-white">✨ New Features</h3>
+            <div className="space-y-3 text-slate-700 dark:text-slate-300">
+              <h3 className="font-bold text-slate-900 dark:text-white">✨ New Features</h3>
               <ul className="space-y-2 ml-4">
                 <li className="flex items-start gap-2">
                   <span className="text-yellow-500">•</span>
@@ -59,7 +59,7 @@ export default function Changelog() {
                 </li>
               </ul>
               
-              <h3 className="font-bold text-white mt-4">🎨 UI Improvements</h3>
+              <h3 className="font-bold text-slate-900 dark:text-white mt-4">🎨 UI Improvements</h3>
               <ul className="space-y-2 ml-4">
                 <li className="flex items-start gap-2">
                   <span className="text-blue-500">•</span>
@@ -79,7 +79,7 @@ export default function Changelog() {
                 </li>
               </ul>
 
-              <h3 className="font-bold text-white mt-4">🔧 Technical Updates</h3>
+              <h3 className="font-bold text-slate-900 dark:text-white mt-4">🔧 Technical Updates</h3>
               <ul className="space-y-2 ml-4">
                 <li className="flex items-start gap-2">
                   <span className="text-purple-500">•</span>
@@ -106,15 +106,15 @@ export default function Changelog() {
           </section>
 
           {/* Version 1.4.0 */}
-          <section className="rounded-lg bg-slate-900 p-6 space-y-4">
+          <section className="rounded-lg bg-white dark:bg-white dark:bg-slate-900 p-6 border border-slate-200 dark:border-transparent space-y-4 border border-slate-200 dark:border-transparent">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-bold text-slate-300">Version 1.4.0</h2>
-                <p className="text-sm text-slate-400">October 23, 2025</p>
+                <h2 className="text-2xl font-bold text-slate-700 dark:text-slate-300">Version 1.4.0</h2>
+                <p className="text-sm text-slate-600 dark:text-slate-400">October 23, 2025</p>
               </div>
             </div>
-            <div className="space-y-3 text-slate-300">
-              <h3 className="font-bold text-white">✨ New Features</h3>
+            <div className="space-y-3 text-slate-700 dark:text-slate-300">
+              <h3 className="font-bold text-slate-900 dark:text-white">✨ New Features</h3>
               <ul className="space-y-2 ml-4">
                 <li className="flex items-start gap-2">
                   <span className="text-yellow-500">•</span>
@@ -130,7 +130,7 @@ export default function Changelog() {
                 </li>
               </ul>
               
-              <h3 className="font-bold text-white mt-4">🔧 Technical Updates</h3>
+              <h3 className="font-bold text-slate-900 dark:text-white mt-4">🔧 Technical Updates</h3>
               <ul className="space-y-2 ml-4">
                 <li className="flex items-start gap-2">
                   <span className="text-purple-500">•</span>
@@ -154,7 +154,7 @@ export default function Changelog() {
                 </li>
               </ul>
 
-              <h3 className="font-bold text-white mt-4">🐛 Bug Fixes</h3>
+              <h3 className="font-bold text-slate-900 dark:text-white mt-4">🐛 Bug Fixes</h3>
               <ul className="space-y-2 ml-4">
                 <li className="flex items-start gap-2">
                   <span className="text-red-500">•</span>
@@ -169,15 +169,15 @@ export default function Changelog() {
           </section>
 
           {/* Version 1.3.0 */}
-          <section className="rounded-lg bg-slate-900 p-6 space-y-4">
+          <section className="rounded-lg bg-white dark:bg-white dark:bg-slate-900 p-6 border border-slate-200 dark:border-transparent space-y-4 border border-slate-200 dark:border-transparent">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-bold text-slate-300">Version 1.3.0</h2>
-                <p className="text-sm text-slate-400">October 2, 2025</p>
+                <h2 className="text-2xl font-bold text-slate-700 dark:text-slate-300">Version 1.3.0</h2>
+                <p className="text-sm text-slate-600 dark:text-slate-400">October 2, 2025</p>
               </div>
             </div>
-            <div className="space-y-3 text-slate-300">
-              <h3 className="font-bold text-white">✨ New Features</h3>
+            <div className="space-y-3 text-slate-700 dark:text-slate-300">
+              <h3 className="font-bold text-slate-900 dark:text-white">✨ New Features</h3>
               <ul className="space-y-2 ml-4">
                 <li className="flex items-start gap-2">
                   <span className="text-yellow-500">•</span>
@@ -205,7 +205,7 @@ export default function Changelog() {
                 </li>
               </ul>
               
-              <h3 className="font-bold text-white mt-4">♿ Accessibility</h3>
+              <h3 className="font-bold text-slate-900 dark:text-white mt-4">♿ Accessibility</h3>
               <ul className="space-y-2 ml-4">
                 <li className="flex items-start gap-2">
                   <span className="text-green-500">•</span>
@@ -225,7 +225,7 @@ export default function Changelog() {
                 </li>
               </ul>
 
-              <h3 className="font-bold text-white mt-4">🎨 UI Improvements</h3>
+              <h3 className="font-bold text-slate-900 dark:text-white mt-4">🎨 UI Improvements</h3>
               <ul className="space-y-2 ml-4">
                 <li className="flex items-start gap-2">
                   <span className="text-blue-500">•</span>
@@ -245,7 +245,7 @@ export default function Changelog() {
                 </li>
               </ul>
 
-              <h3 className="font-bold text-white mt-4">🔧 Technical Updates</h3>
+              <h3 className="font-bold text-slate-900 dark:text-white mt-4">🔧 Technical Updates</h3>
               <ul className="space-y-2 ml-4">
                 <li className="flex items-start gap-2">
                   <span className="text-purple-500">•</span>
@@ -268,7 +268,7 @@ export default function Changelog() {
           </section>
 
           {/* Version 1.2.0 */}
-          <section className="rounded-lg bg-slate-900 p-6 space-y-4">
+          <section className="rounded-lg bg-white dark:bg-slate-900 p-6 border border-slate-200 dark:border-transparent space-y-4">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 className="text-2xl font-bold text-slate-300">Version 1.2.0</h2>
@@ -276,7 +276,7 @@ export default function Changelog() {
               </div>
             </div>
             <div className="space-y-3 text-slate-300">
-              <h3 className="font-bold text-white">✨ New Features</h3>
+              <h3 className="font-bold text-slate-900 dark:text-white">✨ New Features</h3>
               <ul className="space-y-2 ml-4">
                 <li className="flex items-start gap-2">
                   <span className="text-yellow-500">•</span>
@@ -292,7 +292,7 @@ export default function Changelog() {
                 </li>
               </ul>
               
-              <h3 className="font-bold text-white mt-4">🎨 UI Improvements</h3>
+              <h3 className="font-bold text-slate-900 dark:text-white mt-4">🎨 UI Improvements</h3>
               <ul className="space-y-2 ml-4">
                 <li className="flex items-start gap-2">
                   <span className="text-blue-500">•</span>
@@ -311,7 +311,7 @@ export default function Changelog() {
           </section>
 
           {/* Version 1.1.0 */}
-          <section className="rounded-lg bg-slate-900 p-6 space-y-4">
+          <section className="rounded-lg bg-white dark:bg-slate-900 p-6 border border-slate-200 dark:border-transparent space-y-4">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 className="text-2xl font-bold text-slate-300">Version 1.1.0</h2>
@@ -319,7 +319,7 @@ export default function Changelog() {
               </div>
             </div>
             <div className="space-y-3 text-slate-300">
-              <h3 className="font-bold text-white">✨ New Features</h3>
+              <h3 className="font-bold text-slate-900 dark:text-white">✨ New Features</h3>
               <ul className="space-y-2 ml-4">
                 <li className="flex items-start gap-2">
                   <span className="text-yellow-500">•</span>
@@ -335,7 +335,7 @@ export default function Changelog() {
                 </li>
               </ul>
               
-              <h3 className="font-bold text-white mt-4">🔧 Improvements</h3>
+              <h3 className="font-bold text-slate-900 dark:text-white mt-4">🔧 Improvements</h3>
               <ul className="space-y-2 ml-4">
                 <li className="flex items-start gap-2">
                   <span className="text-green-500">•</span>
@@ -350,7 +350,7 @@ export default function Changelog() {
           </section>
 
           {/* Version 1.0.0 */}
-          <section className="rounded-lg bg-slate-900 p-6 space-y-4">
+          <section className="rounded-lg bg-white dark:bg-slate-900 p-6 border border-slate-200 dark:border-transparent space-y-4">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 className="text-2xl font-bold text-slate-300">Version 1.0.0</h2>
@@ -361,7 +361,7 @@ export default function Changelog() {
               </span>
             </div>
             <div className="space-y-3 text-slate-300">
-              <h3 className="font-bold text-white">🚀 Initial Features</h3>
+              <h3 className="font-bold text-slate-900 dark:text-white">🚀 Initial Features</h3>
               <ul className="space-y-2 ml-4">
                 <li className="flex items-start gap-2">
                   <span className="text-yellow-500">•</span>

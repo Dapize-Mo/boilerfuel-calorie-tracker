@@ -15,7 +15,7 @@ export default function Layout({ children }) {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased transition-colors">
+    <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary antialiased transition-colors">
       <Header open={open} setOpen={setOpen} />
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-10">
         {children}
@@ -27,7 +27,7 @@ export default function Layout({ children }) {
 
 function Header({ open, setOpen }) {
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-300/50 dark:border-white/10 bg-white/80 dark:bg-slate-950/60 backdrop-blur supports-[backdrop-filter]:bg-white/80 dark:supports-[backdrop-filter]:bg-slate-950/60">
+    <header className="sticky top-0 z-40 border-b border-theme-border-secondary bg-theme-header-bg backdrop-blur">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           <Link 
@@ -60,7 +60,7 @@ function Header({ open, setOpen }) {
 
           <button
             aria-label="Toggle menu"
-            className="lg:hidden inline-flex items-center justify-center rounded-md border border-slate-300 dark:border-white/10 bg-slate-200/50 dark:bg-white/5 p-2 text-slate-700 dark:text-slate-200 hover:bg-slate-300/50 dark:hover:bg-white/10 transition"
+            className="lg:hidden inline-flex items-center justify-center rounded-md border border-theme-border-primary bg-theme-bg-secondary/50 p-2 text-theme-text-primary hover:bg-theme-bg-hover/50 transition"
             onClick={() => setOpen((v) => !v)}
           >
             <svg
@@ -82,7 +82,7 @@ function Header({ open, setOpen }) {
       </div>
 
       {open && (
-        <div className="border-t border-slate-300/50 dark:border-white/10 bg-slate-100/90 dark:bg-slate-900/70 lg:hidden">
+        <div className="border-t border-theme-border-secondary bg-theme-bg-secondary/90 lg:hidden">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-3">
             <div className="grid gap-2 text-sm">
               <MobileLink href="/" onClick={() => setOpen(false)}>Home</MobileLink>
@@ -106,7 +106,7 @@ function HeaderLink({ href, children }) {
   return (
     <Link
       href={href}
-      className="text-slate-700 dark:text-slate-300 hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors"
+      className="text-theme-text-secondary hover:text-theme-accent-hover transition-colors"
     >
       {children}
     </Link>
@@ -118,7 +118,7 @@ function MobileLink({ href, children, onClick }) {
     <Link
       href={href}
       onClick={onClick}
-      className="block rounded-md px-3 py-2 text-slate-700 dark:text-slate-200 hover:text-yellow-600 dark:hover:text-yellow-400 hover:bg-slate-200/50 dark:hover:bg-white/5 transition"
+      className="block rounded-md px-3 py-2 text-theme-text-primary hover:text-theme-accent-hover hover:bg-theme-bg-hover/50 transition"
     >
       {children}
     </Link>
@@ -127,8 +127,8 @@ function MobileLink({ href, children, onClick }) {
 
 function Footer() {
   return (
-    <footer className="border-t border-slate-300/50 dark:border-white/10">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-xs text-slate-600 dark:text-slate-400 flex flex-wrap items-center justify-between gap-3">
+    <footer className="border-t border-theme-border-secondary">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-xs text-theme-text-tertiary flex flex-wrap items-center justify-between gap-3">
         <p>
           Your data stays on this device. No accounts required.
         </p>

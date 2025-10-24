@@ -2,8 +2,64 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  color-scheme: light dark;
+@layer base {
+  :root {
+    color-scheme: light dark;
+    
+    /* Light mode color palette */
+    --color-bg-primary: 241 245 249; /* slate-100 */
+    --color-bg-secondary: 255 255 255; /* white */
+    --color-bg-tertiary: 248 250 252; /* slate-50 */
+    --color-bg-hover: 226 232 240; /* slate-200 */
+    
+    --color-text-primary: 15 23 42; /* slate-900 */
+    --color-text-secondary: 71 85 105; /* slate-600 */
+    --color-text-tertiary: 100 116 139; /* slate-500 */
+    
+    --color-border-primary: 226 232 240; /* slate-200 */
+    --color-border-secondary: 203 213 225; /* slate-300 */
+    
+    --color-accent-primary: 234 179 8; /* yellow-500 */
+    --color-accent-hover: 202 138 4; /* yellow-600 */
+    --color-accent-light: 250 204 21; /* yellow-400 */
+    
+    --color-success: 34 197 94; /* green-500 */
+    --color-error: 239 68 68; /* red-500 */
+    --color-info: 59 130 246; /* blue-500 */
+    --color-purple: 168 85 247; /* purple-500 */
+    
+    --color-card-bg: 255 255 255; /* white */
+    --color-card-border: 226 232 240; /* slate-200 */
+    --color-header-bg: 255 255 255 / 0.8; /* white/80 */
+  }
+  
+  .dark {
+    /* Dark mode color palette */
+    --color-bg-primary: 2 6 23; /* slate-950 */
+    --color-bg-secondary: 15 23 42; /* slate-900 */
+    --color-bg-tertiary: 30 41 59; /* slate-800 */
+    --color-bg-hover: 51 65 85; /* slate-700 */
+    
+    --color-text-primary: 248 250 252; /* slate-50 */
+    --color-text-secondary: 203 213 225; /* slate-300 */
+    --color-text-tertiary: 148 163 184; /* slate-400 */
+    
+    --color-border-primary: 51 65 85 / 0.3; /* slate-700/30 */
+    --color-border-secondary: 255 255 255 / 0.1; /* white/10 */
+    
+    --color-accent-primary: 250 204 21; /* yellow-400 */
+    --color-accent-hover: 234 179 8; /* yellow-500 */
+    --color-accent-light: 253 224 71; /* yellow-300 */
+    
+    --color-success: 34 197 94; /* green-500 */
+    --color-error: 239 68 68; /* red-500 */
+    --color-info: 59 130 246; /* blue-500 */
+    --color-purple: 168 85 247; /* purple-500 */
+    
+    --color-card-bg: 15 23 42; /* slate-900 */
+    --color-card-border: 0 0 0 / 0; /* transparent */
+    --color-header-bg: 2 6 23 / 0.6; /* slate-950/60 */
+  }
 }
 
 body {
@@ -12,18 +68,8 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-/* Light mode defaults */
-body {
-  background-color: #f1f5f9; /* slate-100 */
-  color: #0f172a; /* slate-900 */
-}
-
-/* Dark mode overrides */
-.dark body {
-  background-color: #020617; /* slate-950 */
-  color: #f8fafc; /* slate-50 */
+  background-color: rgb(var(--color-bg-primary));
+  color: rgb(var(--color-text-primary));
 }
 
 ::selection {
