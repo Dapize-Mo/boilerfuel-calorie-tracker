@@ -105,6 +105,39 @@ function getMonthStart(date) {
 }
 
 export default function GymDashboard() {
+  // Temporary in-progress placeholder
+  return (
+    <>
+      <Head>
+        <title>Gym Tracker – In Progress</title>
+        <meta name="description" content="Gym activities and workouts tracking is coming soon" />
+      </Head>
+      <div className="min-h-screen bg-theme-bg-primary">
+        <div className="mx-auto max-w-3xl px-4 py-12 space-y-6">
+          <header className="rounded-2xl border border-theme-card-border bg-theme-card-bg p-6">
+            <h1 className="text-3xl font-bold text-theme-text-primary">
+              Gym Tracker <span className="text-theme-text-tertiary text-lg font-normal">(in progress)</span>
+            </h1>
+            <p className="mt-2 text-theme-text-tertiary">
+              We’re building this page. Workout logging and activity stats will arrive soon.
+            </p>
+          </header>
+          <section className="rounded-2xl border border-theme-card-border bg-theme-card-bg p-6">
+            <h2 className="text-xl font-semibold mb-2">What’s planned</h2>
+            <ul className="list-disc list-inside space-y-1 text-theme-text-secondary">
+              <li>Browse activities with calories per hour</li>
+              <li>Quick logging with time presets</li>
+              <li>Daily, weekly, and monthly summaries</li>
+              <li>Privacy-first: data stays on your device</li>
+            </ul>
+          </section>
+          <Link href="/dashboard" className="inline-block rounded bg-yellow-500 px-5 py-2 font-semibold text-theme-bg-primary hover:bg-yellow-600 transition-colors">
+            Back to Dashboard
+          </Link>
+        </div>
+      </div>
+    </>
+  );
   const [activities, setActivities] = useState([]);
   const [activityLogs, setActivityLogs] = useState(() => parseActivityLogsCookie());
   const [goals, setGoals] = useState(() => parseGoalsCookie());

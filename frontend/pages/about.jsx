@@ -35,8 +35,8 @@ export default function About() {
           <section className="rounded-lg bg-theme-card-bg p-6 space-y-4">
             <h2 className="text-2xl font-bold text-yellow-500">What is BoilerFuel?</h2>
             <p className="text-theme-text-secondary leading-relaxed">
-              BoilerFuel is a privacy-focused calorie and macro tracker designed specifically for Purdue University 
-              dining halls. Track your meals, monitor your nutrition, and make informed decisions about your diet—all 
+              BoilerFuel is a privacy-focused calorie and macro tracker designed for college students and campus
+              dining halls. Track your meals, monitor your nutrition, and make informed decisions about your diet—all
               while keeping your data completely private on your device.
             </p>
           </section>
@@ -69,7 +69,7 @@ export default function About() {
               <li className="flex items-start gap-3">
                 <span className="text-green-500 text-xl">✓</span>
                 <div>
-                  <strong className="text-white">Filter by Dining Court & Meal Time:</strong> Easily find foods from 
+                  <strong className="text-white">Filter by Dining Hall & Meal Time:</strong> Easily find foods from 
                   your favorite location and meal period.
                 </div>
               </li>
@@ -98,7 +98,7 @@ export default function About() {
                   1
                 </div>
                 <div>
-                  <strong className="text-white">Browse the Menu:</strong> Select your dining court and meal time 
+                  <strong className="text-white">Browse the Menu:</strong> Select your dining hall and meal time 
                   to see available foods.
                 </div>
               </div>
@@ -210,7 +210,7 @@ export default function About() {
 
           {/* Footer */}
           <footer className="text-center text-sm text-slate-500 pt-8 pb-4">
-            <p>Made for Purdue University students</p>
+            <p>Made for college students</p>
             <p className="mt-2">
               <Link href="/changelog" className="text-theme-text-tertiary hover:text-theme-accent transition-colors">
                 View Changelog
