@@ -18,6 +18,10 @@
     
     --color-border-primary: 226 232 240; /* slate-200 */
     --color-border-secondary: 203 213 225; /* slate-300 */
+    --color-border-light: 226 232 240; /* slate-200 */
+    --color-border-focus: 15 23 42; /* slate-900 */
+    
+    --color-text-muted: 148 163 184; /* slate-400 */
     
     --color-accent-primary: 234 179 8; /* yellow-500 */
     --color-accent-hover: 202 138 4; /* yellow-600 */
@@ -46,6 +50,10 @@
     
     --color-border-primary: 51 65 85 / 0.3; /* slate-700/30 */
     --color-border-secondary: 255 255 255 / 0.1; /* white/10 */
+    --color-border-light: 51 65 85; /* slate-700 */
+    --color-border-focus: 250 204 21; /* yellow-400 */
+    
+    --color-text-muted: 100 116 139; /* slate-500 */
     
     --color-accent-primary: 250 204 21; /* yellow-400 */
     --color-accent-hover: 234 179 8; /* yellow-500 */
@@ -59,6 +67,18 @@
     --color-card-bg: 15 23 42; /* slate-900 */
     --color-card-border: 0 0 0 / 0; /* transparent */
     --color-header-bg: 2 6 23 / 0.6; /* slate-950/60 */
+  }
+  
+  /* Disable transitions until theme is loaded to prevent flash */
+  html:not(.theme-loaded) * {
+    transition: none !important;
+  }
+  
+  /* Enable smooth transitions once theme is loaded */
+  html.theme-loaded * {
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 200ms;
   }
 }
 

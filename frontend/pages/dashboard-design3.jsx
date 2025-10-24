@@ -472,13 +472,13 @@ export default function DashboardDesign3() {
       <div className="min-h-screen bg-white">
         <div className="mx-auto max-w-2xl px-4 py-8 space-y-6">
           {/* Minimalist Header */}
-          <header className="border-b border-slate-200 pb-6">
+          <header className="border-b border-theme-border-light pb-6">
             <div className="flex items-center justify-between mb-2">
-              <h1 className="text-3xl font-light text-slate-900">Design 3</h1>
+              <h1 className="text-3xl font-light text-theme-text-primary">Design 3</h1>
               <div className="flex gap-2">
                 <Link
                   href="/dashboard-selector"
-                  className="px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 underline"
+                  className="px-3 py-1.5 text-sm text-theme-text-tertiary hover:text-theme-text-primary underline"
                 >
                   Back
                 </Link>
@@ -491,7 +491,7 @@ export default function DashboardDesign3() {
                 </button>
               </div>
             </div>
-            <p className="text-sm text-slate-500">Minimalist single-column layout</p>
+            <p className="text-sm text-theme-text-muted">Minimalist single-column layout</p>
           </header>
 
           {menuError && (
@@ -507,14 +507,14 @@ export default function DashboardDesign3() {
           )}
 
           {/* Date Selector */}
-          <div className="flex items-center justify-between py-4 border-b border-slate-200">
-            <h2 className="text-xl font-light text-slate-900">{formatDateDisplay(selectedDate)}</h2>
+          <div className="flex items-center justify-between py-4 border-b border-theme-border-light">
+            <h2 className="text-xl font-light text-theme-text-primary">{formatDateDisplay(selectedDate)}</h2>
             <input
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
               max={formatDateForInput(startOfToday())}
-              className="border-b border-slate-300 px-2 py-1 text-slate-900 text-sm focus:outline-none focus:border-slate-900"
+              className="border-b border-theme-border-secondary px-2 py-1 text-theme-text-primary text-sm focus:outline-none focus:border-theme-border-focus"
             />
           </div>
 
@@ -526,24 +526,24 @@ export default function DashboardDesign3() {
             <MinimalStatRow label="Fats" value={Math.round(totals.fats)} goal={userPrefs.showGoals ? goals.fats : null} unit="g" />
             <MinimalStatRow label="Activity" value={Math.round(totals.activityMinutes)} goal={userPrefs.showGoals ? goals.activityMinutes : null} unit="min" />
             <MinimalStatRow label="Burned" value={Math.round(totals.burned)} goal={null} unit="cal" />
-            <div className="pt-3 border-t border-slate-200">
+            <div className="pt-3 border-t border-theme-border-light">
               <MinimalStatRow label="Net Calories" value={Math.round(totals.net)} goal={null} unit="" isBold />
             </div>
           </div>
 
           {/* Goals Section */}
-          <div className="border-t border-slate-200 pt-6">
+          <div className="border-t border-theme-border-light pt-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-light text-slate-900">Goals</h3>
+              <h3 className="text-lg font-light text-theme-text-primary">Goals</h3>
               <div className="flex items-center gap-3">
                 <label className="flex items-center gap-2 text-sm cursor-pointer">
                   <input
                     type="checkbox"
                     checked={userPrefs.showGoals}
                     onChange={handleToggleGoals}
-                    className="rounded border-slate-300 text-slate-900"
+                    className="rounded border-theme-border-secondary text-theme-text-primary"
                   />
-                  <span className="text-slate-600">Show progress</span>
+                  <span className="text-theme-text-tertiary">Show progress</span>
                 </label>
                 <button
                   type="button"
@@ -551,7 +551,7 @@ export default function DashboardDesign3() {
                     setGoalForm(goals);
                     setEditingGoals(true);
                   }}
-                  className="text-sm text-slate-600 hover:text-slate-900 underline"
+                  className="text-sm text-theme-text-tertiary hover:text-theme-text-primary underline"
                 >
                   Edit
                 </button>
@@ -567,7 +567,7 @@ export default function DashboardDesign3() {
                     step="50"
                     value={goalForm.calories}
                     onChange={(e) => setGoalForm({ ...goalForm, calories: e.target.value })}
-                    className="w-full border-b border-slate-300 px-2 py-2 text-slate-900 focus:outline-none focus:border-slate-900"
+                    className="w-full border-b border-theme-border-secondary px-2 py-2 text-theme-text-primary focus:outline-none focus:border-theme-border-focus"
                     placeholder="Calories goal"
                   />
                   <input
@@ -576,7 +576,7 @@ export default function DashboardDesign3() {
                     step="5"
                     value={goalForm.protein}
                     onChange={(e) => setGoalForm({ ...goalForm, protein: e.target.value })}
-                    className="w-full border-b border-slate-300 px-2 py-2 text-slate-900 focus:outline-none focus:border-slate-900"
+                    className="w-full border-b border-theme-border-secondary px-2 py-2 text-theme-text-primary focus:outline-none focus:border-theme-border-focus"
                     placeholder="Protein goal (g)"
                   />
                   <input
@@ -585,7 +585,7 @@ export default function DashboardDesign3() {
                     step="5"
                     value={goalForm.carbs}
                     onChange={(e) => setGoalForm({ ...goalForm, carbs: e.target.value })}
-                    className="w-full border-b border-slate-300 px-2 py-2 text-slate-900 focus:outline-none focus:border-slate-900"
+                    className="w-full border-b border-theme-border-secondary px-2 py-2 text-theme-text-primary focus:outline-none focus:border-theme-border-focus"
                     placeholder="Carbs goal (g)"
                   />
                   <input
@@ -594,7 +594,7 @@ export default function DashboardDesign3() {
                     step="5"
                     value={goalForm.fats}
                     onChange={(e) => setGoalForm({ ...goalForm, fats: e.target.value })}
-                    className="w-full border-b border-slate-300 px-2 py-2 text-slate-900 focus:outline-none focus:border-slate-900"
+                    className="w-full border-b border-theme-border-secondary px-2 py-2 text-theme-text-primary focus:outline-none focus:border-theme-border-focus"
                     placeholder="Fats goal (g)"
                   />
                   <input
@@ -603,28 +603,28 @@ export default function DashboardDesign3() {
                     step="5"
                     value={goalForm.activityMinutes}
                     onChange={(e) => setGoalForm({ ...goalForm, activityMinutes: e.target.value })}
-                    className="w-full border-b border-slate-300 px-2 py-2 text-slate-900 focus:outline-none focus:border-slate-900"
+                    className="w-full border-b border-theme-border-secondary px-2 py-2 text-theme-text-primary focus:outline-none focus:border-theme-border-focus"
                     placeholder="Activity goal (min)"
                   />
                 </div>
                 <div className="flex gap-3 pt-2">
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-slate-900 text-white text-sm hover:bg-slate-800"
+                    className="px-4 py-2 bg-theme-card-bg text-theme-text-primary text-sm hover:bg-theme-bg-tertiary"
                   >
                     Save
                   </button>
                   <button
                     type="button"
                     onClick={handleCancelGoals}
-                    className="px-4 py-2 text-slate-600 hover:text-slate-900 text-sm underline"
+                    className="px-4 py-2 text-theme-text-tertiary hover:text-theme-text-primary text-sm underline"
                   >
                     Cancel
                   </button>
                 </div>
               </form>
             ) : (
-              <div className="text-sm text-slate-600 space-y-1">
+              <div className="text-sm text-theme-text-tertiary space-y-1">
                 <p>Calories: {goals.calories}</p>
                 <p>Protein: {goals.protein}g</p>
                 <p>Carbs: {goals.carbs}g</p>
@@ -635,15 +635,15 @@ export default function DashboardDesign3() {
           </div>
 
           {/* Food Section */}
-          <div className="border-t border-slate-200 pt-6">
-            <h2 className="text-lg font-light text-slate-900 mb-4">Food Menu</h2>
+          <div className="border-t border-theme-border-light pt-6">
+            <h2 className="text-lg font-light text-theme-text-primary mb-4">Food Menu</h2>
 
             <div className="space-y-2 mb-4">
               {diningCourts.length > 0 && (
                 <select
                   value={selectedDiningCourt}
                   onChange={(e) => setSelectedDiningCourt(e.target.value)}
-                  className="w-full border-b border-slate-300 px-2 py-2 text-slate-900 text-sm focus:outline-none focus:border-slate-900"
+                  className="w-full border-b border-theme-border-secondary px-2 py-2 text-theme-text-primary text-sm focus:outline-none focus:border-theme-border-focus"
                 >
                   <option value="">All Dining Courts</option>
                   {diningCourts.map((court) => (
@@ -657,7 +657,7 @@ export default function DashboardDesign3() {
               <select
                 value={selectedMealTime}
                 onChange={(e) => setSelectedMealTime(e.target.value)}
-                className="w-full border-b border-slate-300 px-2 py-2 text-slate-900 text-sm focus:outline-none focus:border-slate-900"
+                className="w-full border-b border-theme-border-secondary px-2 py-2 text-theme-text-primary text-sm focus:outline-none focus:border-theme-border-focus"
               >
                 <option value="">All Meal Times</option>
                 <option value="breakfast">Breakfast</option>
@@ -668,14 +668,14 @@ export default function DashboardDesign3() {
             </div>
 
             {foods.length === 0 ? (
-              <p className="text-slate-500 text-sm">No foods available</p>
+              <p className="text-theme-text-muted text-sm">No foods available</p>
             ) : (
               <div className="space-y-4">
                 {Object.entries(foodsByStation)
                   .sort(([a], [b]) => a.localeCompare(b))
                   .map(([station, stationFoods]) => (
                     <div key={station}>
-                      <h3 className="text-sm font-medium text-slate-900 mb-2 pb-1 border-b border-slate-200">
+                      <h3 className="text-sm font-medium text-theme-text-primary mb-2 pb-1 border-b border-theme-border-light">
                         {station}
                       </h3>
                       <div className="space-y-2">
@@ -684,18 +684,18 @@ export default function DashboardDesign3() {
                           return (
                             <div
                               key={food.id}
-                              className="flex items-center justify-between gap-4 py-2 hover:bg-slate-50"
+                              className="flex items-center justify-between gap-4 py-2 hover:bg-theme-bg-secondary"
                             >
                               <div className="flex-1">
-                                <div className="text-sm text-slate-900">{food.name}</div>
-                                <div className="text-xs text-slate-500">
+                                <div className="text-sm text-theme-text-primary">{food.name}</div>
+                                <div className="text-xs text-theme-text-muted">
                                   {food.calories}cal • P:{Math.round(macros.protein || 0)} C:{Math.round(macros.carbs || 0)} F:{Math.round(macros.fats || 0)}
                                 </div>
                               </div>
                               <button
                                 type="button"
                                 onClick={() => handleQuickAdd(food.id, 1)}
-                                className="px-3 py-1 text-xs border border-slate-300 hover:border-slate-900 hover:bg-slate-900 hover:text-white transition-colors"
+                                className="px-3 py-1 text-xs border border-theme-border-secondary hover:border-slate-900 hover:bg-slate-900 hover:text-white transition-colors"
                               >
                                 Add
                               </button>
@@ -710,10 +710,10 @@ export default function DashboardDesign3() {
           </div>
 
           {/* Logged Meals */}
-          <div className="border-t border-slate-200 pt-6">
-            <h3 className="text-lg font-light text-slate-900 mb-4">Logged Meals</h3>
+          <div className="border-t border-theme-border-light pt-6">
+            <h3 className="text-lg font-light text-theme-text-primary mb-4">Logged Meals</h3>
             {selectedDayLogs.length === 0 ? (
-              <p className="text-slate-500 text-sm">No meals logged</p>
+              <p className="text-theme-text-muted text-sm">No meals logged</p>
             ) : (
               <div className="space-y-2">
                 {selectedDayLogs.map((log) => {
@@ -726,8 +726,8 @@ export default function DashboardDesign3() {
                   return (
                     <div key={log.id} className="flex items-start justify-between gap-4 py-2 border-b border-slate-100">
                       <div className="flex-1">
-                        <div className="text-sm text-slate-900">{food.name}</div>
-                        <div className="text-xs text-slate-500">
+                        <div className="text-sm text-theme-text-primary">{food.name}</div>
+                        <div className="text-xs text-theme-text-muted">
                           {servingsValue}x • {Math.round((food.calories || 0) * servingsValue)}cal
                         </div>
                       </div>
@@ -746,19 +746,19 @@ export default function DashboardDesign3() {
           </div>
 
           {/* Activity Section */}
-          <div className="border-t border-slate-200 pt-6">
+          <div className="border-t border-theme-border-light pt-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-light text-slate-900">Activities</h3>
+              <h3 className="text-lg font-light text-theme-text-primary">Activities</h3>
               <Link
                 href="/gym"
-                className="text-sm text-slate-600 hover:text-slate-900 underline"
+                className="text-sm text-theme-text-tertiary hover:text-theme-text-primary underline"
               >
                 Gym Dashboard
               </Link>
             </div>
 
             {selectedDayActivityLogs.length === 0 ? (
-              <p className="text-slate-500 text-sm">No activities logged</p>
+              <p className="text-theme-text-muted text-sm">No activities logged</p>
             ) : (
               <div className="space-y-2">
                 {selectedDayActivityLogs.map((log) => {
@@ -771,8 +771,8 @@ export default function DashboardDesign3() {
                   return (
                     <div key={log.id} className="flex items-start justify-between gap-4 py-2 border-b border-slate-100">
                       <div className="flex-1">
-                        <div className="text-sm text-slate-900">{activity.name}</div>
-                        <div className="text-xs text-slate-500">
+                        <div className="text-sm text-theme-text-primary">{activity.name}</div>
+                        <div className="text-xs text-theme-text-muted">
                           {durationValue}min • {caloriesBurned}cal
                         </div>
                       </div>
@@ -801,7 +801,7 @@ function MinimalStatRow({ label, value, goal, unit, isBold = false }) {
 
   return (
     <div className="flex items-center justify-between py-2">
-      <span className={`text-slate-600 ${isBold ? 'font-medium' : ''}`}>{label}</span>
+      <span className={`text-theme-text-tertiary ${isBold ? 'font-medium' : ''}`}>{label}</span>
       <div className="flex items-center gap-4">
         {hasGoal && percentage !== null && (
           <div className="w-24 h-1 bg-slate-200 rounded-full overflow-hidden">
@@ -811,7 +811,7 @@ function MinimalStatRow({ label, value, goal, unit, isBold = false }) {
             />
           </div>
         )}
-        <span className={`text-slate-900 ${isBold ? 'font-medium' : ''} min-w-[80px] text-right`}>
+        <span className={`text-theme-text-primary ${isBold ? 'font-medium' : ''} min-w-[80px] text-right`}>
           {value}{unit}
           {hasGoal && <span className="text-slate-400 text-sm ml-1">/ {goal}{unit}</span>}
         </span>

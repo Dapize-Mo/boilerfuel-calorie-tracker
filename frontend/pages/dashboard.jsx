@@ -379,7 +379,7 @@ export default function Dashboard() {
                     Dashboard Overview
                   </h1>
                 </div>
-                <p className="text-slate-400 mt-2">Your daily nutrition and fitness summary—all data stays on this device only.</p>
+                <p className="text-theme-text-tertiary mt-2">Your daily nutrition and fitness summary—all data stays on this device only.</p>
               </div>
             </div>
           </header>
@@ -387,13 +387,13 @@ export default function Dashboard() {
           {/* Date Selector */}
           <div className="backdrop-blur-lg bg-white/5 rounded-2xl border border-white/10 p-6">
             <div className="flex items-center justify-between gap-4">
-              <h2 className="text-xl font-bold text-white">📅 {formatDateDisplay(selectedDate)}</h2>
+              <h2 className="text-xl font-bold text-theme-text-primary">📅 {formatDateDisplay(selectedDate)}</h2>
               <input
                 type="date"
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
                 max={formatDateForInput(startOfToday())}
-                className="rounded-xl border border-slate-600 bg-slate-800/80 px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                className="rounded-xl border border-theme-border-primary bg-theme-bg-tertiary/80 px-4 py-2 text-theme-text-primary focus:outline-none focus:ring-2 focus:ring-yellow-500"
               />
             </div>
           </div>
@@ -438,16 +438,16 @@ export default function Dashboard() {
           {/* Goals Section */}
           <div className="backdrop-blur-lg bg-white/5 rounded-2xl border border-white/10 p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-2xl font-bold text-white">🎯 Daily Goals</h3>
+              <h3 className="text-2xl font-bold text-theme-text-primary">🎯 Daily Goals</h3>
               <div className="flex items-center gap-3">
                 <label className="flex items-center gap-2 text-sm cursor-pointer">
                   <input
                     type="checkbox"
                     checked={userPrefs.showGoals}
                     onChange={handleToggleGoals}
-                    className="rounded border-slate-600 bg-slate-800 text-yellow-500 focus:ring-2 focus:ring-yellow-500"
+                    className="rounded border-theme-border-primary bg-theme-bg-tertiary text-yellow-500 focus:ring-2 focus:ring-yellow-500"
                   />
-                  <span className="text-slate-300">Show progress</span>
+                  <span className="text-theme-text-secondary">Show progress</span>
                 </label>
                 <button
                   type="button"
@@ -463,61 +463,61 @@ export default function Dashboard() {
             </div>
 
             {editingGoals ? (
-              <form onSubmit={handleSaveGoals} className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
+              <form onSubmit={handleSaveGoals} className="bg-theme-bg-tertiary/50 rounded-xl p-4 border border-theme-border-primary">
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
                   <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1">Calories</label>
+                    <label className="block text-xs font-medium text-theme-text-tertiary mb-1">Calories</label>
                     <input
                       type="number"
                       min="0"
                       step="50"
                       value={goalForm.calories}
                       onChange={(e) => setGoalForm({ ...goalForm, calories: e.target.value })}
-                      className="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-white text-sm"
+                      className="w-full rounded-lg border border-theme-border-primary bg-theme-card-bg px-3 py-2 text-theme-text-primary text-sm"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1">Protein (g)</label>
+                    <label className="block text-xs font-medium text-theme-text-tertiary mb-1">Protein (g)</label>
                     <input
                       type="number"
                       min="0"
                       step="5"
                       value={goalForm.protein}
                       onChange={(e) => setGoalForm({ ...goalForm, protein: e.target.value })}
-                      className="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-white text-sm"
+                      className="w-full rounded-lg border border-theme-border-primary bg-theme-card-bg px-3 py-2 text-theme-text-primary text-sm"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1">Carbs (g)</label>
+                    <label className="block text-xs font-medium text-theme-text-tertiary mb-1">Carbs (g)</label>
                     <input
                       type="number"
                       min="0"
                       step="5"
                       value={goalForm.carbs}
                       onChange={(e) => setGoalForm({ ...goalForm, carbs: e.target.value })}
-                      className="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-white text-sm"
+                      className="w-full rounded-lg border border-theme-border-primary bg-theme-card-bg px-3 py-2 text-theme-text-primary text-sm"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1">Fats (g)</label>
+                    <label className="block text-xs font-medium text-theme-text-tertiary mb-1">Fats (g)</label>
                     <input
                       type="number"
                       min="0"
                       step="5"
                       value={goalForm.fats}
                       onChange={(e) => setGoalForm({ ...goalForm, fats: e.target.value })}
-                      className="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-white text-sm"
+                      className="w-full rounded-lg border border-theme-border-primary bg-theme-card-bg px-3 py-2 text-theme-text-primary text-sm"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1">Activity (min)</label>
+                    <label className="block text-xs font-medium text-theme-text-tertiary mb-1">Activity (min)</label>
                     <input
                       type="number"
                       min="0"
                       step="5"
                       value={goalForm.activityMinutes}
                       onChange={(e) => setGoalForm({ ...goalForm, activityMinutes: e.target.value })}
-                      className="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-white text-sm"
+                      className="w-full rounded-lg border border-theme-border-primary bg-theme-card-bg px-3 py-2 text-theme-text-primary text-sm"
                     />
                   </div>
                 </div>
@@ -559,21 +559,21 @@ export default function Dashboard() {
                 <div className="flex items-center gap-4">
                   <span className="text-5xl">🍽️</span>
                   <div>
-                    <h2 className="text-2xl font-bold text-white group-hover:text-yellow-400 transition-colors">Food Tracker</h2>
-                    <p className="text-slate-400">Track your meals and nutrition</p>
+                    <h2 className="text-2xl font-bold text-theme-text-primary group-hover:text-yellow-400 transition-colors">Food Tracker</h2>
+                    <p className="text-theme-text-tertiary">Track your meals and nutrition</p>
                   </div>
                 </div>
-                <svg className="w-6 h-6 text-slate-400 group-hover:text-yellow-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 text-theme-text-tertiary group-hover:text-yellow-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </div>
               <div className="mt-6 space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-400">Today&apos;s meals logged:</span>
-                  <span className="text-white font-semibold">{selectedDayLogs.length}</span>
+                  <span className="text-theme-text-tertiary">Today&apos;s meals logged:</span>
+                  <span className="text-theme-text-primary font-semibold">{selectedDayLogs.length}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-400">Calories consumed:</span>
+                  <span className="text-theme-text-tertiary">Calories consumed:</span>
                   <span className="text-yellow-400 font-semibold">{Math.round(totals.calories)} cal</span>
                 </div>
               </div>
@@ -588,21 +588,21 @@ export default function Dashboard() {
                 <div className="flex items-center gap-4">
                   <span className="text-5xl">💪</span>
                   <div>
-                    <h2 className="text-2xl font-bold text-white group-hover:text-orange-400 transition-colors">Gym Tracker</h2>
-                    <p className="text-slate-400">Log your workouts and activities</p>
+                    <h2 className="text-2xl font-bold text-theme-text-primary group-hover:text-orange-400 transition-colors">Gym Tracker</h2>
+                    <p className="text-theme-text-tertiary">Log your workouts and activities</p>
                   </div>
                 </div>
-                <svg className="w-6 h-6 text-slate-400 group-hover:text-orange-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 text-theme-text-tertiary group-hover:text-orange-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </div>
               <div className="mt-6 space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-400">Today&apos;s activities:</span>
-                  <span className="text-white font-semibold">{selectedDayActivityLogs.length}</span>
+                  <span className="text-theme-text-tertiary">Today&apos;s activities:</span>
+                  <span className="text-theme-text-primary font-semibold">{selectedDayActivityLogs.length}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-400">Calories burned:</span>
+                  <span className="text-theme-text-tertiary">Calories burned:</span>
                   <span className="text-orange-400 font-semibold">{Math.round(totals.burned)} cal</span>
                 </div>
               </div>
@@ -614,13 +614,13 @@ export default function Dashboard() {
             {/* Recent Meals */}
             <div className="backdrop-blur-lg bg-white/5 rounded-2xl border border-white/10 p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-bold text-white">📝 Recent Meals</h3>
+                <h3 className="text-xl font-bold text-theme-text-primary">📝 Recent Meals</h3>
                 <Link href="/food-dashboard" className="text-sm text-yellow-400 hover:text-yellow-300">
                   View all →
                 </Link>
               </div>
               {selectedDayLogs.length === 0 ? (
-                <p className="text-slate-400">No meals logged today.</p>
+                <p className="text-theme-text-tertiary">No meals logged today.</p>
               ) : (
                 <div className="space-y-3">
                   {selectedDayLogs.slice(0, 3).map((log) => {
@@ -628,11 +628,11 @@ export default function Dashboard() {
                     if (!food) return null;
                     const servingsValue = Number(log.servings) || 0;
                     return (
-                      <div key={log.id} className="rounded-lg bg-slate-800/50 p-3 border border-slate-700">
+                      <div key={log.id} className="rounded-lg bg-theme-bg-tertiary/50 p-3 border border-theme-border-primary">
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
-                            <p className="font-semibold text-white text-sm">{food.name}</p>
-                            <p className="text-xs text-slate-400">{servingsValue} {servingsValue === 1 ? 'serving' : 'servings'}</p>
+                            <p className="font-semibold text-theme-text-primary text-sm">{food.name}</p>
+                            <p className="text-xs text-theme-text-tertiary">{servingsValue} {servingsValue === 1 ? 'serving' : 'servings'}</p>
                           </div>
                           <p className="font-bold text-yellow-400 text-sm">{Math.round((food.calories || 0) * servingsValue)} cal</p>
                         </div>
@@ -640,7 +640,7 @@ export default function Dashboard() {
                     );
                   })}
                   {selectedDayLogs.length > 3 && (
-                    <p className="text-center text-sm text-slate-400">+{selectedDayLogs.length - 3} more</p>
+                    <p className="text-center text-sm text-theme-text-tertiary">+{selectedDayLogs.length - 3} more</p>
                   )}
                 </div>
               )}
@@ -649,13 +649,13 @@ export default function Dashboard() {
             {/* Recent Activities */}
             <div className="backdrop-blur-lg bg-white/5 rounded-2xl border border-white/10 p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-bold text-white">🏋️ Recent Activities</h3>
+                <h3 className="text-xl font-bold text-theme-text-primary">🏋️ Recent Activities</h3>
                 <Link href="/gym" className="text-sm text-orange-400 hover:text-orange-300">
                   View all →
                 </Link>
               </div>
               {selectedDayActivityLogs.length === 0 ? (
-                <p className="text-slate-400">No activities logged today.</p>
+                <p className="text-theme-text-tertiary">No activities logged today.</p>
               ) : (
                 <div className="space-y-3">
                   {selectedDayActivityLogs.slice(0, 3).map((log) => {
@@ -664,11 +664,11 @@ export default function Dashboard() {
                     const durationValue = Number(log.duration) || 0;
                     const caloriesBurned = Math.round((activity.calories_per_hour * durationValue) / 60);
                     return (
-                      <div key={log.id} className="rounded-lg bg-slate-800/50 p-3 border border-slate-700">
+                      <div key={log.id} className="rounded-lg bg-theme-bg-tertiary/50 p-3 border border-theme-border-primary">
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
-                            <p className="font-semibold text-white text-sm">{activity.name}</p>
-                            <p className="text-xs text-slate-400">{durationValue} {durationValue === 1 ? 'minute' : 'minutes'}</p>
+                            <p className="font-semibold text-theme-text-primary text-sm">{activity.name}</p>
+                            <p className="text-xs text-theme-text-tertiary">{durationValue} {durationValue === 1 ? 'minute' : 'minutes'}</p>
                           </div>
                           <p className="font-bold text-orange-400 text-sm">{caloriesBurned} cal</p>
                         </div>
@@ -676,7 +676,7 @@ export default function Dashboard() {
                     );
                   })}
                   {selectedDayActivityLogs.length > 3 && (
-                    <p className="text-center text-sm text-slate-400">+{selectedDayActivityLogs.length - 3} more</p>
+                    <p className="text-center text-sm text-theme-text-tertiary">+{selectedDayActivityLogs.length - 3} more</p>
                   )}
                 </div>
               )}
@@ -697,7 +697,7 @@ function StatCardModern({ label, value, goal, gradient, icon }) {
   return (
     <div className="backdrop-blur-lg bg-white/5 rounded-2xl border border-white/10 p-4 hover:scale-105 transition-transform">
       <div className="flex items-center justify-between mb-2">
-        <p className="text-sm text-slate-400 font-medium">{label}</p>
+        <p className="text-sm text-theme-text-tertiary font-medium">{label}</p>
         <span className="text-2xl">{icon}</span>
       </div>
       <p className={`text-3xl font-bold bg-gradient-to-r ${gradient} bg-clip-text text-transparent`}>
@@ -705,11 +705,11 @@ function StatCardModern({ label, value, goal, gradient, icon }) {
       </p>
       {hasGoal && percentage !== null && (
         <div className="mt-3">
-          <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
+          <div className="flex items-center justify-between text-xs text-theme-text-tertiary mb-1">
             <span>Goal: {goal}</span>
             <span>{Math.round(percentage)}%</span>
           </div>
-          <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+          <div className="h-2 bg-theme-bg-tertiary rounded-full overflow-hidden">
             <div
               className={`h-full bg-gradient-to-r ${gradient} transition-all duration-500`}
               style={{ width: `${percentage}%` }}
@@ -728,12 +728,12 @@ function GoalCardModern({ label, value, current, showProgress }) {
   const isComplete = percentage >= 100;
 
   return (
-    <div className="rounded-xl bg-slate-800/50 backdrop-blur border border-slate-700 p-3">
-      <p className="text-xs text-slate-400 mb-1">{label}</p>
+    <div className="rounded-xl bg-theme-bg-tertiary/50 backdrop-blur border border-theme-border-primary p-3">
+      <p className="text-xs text-theme-text-tertiary mb-1">{label}</p>
       <div className="flex items-baseline gap-2 mb-2">
-        <p className="text-lg font-bold text-white">{value}</p>
+        <p className="text-lg font-bold text-theme-text-primary">{value}</p>
         {showProgress && (
-          <p className={`text-sm ${isComplete ? 'text-green-400' : 'text-slate-400'}`}>
+          <p className={`text-sm ${isComplete ? 'text-green-400' : 'text-theme-text-tertiary'}`}>
             ({current})
           </p>
         )}

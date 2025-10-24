@@ -296,7 +296,7 @@ export default function GymDashboard() {
         <Head>
           <title>Loading... - Gym Dashboard</title>
         </Head>
-        <main className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
+        <main className="min-h-screen bg-theme-bg-primary text-theme-text-primary flex items-center justify-center">
           <div className="text-xl">Loading activities...</div>
         </main>
       </>
@@ -309,14 +309,14 @@ export default function GymDashboard() {
         <title>Gym Dashboard - BoilerFuel</title>
         <meta name="description" content="Track your gym and fitness activities with BoilerFuel" />
       </Head>
-      <main className="min-h-screen bg-slate-950 text-white p-6">
+      <main className="min-h-screen bg-theme-bg-primary text-theme-text-primary p-6">
         <div className="mx-auto max-w-7xl space-y-6">
           {/* Navigation */}
-          <nav className="flex items-center gap-4 text-sm text-slate-400">
+          <nav className="flex items-center gap-4 text-sm text-theme-text-tertiary">
             <Link href="/" className="hover:text-yellow-400 transition-colors">← Home</Link>
-            <span className="text-slate-600">|</span>
+            <span className="text-theme-text-tertiary">|</span>
             <Link href="/dashboard" className="hover:text-yellow-400 transition-colors">Dashboard</Link>
-            <span className="text-slate-600">|</span>
+            <span className="text-theme-text-tertiary">|</span>
             <Link href="/about" className="hover:text-yellow-400 transition-colors">About</Link>
           </nav>
 
@@ -327,12 +327,12 @@ export default function GymDashboard() {
                 <span>💪</span>
                 Gym Dashboard
               </h1>
-              <p className="text-slate-400">Track your workouts and fitness activities—all data stays on this device only.</p>
+              <p className="text-theme-text-tertiary">Track your workouts and fitness activities—all data stays on this device only.</p>
             </div>
             <button
               type="button"
               onClick={handleClearAllLogs}
-              className="self-start rounded bg-slate-800 px-4 py-2 text-sm font-semibold text-slate-200 hover:bg-slate-700"
+              className="self-start rounded bg-theme-bg-tertiary px-4 py-2 text-sm font-semibold text-theme-text-secondary hover:bg-theme-bg-hover"
             >
               Clear all logs
             </button>
@@ -354,7 +354,7 @@ export default function GymDashboard() {
                 className={`px-4 py-2 rounded font-semibold transition-colors ${
                   viewMode === mode
                     ? 'bg-orange-500 text-slate-900'
-                    : 'bg-slate-800 text-slate-200 hover:bg-slate-700'
+                    : 'bg-theme-bg-tertiary text-theme-text-secondary hover:bg-theme-bg-hover'
                 }`}
               >
                 {mode.charAt(0).toUpperCase() + mode.slice(1)}
@@ -390,15 +390,15 @@ export default function GymDashboard() {
 
           {/* Activity Breakdown */}
           {Object.keys(stats.activityBreakdown).length > 0 && (
-            <section className="rounded-lg bg-slate-900 p-6">
+            <section className="rounded-lg bg-theme-card-bg p-6">
               <h2 className="mb-4 text-2xl font-bold">Activity Breakdown</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {Object.entries(stats.activityBreakdown)
                   .sort((a, b) => b[1].calories - a[1].calories)
                   .map(([name, data]) => (
-                    <div key={name} className="rounded-lg bg-slate-800 p-4 border-l-4 border-orange-500">
+                    <div key={name} className="rounded-lg bg-theme-bg-tertiary p-4 border-l-4 border-orange-500">
                       <h3 className="font-bold text-lg mb-2">{name}</h3>
-                      <div className="space-y-1 text-sm text-slate-300">
+                      <div className="space-y-1 text-sm text-theme-text-secondary">
                         <p>🔥 {Math.round(data.calories)} calories burned</p>
                         <p>⏱️ {Math.round(data.duration)} minutes total</p>
                         <p>📊 {data.count} {data.count === 1 ? 'session' : 'sessions'}</p>
@@ -410,7 +410,7 @@ export default function GymDashboard() {
           )}
 
           {/* Log New Activity */}
-          <section className="rounded-lg bg-slate-900 p-6">
+          <section className="rounded-lg bg-theme-card-bg p-6">
             <h2 className="mb-4 text-2xl font-bold">Log New Activity</h2>
             {formError && (
               <div className="mb-4 rounded border border-red-500 bg-red-500/10 px-4 py-3 text-red-400">
@@ -432,7 +432,7 @@ export default function GymDashboard() {
                   value={selectedActivity}
                   onChange={(event) => setSelectedActivity(event.target.value)}
                   required
-                  className="w-full rounded border border-slate-700 bg-slate-800 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full rounded border border-theme-border-primary bg-theme-bg-tertiary px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
                 >
                   <option value="">Select an activity...</option>
                   {activities.length === 0 && <option disabled value="">No activities available yet</option>}
@@ -454,7 +454,7 @@ export default function GymDashboard() {
                   step="1"
                   value={duration}
                   onChange={(event) => setDuration(event.target.value)}
-                  className="w-full rounded border border-slate-700 bg-slate-800 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full rounded border border-theme-border-primary bg-theme-bg-tertiary px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
               <div className="md:col-span-1 flex items-end">
@@ -469,10 +469,10 @@ export default function GymDashboard() {
           </section>
 
           {/* Activity History */}
-          <section className="rounded-lg bg-slate-900 p-6">
+          <section className="rounded-lg bg-theme-card-bg p-6">
             <h2 className="mb-4 text-2xl font-bold">Activity History</h2>
             {filteredLogs.length === 0 ? (
-              <p className="text-slate-400">
+              <p className="text-theme-text-tertiary">
                 No activities logged for this period. Start logging your workouts above!
               </p>
             ) : (
@@ -490,7 +490,7 @@ export default function GymDashboard() {
                     <div key={dateGroup.date.toISOString()} className="border-l-4 border-orange-500 pl-4">
                       <div className="mb-3 flex items-center justify-between">
                         <h3 className="text-xl font-bold">{formatDate(dateGroup.date)}</h3>
-                        <div className="text-sm text-slate-400">
+                        <div className="text-sm text-theme-text-tertiary">
                           🔥 {Math.round(totalDayCalories)} cal • ⏱️ {Math.round(totalDayDuration)} min
                         </div>
                       </div>
@@ -508,12 +508,12 @@ export default function GymDashboard() {
                           return (
                             <article 
                               key={log.id} 
-                              className="rounded bg-slate-800 p-4 hover:bg-slate-750 transition-colors"
+                              className="rounded bg-theme-bg-tertiary p-4 hover:bg-slate-750 transition-colors"
                             >
                               <div className="flex items-start justify-between gap-4">
                                 <div className="flex-1">
                                   <h4 className="font-semibold text-lg">{activity.name}</h4>
-                                  <p className="text-sm text-slate-400 mt-1">
+                                  <p className="text-sm text-theme-text-tertiary mt-1">
                                     ⏱️ {log.duration} {log.duration === 1 ? 'minute' : 'minutes'}
                                     <span className="mx-2">•</span>
                                     🕐 {logTime}
@@ -523,7 +523,7 @@ export default function GymDashboard() {
                                   <p className="font-semibold text-orange-500 text-lg">
                                     🔥 {caloriesBurned} cal
                                   </p>
-                                  <p className="text-xs text-slate-400 mt-1">
+                                  <p className="text-xs text-theme-text-tertiary mt-1">
                                     {activity.calories_per_hour} cal/hr
                                   </p>
                                 </div>
@@ -531,7 +531,7 @@ export default function GymDashboard() {
                               <button
                                 type="button"
                                 onClick={() => handleRemoveLog(log.id)}
-                                className="mt-3 text-sm text-slate-400 hover:text-red-400 transition-colors"
+                                className="mt-3 text-sm text-theme-text-tertiary hover:text-red-400 transition-colors"
                               >
                                 Remove
                               </button>
@@ -556,9 +556,9 @@ function StatCard({ label, value, unit, icon, accent, goal }) {
   const percentage = hasGoal && goal > 0 ? Math.min(100, (value / goal) * 100) : null;
 
   return (
-    <div className="rounded-lg bg-slate-900 p-6 border-2 border-slate-800 hover:border-slate-700 transition-colors">
+    <div className="rounded-lg bg-theme-card-bg p-6 border-2 border-theme-border-primary hover:border-theme-border-primary transition-colors">
       <div className="flex items-center justify-between mb-2">
-        <p className="text-sm text-slate-400">{label}</p>
+        <p className="text-sm text-theme-text-tertiary">{label}</p>
         <span className="text-2xl">{icon}</span>
       </div>
       <p className={`text-4xl font-bold ${accent}`}>
@@ -566,11 +566,11 @@ function StatCard({ label, value, unit, icon, accent, goal }) {
       </p>
       {hasGoal && percentage !== null && (
         <div className="mt-3">
-          <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
+          <div className="flex items-center justify-between text-xs text-theme-text-tertiary mb-1">
             <span>Daily Goal: {goal}{unit}</span>
             <span>{Math.round(percentage)}%</span>
           </div>
-          <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
+          <div className="h-1.5 bg-theme-bg-hover rounded-full overflow-hidden">
             <div
               className={`h-full ${accent.replace('text-', 'bg-')} transition-all duration-300`}
               style={{ width: `${percentage}%` }}

@@ -8,33 +8,33 @@ export default function About() {
         <title>About - BoilerFuel</title>
         <meta name="description" content="Learn about BoilerFuel Calorie Tracker" />
       </Head>
-      <main className="min-h-screen bg-slate-950 text-white p-6">
+      <main className="min-h-screen bg-theme-bg-primary text-theme-text-primary p-6">
         <div className="mx-auto max-w-4xl space-y-8">
           {/* Navigation */}
           <nav className="flex items-center gap-4 text-sm">
-            <Link href="/" className="text-slate-400 hover:text-yellow-400 transition-colors">
+            <Link href="/" className="text-theme-text-tertiary hover:text-theme-accent transition-colors">
               ← Home
             </Link>
-            <span className="text-slate-600">|</span>
-            <Link href="/dashboard" className="text-slate-400 hover:text-yellow-400 transition-colors">
+            <span className="text-theme-text-muted">|</span>
+            <Link href="/dashboard" className="text-theme-text-tertiary hover:text-theme-accent transition-colors">
               Dashboard
             </Link>
-            <span className="text-slate-600">|</span>
-            <Link href="/changelog" className="text-slate-400 hover:text-yellow-400 transition-colors">
+            <span className="text-theme-text-muted">|</span>
+            <Link href="/changelog" className="text-theme-text-tertiary hover:text-theme-accent transition-colors">
               Changelog
             </Link>
           </nav>
 
           {/* Header */}
-          <header className="border-b border-slate-800 pb-6">
+          <header className="border-b border-theme-border-primary pb-6">
             <h1 className="text-4xl font-bold mb-2">About BoilerFuel</h1>
-            <p className="text-xl text-slate-400">Your personal dining hall nutrition tracker</p>
+            <p className="text-xl text-theme-text-tertiary">Your personal dining hall nutrition tracker</p>
           </header>
 
           {/* What is BoilerFuel */}
-          <section className="rounded-lg bg-slate-900 p-6 space-y-4">
+          <section className="rounded-lg bg-theme-card-bg p-6 space-y-4">
             <h2 className="text-2xl font-bold text-yellow-500">What is BoilerFuel?</h2>
-            <p className="text-slate-300 leading-relaxed">
+            <p className="text-theme-text-secondary leading-relaxed">
               BoilerFuel is a privacy-focused calorie and macro tracker designed specifically for Purdue University 
               dining halls. Track your meals, monitor your nutrition, and make informed decisions about your diet—all 
               while keeping your data completely private on your device.
@@ -42,9 +42,9 @@ export default function About() {
           </section>
 
           {/* Key Features */}
-          <section className="rounded-lg bg-slate-900 p-6 space-y-4">
+          <section className="rounded-lg bg-theme-card-bg p-6 space-y-4">
             <h2 className="text-2xl font-bold text-yellow-500">Key Features</h2>
-            <ul className="space-y-3 text-slate-300">
+            <ul className="space-y-3 text-theme-text-secondary">
               <li className="flex items-start gap-3">
                 <span className="text-green-500 text-xl">✓</span>
                 <div>
@@ -90,9 +90,9 @@ export default function About() {
           </section>
 
           {/* How It Works */}
-          <section className="rounded-lg bg-slate-900 p-6 space-y-4">
+          <section className="rounded-lg bg-theme-card-bg p-6 space-y-4">
             <h2 className="text-2xl font-bold text-yellow-500">How It Works</h2>
-            <div className="space-y-4 text-slate-300">
+            <div className="space-y-4 text-theme-text-secondary">
               <div className="flex items-start gap-4">
                 <div className="flex-shrink-0 w-8 h-8 rounded-full bg-yellow-500/20 flex items-center justify-center text-yellow-500 font-bold">
                   1
@@ -133,9 +133,9 @@ export default function About() {
           </section>
 
           {/* Privacy & Security */}
-          <section className="rounded-lg bg-slate-900 p-6 space-y-4">
+          <section className="rounded-lg bg-theme-card-bg p-6 space-y-4">
             <h2 className="text-2xl font-bold text-yellow-500">Privacy & Security</h2>
-            <div className="space-y-3 text-slate-300">
+            <div className="space-y-3 text-theme-text-secondary">
               <p>
                 <strong className="text-white">Your data is yours.</strong> BoilerFuel stores all meal and activity 
                 logs locally in your browser using cookies. This means:
@@ -146,7 +146,7 @@ export default function About() {
                 <li>No tracking or analytics on your eating habits</li>
                 <li>Data stays on your device only</li>
               </ul>
-              <p className="text-sm text-slate-400 mt-4">
+              <p className="text-sm text-theme-text-tertiary mt-4">
                 <strong>Note:</strong> Because data is stored locally, it won&apos;t sync across devices. If you clear 
                 your browser cookies, your logs will be deleted.
               </p>
@@ -154,23 +154,23 @@ export default function About() {
           </section>
 
           {/* Technology */}
-          <section className="rounded-lg bg-slate-900 p-6 space-y-4">
+          <section className="rounded-lg bg-theme-card-bg p-6 space-y-4">
             <h2 className="text-2xl font-bold text-yellow-500">Technology</h2>
-            <p className="text-slate-300">
+            <p className="text-theme-text-secondary">
               BoilerFuel is built with modern web technologies:
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-              <div className="bg-slate-800 rounded p-4">
+              <div className="bg-theme-bg-tertiary rounded p-4">
                 <h3 className="font-bold text-white mb-2">Frontend</h3>
-                <ul className="text-sm text-slate-400 space-y-1">
+                <ul className="text-sm text-theme-text-tertiary space-y-1">
                   <li>• Next.js & React</li>
                   <li>• TailwindCSS</li>
                   <li>• Deployed on Vercel</li>
                 </ul>
               </div>
-              <div className="bg-slate-800 rounded p-4">
+              <div className="bg-theme-bg-tertiary rounded p-4">
                 <h3 className="font-bold text-white mb-2">Backend</h3>
-                <ul className="text-sm text-slate-400 space-y-1">
+                <ul className="text-sm text-theme-text-tertiary space-y-1">
                   <li>• Flask (Python)</li>
                   <li>• PostgreSQL Database</li>
                   <li>• Deployed on a cloud platform</li>
@@ -180,15 +180,15 @@ export default function About() {
           </section>
 
           {/* Admin Info */}
-          <section className="rounded-lg bg-slate-900 p-6 space-y-4">
+          <section className="rounded-lg bg-theme-card-bg p-6 space-y-4">
             <h2 className="text-2xl font-bold text-yellow-500">For Administrators</h2>
-            <p className="text-slate-300">
+            <p className="text-theme-text-secondary">
               Administrators can log in to manage the shared food database and activities list. The admin panel 
               allows you to add, update, and remove menu items to keep the information current for all users.
             </p>
             <Link 
               href="/admin"
-              className="inline-block rounded bg-slate-800 border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-200 hover:border-yellow-500 hover:text-yellow-400 transition-colors"
+              className="inline-block rounded bg-theme-bg-tertiary border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-200 hover:border-yellow-500 hover:text-theme-accent transition-colors"
             >
               Admin Login →
             </Link>
@@ -197,7 +197,7 @@ export default function About() {
           {/* Get Started */}
           <section className="rounded-lg bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/30 p-6 text-center space-y-4">
             <h2 className="text-2xl font-bold">Ready to Start Tracking?</h2>
-            <p className="text-slate-300">
+            <p className="text-theme-text-secondary">
               Head to the dashboard and begin logging your meals today!
             </p>
             <Link 
@@ -212,7 +212,7 @@ export default function About() {
           <footer className="text-center text-sm text-slate-500 pt-8 pb-4">
             <p>Made for Purdue University students</p>
             <p className="mt-2">
-              <Link href="/changelog" className="text-slate-400 hover:text-yellow-400 transition-colors">
+              <Link href="/changelog" className="text-theme-text-tertiary hover:text-theme-accent transition-colors">
                 View Changelog
               </Link>
             </p>

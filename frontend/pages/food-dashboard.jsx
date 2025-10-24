@@ -510,7 +510,7 @@ export default function FoodDashboard() {
                     Food Tracker
                   </h1>
                 </div>
-                <p className="text-slate-400 mt-2">Track your meals and nutrition—all data stays on this device only.</p>
+                <p className="text-theme-text-tertiary mt-2">Track your meals and nutrition—all data stays on this device only.</p>
               </div>
               <div className="flex gap-3">
                 <button
@@ -539,13 +539,13 @@ export default function FoodDashboard() {
           {/* Date Selector */}
           <div className="backdrop-blur-lg bg-white/5 rounded-2xl border border-white/10 p-6">
             <div className="flex items-center justify-between gap-4">
-              <h2 className="text-xl font-bold text-white">📅 {formatDateDisplay(selectedDate)}</h2>
+              <h2 className="text-xl font-bold text-theme-text-primary">📅 {formatDateDisplay(selectedDate)}</h2>
               <input
                 type="date"
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
                 max={formatDateForInput(startOfToday())}
-                className="rounded-xl border border-slate-600 bg-slate-800/80 px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                className="rounded-xl border border-theme-border-primary bg-theme-bg-tertiary/80 px-4 py-2 text-theme-text-primary focus:outline-none focus:ring-2 focus:ring-yellow-500"
               />
             </div>
           </div>
@@ -585,16 +585,16 @@ export default function FoodDashboard() {
           {/* Goals Section */}
           <div className="backdrop-blur-lg bg-white/5 rounded-2xl border border-white/10 p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-2xl font-bold text-white">🎯 Food Goals</h3>
+              <h3 className="text-2xl font-bold text-theme-text-primary">🎯 Food Goals</h3>
               <div className="flex items-center gap-3">
                 <label className="flex items-center gap-2 text-sm cursor-pointer">
                   <input
                     type="checkbox"
                     checked={userPrefs.showGoals}
                     onChange={handleToggleGoals}
-                    className="rounded border-slate-600 bg-slate-800 text-yellow-500 focus:ring-2 focus:ring-yellow-500"
+                    className="rounded border-theme-border-primary bg-theme-bg-tertiary text-yellow-500 focus:ring-2 focus:ring-yellow-500"
                   />
-                  <span className="text-slate-300">Show progress</span>
+                  <span className="text-theme-text-secondary">Show progress</span>
                 </label>
                 <button
                   type="button"
@@ -610,50 +610,50 @@ export default function FoodDashboard() {
             </div>
 
             {editingGoals ? (
-              <form onSubmit={handleSaveGoals} className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
+              <form onSubmit={handleSaveGoals} className="bg-theme-bg-tertiary/50 rounded-xl p-4 border border-theme-border-primary">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                   <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1">Calories</label>
+                    <label className="block text-xs font-medium text-theme-text-tertiary mb-1">Calories</label>
                     <input
                       type="number"
                       min="0"
                       step="50"
                       value={goalForm.calories}
                       onChange={(e) => setGoalForm({ ...goalForm, calories: e.target.value })}
-                      className="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-white text-sm"
+                      className="w-full rounded-lg border border-theme-border-primary bg-theme-card-bg px-3 py-2 text-theme-text-primary text-sm"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1">Protein (g)</label>
+                    <label className="block text-xs font-medium text-theme-text-tertiary mb-1">Protein (g)</label>
                     <input
                       type="number"
                       min="0"
                       step="5"
                       value={goalForm.protein}
                       onChange={(e) => setGoalForm({ ...goalForm, protein: e.target.value })}
-                      className="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-white text-sm"
+                      className="w-full rounded-lg border border-theme-border-primary bg-theme-card-bg px-3 py-2 text-theme-text-primary text-sm"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1">Carbs (g)</label>
+                    <label className="block text-xs font-medium text-theme-text-tertiary mb-1">Carbs (g)</label>
                     <input
                       type="number"
                       min="0"
                       step="5"
                       value={goalForm.carbs}
                       onChange={(e) => setGoalForm({ ...goalForm, carbs: e.target.value })}
-                      className="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-white text-sm"
+                      className="w-full rounded-lg border border-theme-border-primary bg-theme-card-bg px-3 py-2 text-theme-text-primary text-sm"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1">Fats (g)</label>
+                    <label className="block text-xs font-medium text-theme-text-tertiary mb-1">Fats (g)</label>
                     <input
                       type="number"
                       min="0"
                       step="5"
                       value={goalForm.fats}
                       onChange={(e) => setGoalForm({ ...goalForm, fats: e.target.value })}
-                      className="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-white text-sm"
+                      className="w-full rounded-lg border border-theme-border-primary bg-theme-card-bg px-3 py-2 text-theme-text-primary text-sm"
                     />
                   </div>
                 </div>
@@ -685,16 +685,16 @@ export default function FoodDashboard() {
 
           {/* Food Section */}
           <div className="backdrop-blur-lg bg-white/5 rounded-2xl border border-white/10 p-6">
-            <h2 className="text-2xl font-bold mb-6 text-white">🍽️ Food Menu</h2>
+            <h2 className="text-2xl font-bold mb-6 text-theme-text-primary">🍽️ Food Menu</h2>
 
             <div className="grid gap-4 md:grid-cols-2 mb-6">
               {diningCourts.length > 0 && (
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-300">Dining Court</label>
+                  <label className="mb-2 block text-sm font-medium text-theme-text-secondary">Dining Court</label>
                   <select
                     value={selectedDiningCourt}
                     onChange={(e) => setSelectedDiningCourt(e.target.value)}
-                    className="w-full rounded-xl border border-slate-600 bg-slate-800/80 px-4 py-2.5 text-white focus:ring-2 focus:ring-yellow-500"
+                    className="w-full rounded-xl border border-theme-border-primary bg-theme-bg-tertiary/80 px-4 py-2.5 text-theme-text-primary focus:ring-2 focus:ring-yellow-500"
                   >
                     <option value="">All Dining Courts</option>
                     {diningCourts.map((court) => (
@@ -707,11 +707,11 @@ export default function FoodDashboard() {
               )}
 
               <div>
-                <label className="mb-2 block text-sm font-medium text-slate-300">Meal Time</label>
+                <label className="mb-2 block text-sm font-medium text-theme-text-secondary">Meal Time</label>
                 <select
                   value={selectedMealTime}
                   onChange={(e) => setSelectedMealTime(e.target.value)}
-                  className="w-full rounded-xl border border-slate-600 bg-slate-800/80 px-4 py-2.5 text-white focus:ring-2 focus:ring-yellow-500"
+                  className="w-full rounded-xl border border-theme-border-primary bg-theme-bg-tertiary/80 px-4 py-2.5 text-theme-text-primary focus:ring-2 focus:ring-yellow-500"
                 >
                   <option value="">All Meal Times</option>
                   <option value="breakfast">Breakfast</option>
@@ -723,7 +723,7 @@ export default function FoodDashboard() {
             </div>
 
             {foods.length === 0 ? (
-              <p className="text-slate-400">No foods available</p>
+              <p className="text-theme-text-tertiary">No foods available</p>
             ) : (
               <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
                 {Object.entries(foodsByStation)
@@ -746,19 +746,19 @@ export default function FoodDashboard() {
                                 console.log('Card clicked:', food.name);
                                 setSelectedFood(food);
                               }}
-                              className="bg-slate-700/50 backdrop-blur rounded-lg px-3 py-2 hover:bg-slate-600/50 transition-all border border-slate-600/30 cursor-pointer"
+                              className="bg-slate-700/50 backdrop-blur rounded-lg px-3 py-2 hover:bg-slate-600/50 transition-all border border-theme-border-primary/30 cursor-pointer"
                             >
                               <div className="flex items-start justify-between gap-2">
                                 <div className="flex-1">
                                   <div className="flex items-center gap-2 flex-wrap">
-                                    <div className="font-semibold text-white text-sm">{food.name}</div>
+                                    <div className="font-semibold text-theme-text-primary text-sm">{food.name}</div>
                                     {food.meal_time && hasForecast && (
                                       <div className="relative group">
                                         <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-500/20 text-purple-300 border border-purple-500/30 cursor-help">
                                           {food.meal_time}
                                         </span>
                                         {/* Tooltip */}
-                                        <div className="absolute left-0 top-full mt-1 z-50 hidden group-hover:block w-64 p-3 bg-slate-900 border border-purple-500/50 rounded-lg shadow-xl pointer-events-none">
+                                        <div className="absolute left-0 top-full mt-1 z-50 hidden group-hover:block w-64 p-3 bg-theme-card-bg border border-purple-500/50 rounded-lg shadow-xl pointer-events-none">
                                           <div className="text-xs font-semibold text-purple-300 mb-2">📅 7-Day Forecast</div>
                                           <div className="space-y-1 max-h-48 overflow-y-auto">
                                             {nextAvail.slice(0, 7).map((slot, idx) => {
@@ -777,7 +777,7 @@ export default function FoodDashboard() {
                                               }
                                               
                                               return (
-                                                <div key={idx} className="text-xs text-slate-300 flex justify-between items-center py-1 border-b border-slate-700/50 last:border-0">
+                                                <div key={idx} className="text-xs text-theme-text-secondary flex justify-between items-center py-1 border-b border-theme-border-primary/50 last:border-0">
                                                   <span className="font-medium">{dayLabel}</span>
                                                   <span className="text-emerald-400">{slot.meal_time}</span>
                                                 </div>
@@ -788,7 +788,7 @@ export default function FoodDashboard() {
                                       </div>
                                     )}
                                   </div>
-                                  <div className="text-xs text-slate-300 mt-1">
+                                  <div className="text-xs text-theme-text-secondary mt-1">
                                     {food.calories} cal
                                     {(macros.protein || macros.carbs || macros.fats) && (
                                       <span className="block mt-0.5">
@@ -802,7 +802,7 @@ export default function FoodDashboard() {
                                 <button
                                   type="button"
                                   onClick={(e) => { e.stopPropagation(); handleQuickAdd(food.id, 1); }}
-                                  className="rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold w-8 h-8 flex items-center justify-center transition-all shadow-lg"
+                                  className="rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-theme-text-primary font-bold w-8 h-8 flex items-center justify-center transition-all shadow-lg"
                                 >
                                   +
                                 </button>
@@ -819,9 +819,9 @@ export default function FoodDashboard() {
 
           {/* Meals Log */}
           <div className="backdrop-blur-lg bg-white/5 rounded-2xl border border-white/10 p-6">
-            <h3 className="text-xl font-bold mb-4 text-white">📝 Logged Meals</h3>
+            <h3 className="text-xl font-bold mb-4 text-theme-text-primary">📝 Logged Meals</h3>
             {selectedDayLogs.length === 0 ? (
-              <p className="text-slate-400">No meals logged for this date.</p>
+              <p className="text-theme-text-tertiary">No meals logged for this date.</p>
             ) : (
               <div className="grid gap-3 md:grid-cols-2">
                 {selectedDayLogs.map((log) => {
@@ -832,11 +832,11 @@ export default function FoodDashboard() {
                   const servingsValue = Number(log.servings) || 0;
 
                   return (
-                    <div key={log.id} className="rounded-xl bg-slate-800/50 backdrop-blur border border-slate-700 p-4 hover:border-yellow-500/50 transition-all">
+                    <div key={log.id} className="rounded-xl bg-theme-bg-tertiary/50 backdrop-blur border border-theme-border-primary p-4 hover:border-yellow-500/50 transition-all">
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
-                          <h4 className="font-semibold text-white">{food.name}</h4>
-                          <p className="text-sm text-slate-400">
+                          <h4 className="font-semibold text-theme-text-primary">{food.name}</h4>
+                          <p className="text-sm text-theme-text-tertiary">
                             {servingsValue} {servingsValue === 1 ? 'serving' : 'servings'}
                           </p>
                         </div>
@@ -844,7 +844,7 @@ export default function FoodDashboard() {
                           <p className="font-bold text-yellow-400">
                             {Math.round((food.calories || 0) * servingsValue)} cal
                           </p>
-                          <p className="text-xs text-slate-400">
+                          <p className="text-xs text-theme-text-tertiary">
                             P: {Math.round((macros.protein || 0) * servingsValue)}g
                             • C: {Math.round((macros.carbs || 0) * servingsValue)}g
                             • F: {Math.round((macros.fats || 0) * servingsValue)}g
@@ -854,7 +854,7 @@ export default function FoodDashboard() {
                       <button
                         type="button"
                         onClick={() => handleRemoveLog(log.id)}
-                        className="mt-3 text-sm text-slate-400 hover:text-red-400 transition-colors"
+                        className="mt-3 text-sm text-theme-text-tertiary hover:text-red-400 transition-colors"
                       >
                         Remove
                       </button>
@@ -870,47 +870,47 @@ export default function FoodDashboard() {
       {selectedFood && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={() => setSelectedFood(null)}>
           <div className="absolute inset-0 bg-black/60" />
-          <div className="relative z-10 w-full max-w-lg rounded-2xl border border-white/10 bg-slate-900 p-5 shadow-2xl" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
+          <div className="relative z-10 w-full max-w-lg rounded-2xl border border-white/10 bg-theme-card-bg p-5 shadow-2xl" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
             <div className="flex items-start justify-between gap-3 mb-3">
-              <h4 className="text-xl font-bold text-white">{selectedFood.name}</h4>
-              <button onClick={() => setSelectedFood(null)} className="text-slate-300 hover:text-white">✕</button>
+              <h4 className="text-xl font-bold text-theme-text-primary">{selectedFood.name}</h4>
+              <button onClick={() => setSelectedFood(null)} className="text-theme-text-secondary hover:text-theme-text-primary">✕</button>
             </div>
             <div className="grid grid-cols-2 gap-3 text-sm">
-              <div className="rounded-lg bg-slate-800/60 p-3 border border-slate-700">
-                <div className="text-slate-400">Calories</div>
-                <div className="text-white font-semibold">{selectedFood.calories || 0}</div>
+              <div className="rounded-lg bg-theme-bg-tertiary/60 p-3 border border-theme-border-primary">
+                <div className="text-theme-text-tertiary">Calories</div>
+                <div className="text-theme-text-primary font-semibold">{selectedFood.calories || 0}</div>
               </div>
-              <div className="rounded-lg bg-slate-800/60 p-3 border border-slate-700">
-                <div className="text-slate-400">Protein</div>
-                <div className="text-white font-semibold">{Math.round(selectedFood.macros?.protein || 0)}g</div>
+              <div className="rounded-lg bg-theme-bg-tertiary/60 p-3 border border-theme-border-primary">
+                <div className="text-theme-text-tertiary">Protein</div>
+                <div className="text-theme-text-primary font-semibold">{Math.round(selectedFood.macros?.protein || 0)}g</div>
               </div>
-              <div className="rounded-lg bg-slate-800/60 p-3 border border-slate-700">
-                <div className="text-slate-400">Carbs</div>
-                <div className="text-white font-semibold">{Math.round(selectedFood.macros?.carbs || 0)}g</div>
+              <div className="rounded-lg bg-theme-bg-tertiary/60 p-3 border border-theme-border-primary">
+                <div className="text-theme-text-tertiary">Carbs</div>
+                <div className="text-theme-text-primary font-semibold">{Math.round(selectedFood.macros?.carbs || 0)}g</div>
               </div>
-              <div className="rounded-lg bg-slate-800/60 p-3 border border-slate-700">
-                <div className="text-slate-400">Fats</div>
-                <div className="text-white font-semibold">{Math.round(selectedFood.macros?.fats || 0)}g</div>
+              <div className="rounded-lg bg-theme-bg-tertiary/60 p-3 border border-theme-border-primary">
+                <div className="text-theme-text-tertiary">Fats</div>
+                <div className="text-theme-text-primary font-semibold">{Math.round(selectedFood.macros?.fats || 0)}g</div>
               </div>
             </div>
             <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-              <div className="rounded-lg bg-slate-800/60 p-3 border border-slate-700">
-                <div className="text-slate-400">Dining Court</div>
-                <div className="text-white font-medium">{selectedFood.dining_court || '—'}</div>
+              <div className="rounded-lg bg-theme-bg-tertiary/60 p-3 border border-theme-border-primary">
+                <div className="text-theme-text-tertiary">Dining Court</div>
+                <div className="text-theme-text-primary font-medium">{selectedFood.dining_court || '—'}</div>
               </div>
-              <div className="rounded-lg bg-slate-800/60 p-3 border border-slate-700">
-                <div className="text-slate-400">Station</div>
-                <div className="text-white font-medium">{selectedFood.station || '—'}</div>
+              <div className="rounded-lg bg-theme-bg-tertiary/60 p-3 border border-theme-border-primary">
+                <div className="text-theme-text-tertiary">Station</div>
+                <div className="text-theme-text-primary font-medium">{selectedFood.station || '—'}</div>
               </div>
-              <div className="rounded-lg bg-slate-800/60 p-3 border border-slate-700 col-span-2">
-                <div className="text-slate-400">Meal Time</div>
-                <div className="text-white font-medium">{selectedFood.meal_time || '—'}</div>
+              <div className="rounded-lg bg-theme-bg-tertiary/60 p-3 border border-theme-border-primary col-span-2">
+                <div className="text-theme-text-tertiary">Meal Time</div>
+                <div className="text-theme-text-primary font-medium">{selectedFood.meal_time || '—'}</div>
               </div>
             </div>
             {Array.isArray(selectedFood.next_available) && selectedFood.next_available.length > 0 && (
               <div className="mt-4">
                 <div className="text-sm text-purple-300 font-semibold mb-2">📅 7-Day Forecast</div>
-                <div className="max-h-48 overflow-y-auto rounded-lg border border-slate-700">
+                <div className="max-h-48 overflow-y-auto rounded-lg border border-theme-border-primary">
                   {selectedFood.next_available.slice(0,7).map((slot, i) => {
                     const date = new Date(slot.date);
                     const today = new Date();
@@ -919,7 +919,7 @@ export default function FoodDashboard() {
                     if (date.toDateString() === today.toDateString()) dayLabel = 'Today';
                     else if (date.toDateString() === tomorrow.toDateString()) dayLabel = 'Tomorrow';
                     return (
-                      <div key={i} className="flex justify-between items-center px-3 py-2 text-sm border-b border-slate-700 last:border-0 bg-slate-800/40">
+                      <div key={i} className="flex justify-between items-center px-3 py-2 text-sm border-b border-theme-border-primary last:border-0 bg-theme-bg-tertiary/40">
                         <span className="text-slate-200">{dayLabel}</span>
                         <span className="text-emerald-400">{slot.meal_time}</span>
                       </div>
@@ -930,7 +930,7 @@ export default function FoodDashboard() {
             )}
             <div className="mt-5 flex justify-end gap-2">
               <button onClick={() => setSelectedFood(null)} className="rounded-lg bg-slate-700 px-4 py-2 text-sm text-slate-200 hover:bg-slate-600">Close</button>
-              <button onClick={() => { handleQuickAdd(selectedFood.id, 1); setSelectedFood(null); }} className="rounded-lg bg-green-600 px-4 py-2 text-sm text-white hover:bg-green-700">+ Add 1 serving</button>
+              <button onClick={() => { handleQuickAdd(selectedFood.id, 1); setSelectedFood(null); }} className="rounded-lg bg-green-600 px-4 py-2 text-sm text-theme-text-primary hover:bg-green-700">+ Add 1 serving</button>
             </div>
           </div>
         </div>
@@ -950,7 +950,7 @@ function StatCardModern({ label, value, goal, gradient, icon }) {
   return (
     <div className="backdrop-blur-lg bg-white/5 rounded-2xl border border-white/10 p-4 hover:scale-105 transition-transform">
       <div className="flex items-center justify-between mb-2">
-        <p className="text-sm text-slate-400 font-medium">{label}</p>
+        <p className="text-sm text-theme-text-tertiary font-medium">{label}</p>
         <span className="text-2xl">{icon}</span>
       </div>
       <p className={`text-3xl font-bold bg-gradient-to-r ${gradient} bg-clip-text text-transparent`}>
@@ -958,11 +958,11 @@ function StatCardModern({ label, value, goal, gradient, icon }) {
       </p>
       {hasGoal && percentage !== null && (
         <div className="mt-3">
-          <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
+          <div className="flex items-center justify-between text-xs text-theme-text-tertiary mb-1">
             <span>Goal: {goal}</span>
             <span>{Math.round(percentage)}%</span>
           </div>
-          <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+          <div className="h-2 bg-theme-bg-tertiary rounded-full overflow-hidden">
             <div
               className={`h-full bg-gradient-to-r ${gradient} transition-all duration-500`}
               style={{ width: `${percentage}%` }}
@@ -981,12 +981,12 @@ function GoalCardModern({ label, value, current, showProgress }) {
   const isComplete = percentage >= 100;
 
   return (
-    <div className="rounded-xl bg-slate-800/50 backdrop-blur border border-slate-700 p-3">
-      <p className="text-xs text-slate-400 mb-1">{label}</p>
+    <div className="rounded-xl bg-theme-bg-tertiary/50 backdrop-blur border border-theme-border-primary p-3">
+      <p className="text-xs text-theme-text-tertiary mb-1">{label}</p>
       <div className="flex items-baseline gap-2 mb-2">
-        <p className="text-lg font-bold text-white">{value}</p>
+        <p className="text-lg font-bold text-theme-text-primary">{value}</p>
         {showProgress && (
-          <p className={`text-sm ${isComplete ? 'text-green-400' : 'text-slate-400'}`}>
+          <p className={`text-sm ${isComplete ? 'text-green-400' : 'text-theme-text-tertiary'}`}>
             ({current})
           </p>
         )}

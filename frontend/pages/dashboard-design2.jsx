@@ -469,19 +469,19 @@ export default function DashboardDesign2() {
         <title>Design 2 - Compact Stats Grid</title>
         <meta name="description" content="Compact grid-based dashboard design" />
       </Head>
-      <div className="min-h-screen bg-slate-950">
+      <div className="min-h-screen bg-theme-bg-primary">
         <div className="mx-auto max-w-7xl px-4 py-6 space-y-4">
           {/* Compact Header */}
-          <header className="bg-slate-900 rounded-lg border border-slate-800 p-4">
+          <header className="bg-theme-card-bg rounded-lg border border-theme-border-primary p-4">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
               <div>
                 <h1 className="text-2xl font-bold text-yellow-400">Design 2: Compact Grid</h1>
-                <p className="text-sm text-slate-500">Dense information layout for power users</p>
+                <p className="text-sm text-theme-text-muted">Dense information layout for power users</p>
               </div>
               <div className="flex gap-2">
                 <Link
                   href="/dashboard-selector"
-                  className="px-3 py-1.5 rounded bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-sm font-medium"
+                  className="px-3 py-1.5 rounded bg-theme-bg-tertiary hover:bg-theme-bg-hover border border-theme-border-primary text-theme-text-primary text-sm font-medium"
                 >
                   Back
                 </Link>
@@ -509,14 +509,14 @@ export default function DashboardDesign2() {
           )}
 
           {/* Compact Date Bar */}
-          <div className="bg-slate-900 rounded-lg border border-slate-800 p-3 flex items-center justify-between">
-            <span className="text-white font-semibold">{formatDateDisplay(selectedDate)}</span>
+          <div className="bg-theme-card-bg rounded-lg border border-theme-border-primary p-3 flex items-center justify-between">
+            <span className="text-theme-text-primary font-semibold">{formatDateDisplay(selectedDate)}</span>
             <input
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
               max={formatDateForInput(startOfToday())}
-              className="rounded border border-slate-700 bg-slate-800 px-3 py-1 text-white text-sm focus:outline-none focus:ring-1 focus:ring-yellow-500"
+              className="rounded border border-theme-border-primary bg-theme-bg-tertiary px-3 py-1 text-theme-text-primary text-sm focus:outline-none focus:ring-1 focus:ring-yellow-500"
             />
           </div>
 
@@ -532,18 +532,18 @@ export default function DashboardDesign2() {
           </div>
 
           {/* Goals Bar */}
-          <div className="bg-slate-900 rounded-lg border border-slate-800 p-3">
+          <div className="bg-theme-card-bg rounded-lg border border-theme-border-primary p-3">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-bold text-white">Goals</h3>
+              <h3 className="text-sm font-bold text-theme-text-primary">Goals</h3>
               <div className="flex items-center gap-2">
                 <label className="flex items-center gap-1 text-xs cursor-pointer">
                   <input
                     type="checkbox"
                     checked={userPrefs.showGoals}
                     onChange={handleToggleGoals}
-                    className="rounded border-slate-700 bg-slate-800 text-yellow-500 w-3 h-3"
+                    className="rounded border-theme-border-primary bg-theme-bg-tertiary text-yellow-500 w-3 h-3"
                   />
-                  <span className="text-slate-400">Show</span>
+                  <span className="text-theme-text-tertiary">Show</span>
                 </label>
                 <button
                   type="button"
@@ -551,7 +551,7 @@ export default function DashboardDesign2() {
                     setGoalForm(goals);
                     setEditingGoals(true);
                   }}
-                  className="rounded bg-slate-800 hover:bg-slate-700 px-2 py-1 text-xs font-semibold text-slate-300"
+                  className="rounded bg-theme-bg-tertiary hover:bg-theme-bg-hover px-2 py-1 text-xs font-semibold text-theme-text-secondary"
                 >
                   Edit
                 </button>
@@ -567,7 +567,7 @@ export default function DashboardDesign2() {
                     step="50"
                     value={goalForm.calories}
                     onChange={(e) => setGoalForm({ ...goalForm, calories: e.target.value })}
-                    className="w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white text-xs"
+                    className="w-full rounded border border-theme-border-primary bg-theme-bg-primary px-2 py-1 text-theme-text-primary text-xs"
                     placeholder="Cal"
                   />
                   <input
@@ -576,7 +576,7 @@ export default function DashboardDesign2() {
                     step="5"
                     value={goalForm.protein}
                     onChange={(e) => setGoalForm({ ...goalForm, protein: e.target.value })}
-                    className="w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white text-xs"
+                    className="w-full rounded border border-theme-border-primary bg-theme-bg-primary px-2 py-1 text-theme-text-primary text-xs"
                     placeholder="Pro"
                   />
                   <input
@@ -585,7 +585,7 @@ export default function DashboardDesign2() {
                     step="5"
                     value={goalForm.carbs}
                     onChange={(e) => setGoalForm({ ...goalForm, carbs: e.target.value })}
-                    className="w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white text-xs"
+                    className="w-full rounded border border-theme-border-primary bg-theme-bg-primary px-2 py-1 text-theme-text-primary text-xs"
                     placeholder="Carb"
                   />
                   <input
@@ -594,7 +594,7 @@ export default function DashboardDesign2() {
                     step="5"
                     value={goalForm.fats}
                     onChange={(e) => setGoalForm({ ...goalForm, fats: e.target.value })}
-                    className="w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white text-xs"
+                    className="w-full rounded border border-theme-border-primary bg-theme-bg-primary px-2 py-1 text-theme-text-primary text-xs"
                     placeholder="Fat"
                   />
                   <input
@@ -603,21 +603,21 @@ export default function DashboardDesign2() {
                     step="5"
                     value={goalForm.activityMinutes}
                     onChange={(e) => setGoalForm({ ...goalForm, activityMinutes: e.target.value })}
-                    className="w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white text-xs"
+                    className="w-full rounded border border-theme-border-primary bg-theme-bg-primary px-2 py-1 text-theme-text-primary text-xs"
                     placeholder="Act"
                   />
                 </div>
                 <div className="flex gap-2">
                   <button
                     type="submit"
-                    className="rounded bg-yellow-500 px-3 py-1 text-xs font-semibold text-slate-900 hover:bg-yellow-600"
+                    className="rounded bg-yellow-500 px-3 py-1 text-xs font-semibold text-theme-bg-primary hover:bg-yellow-600"
                   >
                     Save
                   </button>
                   <button
                     type="button"
                     onClick={handleCancelGoals}
-                    className="rounded bg-slate-700 px-3 py-1 text-xs font-semibold text-slate-200 hover:bg-slate-600"
+                    className="rounded bg-theme-bg-hover px-3 py-1 text-xs font-semibold text-theme-text-secondary hover:bg-theme-border-primary"
                   >
                     Cancel
                   </button>
@@ -637,15 +637,15 @@ export default function DashboardDesign2() {
           {/* Two Column Layout for Food and Logs */}
           <div className="grid md:grid-cols-2 gap-4">
             {/* Food Menu */}
-            <div className="bg-slate-900 rounded-lg border border-slate-800 p-4">
-              <h2 className="text-lg font-bold mb-3 text-white">Food Menu</h2>
+            <div className="bg-theme-card-bg rounded-lg border border-theme-border-primary p-4">
+              <h2 className="text-lg font-bold mb-3 text-theme-text-primary">Food Menu</h2>
 
               <div className="grid grid-cols-2 gap-2 mb-3">
                 {diningCourts.length > 0 && (
                   <select
                     value={selectedDiningCourt}
                     onChange={(e) => setSelectedDiningCourt(e.target.value)}
-                    className="w-full rounded border border-slate-700 bg-slate-800 px-2 py-1.5 text-white text-xs"
+                    className="w-full rounded border border-theme-border-primary bg-theme-bg-tertiary px-2 py-1.5 text-theme-text-primary text-xs"
                   >
                     <option value="">All Courts</option>
                     {diningCourts.map((court) => (
@@ -659,7 +659,7 @@ export default function DashboardDesign2() {
                 <select
                   value={selectedMealTime}
                   onChange={(e) => setSelectedMealTime(e.target.value)}
-                  className="w-full rounded border border-slate-700 bg-slate-800 px-2 py-1.5 text-white text-xs"
+                  className="w-full rounded border border-theme-border-primary bg-theme-bg-tertiary px-2 py-1.5 text-theme-text-primary text-xs"
                 >
                   <option value="">All Meals</option>
                   <option value="breakfast">Breakfast</option>
@@ -670,34 +670,34 @@ export default function DashboardDesign2() {
               </div>
 
               {foods.length === 0 ? (
-                <p className="text-slate-500 text-sm">No foods available</p>
+                <p className="text-theme-text-muted text-sm">No foods available</p>
               ) : (
                 <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2">
                   {Object.entries(foodsByStation)
                     .sort(([a], [b]) => a.localeCompare(b))
                     .map(([station, stationFoods]) => (
                       <div key={station}>
-                        <div className="bg-yellow-600 px-2 py-1 rounded-t text-xs font-bold text-slate-900">
+                        <div className="bg-yellow-600 px-2 py-1 rounded-t text-xs font-bold text-theme-bg-primary">
                           {station}
                         </div>
-                        <div className="bg-slate-800 rounded-b p-2 space-y-1">
+                        <div className="bg-theme-bg-tertiary rounded-b p-2 space-y-1">
                           {stationFoods.map((food) => {
                             const macros = food.macros || {};
                             return (
                               <div
                                 key={food.id}
-                                className="flex items-center justify-between gap-2 bg-slate-900 hover:bg-slate-700 rounded px-2 py-1.5 transition-colors"
+                                className="flex items-center justify-between gap-2 bg-theme-card-bg hover:bg-theme-bg-hover rounded px-2 py-1.5 transition-colors"
                               >
                                 <div className="flex-1 min-w-0">
-                                  <div className="font-semibold text-white text-xs truncate">{food.name}</div>
-                                  <div className="text-[0.65rem] text-slate-400">
+                                  <div className="font-semibold text-theme-text-primary text-xs truncate">{food.name}</div>
+                                  <div className="text-[0.65rem] text-theme-text-tertiary">
                                     {food.calories}cal • P:{Math.round(macros.protein || 0)} C:{Math.round(macros.carbs || 0)} F:{Math.round(macros.fats || 0)}
                                   </div>
                                 </div>
                                 <button
                                   type="button"
                                   onClick={() => handleQuickAdd(food.id, 1)}
-                                  className="rounded bg-green-600 hover:bg-green-700 text-white font-bold w-6 h-6 flex items-center justify-center text-xs flex-shrink-0"
+                                  className="rounded bg-green-600 hover:bg-green-700 text-theme-text-primary font-bold w-6 h-6 flex items-center justify-center text-xs flex-shrink-0"
                                 >
                                   +
                                 </button>
@@ -714,10 +714,10 @@ export default function DashboardDesign2() {
             {/* Logs Column */}
             <div className="space-y-4">
               {/* Meals Log */}
-              <div className="bg-slate-900 rounded-lg border border-slate-800 p-4">
-                <h3 className="text-lg font-bold mb-3 text-white">Logged Meals</h3>
+              <div className="bg-theme-card-bg rounded-lg border border-theme-border-primary p-4">
+                <h3 className="text-lg font-bold mb-3 text-theme-text-primary">Logged Meals</h3>
                 {selectedDayLogs.length === 0 ? (
-                  <p className="text-slate-500 text-sm">No meals logged</p>
+                  <p className="text-theme-text-muted text-sm">No meals logged</p>
                 ) : (
                   <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
                     {selectedDayLogs.map((log) => {
@@ -728,11 +728,11 @@ export default function DashboardDesign2() {
                       const servingsValue = Number(log.servings) || 0;
 
                       return (
-                        <div key={log.id} className="rounded bg-slate-800 p-2">
+                        <div key={log.id} className="rounded bg-theme-bg-tertiary p-2">
                           <div className="flex items-start justify-between gap-2">
                             <div className="flex-1 min-w-0">
-                              <h4 className="font-semibold text-white text-xs truncate">{food.name}</h4>
-                              <p className="text-[0.65rem] text-slate-400">
+                              <h4 className="font-semibold text-theme-text-primary text-xs truncate">{food.name}</h4>
+                              <p className="text-[0.65rem] text-theme-text-tertiary">
                                 {servingsValue}x • {Math.round((food.calories || 0) * servingsValue)}cal
                               </p>
                             </div>
@@ -752,19 +752,19 @@ export default function DashboardDesign2() {
               </div>
 
               {/* Activity Log */}
-              <div className="bg-slate-900 rounded-lg border border-slate-800 p-4">
+              <div className="bg-theme-card-bg rounded-lg border border-theme-border-primary p-4">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-lg font-bold text-white">Activities</h3>
+                  <h3 className="text-lg font-bold text-theme-text-primary">Activities</h3>
                   <Link
                     href="/gym"
-                    className="text-xs bg-orange-600 hover:bg-orange-700 text-white px-2 py-1 rounded"
+                    className="text-xs bg-orange-600 hover:bg-orange-700 text-theme-text-primary px-2 py-1 rounded"
                   >
                     Gym
                   </Link>
                 </div>
 
                 {selectedDayActivityLogs.length === 0 ? (
-                  <p className="text-slate-500 text-sm">No activities logged</p>
+                  <p className="text-theme-text-muted text-sm">No activities logged</p>
                 ) : (
                   <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2">
                     {selectedDayActivityLogs.map((log) => {
@@ -775,11 +775,11 @@ export default function DashboardDesign2() {
                       const caloriesBurned = Math.round((activity.calories_per_hour * durationValue) / 60);
 
                       return (
-                        <div key={log.id} className="rounded bg-slate-800 p-2">
+                        <div key={log.id} className="rounded bg-theme-bg-tertiary p-2">
                           <div className="flex items-start justify-between gap-2">
                             <div className="flex-1">
-                              <h4 className="font-semibold text-white text-xs">{activity.name}</h4>
-                              <p className="text-[0.65rem] text-slate-400">
+                              <h4 className="font-semibold text-theme-text-primary text-xs">{activity.name}</h4>
+                              <p className="text-[0.65rem] text-theme-text-tertiary">
                                 {durationValue}min • {caloriesBurned}cal
                               </p>
                             </div>
@@ -817,8 +817,8 @@ function CompactStatCard({ label, value, color }) {
   };
 
   return (
-    <div className={`bg-slate-900 rounded border ${colorClasses[color]} p-2 text-center`}>
-      <p className="text-[0.65rem] text-slate-400 font-medium uppercase tracking-wide">{label}</p>
+    <div className={`bg-theme-card-bg rounded border ${colorClasses[color]} p-2 text-center`}>
+      <p className="text-[0.65rem] text-theme-text-tertiary font-medium uppercase tracking-wide">{label}</p>
       <p className={`text-lg font-bold ${colorClasses[color].split(' ')[0]}`}>{value}</p>
     </div>
   );
@@ -831,15 +831,15 @@ function CompactGoalCard({ label, value, current, show }) {
   const isComplete = percentage >= 100;
 
   return (
-    <div className="bg-slate-800 rounded p-2 text-center">
-      <p className="text-[0.65rem] text-slate-400 font-medium uppercase">{label}</p>
-      <p className="text-xs font-bold text-white">{value}</p>
+    <div className="bg-theme-bg-tertiary rounded p-2 text-center">
+      <p className="text-[0.65rem] text-theme-text-tertiary font-medium uppercase">{label}</p>
+      <p className="text-xs font-bold text-theme-text-primary">{value}</p>
       {show && (
         <>
-          <p className={`text-[0.6rem] ${isComplete ? 'text-green-400' : 'text-slate-400'}`}>
+          <p className={`text-[0.6rem] ${isComplete ? 'text-green-400' : 'text-theme-text-tertiary'}`}>
             {current}
           </p>
-          <div className="h-1 bg-slate-700 rounded-full overflow-hidden mt-1">
+          <div className="h-1 bg-theme-bg-hover rounded-full overflow-hidden mt-1">
             <div
               className={`h-full ${isComplete ? 'bg-green-500' : 'bg-yellow-500'}`}
               style={{ width: `${percentage}%` }}

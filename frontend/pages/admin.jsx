@@ -332,7 +332,7 @@ export default function AdminPage() {
         <Head>
           <title>Loading... - Admin Panel</title>
         </Head>
-        <main className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
+        <main className="min-h-screen bg-theme-bg-primary text-theme-text-primary flex items-center justify-center">
           <div className="text-xl">Checking session...</div>
         </main>
       </>
@@ -346,8 +346,8 @@ export default function AdminPage() {
           <title>Admin Login - BoilerFuel</title>
           <meta name="description" content="Admin login for BoilerFuel calorie tracker" />
         </Head>
-        <main className="min-h-screen bg-slate-950 text-white flex items-center justify-center p-6">
-          <section className="w-full max-w-md rounded-lg bg-slate-900 p-8 shadow-xl">
+        <main className="min-h-screen bg-theme-bg-primary text-theme-text-primary flex items-center justify-center p-6">
+          <section className="w-full max-w-md rounded-lg bg-theme-card-bg p-8 shadow-xl">
             <h1 className="mb-6 text-3xl font-bold text-center">Admin Login</h1>
           {loginError && (
             <div className="mb-4 rounded border border-red-500 bg-red-500/10 px-4 py-3 text-red-400">
@@ -365,13 +365,13 @@ export default function AdminPage() {
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
-                  className="w-full rounded border border-slate-700 bg-slate-800 px-4 py-2 pr-12 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                  className="w-full rounded border border-theme-border-primary bg-theme-bg-tertiary px-4 py-2 pr-12 focus:outline-none focus:ring-2 focus:ring-yellow-500"
                   placeholder="Enter password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-text-tertiary hover:text-theme-text-secondary"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? (
@@ -389,7 +389,7 @@ export default function AdminPage() {
             </div>
             <button
               type="submit"
-              className="w-full rounded bg-yellow-500 px-4 py-2 font-semibold text-slate-900 hover:bg-yellow-600"
+              className="w-full rounded bg-yellow-500 px-4 py-2 font-semibold text-theme-bg-primary hover:bg-yellow-600"
             >
               Login
             </button>
@@ -406,21 +406,21 @@ export default function AdminPage() {
         <title>Admin Panel - BoilerFuel</title>
         <meta name="description" content="Manage foods and activities for BoilerFuel calorie tracker" />
       </Head>
-      <main className="min-h-screen bg-slate-950 text-white p-6">
+      <main className="min-h-screen bg-theme-bg-primary text-theme-text-primary p-6">
         <div className="mx-auto flex max-w-5xl flex-col gap-6">
           {/* Navigation */}
-          <nav className="flex items-center gap-4 text-sm text-slate-400">
+          <nav className="flex items-center gap-4 text-sm text-theme-text-tertiary">
             <Link href="/" className="hover:text-yellow-400 transition-colors">← Home</Link>
-            <span className="text-slate-600">|</span>
+            <span className="text-theme-text-muted">|</span>
             <Link href="/dashboard" className="hover:text-yellow-400 transition-colors">Dashboard</Link>
-            <span className="text-slate-600">|</span>
+            <span className="text-theme-text-muted">|</span>
             <Link href="/about" className="hover:text-yellow-400 transition-colors">About</Link>
           </nav>
 
           <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <h1 className="text-4xl font-bold">Admin Food & Activity Manager</h1>
-            <p className="text-slate-400">
+            <p className="text-theme-text-tertiary">
               Manage foods and activities available to the public dashboard.
             </p>
           </div>
@@ -463,7 +463,7 @@ export default function AdminPage() {
             <button
               type="button"
               onClick={handleLogout}
-              className="self-start rounded bg-slate-800 px-4 py-2 font-semibold text-slate-200 hover:bg-slate-700"
+              className="self-start rounded bg-theme-bg-tertiary px-4 py-2 font-semibold text-theme-text-secondary hover:bg-theme-bg-hover"
             >
               Logout
             </button>
@@ -493,7 +493,7 @@ export default function AdminPage() {
         )}
 
         {/* Database Viewer Section */}
-        <section className="rounded-lg bg-slate-900 p-6">
+        <section className="rounded-lg bg-theme-card-bg p-6">
           <h2 className="mb-6 text-3xl font-bold">📊 Database Viewer</h2>
           
           {/* Search and Filter Controls */}
@@ -508,7 +508,7 @@ export default function AdminPage() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search by name..."
-                className="w-full rounded border border-slate-700 bg-slate-800 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                className="w-full rounded border border-theme-border-primary bg-theme-bg-tertiary px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500"
               />
             </div>
             
@@ -520,7 +520,7 @@ export default function AdminPage() {
                 id="filter-dining-court"
                 value={filterDiningCourt}
                 onChange={(e) => setFilterDiningCourt(e.target.value)}
-                className="w-full rounded border border-slate-700 bg-slate-800 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                className="w-full rounded border border-theme-border-primary bg-theme-bg-tertiary px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500"
               >
                 <option value="">All Courts</option>
                 {uniqueDiningCourts.map((court) => (
@@ -537,7 +537,7 @@ export default function AdminPage() {
                 id="filter-meal-time"
                 value={filterMealTime}
                 onChange={(e) => setFilterMealTime(e.target.value)}
-                className="w-full rounded border border-slate-700 bg-slate-800 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                className="w-full rounded border border-theme-border-primary bg-theme-bg-tertiary px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500"
               >
                 <option value="">All Times</option>
                 {uniqueMealTimes.map((time) => (
@@ -554,7 +554,7 @@ export default function AdminPage() {
                 id="filter-station"
                 value={filterStation}
                 onChange={(e) => setFilterStation(e.target.value)}
-                className="w-full rounded border border-slate-700 bg-slate-800 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                className="w-full rounded border border-theme-border-primary bg-theme-bg-tertiary px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500"
               >
                 <option value="">All Stations</option>
                 {uniqueStations.map((station) => (
@@ -574,7 +574,7 @@ export default function AdminPage() {
                 id="sort-by"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="rounded border border-slate-700 bg-slate-800 px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                className="rounded border border-theme-border-primary bg-theme-bg-tertiary px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500"
               >
                 <option value="name">Name</option>
                 <option value="calories">Calories</option>
@@ -587,12 +587,12 @@ export default function AdminPage() {
             <button
               type="button"
               onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-              className="rounded border border-slate-700 bg-slate-800 px-3 py-1 text-sm hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+              className="rounded border border-theme-border-primary bg-theme-bg-tertiary px-3 py-1 text-sm hover:bg-theme-bg-hover focus:outline-none focus:ring-2 focus:ring-yellow-500"
             >
               {sortOrder === 'asc' ? '↑ Ascending' : '↓ Descending'}
             </button>
 
-            <div className="ml-auto text-sm text-slate-400">
+            <div className="ml-auto text-sm text-theme-text-tertiary">
               Showing {filteredAndSortedFoods.length} of {foods.length} items
             </div>
           </div>
@@ -618,13 +618,13 @@ export default function AdminPage() {
           {/* Data Table */}
           <div className="overflow-x-auto">
             {filteredAndSortedFoods.length === 0 ? (
-              <p className="text-slate-400 text-center py-8">
+              <p className="text-theme-text-tertiary text-center py-8">
                 {foods.length === 0 ? 'No foods in database yet.' : 'No foods match your filters.'}
               </p>
             ) : (
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-slate-700 text-left">
+                  <tr className="border-b border-theme-border-primary text-left">
                     <th className="pb-3 pr-4 font-semibold">Name</th>
                     <th className="pb-3 pr-4 font-semibold">Calories</th>
                     <th className="pb-3 pr-4 font-semibold">Protein</th>
@@ -640,8 +640,8 @@ export default function AdminPage() {
                   {filteredAndSortedFoods.map((food, index) => (
                     <tr 
                       key={food.id}
-                      className={`border-b border-slate-800 hover:bg-slate-800/50 ${
-                        index % 2 === 0 ? 'bg-slate-900/50' : ''
+                      className={`border-b border-slate-800 hover:bg-theme-bg-tertiary/50 ${
+                        index % 2 === 0 ? 'bg-theme-card-bg/50' : ''
                       }`}
                     >
                       <td className="py-3 pr-4 font-medium">{food.name}</td>
@@ -650,17 +650,17 @@ export default function AdminPage() {
                       <td className="py-3 pr-4">{food.macros?.carbs || 0}g</td>
                       <td className="py-3 pr-4">{food.macros?.fats || 0}g</td>
                       <td className="py-3 pr-4">
-                        <span className="inline-block rounded bg-slate-700 px-2 py-1 text-xs">
+                        <span className="inline-block rounded bg-theme-bg-hover px-2 py-1 text-xs">
                           {food.dining_court || 'N/A'}
                         </span>
                       </td>
                       <td className="py-3 pr-4">
-                        <span className="inline-block rounded bg-slate-700 px-2 py-1 text-xs">
+                        <span className="inline-block rounded bg-theme-bg-hover px-2 py-1 text-xs">
                           {food.meal_time || 'N/A'}
                         </span>
                       </td>
                       <td className="py-3 pr-4">
-                        <span className="inline-block rounded bg-slate-700 px-2 py-1 text-xs">
+                        <span className="inline-block rounded bg-theme-bg-hover px-2 py-1 text-xs">
                           {food.station || 'N/A'}
                         </span>
                       </td>
@@ -673,7 +673,7 @@ export default function AdminPage() {
           </div>
         </section>
 
-        <section className="rounded-lg bg-slate-900 p-6">
+        <section className="rounded-lg bg-theme-card-bg p-6">
           <h2 className="mb-4 text-2xl font-bold">Add Food</h2>
           {foodError && (
             <div className="mb-4 rounded border border-red-500 bg-red-500/10 px-4 py-3 text-red-400">
@@ -695,7 +695,7 @@ export default function AdminPage() {
                 type="text"
                 value={foodForm.name}
                 onChange={(event) => setFoodForm({ ...foodForm, name: event.target.value })}
-                className="w-full rounded border border-slate-700 bg-slate-800 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                className="w-full rounded border border-theme-border-primary bg-theme-bg-tertiary px-4 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500"
               />
             </div>
             <div>
@@ -708,7 +708,7 @@ export default function AdminPage() {
                 min="0"
                 value={foodForm.calories}
                 onChange={(event) => setFoodForm({ ...foodForm, calories: event.target.value })}
-                className="w-full rounded border border-slate-700 bg-slate-800 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                className="w-full rounded border border-theme-border-primary bg-theme-bg-tertiary px-4 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500"
               />
             </div>
             <div>
@@ -722,7 +722,7 @@ export default function AdminPage() {
                 step="0.1"
                 value={foodForm.protein}
                 onChange={(event) => setFoodForm({ ...foodForm, protein: event.target.value })}
-                className="w-full rounded border border-slate-700 bg-slate-800 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                className="w-full rounded border border-theme-border-primary bg-theme-bg-tertiary px-4 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500"
               />
             </div>
             <div>
@@ -736,7 +736,7 @@ export default function AdminPage() {
                 step="0.1"
                 value={foodForm.carbs}
                 onChange={(event) => setFoodForm({ ...foodForm, carbs: event.target.value })}
-                className="w-full rounded border border-slate-700 bg-slate-800 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                className="w-full rounded border border-theme-border-primary bg-theme-bg-tertiary px-4 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500"
               />
             </div>
             <div>
@@ -750,13 +750,13 @@ export default function AdminPage() {
                 step="0.1"
                 value={foodForm.fats}
                 onChange={(event) => setFoodForm({ ...foodForm, fats: event.target.value })}
-                className="w-full rounded border border-slate-700 bg-slate-800 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                className="w-full rounded border border-theme-border-primary bg-theme-bg-tertiary px-4 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500"
               />
             </div>
             <div className="md:col-span-2">
               <button
                 type="submit"
-                className="w-full rounded bg-yellow-500 px-4 py-2 font-semibold text-slate-900 hover:bg-yellow-600"
+                className="w-full rounded bg-yellow-500 px-4 py-2 font-semibold text-theme-bg-primary hover:bg-yellow-600"
               >
                 Add Food
               </button>
@@ -764,17 +764,17 @@ export default function AdminPage() {
           </form>
         </section>
 
-        <section className="rounded-lg bg-slate-900 p-6">
+        <section className="rounded-lg bg-theme-card-bg p-6">
           <h2 className="mb-4 text-2xl font-bold">Current Foods</h2>
           {foods.length === 0 ? (
-            <p className="text-slate-400">No foods available yet.</p>
+            <p className="text-theme-text-tertiary">No foods available yet.</p>
           ) : (
             <ul className="space-y-3">
               {foods.map((food) => (
-                <li key={food.id} className="flex items-start justify-between gap-4 rounded bg-slate-800 p-4">
+                <li key={food.id} className="flex items-start justify-between gap-4 rounded bg-theme-bg-tertiary p-4">
                   <div>
                     <p className="font-semibold">{food.name}</p>
-                    <p className="text-sm text-slate-400">
+                    <p className="text-sm text-theme-text-tertiary">
                       {food.calories} cal • P: {food.macros?.protein ?? 0}g • C:{' '}
                       {food.macros?.carbs ?? 0}g • F: {food.macros?.fats ?? 0}g
                     </p>
@@ -792,7 +792,7 @@ export default function AdminPage() {
           )}
         </section>
 
-        <section className="rounded-lg bg-slate-900 p-6">
+        <section className="rounded-lg bg-theme-card-bg p-6">
           <h2 className="mb-4 text-2xl font-bold">Add Activity</h2>
           {activityError && (
             <div className="mb-4 rounded border border-red-500 bg-red-500/10 px-4 py-3 text-red-400">
@@ -816,7 +816,7 @@ export default function AdminPage() {
                 onChange={(event) =>
                   setActivityForm({ ...activityForm, name: event.target.value })
                 }
-                className="w-full rounded border border-slate-700 bg-slate-800 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                className="w-full rounded border border-theme-border-primary bg-theme-bg-tertiary px-4 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500"
                 placeholder="e.g., Running"
               />
             </div>
@@ -831,14 +831,14 @@ export default function AdminPage() {
                 onChange={(event) =>
                   setActivityForm({ ...activityForm, calories_per_hour: event.target.value })
                 }
-                className="w-full rounded border border-slate-700 bg-slate-800 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                className="w-full rounded border border-theme-border-primary bg-theme-bg-tertiary px-4 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500"
                 placeholder="e.g., 600"
               />
             </div>
             <div className="md:col-span-2">
               <button
                 type="submit"
-                className="w-full rounded bg-orange-500 px-4 py-2 font-semibold text-slate-900 hover:bg-orange-600"
+                className="w-full rounded bg-orange-500 px-4 py-2 font-semibold text-theme-bg-primary hover:bg-orange-600"
               >
                 Add Activity
               </button>
@@ -846,17 +846,17 @@ export default function AdminPage() {
           </form>
         </section>
 
-        <section className="rounded-lg bg-slate-900 p-6">
+        <section className="rounded-lg bg-theme-card-bg p-6">
           <h2 className="mb-4 text-2xl font-bold">Current Activities</h2>
           {activities.length === 0 ? (
-            <p className="text-slate-400">No activities available yet.</p>
+            <p className="text-theme-text-tertiary">No activities available yet.</p>
           ) : (
             <ul className="space-y-3">
               {activities.map((activity) => (
-                <li key={activity.id} className="flex items-start justify-between gap-4 rounded bg-slate-800 p-4">
+                <li key={activity.id} className="flex items-start justify-between gap-4 rounded bg-theme-bg-tertiary p-4">
                   <div>
                     <p className="font-semibold">{activity.name}</p>
-                    <p className="text-sm text-slate-400">
+                    <p className="text-sm text-theme-text-tertiary">
                       {activity.calories_per_hour} cal/hour
                     </p>
                   </div>

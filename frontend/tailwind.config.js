@@ -24,9 +24,12 @@ module.exports = {
           'text-primary': 'rgb(var(--color-text-primary) / <alpha-value>)',
           'text-secondary': 'rgb(var(--color-text-secondary) / <alpha-value>)',
           'text-tertiary': 'rgb(var(--color-text-tertiary) / <alpha-value>)',
+          'text-muted': 'rgb(var(--color-text-muted) / <alpha-value>)',
           
           'border-primary': 'rgb(var(--color-border-primary) / <alpha-value>)',
           'border-secondary': 'rgb(var(--color-border-secondary) / <alpha-value>)',
+          'border-light': 'rgb(var(--color-border-light) / <alpha-value>)',
+          'border-focus': 'rgb(var(--color-border-focus) / <alpha-value>)',
           
           'accent': 'rgb(var(--color-accent-primary) / <alpha-value>)',
           'accent-hover': 'rgb(var(--color-accent-hover) / <alpha-value>)',
