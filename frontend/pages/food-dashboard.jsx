@@ -725,7 +725,7 @@ export default function FoodDashboard() {
             {foods.length === 0 ? (
               <p className="text-theme-text-tertiary">No foods available</p>
             ) : (
-              <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+              <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
                 {Object.entries(foodsByStation)
                   .sort(([a], [b]) => a.localeCompare(b))
                   .map(([station, stationFoods]) => (
