@@ -265,9 +265,7 @@ export default function FoodDashboard() {
         setActivities(Array.isArray(data) ? data : []);
       } catch (error) {
         if (!isMounted) return;
-        if (!menuError) {
-          setMenuError(error?.message || 'Failed to load activities.');
-        }
+        setMenuError(error?.message || 'Failed to load activities.');
       }
     }
 

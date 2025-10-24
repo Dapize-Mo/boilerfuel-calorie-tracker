@@ -235,8 +235,9 @@ export default function Dashboard() {
 
     return () => {
       isMounted = false;
-      if (successTimeout.current) {
-        clearTimeout(successTimeout.current);
+      const timeout = successTimeout.current;
+      if (timeout) {
+        clearTimeout(timeout);
       }
     };
   }, []);
