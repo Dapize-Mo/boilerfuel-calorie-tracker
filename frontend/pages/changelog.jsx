@@ -31,16 +31,150 @@ export default function Changelog() {
             <p className="text-xl text-slate-400">Version history and updates</p>
           </header>
 
-          {/* Version 1.3.0 */}
+          {/* Version 1.5.0 */}
           <section className="rounded-lg bg-slate-900 p-6 space-y-4">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-bold text-yellow-500">Version 1.3.0</h2>
-                <p className="text-sm text-slate-400">October 2, 2025</p>
+                <h2 className="text-2xl font-bold text-yellow-500">Version 1.5.0</h2>
+                <p className="text-sm text-slate-400">October 24, 2025</p>
               </div>
               <span className="rounded-full bg-green-500/20 text-green-400 px-3 py-1 text-xs font-semibold">
                 Latest
               </span>
+            </div>
+            <div className="space-y-3 text-slate-300">
+              <h3 className="font-bold text-white">✨ New Features</h3>
+              <ul className="space-y-2 ml-4">
+                <li className="flex items-start gap-2">
+                  <span className="text-yellow-500">•</span>
+                  <span><strong>Light/Dark Mode Theme:</strong> Toggle between light mode, dark mode, or automatic system preference detection</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-yellow-500">•</span>
+                  <span><strong>Food Details Modal:</strong> Click any food item to view detailed nutritional info, dining court, station, and 7-day forecast</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-yellow-500">•</span>
+                  <span><strong>7-Day Forecast Tooltips:</strong> Hover over meal time badges to see when items will be available over the next week</span>
+                </li>
+              </ul>
+              
+              <h3 className="font-bold text-white mt-4">🎨 UI Improvements</h3>
+              <ul className="space-y-2 ml-4">
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-500">•</span>
+                  <span>Theme toggle in navigation with ☀️ Light, 💻 System, 🌙 Dark modes</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-500">•</span>
+                  <span>Light mode styling throughout app with adaptive colors</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-500">•</span>
+                  <span>Interactive food cards with hover states and click-to-expand</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-500">•</span>
+                  <span>Improved tooltip visibility with proper z-index layering</span>
+                </li>
+              </ul>
+
+              <h3 className="font-bold text-white mt-4">🔧 Technical Updates</h3>
+              <ul className="space-y-2 ml-4">
+                <li className="flex items-start gap-2">
+                  <span className="text-purple-500">•</span>
+                  <span>ThemeContext for global theme state management</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-purple-500">•</span>
+                  <span>localStorage persistence for theme preference</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-purple-500">•</span>
+                  <span>Real-time system theme change detection</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-purple-500">•</span>
+                  <span>Tailwind dark mode with class-based strategy</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-purple-500">•</span>
+                  <span>Fixed React Hook ESLint warnings for cleaner builds</span>
+                </li>
+              </ul>
+            </div>
+          </section>
+
+          {/* Version 1.4.0 */}
+          <section className="rounded-lg bg-slate-900 p-6 space-y-4">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-300">Version 1.4.0</h2>
+                <p className="text-sm text-slate-400">October 23, 2025</p>
+              </div>
+            </div>
+            <div className="space-y-3 text-slate-300">
+              <h3 className="font-bold text-white">✨ New Features</h3>
+              <ul className="space-y-2 ml-4">
+                <li className="flex items-start gap-2">
+                  <span className="text-yellow-500">•</span>
+                  <span><strong>7-Day Menu Forecasting:</strong> See when foods will be available over the next week with multi-day scheduling</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-yellow-500">•</span>
+                  <span><strong>Admin GitHub Actions Trigger:</strong> Manually trigger menu scraper from admin panel to update database on-demand</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-yellow-500">•</span>
+                  <span><strong>Enhanced Scraper:</strong> Multi-day scraping with caching and configurable day range (default 7 days)</span>
+                </li>
+              </ul>
+              
+              <h3 className="font-bold text-white mt-4">🔧 Technical Updates</h3>
+              <ul className="space-y-2 ml-4">
+                <li className="flex items-start gap-2">
+                  <span className="text-purple-500">•</span>
+                  <span>Added next_available JSONB column with GIN index for forecast data storage</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-purple-500">•</span>
+                  <span>Database migration to Neon PostgreSQL with proper connection handling</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-purple-500">•</span>
+                  <span>GitHub Actions workflow improvements with verification queries and SCRAPE_DAYS env var</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-purple-500">•</span>
+                  <span>Backend endpoint for CI workflow dispatch via GitHub API</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-purple-500">•</span>
+                  <span>Selenium fallback gracefully skips in CI if unavailable</span>
+                </li>
+              </ul>
+
+              <h3 className="font-bold text-white mt-4">🐛 Bug Fixes</h3>
+              <ul className="space-y-2 ml-4">
+                <li className="flex items-start gap-2">
+                  <span className="text-red-500">•</span>
+                  <span>Fixed Neon database not updating in production environment</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-red-500">•</span>
+                  <span>Added post-scrape verification to ensure data populated correctly</span>
+                </li>
+              </ul>
+            </div>
+          </section>
+
+          {/* Version 1.3.0 */}
+          <section className="rounded-lg bg-slate-900 p-6 space-y-4">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-300">Version 1.3.0</h2>
+                <p className="text-sm text-slate-400">October 2, 2025</p>
+              </div>
             </div>
             <div className="space-y-3 text-slate-300">
               <h3 className="font-bold text-white">✨ New Features</h3>
