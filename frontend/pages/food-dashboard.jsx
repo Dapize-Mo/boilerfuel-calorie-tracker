@@ -241,6 +241,8 @@ export default function FoodDashboard() {
   const [loading, setLoading] = useState(true);
   const [menuError, setMenuError] = useState('');
   const [success, setSuccess] = useState('');
+  // Food details modal
+  const [selectedFood, setSelectedFood] = useState(null);
   const successTimeout = useRef(null);
 
   useEffect(() => {
@@ -729,7 +731,7 @@ export default function FoodDashboard() {
                 {Object.entries(foodsByStation)
                   .sort(([a], [b]) => a.localeCompare(b))
                   .map(([station, stationFoods]) => (
-                    <div key={station} className="rounded-xl bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-yellow-500/30 overflow-hidden">
+                    <div key={station} className="rounded-xl bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-yellow-500/30 overflow-visible">
                       <div className="bg-gradient-to-r from-yellow-600 to-orange-500 px-4 py-3">
                         <h3 className="text-lg font-bold text-slate-900">{station}</h3>
                       </div>
@@ -742,7 +744,8 @@ export default function FoodDashboard() {
                           return (
                             <div
                               key={food.id}
-                              className="bg-slate-700/50 backdrop-blur rounded-lg px-3 py-2 hover:bg-slate-600/50 transition-all border border-slate-600/30"
+                              onClick={() => setSelectedFood(food)}
+                              className="bg-slate-700/50 backdrop-blur rounded-lg px-3 py-2 hover:bg-slate-600/50 transition-all border border-slate-600/30 cursor-pointer"
                             >
                               <div className="flex items-start justify-between gap-2">
                                 <div className="flex-1">
@@ -797,7 +800,7 @@ export default function FoodDashboard() {
                                 </div>
                                 <button
                                   type="button"
-                                  onClick={() => handleQuickAdd(food.id, 1)}
+                                  onClick={(e) => { e.stopPropagation(); handleQuickAdd(food.id, 1); }}
                                   className="rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold w-8 h-8 flex items-center justify-center transition-all shadow-lg"
                                 >
                                   +
@@ -862,9 +865,80 @@ export default function FoodDashboard() {
           </div>
         </div>
       </div>
+      {/* Food details modal */}
+      {selectedFood && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={() => setSelectedFood(null)}>
+          <div className="absolute inset-0 bg-black/60" />
+          <div className="relative z-10 w-full max-w-lg rounded-2xl border border-white/10 bg-slate-900 p-5 shadow-2xl" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
+            <div className="flex items-start justify-between gap-3 mb-3">
+              <h4 className="text-xl font-bold text-white">{selectedFood.name}</h4>
+              <button onClick={() => setSelectedFood(null)} className="text-slate-300 hover:text-white">✕</button>
+            </div>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="rounded-lg bg-slate-800/60 p-3 border border-slate-700">
+                <div className="text-slate-400">Calories</div>
+                <div className="text-white font-semibold">{selectedFood.calories || 0}</div>
+              </div>
+              <div className="rounded-lg bg-slate-800/60 p-3 border border-slate-700">
+                <div className="text-slate-400">Protein</div>
+                <div className="text-white font-semibold">{Math.round(selectedFood.macros?.protein || 0)}g</div>
+              </div>
+              <div className="rounded-lg bg-slate-800/60 p-3 border border-slate-700">
+                <div className="text-slate-400">Carbs</div>
+                <div className="text-white font-semibold">{Math.round(selectedFood.macros?.carbs || 0)}g</div>
+              </div>
+              <div className="rounded-lg bg-slate-800/60 p-3 border border-slate-700">
+                <div className="text-slate-400">Fats</div>
+                <div className="text-white font-semibold">{Math.round(selectedFood.macros?.fats || 0)}g</div>
+              </div>
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+              <div className="rounded-lg bg-slate-800/60 p-3 border border-slate-700">
+                <div className="text-slate-400">Dining Court</div>
+                <div className="text-white font-medium">{selectedFood.dining_court || '—'}</div>
+              </div>
+              <div className="rounded-lg bg-slate-800/60 p-3 border border-slate-700">
+                <div className="text-slate-400">Station</div>
+                <div className="text-white font-medium">{selectedFood.station || '—'}</div>
+              </div>
+              <div className="rounded-lg bg-slate-800/60 p-3 border border-slate-700 col-span-2">
+                <div className="text-slate-400">Meal Time</div>
+                <div className="text-white font-medium">{selectedFood.meal_time || '—'}</div>
+              </div>
+            </div>
+            {Array.isArray(selectedFood.next_available) && selectedFood.next_available.length > 0 && (
+              <div className="mt-4">
+                <div className="text-sm text-purple-300 font-semibold mb-2">📅 7-Day Forecast</div>
+                <div className="max-h-48 overflow-y-auto rounded-lg border border-slate-700">
+                  {selectedFood.next_available.slice(0,7).map((slot, i) => {
+                    const date = new Date(slot.date);
+                    const today = new Date();
+                    const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate()+1);
+                    let dayLabel = slot.day_name;
+                    if (date.toDateString() === today.toDateString()) dayLabel = 'Today';
+                    else if (date.toDateString() === tomorrow.toDateString()) dayLabel = 'Tomorrow';
+                    return (
+                      <div key={i} className="flex justify-between items-center px-3 py-2 text-sm border-b border-slate-700 last:border-0 bg-slate-800/40">
+                        <span className="text-slate-200">{dayLabel}</span>
+                        <span className="text-emerald-400">{slot.meal_time}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            <div className="mt-5 flex justify-end gap-2">
+              <button onClick={() => setSelectedFood(null)} className="rounded-lg bg-slate-700 px-4 py-2 text-sm text-slate-200 hover:bg-slate-600">Close</button>
+              <button onClick={() => { handleQuickAdd(selectedFood.id, 1); setSelectedFood(null); }} className="rounded-lg bg-green-600 px-4 py-2 text-sm text-white hover:bg-green-700">+ Add 1 serving</button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
+
+// Modal component for food details is rendered within the page component below main markup
 
 function StatCardModern({ label, value, goal, gradient, icon }) {
   const hasGoal = goal !== null && goal !== undefined;

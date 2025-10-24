@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run dev:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nfeat: Add modern glass-morphism dashboard design with 3 alternative layouts\n\n- Replace default dashboard with Design 1 (Modern Card Layout)\n  - Glass-morphism effects with backdrop blur\n  - Vibrant gradient text and buttons\n  - Enhanced visual hierarchy with rounded corners and shadows\n  - Smooth hover animations and transitions\n\n- Add dashboard selector page for easy design comparison\n- Create 3 distinct dashboard design alternatives:\n  - Design 1: Modern Card Layout (glass effects, gradients)\n  - Design 2: Compact Stats Grid (dense, data-focused)\n  - Design 3: Minimalist Single Column (clean, simple)\n\n- Preserve original dashboard as backup file\n- All designs share same functionality and data\n- Add navigation between designs via selector page\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
