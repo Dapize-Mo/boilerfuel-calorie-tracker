@@ -172,7 +172,7 @@ function ProfileMenu() {
             <p className="text-xs text-theme-text-tertiary">Signed out</p>
           </div>
           <MenuItem href="#" onClick={() => setOpen(false)}>Profile (coming soon)</MenuItem>
-          <MenuItem href="#" onClick={() => setOpen(false)}>Settings</MenuItem>
+          <MenuItem href="#" onClick={() => setOpen(false)}>Settings (coming soon)</MenuItem>
           <div className="my-1 h-px bg-theme-border-primary/60" />
           <MenuItem href="#" onClick={() => setOpen(false)}>
             <span className="text-theme-accent">Sign in</span>
