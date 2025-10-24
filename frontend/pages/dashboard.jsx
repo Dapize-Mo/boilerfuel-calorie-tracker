@@ -367,7 +367,7 @@ export default function Dashboard() {
         <title>BoilerFuel Dashboard - Overview</title>
         <meta name="description" content="Your health and fitness overview with BoilerFuel" />
       </Head>
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+  <div className="min-h-screen bg-theme-bg-primary">
         <div className="mx-auto max-w-7xl px-4 py-8 space-y-8">
           {/* Header with Glass Effect */}
           <header className="backdrop-blur-lg bg-theme-card-bg rounded-2xl border border-theme-card-border p-6 shadow-2xl">
@@ -531,7 +531,7 @@ export default function Dashboard() {
                   <button
                     type="button"
                     onClick={handleCancelGoals}
-                    className="rounded-xl bg-slate-700 px-4 py-2 text-sm font-semibold text-slate-200 hover:bg-slate-600"
+                    className="rounded-xl bg-theme-bg-tertiary px-4 py-2 text-sm font-semibold text-theme-text-primary hover:bg-theme-bg-hover"
                   >
                     Cancel
                   </button>
@@ -739,7 +739,7 @@ function GoalCardModern({ label, value, current, showProgress }) {
         )}
       </div>
       {showProgress && (
-        <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
+  <div className="h-1.5 bg-theme-border-primary rounded-full overflow-hidden">
           <div
             className={`h-full transition-all duration-500 ${
               isComplete ? 'bg-green-500' : 'bg-yellow-500'

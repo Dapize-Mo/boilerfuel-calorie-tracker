@@ -498,7 +498,7 @@ export default function FoodDashboard() {
         <title>Food Tracker - BoilerFuel</title>
         <meta name="description" content="Track your meals with BoilerFuel calorie tracker" />
       </Head>
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+  <div className="min-h-screen bg-theme-bg-primary">
         <div className="mx-auto max-w-7xl px-4 py-8 space-y-8">
           {/* Header with Glass Effect */}
           <header className="backdrop-blur-lg bg-theme-card-bg rounded-2xl border border-theme-card-border p-6 shadow-2xl">
@@ -729,7 +729,7 @@ export default function FoodDashboard() {
                 {Object.entries(foodsByStation)
                   .sort(([a], [b]) => a.localeCompare(b))
                   .map(([station, stationFoods]) => (
-                    <div key={station} className="rounded-xl bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-yellow-500/30 overflow-visible">
+                    <div key={station} className="rounded-xl bg-theme-card-bg border border-theme-card-border overflow-visible">
                       <div className="bg-gradient-to-r from-yellow-600 to-orange-500 px-4 py-3">
                         <h3 className="text-lg font-bold text-slate-900">{station}</h3>
                       </div>
