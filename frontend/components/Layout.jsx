@@ -55,7 +55,10 @@ function Header({ open, setOpen }) {
             <HeaderLink href="/about">About</HeaderLink>
             <HeaderLink href="/changelog">Changelog</HeaderLink>
             <HeaderLink href="/admin">Admin</HeaderLink>
-            <ThemeToggle />
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <ProfileMenu />
+            </div>
           </nav>
 
           <button
@@ -91,8 +94,9 @@ function Header({ open, setOpen }) {
               <MobileLink href="/about" onClick={() => setOpen(false)}>About</MobileLink>
               <MobileLink href="/changelog" onClick={() => setOpen(false)}>Changelog</MobileLink>
               <MobileLink href="/admin" onClick={() => setOpen(false)}>Admin</MobileLink>
-              <div className="px-3 py-2">
+              <div className="px-3 py-2 flex items-center gap-3">
                 <ThemeToggle />
+                <MobileProfileLinks />
               </div>
             </div>
           </div>
@@ -138,5 +142,68 @@ function Footer() {
         </div>
       </div>
     </footer>
+  );
+}
+
+function ProfileMenu() {
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    function onKey(e) {
+      if (e.key === 'Escape') setOpen(false);
+    }
+    if (open) document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [open]);
+
+  return (
+    <div className="relative">
+      <button
+        aria-label="Open profile menu"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+        className="inline-flex items-center justify-center h-9 w-9 rounded-full border border-theme-border-primary bg-theme-bg-secondary/70 text-theme-text-primary hover:bg-theme-bg-hover/60 focus:outline-none focus:ring-2 focus:ring-theme-accent/60"
+      >
+        <span className="sr-only">Open profile menu</span>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+          <path fillRule="evenodd" d="M12 2.25a5.25 5.25 0 100 10.5 5.25 5.25 0 000-10.5zM4.5 20.25a7.5 7.5 0 0115 0 .75.75 0 01-.75.75h-13.5a.75.75 0 01-.75-.75z" clipRule="evenodd" />
+        </svg>
+      </button>
+      {open && (
+        <div className="absolute right-0 mt-2 w-48 rounded-md border border-theme-border-primary bg-theme-bg-secondary shadow-soft p-1 z-50">
+          <div className="px-3 py-2">
+            <p className="text-xs text-theme-text-tertiary">Signed out</p>
+          </div>
+          <MenuItem href="#" onClick={() => setOpen(false)}>Profile (coming soon)</MenuItem>
+          <MenuItem href="#" onClick={() => setOpen(false)}>Settings</MenuItem>
+          <div className="my-1 h-px bg-theme-border-primary/60" />
+          <MenuItem href="#" onClick={() => setOpen(false)}>
+            <span className="text-theme-accent">Sign in</span>
+          </MenuItem>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MenuItem({ href, children, onClick }) {
+  return (
+    <Link
+      href={href}
+      onClick={onClick}
+      className="block rounded-md px-3 py-2 text-sm text-theme-text-secondary hover:text-theme-text-primary hover:bg-theme-bg-hover/60 transition-colors"
+    >
+      {children}
+    </Link>
+  );
+}
+
+function MobileProfileLinks() {
+  return (
+    <div className="flex items-center gap-2">
+      <Link href="#" className="text-theme-text-secondary hover:text-theme-text-primary text-sm">Profile</Link>
+      <span className="text-theme-text-tertiary">•</span>
+      <Link href="#" className="text-theme-text-secondary hover:text-theme-text-primary text-sm">Sign in</Link>
+    </div>
   );
 }
