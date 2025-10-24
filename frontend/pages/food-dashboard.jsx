@@ -501,7 +501,7 @@ export default function FoodDashboard() {
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
         <div className="mx-auto max-w-7xl px-4 py-8 space-y-8">
           {/* Header with Glass Effect */}
-          <header className="backdrop-blur-lg bg-white/5 rounded-2xl border border-white/10 p-6 shadow-2xl">
+          <header className="backdrop-blur-lg bg-theme-card-bg rounded-2xl border border-theme-card-border p-6 shadow-2xl">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
                 <div className="flex items-center gap-3">
@@ -537,7 +537,7 @@ export default function FoodDashboard() {
           )}
 
           {/* Date Selector */}
-          <div className="backdrop-blur-lg bg-white/5 rounded-2xl border border-white/10 p-6">
+          <div className="backdrop-blur-lg bg-theme-card-bg rounded-2xl border border-theme-card-border p-6">
             <div className="flex items-center justify-between gap-4">
               <h2 className="text-xl font-bold text-theme-text-primary">📅 {formatDateDisplay(selectedDate)}</h2>
               <input
@@ -583,7 +583,7 @@ export default function FoodDashboard() {
           </div>
 
           {/* Goals Section */}
-          <div className="backdrop-blur-lg bg-white/5 rounded-2xl border border-white/10 p-6">
+          <div className="backdrop-blur-lg bg-theme-card-bg rounded-2xl border border-theme-card-border p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-2xl font-bold text-theme-text-primary">🎯 Food Goals</h3>
               <div className="flex items-center gap-3">
@@ -684,7 +684,7 @@ export default function FoodDashboard() {
           </div>
 
           {/* Food Section */}
-          <div className="backdrop-blur-lg bg-white/5 rounded-2xl border border-white/10 p-6">
+          <div className="backdrop-blur-lg bg-theme-card-bg rounded-2xl border border-theme-card-border p-6">
             <h2 className="text-2xl font-bold mb-6 text-theme-text-primary">🍽️ Food Menu</h2>
 
             <div className="grid gap-4 md:grid-cols-2 mb-6">
@@ -870,7 +870,7 @@ export default function FoodDashboard() {
       {selectedFood && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={() => setSelectedFood(null)}>
           <div className="absolute inset-0 bg-black/60" />
-          <div className="relative z-10 w-full max-w-lg rounded-2xl border border-white/10 bg-theme-card-bg p-5 shadow-2xl" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
+          <div className="relative z-10 w-full max-w-lg rounded-2xl border border-theme-card-border bg-theme-card-bg p-5 shadow-2xl" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
             <div className="flex items-start justify-between gap-3 mb-3">
               <h4 className="text-xl font-bold text-theme-text-primary">{selectedFood.name}</h4>
               <button onClick={() => setSelectedFood(null)} className="text-theme-text-secondary hover:text-theme-text-primary">✕</button>
@@ -948,7 +948,7 @@ function StatCardModern({ label, value, goal, gradient, icon }) {
   const percentage = hasGoal && numericGoal > 0 ? Math.min(100, (numericValue / numericGoal) * 100) : null;
 
   return (
-    <div className="backdrop-blur-lg bg-white/5 rounded-2xl border border-white/10 p-4 hover:scale-105 transition-transform">
+  <div className="backdrop-blur-lg bg-theme-card-bg rounded-2xl border border-theme-card-border p-4 hover:scale-105 transition-transform">
       <div className="flex items-center justify-between mb-2">
         <p className="text-sm text-theme-text-tertiary font-medium">{label}</p>
         <span className="text-2xl">{icon}</span>

@@ -370,7 +370,7 @@ export default function Dashboard() {
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
         <div className="mx-auto max-w-7xl px-4 py-8 space-y-8">
           {/* Header with Glass Effect */}
-          <header className="backdrop-blur-lg bg-white/5 rounded-2xl border border-white/10 p-6 shadow-2xl">
+          <header className="backdrop-blur-lg bg-theme-card-bg rounded-2xl border border-theme-card-border p-6 shadow-2xl">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
                 <div className="flex items-center gap-3">
@@ -385,7 +385,7 @@ export default function Dashboard() {
           </header>
 
           {/* Date Selector */}
-          <div className="backdrop-blur-lg bg-white/5 rounded-2xl border border-white/10 p-6">
+          <div className="backdrop-blur-lg bg-theme-card-bg rounded-2xl border border-theme-card-border p-6">
             <div className="flex items-center justify-between gap-4">
               <h2 className="text-xl font-bold text-theme-text-primary">📅 {formatDateDisplay(selectedDate)}</h2>
               <input
@@ -436,7 +436,7 @@ export default function Dashboard() {
           </div>
 
           {/* Goals Section */}
-          <div className="backdrop-blur-lg bg-white/5 rounded-2xl border border-white/10 p-6">
+          <div className="backdrop-blur-lg bg-theme-card-bg rounded-2xl border border-theme-card-border p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-2xl font-bold text-theme-text-primary">🎯 Daily Goals</h3>
               <div className="flex items-center gap-3">
@@ -553,7 +553,7 @@ export default function Dashboard() {
             {/* Food Tracker Card */}
             <Link
               href="/food-dashboard"
-              className="backdrop-blur-lg bg-white/5 rounded-2xl border border-white/10 p-8 hover:border-yellow-500/50 transition-all group"
+              className="backdrop-blur-lg bg-theme-card-bg rounded-2xl border border-theme-card-border p-8 hover:border-theme-accent/50 transition-all group"
             >
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-4">
@@ -582,7 +582,7 @@ export default function Dashboard() {
             {/* Gym Tracker Card */}
             <Link
               href="/gym"
-              className="backdrop-blur-lg bg-white/5 rounded-2xl border border-white/10 p-8 hover:border-orange-500/50 transition-all group"
+              className="backdrop-blur-lg bg-theme-card-bg rounded-2xl border border-theme-card-border p-8 hover:border-theme-accent/50 transition-all group"
             >
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-4">
@@ -612,7 +612,7 @@ export default function Dashboard() {
           {/* Recent Activity Summary */}
           <div className="grid gap-6 md:grid-cols-2">
             {/* Recent Meals */}
-            <div className="backdrop-blur-lg bg-white/5 rounded-2xl border border-white/10 p-6">
+            <div className="backdrop-blur-lg bg-theme-card-bg rounded-2xl border border-theme-card-border p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xl font-bold text-theme-text-primary">📝 Recent Meals</h3>
                 <Link href="/food-dashboard" className="text-sm text-yellow-400 hover:text-yellow-300">
@@ -647,7 +647,7 @@ export default function Dashboard() {
             </div>
 
             {/* Recent Activities */}
-            <div className="backdrop-blur-lg bg-white/5 rounded-2xl border border-white/10 p-6">
+            <div className="backdrop-blur-lg bg-theme-card-bg rounded-2xl border border-theme-card-border p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xl font-bold text-theme-text-primary">🏋️ Recent Activities</h3>
                 <Link href="/gym" className="text-sm text-orange-400 hover:text-orange-300">
@@ -695,7 +695,7 @@ function StatCardModern({ label, value, goal, gradient, icon }) {
   const percentage = hasGoal && numericGoal > 0 ? Math.min(100, (numericValue / numericGoal) * 100) : null;
 
   return (
-    <div className="backdrop-blur-lg bg-white/5 rounded-2xl border border-white/10 p-4 hover:scale-105 transition-transform">
+  <div className="backdrop-blur-lg bg-theme-card-bg rounded-2xl border border-theme-card-border p-4 hover:scale-105 transition-transform">
       <div className="flex items-center justify-between mb-2">
         <p className="text-sm text-theme-text-tertiary font-medium">{label}</p>
         <span className="text-2xl">{icon}</span>

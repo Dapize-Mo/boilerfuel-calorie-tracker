@@ -53,8 +53,6 @@ function Header({ open, setOpen }) {
             <HeaderLink href="/food-dashboard">Food</HeaderLink>
             <HeaderLink href="/gym">Gym</HeaderLink>
             <HeaderLink href="/about">About</HeaderLink>
-            <HeaderLink href="/changelog">Changelog</HeaderLink>
-            <HeaderLink href="/admin">Admin</HeaderLink>
             <div className="flex items-center gap-2">
               <ThemeToggle />
               <ProfileMenu />
@@ -92,8 +90,6 @@ function Header({ open, setOpen }) {
               <MobileLink href="/food-dashboard" onClick={() => setOpen(false)}>Food</MobileLink>
               <MobileLink href="/gym" onClick={() => setOpen(false)}>Gym</MobileLink>
               <MobileLink href="/about" onClick={() => setOpen(false)}>About</MobileLink>
-              <MobileLink href="/changelog" onClick={() => setOpen(false)}>Changelog</MobileLink>
-              <MobileLink href="/admin" onClick={() => setOpen(false)}>Admin</MobileLink>
               <div className="px-3 py-2 flex items-center gap-3">
                 <ThemeToggle />
                 <MobileProfileLinks />
@@ -139,6 +135,7 @@ function Footer() {
         <div className="flex items-center gap-4">
           <Link href="/about" className="hover:text-yellow-400 transition-colors">About</Link>
           <Link href="/changelog" className="hover:text-yellow-400 transition-colors">Changelog</Link>
+          <Link href="/admin" className="hover:text-yellow-400 transition-colors">Admin</Link>
         </div>
       </div>
     </footer>
