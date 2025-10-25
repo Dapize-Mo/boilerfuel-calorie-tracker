@@ -200,6 +200,8 @@ function MobileProfileLinks() {
     <div className="flex items-center gap-2">
       <Link href="#" className="text-theme-text-secondary hover:text-theme-text-primary text-sm">Profile</Link>
       <span className="text-theme-text-tertiary">•</span>
+      <Link href="#" className="text-theme-text-secondary hover:text-theme-text-primary text-sm">Settings (coming soon)</Link>
+      <span className="text-theme-text-tertiary">•</span>
       <Link href="#" className="text-theme-text-secondary hover:text-theme-text-primary text-sm">Sign in</Link>
     </div>
   );

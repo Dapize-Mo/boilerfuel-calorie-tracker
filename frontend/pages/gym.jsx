@@ -109,31 +109,26 @@ export default function GymDashboard() {
   return (
     <>
       <Head>
-        <title>Gym Tracker – In Progress</title>
-        <meta name="description" content="Gym activities and workouts tracking is coming soon" />
+        <title>Gym – Coming Soon</title>
+        <meta name="description" content="Gym activities and workout tracking are coming soon" />
       </Head>
-      <div className="min-h-screen bg-theme-bg-primary">
-        <div className="mx-auto max-w-3xl px-4 py-12 space-y-6">
-          <header className="rounded-2xl border border-theme-card-border bg-theme-card-bg p-6">
-            <h1 className="text-3xl font-bold text-theme-text-primary">
-              Gym Tracker <span className="text-theme-text-tertiary text-lg font-normal">(in progress)</span>
-            </h1>
-            <p className="mt-2 text-theme-text-tertiary">
-              We’re building this page. Workout logging and activity stats will arrive soon.
+      <div className="relative min-h-screen bg-theme-bg-primary">
+        {/* Full-page banner */}
+        <div className="absolute inset-0 z-10 flex items-center justify-center p-6">
+          <div className="w-full max-w-3xl rounded-2xl border border-theme-card-border bg-theme-card-bg/90 backdrop-blur-sm text-center px-8 py-12 shadow-soft">
+            <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-theme-border-secondary bg-theme-bg-secondary/70 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-theme-text-tertiary">
+              Coming soon
             </p>
-          </header>
-          <section className="rounded-2xl border border-theme-card-border bg-theme-card-bg p-6">
-            <h2 className="text-xl font-semibold mb-2">What’s planned</h2>
-            <ul className="list-disc list-inside space-y-1 text-theme-text-secondary">
-              <li>Browse activities with calories per hour</li>
-              <li>Quick logging with time presets</li>
-              <li>Daily, weekly, and monthly summaries</li>
-              <li>Privacy-first: data stays on your device</li>
-            </ul>
-          </section>
-          <Link href="/dashboard" className="inline-block rounded bg-yellow-500 px-5 py-2 font-semibold text-theme-bg-primary hover:bg-yellow-600 transition-colors">
-            Back to Dashboard
-          </Link>
+            <h1 className="text-4xl md:text-5xl font-extrabold text-theme-text-primary">Gym tracking is on the way</h1>
+            <p className="mt-3 text-theme-text-secondary max-w-prose mx-auto">
+              We’re building workout logging, activity stats, and summaries. Check back soon!
+            </p>
+            <div className="mt-6">
+              <Link href="/dashboard" className="inline-block rounded bg-yellow-500 px-5 py-2 font-semibold text-theme-bg-primary hover:bg-yellow-600 transition-colors">
+                Back to Dashboard
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </>
