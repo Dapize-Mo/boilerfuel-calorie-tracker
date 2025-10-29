@@ -660,14 +660,14 @@ export default function FoodDashboard() {
                 <div className="flex gap-3">
                   <button
                     type="submit"
-                    className="rounded-xl bg-yellow-500 px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-yellow-600"
+                    className="rounded-xl bg-yellow-500 px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-yellow-600 transition-all duration-300 glow-yellow"
                   >
                     Save Goals
                   </button>
                   <button
                     type="button"
                     onClick={handleCancelGoals}
-                    className="rounded-xl bg-slate-700 px-4 py-2 text-sm font-semibold text-slate-200 hover:bg-slate-600"
+                    className="rounded-xl bg-slate-700 px-4 py-2 text-sm font-semibold text-slate-200 hover:bg-slate-600 transition-all duration-300"
                   >
                     Cancel
                   </button>
@@ -802,7 +802,7 @@ export default function FoodDashboard() {
                                 <button
                                   type="button"
                                   onClick={(e) => { e.stopPropagation(); handleQuickAdd(food.id, 1); }}
-                                  className="rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-theme-text-primary font-bold w-8 h-8 flex items-center justify-center transition-all shadow-lg"
+                                  className="rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-theme-text-primary font-bold w-8 h-8 flex items-center justify-center transition-all shadow-lg glow-green"
                                 >
                                   +
                                 </button>
@@ -832,7 +832,7 @@ export default function FoodDashboard() {
                   const servingsValue = Number(log.servings) || 0;
 
                   return (
-                    <div key={log.id} className="rounded-xl bg-theme-bg-tertiary/50 backdrop-blur border border-theme-border-primary p-4 hover:border-yellow-500/50 transition-all">
+                    <div key={log.id} className="rounded-xl bg-theme-bg-tertiary/50 backdrop-blur border border-theme-border-primary p-4 hover:border-yellow-500/50 transition-all card-glow">
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
                           <h4 className="font-semibold text-theme-text-primary">{food.name}</h4>

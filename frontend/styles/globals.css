@@ -159,6 +159,79 @@ body {
   .scroll-parallax {
     will-change: transform;
   }
+
+  /* Hover glow effects */
+  .glow-hover {
+    @apply relative transition-all duration-300;
+  }
+
+  .glow-hover::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    padding: 2px;
+    background: linear-gradient(135deg, rgba(250, 204, 21, 0.5), rgba(234, 179, 8, 0.5));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .glow-hover:hover::before {
+    opacity: 1;
+  }
+
+  .glow-hover::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(circle at center, rgba(250, 204, 21, 0.15), transparent 70%);
+    opacity: 0;
+    filter: blur(20px);
+    transition: opacity 0.3s ease;
+    z-index: -1;
+  }
+
+  .glow-hover:hover::after {
+    opacity: 1;
+  }
+
+  /* Glow variants for different colors */
+  .glow-yellow:hover {
+    box-shadow: 0 0 20px rgba(250, 204, 21, 0.4), 0 0 40px rgba(250, 204, 21, 0.2);
+  }
+
+  .glow-blue:hover {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.4), 0 0 40px rgba(59, 130, 246, 0.2);
+  }
+
+  .glow-green:hover {
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.4), 0 0 40px rgba(34, 197, 94, 0.2);
+  }
+
+  .glow-purple:hover {
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.4), 0 0 40px rgba(168, 85, 247, 0.2);
+  }
+
+  .glow-orange:hover {
+    box-shadow: 0 0 20px rgba(249, 115, 22, 0.4), 0 0 40px rgba(249, 115, 22, 0.2);
+  }
+
+  /* Subtle glow for cards */
+  .card-glow {
+    @apply transition-all duration-300;
+  }
+
+  .card-glow:hover {
+    box-shadow:
+      0 0 30px rgba(250, 204, 21, 0.15),
+      0 0 60px rgba(250, 204, 21, 0.1),
+      0 10px 30px rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px);
+  }
 }
 
 @keyframes fadeInUp {

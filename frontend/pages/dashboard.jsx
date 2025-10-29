@@ -570,7 +570,7 @@ export default function Dashboard() {
             {/* Food Tracker Card */}
             <Link
               href="/food-dashboard"
-              className="backdrop-blur-lg bg-theme-card-bg rounded-2xl border border-theme-card-border p-8 hover:border-theme-accent/50 transition-all group"
+              className="backdrop-blur-lg bg-theme-card-bg rounded-2xl border border-theme-card-border p-8 hover:border-theme-accent/50 transition-all group card-glow glow-yellow"
             >
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-4">
@@ -599,7 +599,7 @@ export default function Dashboard() {
             {/* Gym Tracker Card */}
             <Link
               href="/gym"
-              className="backdrop-blur-lg bg-theme-card-bg rounded-2xl border border-theme-card-border p-8 hover:border-theme-accent/50 transition-all group"
+              className="backdrop-blur-lg bg-theme-card-bg rounded-2xl border border-theme-card-border p-8 hover:border-theme-accent/50 transition-all group card-glow glow-orange"
             >
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-4">
@@ -712,7 +712,7 @@ function StatCardModern({ label, value, goal, gradient, icon }) {
   const percentage = hasGoal && numericGoal > 0 ? Math.min(100, (numericValue / numericGoal) * 100) : null;
 
   return (
-  <div className="p-4 border-l-4 border-theme-border-primary hover:border-yellow-500 transition-colors bg-theme-bg-primary/30">
+  <div className="p-4 border-l-4 border-theme-border-primary hover:border-yellow-500 transition-all duration-300 bg-theme-bg-primary/30 card-glow">
       <div className="flex items-center justify-between mb-2">
         <p className="text-sm text-theme-text-tertiary font-medium">{label}</p>
         <span className="text-2xl">{icon}</span>
@@ -745,7 +745,7 @@ function GoalCardModern({ label, value, current, showProgress }) {
   const isComplete = percentage >= 100;
 
   return (
-    <div className="p-3 border-l-2 border-theme-border-primary hover:border-yellow-500 transition-colors bg-theme-bg-primary/20">
+    <div className="p-3 border-l-2 border-theme-border-primary hover:border-yellow-500 transition-all duration-300 bg-theme-bg-primary/20 card-glow">
       <p className="text-xs text-theme-text-tertiary mb-1">{label}</p>
       <div className="flex items-baseline gap-2 mb-2">
         <p className="text-lg font-bold text-theme-text-primary">{value}</p>

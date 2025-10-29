@@ -108,7 +108,7 @@ function HeaderLink({ href, children }) {
   return (
     <Link
       href={href}
-      className="text-theme-text-secondary hover:text-theme-accent-hover transition-colors"
+      className="text-theme-text-secondary hover:text-theme-accent-hover transition-all duration-300 glow-yellow px-3 py-2 rounded-lg"
     >
       {children}
     </Link>
@@ -120,7 +120,7 @@ function MobileLink({ href, children, onClick }) {
     <Link
       href={href}
       onClick={onClick}
-      className="block rounded-md px-3 py-2 text-theme-text-primary hover:text-theme-accent-hover hover:bg-theme-bg-hover/50 transition"
+      className="block rounded-md px-3 py-2 text-theme-text-primary hover:text-theme-accent-hover hover:bg-theme-bg-hover/50 transition-all duration-300 glow-yellow"
     >
       {children}
     </Link>
