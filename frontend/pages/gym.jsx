@@ -345,8 +345,8 @@ export default function GymDashboard() {
         <title>Gym Dashboard - BoilerFuel</title>
         <meta name="description" content="Track your gym and fitness activities with BoilerFuel" />
       </Head>
-      <main className="min-h-screen bg-theme-bg-primary text-theme-text-primary p-6">
-        <div className="mx-auto max-w-7xl space-y-6">
+      <main className="min-h-screen bg-theme-bg-primary text-theme-text-primary">
+        <div className="mx-auto max-w-7xl space-y-6 p-6">
           {/* Navigation */}
           <nav className="flex items-center gap-4 text-sm text-theme-text-tertiary">
             <Link href="/" className="hover:text-yellow-400 transition-colors">← Home</Link>
@@ -400,39 +400,39 @@ export default function GymDashboard() {
 
           {/* Statistics Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <StatCard 
-              label="Total Calories Burned" 
-              value={stats.totalCalories} 
+            <StatCard
+              label="Total Calories Burned"
+              value={stats.totalCalories}
               unit="cal"
               icon="🔥"
-              accent="text-orange-500" 
+              accent="text-orange-500"
             />
-            <StatCard 
-              label="Total Duration" 
-              value={stats.totalDuration} 
+            <StatCard
+              label="Total Duration"
+              value={stats.totalDuration}
               unit="min"
               goal={viewMode === 'today' ? goals.activityMinutes : null}
               icon="⏱️"
-              accent="text-blue-500" 
+              accent="text-blue-500"
             />
-            <StatCard 
-              label="Workout Sessions" 
-              value={stats.totalSessions} 
+            <StatCard
+              label="Workout Sessions"
+              value={stats.totalSessions}
               unit=""
               icon="📊"
-              accent="text-green-500" 
+              accent="text-green-500"
             />
           </div>
 
           {/* Activity Breakdown */}
           {Object.keys(stats.activityBreakdown).length > 0 && (
-            <section className="rounded-lg bg-theme-card-bg p-6">
+            <section className="py-6">
               <h2 className="mb-4 text-2xl font-bold">Activity Breakdown</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {Object.entries(stats.activityBreakdown)
                   .sort((a, b) => b[1].calories - a[1].calories)
                   .map(([name, data]) => (
-                    <div key={name} className="rounded-lg bg-theme-bg-tertiary p-4 border-l-4 border-orange-500">
+                    <div key={name} className="p-4 border-l-4 border-orange-500 bg-theme-bg-primary/50">
                       <h3 className="font-bold text-lg mb-2">{name}</h3>
                       <div className="space-y-1 text-sm text-theme-text-secondary">
                         <p>🔥 {Math.round(data.calories)} calories burned</p>
@@ -446,7 +446,7 @@ export default function GymDashboard() {
           )}
 
           {/* Log New Activity */}
-          <section className="rounded-lg bg-theme-card-bg p-6">
+          <section className="py-6 border-t border-theme-border-primary">
             <h2 className="mb-4 text-2xl font-bold">Log New Activity</h2>
             {formError && (
               <div className="mb-4 rounded border border-red-500 bg-red-500/10 px-4 py-3 text-red-400">
@@ -505,7 +505,7 @@ export default function GymDashboard() {
           </section>
 
           {/* Activity History */}
-          <section className="rounded-lg bg-theme-card-bg p-6">
+          <section className="py-6 border-t border-theme-border-primary">
             <h2 className="mb-4 text-2xl font-bold">Activity History</h2>
             {filteredLogs.length === 0 ? (
               <p className="text-theme-text-tertiary">
@@ -542,9 +542,9 @@ export default function GymDashboard() {
                           });
 
                           return (
-                            <article 
-                              key={log.id} 
-                              className="rounded bg-theme-bg-tertiary p-4 hover:bg-slate-750 transition-colors"
+                            <article
+                              key={log.id}
+                              className="p-4 border-l border-theme-border-primary hover:border-orange-500 transition-colors"
                             >
                               <div className="flex items-start justify-between gap-4">
                                 <div className="flex-1">
@@ -592,7 +592,7 @@ function StatCard({ label, value, unit, icon, accent, goal }) {
   const percentage = hasGoal && goal > 0 ? Math.min(100, (value / goal) * 100) : null;
 
   return (
-    <div className="rounded-lg bg-theme-card-bg p-6 border-2 border-theme-border-primary hover:border-theme-border-primary transition-colors">
+    <div className="p-6 border-l-4 border-theme-border-primary hover:border-orange-500 transition-colors bg-theme-bg-primary/30">
       <div className="flex items-center justify-between mb-2">
         <p className="text-sm text-theme-text-tertiary">{label}</p>
         <span className="text-2xl">{icon}</span>
@@ -606,7 +606,7 @@ function StatCard({ label, value, unit, icon, accent, goal }) {
             <span>Daily Goal: {goal}{unit}</span>
             <span>{Math.round(percentage)}%</span>
           </div>
-          <div className="h-1.5 bg-theme-bg-hover rounded-full overflow-hidden">
+          <div className="h-1.5 bg-theme-border-primary overflow-hidden">
             <div
               className={`h-full ${accent.replace('text-', 'bg-')} transition-all duration-300`}
               style={{ width: `${percentage}%` }}

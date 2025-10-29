@@ -385,9 +385,9 @@ export default function Dashboard() {
         <meta name="description" content="Your health and fitness overview with BoilerFuel" />
       </Head>
   <div className="min-h-screen bg-theme-bg-primary">
-        <div className="mx-auto max-w-7xl px-4 py-8 space-y-8">
-          {/* Header with Glass Effect */}
-          <header className="backdrop-blur-lg bg-theme-card-bg rounded-2xl border border-theme-card-border p-6 shadow-2xl">
+        <div className="mx-auto max-w-7xl px-4 py-8 space-y-6">
+          {/* Header */}
+          <header className="pb-6 border-b border-theme-border-primary">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
                 <div className="flex items-center gap-3">
@@ -402,7 +402,7 @@ export default function Dashboard() {
           </header>
 
           {/* Date Selector */}
-          <div className="backdrop-blur-lg bg-theme-card-bg rounded-2xl border border-theme-card-border p-6">
+          <div className="py-6 border-b border-theme-border-primary">
             <div className="flex items-center justify-between gap-4">
               <h2 className="text-xl font-bold text-theme-text-primary">📅 {formatDateDisplay(selectedDate)}</h2>
               <input
@@ -453,7 +453,7 @@ export default function Dashboard() {
           </div>
 
           {/* Goals Section */}
-          <div className="backdrop-blur-lg bg-theme-card-bg rounded-2xl border border-theme-card-border p-6">
+          <div className="py-6 border-t border-theme-border-primary">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-2xl font-bold text-theme-text-primary">🎯 Daily Goals</h3>
               <div className="flex items-center gap-3">
@@ -627,9 +627,9 @@ export default function Dashboard() {
           </div>
 
           {/* Recent Activity Summary */}
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-6 md:grid-cols-2 py-6 border-t border-theme-border-primary">
             {/* Recent Meals */}
-            <div className="backdrop-blur-lg bg-theme-card-bg rounded-2xl border border-theme-card-border p-6">
+            <div className="p-6 border-l-4 border-theme-border-primary hover:border-yellow-500 transition-colors bg-theme-bg-primary/20">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xl font-bold text-theme-text-primary">📝 Recent Meals</h3>
                 <Link href="/food-dashboard" className="text-sm text-yellow-400 hover:text-yellow-300">
@@ -664,7 +664,7 @@ export default function Dashboard() {
             </div>
 
             {/* Recent Activities */}
-            <div className="backdrop-blur-lg bg-theme-card-bg rounded-2xl border border-theme-card-border p-6">
+            <div className="p-6 border-l-4 border-theme-border-primary hover:border-orange-500 transition-colors bg-theme-bg-primary/20">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xl font-bold text-theme-text-primary">🏋️ Recent Activities</h3>
                 <Link href="/gym" className="text-sm text-orange-400 hover:text-orange-300">
@@ -712,7 +712,7 @@ function StatCardModern({ label, value, goal, gradient, icon }) {
   const percentage = hasGoal && numericGoal > 0 ? Math.min(100, (numericValue / numericGoal) * 100) : null;
 
   return (
-  <div className="backdrop-blur-lg bg-theme-card-bg rounded-2xl border border-theme-card-border p-4 hover:scale-105 transition-transform">
+  <div className="p-4 border-l-4 border-theme-border-primary hover:border-yellow-500 transition-colors bg-theme-bg-primary/30">
       <div className="flex items-center justify-between mb-2">
         <p className="text-sm text-theme-text-tertiary font-medium">{label}</p>
         <span className="text-2xl">{icon}</span>
@@ -726,7 +726,7 @@ function StatCardModern({ label, value, goal, gradient, icon }) {
             <span>Goal: {goal}</span>
             <span>{Math.round(percentage)}%</span>
           </div>
-          <div className="h-2 bg-theme-bg-tertiary rounded-full overflow-hidden">
+          <div className="h-2 bg-theme-border-primary overflow-hidden">
             <div
               className={`h-full bg-gradient-to-r ${gradient} transition-all duration-500`}
               style={{ width: `${percentage}%` }}
@@ -745,7 +745,7 @@ function GoalCardModern({ label, value, current, showProgress }) {
   const isComplete = percentage >= 100;
 
   return (
-    <div className="rounded-xl bg-theme-bg-tertiary/50 backdrop-blur border border-theme-border-primary p-3">
+    <div className="p-3 border-l-2 border-theme-border-primary hover:border-yellow-500 transition-colors bg-theme-bg-primary/20">
       <p className="text-xs text-theme-text-tertiary mb-1">{label}</p>
       <div className="flex items-baseline gap-2 mb-2">
         <p className="text-lg font-bold text-theme-text-primary">{value}</p>
@@ -756,7 +756,7 @@ function GoalCardModern({ label, value, current, showProgress }) {
         )}
       </div>
       {showProgress && (
-  <div className="h-1.5 bg-theme-border-primary rounded-full overflow-hidden">
+  <div className="h-1.5 bg-theme-border-primary overflow-hidden">
           <div
             className={`h-full transition-all duration-500 ${
               isComplete ? 'bg-green-500' : 'bg-yellow-500'
