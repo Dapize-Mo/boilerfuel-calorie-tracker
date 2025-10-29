@@ -729,11 +729,12 @@ export default function FoodDashboard() {
                 {Object.entries(foodsByStation)
                   .sort(([a], [b]) => a.localeCompare(b))
                   .map(([station, stationFoods]) => (
-                    <div key={station} className="rounded-xl bg-theme-card-bg border border-theme-card-border overflow-visible">
+                    <div key={station} className="rounded-xl bg-theme-card-bg border border-theme-card-border overflow-hidden">
                       <div className="bg-gradient-to-r from-yellow-600 to-orange-500 px-4 py-3">
                         <h3 className="text-lg font-bold text-slate-900">{station}</h3>
+                        <p className="text-xs text-slate-800">{stationFoods.length} items</p>
                       </div>
-                      <div className="p-4 space-y-2">
+                      <div className="p-4 space-y-2 max-h-[400px] overflow-y-auto">
                         {stationFoods.map((food) => {
                           const macros = food.macros || {};
                           const nextAvail = food.next_available || [];
@@ -789,7 +790,8 @@ export default function FoodDashboard() {
                                     )}
                                   </div>
                                   <div className="text-xs text-theme-text-secondary mt-1">
-                                    {food.calories} cal
+                                    <span className="font-semibold text-yellow-400">{food.calories} cal</span>
+                                    <span className="text-theme-text-tertiary ml-1">per serving</span>
                                     {(macros.protein || macros.carbs || macros.fats) && (
                                       <span className="block mt-0.5">
                                         P: {Math.round(macros.protein || 0)}g
@@ -872,7 +874,10 @@ export default function FoodDashboard() {
           <div className="absolute inset-0 bg-black/60" />
           <div className="relative z-10 w-full max-w-lg rounded-2xl border border-theme-card-border bg-theme-card-bg p-5 shadow-2xl" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
             <div className="flex items-start justify-between gap-3 mb-3">
-              <h4 className="text-xl font-bold text-theme-text-primary">{selectedFood.name}</h4>
+              <div>
+                <h4 className="text-xl font-bold text-theme-text-primary">{selectedFood.name}</h4>
+                <p className="text-xs text-theme-text-tertiary mt-1">Nutrition per serving</p>
+              </div>
               <button onClick={() => setSelectedFood(null)} className="text-theme-text-secondary hover:text-theme-text-primary">✕</button>
             </div>
             <div className="grid grid-cols-2 gap-3 text-sm">

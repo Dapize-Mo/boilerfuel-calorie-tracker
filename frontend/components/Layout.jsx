@@ -173,11 +173,11 @@ function ProfileMenu() {
           <div className="px-3 py-2">
             <p className="text-xs text-theme-text-tertiary">Signed out</p>
           </div>
-          <MenuItem href="#" onClick={() => setOpen(false)}>Profile (coming soon)</MenuItem>
-          <MenuItem href="#" onClick={() => setOpen(false)}>Settings (coming soon)</MenuItem>
+          <MenuItem href="/profile" onClick={() => setOpen(false)}>Profile</MenuItem>
+          <MenuItem href="/settings" onClick={() => setOpen(false)}>Settings</MenuItem>
           <div className="my-1 h-px bg-theme-border-primary/60" />
           <MenuItem href="#" onClick={() => setOpen(false)}>
-            <span className="text-theme-accent">Sign in</span>
+            <span className="text-theme-accent">Sign in (coming soon)</span>
           </MenuItem>
         </div>
       )}
@@ -200,11 +200,9 @@ function MenuItem({ href, children, onClick }) {
 function MobileProfileLinks() {
   return (
     <div className="flex items-center gap-2">
-      <Link href="#" className="text-theme-text-secondary hover:text-theme-text-primary text-sm">Profile</Link>
+      <Link href="/profile" className="text-theme-text-secondary hover:text-theme-text-primary text-sm">Profile</Link>
       <span className="text-theme-text-tertiary">•</span>
-      <Link href="#" className="text-theme-text-secondary hover:text-theme-text-primary text-sm">Settings (coming soon)</Link>
-      <span className="text-theme-text-tertiary">•</span>
-      <Link href="#" className="text-theme-text-secondary hover:text-theme-text-primary text-sm">Sign in</Link>
+      <Link href="/settings" className="text-theme-text-secondary hover:text-theme-text-primary text-sm">Settings</Link>
     </div>
   );
 }
