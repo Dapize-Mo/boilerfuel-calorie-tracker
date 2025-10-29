@@ -808,7 +808,7 @@ export default function FoodDashboard() {
                                   </div>
                                   <div className="text-xs text-theme-text-secondary mt-1">
                                     <span className="font-semibold text-yellow-400">{food.calories} cal</span>
-                                    <span className="text-theme-text-tertiary ml-1">per serving</span>
+                                    <span className="text-theme-text-tertiary ml-1">({macros.serving_size || '1 serving'})</span>
                                     {(macros.protein || macros.carbs || macros.fats) && (
                                       <span className="block mt-0.5">
                                         P: {Math.round(macros.protein || 0)}g
@@ -893,7 +893,9 @@ export default function FoodDashboard() {
             <div className="flex items-start justify-between gap-3 mb-3">
               <div>
                 <h4 className="text-xl font-bold text-theme-text-primary">{selectedFood.name}</h4>
-                <p className="text-xs text-theme-text-tertiary mt-1">Nutrition per serving</p>
+                <p className="text-xs text-theme-text-tertiary mt-1">
+                  Serving size: {selectedFood.macros?.serving_size || '1 serving'}
+                </p>
               </div>
               <button onClick={() => setSelectedFood(null)} className="text-theme-text-secondary hover:text-theme-text-primary">✕</button>
             </div>
@@ -1069,7 +1071,7 @@ export default function FoodDashboard() {
                               <h4 className="font-bold text-theme-text-primary mb-1">{food.name}</h4>
                               <div className="text-sm text-theme-text-secondary">
                                 <span className="font-semibold text-yellow-400">{food.calories} cal</span>
-                                <span className="text-theme-text-tertiary ml-1">per serving</span>
+                                <span className="text-theme-text-tertiary ml-1">({macros.serving_size || '1 serving'})</span>
                               </div>
                               {(macros.protein || macros.carbs || macros.fats) && (
                                 <div className="text-xs text-theme-text-tertiary mt-1">

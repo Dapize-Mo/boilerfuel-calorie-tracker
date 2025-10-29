@@ -62,7 +62,8 @@ def get_nutrition_cache(database_url=None):
                 'calories': calories,
                 'protein': macros_dict.get('protein', 0.0),
                 'carbs': macros_dict.get('carbs', 0.0),
-                'fats': macros_dict.get('fats', 0.0)
+                'fats': macros_dict.get('fats', 0.0),
+                'serving_size': macros_dict.get('serving_size', '1 serving')
             }
         
         cursor.close()
@@ -79,28 +80,32 @@ def get_nutrition_cache(database_url=None):
 def fetch_item_nutrition(item_id, headers):
     """
     Fetch detailed nutrition information for a specific item.
-    
+
     Args:
         item_id: The item ID
         headers: Request headers
-    
+
     Returns:
-        Dictionary with calories, protein, carbs, fats or None if failed
+        Dictionary with calories, protein, carbs, fats, serving_size or None if failed
     """
     try:
         item_url = f"https://api.hfs.purdue.edu/menus/v2/items/{item_id}"
         response = requests.get(item_url, headers=headers, timeout=10)
         response.raise_for_status()
-        
+
         item_data = response.json()
         nutrition_list = item_data.get('Nutrition', [])
-        
+
+        # Extract serving size from item data
+        serving_size = item_data.get('ServingSize', '') or item_data.get('PortionSize', '')
+
         # Parse nutrition array
         nutrition = {}
         for nutrient in nutrition_list:
             name = nutrient.get('Name', '').lower()
             value = nutrient.get('Value', 0)
-            
+            label_value = nutrient.get('LabelValue', '')  # Sometimes serving size is here
+
             if 'calories' in name and 'from' not in name:
                 nutrition['calories'] = int(float(value)) if value else 0
             elif 'protein' in name:
@@ -109,9 +114,14 @@ def fetch_item_nutrition(item_id, headers):
                 nutrition['carbs'] = float(value) if value else 0.0
             elif 'total fat' in name:
                 nutrition['fats'] = float(value) if value else 0.0
-        
+            elif 'serving size' in name and label_value:
+                serving_size = label_value
+
+        # Add serving size to nutrition dict
+        nutrition['serving_size'] = serving_size.strip() if serving_size else '1 serving'
+
         return nutrition
-    
+
     except Exception as e:
         return None
 
@@ -201,10 +211,11 @@ def scrape_purdue_menu_api(dining_court='Wiley', date_str=None, nutrition_cache=
             protein = 0.0
             carbs = 0.0
             fats = 0.0
-            
+            serving_size = '1 serving'
+
             # Check cache first
             cache_key = (item_info['name'].lower().strip(), item_info['dining_court'].lower().strip())
-            
+
             if cache_key in nutrition_cache:
                 # Use cached data
                 cached_nutrition = nutrition_cache[cache_key]
@@ -212,6 +223,7 @@ def scrape_purdue_menu_api(dining_court='Wiley', date_str=None, nutrition_cache=
                 protein = cached_nutrition['protein']
                 carbs = cached_nutrition['carbs']
                 fats = cached_nutrition['fats']
+                serving_size = cached_nutrition.get('serving_size', '1 serving')
                 cached_count += 1
             elif item_info['nutrition_ready'] and item_info['item_id']:
                 # Fetch from API
@@ -221,22 +233,25 @@ def scrape_purdue_menu_api(dining_court='Wiley', date_str=None, nutrition_cache=
                     protein = nutrition.get('protein', 0.0)
                     carbs = nutrition.get('carbs', 0.0)
                     fats = nutrition.get('fats', 0.0)
+                    serving_size = nutrition.get('serving_size', '1 serving')
                     fetched_count += 1
-                    
+
                     # Add to cache for this session
                     nutrition_cache[cache_key] = {
                         'calories': calories,
                         'protein': protein,
                         'carbs': carbs,
-                        'fats': fats
+                        'fats': fats,
+                        'serving_size': serving_size
                     }
-            
+
             menu_items.append({
                 'name': item_info['name'],
                 'calories': calories,
                 'protein': protein,
                 'carbs': carbs,
                 'fats': fats,
+                'serving_size': serving_size,
                 'dining_court': item_info['dining_court'],
                 'station': item_info['station'],
                 'meal_period': item_info['meal_period']
@@ -669,8 +684,8 @@ def save_to_database(menu_items, database_url=None):
                 # Always update with new schedule information
                 cursor.execute(
                     """
-                    UPDATE foods 
-                    SET calories = %s, macros = %s, station = %s, meal_time = %s, 
+                    UPDATE foods
+                    SET calories = %s, macros = %s, station = %s, meal_time = %s,
                         next_available = %s, updated_at = CURRENT_TIMESTAMP
                     WHERE id = %s
                     """,
@@ -679,7 +694,8 @@ def save_to_database(menu_items, database_url=None):
                         json.dumps({
                             'protein': item['protein'],
                             'carbs': item['carbs'],
-                            'fats': item['fats']
+                            'fats': item['fats'],
+                            'serving_size': item.get('serving_size', '1 serving')
                         }),
                         item.get('station'),
                         primary_meal_time,
@@ -701,7 +717,8 @@ def save_to_database(menu_items, database_url=None):
                         json.dumps({
                             'protein': item['protein'],
                             'carbs': item['carbs'],
-                            'fats': item['fats']
+                            'fats': item['fats'],
+                            'serving_size': item.get('serving_size', '1 serving')
                         }),
                         item.get('dining_court'),
                         item.get('station'),
