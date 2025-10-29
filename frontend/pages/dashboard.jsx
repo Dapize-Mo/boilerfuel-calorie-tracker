@@ -244,21 +244,25 @@ export default function Dashboard() {
 
   const foodsById = useMemo(() => {
     const map = new Map();
-    foods.forEach((food) => {
-      if (food && typeof food.id === 'number') {
-        map.set(food.id, food);
-      }
-    });
+    if (Array.isArray(foods)) {
+      foods.forEach((food) => {
+        if (food && typeof food.id === 'number') {
+          map.set(food.id, food);
+        }
+      });
+    }
     return map;
   }, [foods]);
 
   const activitiesById = useMemo(() => {
     const map = new Map();
-    activities.forEach((activity) => {
-      if (activity && typeof activity.id === 'number') {
-        map.set(activity.id, activity);
-      }
-    });
+    if (Array.isArray(activities)) {
+      activities.forEach((activity) => {
+        if (activity && typeof activity.id === 'number') {
+          map.set(activity.id, activity);
+        }
+      });
+    }
     return map;
   }, [activities]);
 
@@ -275,44 +279,57 @@ export default function Dashboard() {
   );
 
   const totals = useMemo(() => {
-    const consumed = selectedDayLogs.reduce(
-      (acc, log) => {
-        const food = foodsById.get(log.foodId);
-        if (!food) {
+    try {
+      const consumed = (Array.isArray(selectedDayLogs) ? selectedDayLogs : []).reduce(
+        (acc, log) => {
+          const food = foodsById.get(log.foodId);
+          if (!food) {
+            return acc;
+          }
+
+          const servingsValue = Number(log.servings) || 0;
+          const macros = food.macros || {};
+
+          acc.calories += (food.calories || 0) * servingsValue;
+          acc.protein += (macros.protein || 0) * servingsValue;
+          acc.carbs += (macros.carbs || 0) * servingsValue;
+          acc.fats += (macros.fats || 0) * servingsValue;
           return acc;
+        },
+        { calories: 0, protein: 0, carbs: 0, fats: 0 }
+      );
+
+      const burned = (Array.isArray(selectedDayActivityLogs) ? selectedDayActivityLogs : []).reduce((total, log) => {
+        const activity = activitiesById.get(log.activityId);
+        if (!activity) {
+          return total;
         }
+        const durationValue = Number(log.duration) || 0;
+        return total + ((activity.calories_per_hour || 0) * durationValue) / 60;
+      }, 0);
 
-        const servingsValue = Number(log.servings) || 0;
-        const macros = food.macros || {};
+      const totalActivityMinutes = (Array.isArray(selectedDayActivityLogs) ? selectedDayActivityLogs : []).reduce((total, log) => {
+        return total + (Number(log.duration) || 0);
+      }, 0);
 
-        acc.calories += (food.calories || 0) * servingsValue;
-        acc.protein += (macros.protein || 0) * servingsValue;
-        acc.carbs += (macros.carbs || 0) * servingsValue;
-        acc.fats += (macros.fats || 0) * servingsValue;
-        return acc;
-      },
-      { calories: 0, protein: 0, carbs: 0, fats: 0 }
-    );
-
-    const burned = selectedDayActivityLogs.reduce((total, log) => {
-      const activity = activitiesById.get(log.activityId);
-      if (!activity) {
-        return total;
-      }
-      const durationValue = Number(log.duration) || 0;
-      return total + ((activity.calories_per_hour || 0) * durationValue) / 60;
-    }, 0);
-
-    const totalActivityMinutes = selectedDayActivityLogs.reduce((total, log) => {
-      return total + (Number(log.duration) || 0);
-    }, 0);
-
-    return {
-      ...consumed,
-      burned,
-      net: consumed.calories - burned,
-      activityMinutes: totalActivityMinutes,
-    };
+      return {
+        ...consumed,
+        burned,
+        net: consumed.calories - burned,
+        activityMinutes: totalActivityMinutes,
+      };
+    } catch (error) {
+      console.error('Error calculating totals:', error);
+      return {
+        calories: 0,
+        protein: 0,
+        carbs: 0,
+        fats: 0,
+        burned: 0,
+        net: 0,
+        activityMinutes: 0,
+      };
+    }
   }, [selectedDayLogs, selectedDayActivityLogs, foodsById, activitiesById]);
 
   function persistGoals(nextGoals) {
@@ -368,9 +385,9 @@ export default function Dashboard() {
         <meta name="description" content="Your health and fitness overview with BoilerFuel" />
       </Head>
   <div className="min-h-screen bg-theme-bg-primary">
-        <div className="mx-auto max-w-7xl px-4 py-8 space-y-8">
-          {/* Header with Glass Effect */}
-          <header className="backdrop-blur-lg bg-theme-card-bg rounded-2xl border border-theme-card-border p-6 shadow-2xl">
+        <div className="mx-auto max-w-7xl px-4 py-8 space-y-6">
+          {/* Header */}
+          <header className="pb-6 border-b border-theme-border-primary">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
                 <div className="flex items-center gap-3">
@@ -385,7 +402,7 @@ export default function Dashboard() {
           </header>
 
           {/* Date Selector */}
-          <div className="backdrop-blur-lg bg-theme-card-bg rounded-2xl border border-theme-card-border p-6">
+          <div className="py-6 border-b border-theme-border-primary">
             <div className="flex items-center justify-between gap-4">
               <h2 className="text-xl font-bold text-theme-text-primary">📅 {formatDateDisplay(selectedDate)}</h2>
               <input
@@ -402,33 +419,33 @@ export default function Dashboard() {
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
             <StatCardModern
               label="Calories In"
-              value={Math.round(totals.calories)}
+              value={Math.round(totals?.calories || 0)}
               goal={userPrefs.showGoals ? goals.calories : null}
               gradient="from-yellow-500 to-orange-500"
               icon="🔥"
             />
             <StatCardModern
               label="Calories Out"
-              value={Math.round(totals.burned)}
+              value={Math.round(totals?.burned || 0)}
               gradient="from-orange-500 to-red-500"
               icon="💪"
             />
             <StatCardModern
               label="Net Calories"
-              value={Math.round(totals.net)}
+              value={Math.round(totals?.net || 0)}
               gradient="from-cyan-500 to-blue-500"
               icon="📊"
             />
             <StatCardModern
               label="Protein"
-              value={`${Math.round(totals.protein)}g`}
+              value={`${Math.round(totals?.protein || 0)}g`}
               goal={userPrefs.showGoals ? goals.protein : null}
               gradient="from-green-500 to-emerald-500"
               icon="🥩"
             />
             <StatCardModern
               label="Carbs"
-              value={`${Math.round(totals.carbs)}g`}
+              value={`${Math.round(totals?.carbs || 0)}g`}
               goal={userPrefs.showGoals ? goals.carbs : null}
               gradient="from-blue-500 to-indigo-500"
               icon="🍞"
@@ -436,7 +453,7 @@ export default function Dashboard() {
           </div>
 
           {/* Goals Section */}
-          <div className="backdrop-blur-lg bg-theme-card-bg rounded-2xl border border-theme-card-border p-6">
+          <div className="py-6 border-t border-theme-border-primary">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-2xl font-bold text-theme-text-primary">🎯 Daily Goals</h3>
               <div className="flex items-center gap-3">
@@ -539,11 +556,11 @@ export default function Dashboard() {
               </form>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                <GoalCardModern label="Calories" value={goals.calories} current={Math.round(totals.calories)} showProgress={userPrefs.showGoals} />
-                <GoalCardModern label="Protein" value={`${goals.protein}g`} current={`${Math.round(totals.protein)}g`} showProgress={userPrefs.showGoals} />
-                <GoalCardModern label="Carbs" value={`${goals.carbs}g`} current={`${Math.round(totals.carbs)}g`} showProgress={userPrefs.showGoals} />
-                <GoalCardModern label="Fats" value={`${goals.fats}g`} current={`${Math.round(totals.fats)}g`} showProgress={userPrefs.showGoals} />
-                <GoalCardModern label="Activity" value={`${goals.activityMinutes} min`} current={`${Math.round(totals.activityMinutes)} min`} showProgress={userPrefs.showGoals} />
+                <GoalCardModern label="Calories" value={goals.calories} current={Math.round(totals?.calories || 0)} showProgress={userPrefs.showGoals} />
+                <GoalCardModern label="Protein" value={`${goals.protein}g`} current={`${Math.round(totals?.protein || 0)}g`} showProgress={userPrefs.showGoals} />
+                <GoalCardModern label="Carbs" value={`${goals.carbs}g`} current={`${Math.round(totals?.carbs || 0)}g`} showProgress={userPrefs.showGoals} />
+                <GoalCardModern label="Fats" value={`${goals.fats}g`} current={`${Math.round(totals?.fats || 0)}g`} showProgress={userPrefs.showGoals} />
+                <GoalCardModern label="Activity" value={`${goals.activityMinutes} min`} current={`${Math.round(totals?.activityMinutes || 0)} min`} showProgress={userPrefs.showGoals} />
               </div>
             )}
           </div>
@@ -574,7 +591,7 @@ export default function Dashboard() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-theme-text-tertiary">Calories consumed:</span>
-                  <span className="text-yellow-400 font-semibold">{Math.round(totals.calories)} cal</span>
+                  <span className="text-yellow-400 font-semibold">{Math.round(totals?.calories || 0)} cal</span>
                 </div>
               </div>
             </Link>
@@ -610,9 +627,9 @@ export default function Dashboard() {
           </div>
 
           {/* Recent Activity Summary */}
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-6 md:grid-cols-2 py-6 border-t border-theme-border-primary">
             {/* Recent Meals */}
-            <div className="backdrop-blur-lg bg-theme-card-bg rounded-2xl border border-theme-card-border p-6">
+            <div className="p-6 border-l-4 border-theme-border-primary hover:border-yellow-500 transition-colors bg-theme-bg-primary/20">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xl font-bold text-theme-text-primary">📝 Recent Meals</h3>
                 <Link href="/food-dashboard" className="text-sm text-yellow-400 hover:text-yellow-300">
@@ -647,7 +664,7 @@ export default function Dashboard() {
             </div>
 
             {/* Recent Activities */}
-            <div className="backdrop-blur-lg bg-theme-card-bg rounded-2xl border border-theme-card-border p-6">
+            <div className="p-6 border-l-4 border-theme-border-primary hover:border-orange-500 transition-colors bg-theme-bg-primary/20">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xl font-bold text-theme-text-primary">🏋️ Recent Activities</h3>
                 <Link href="/gym" className="text-sm text-orange-400 hover:text-orange-300">
@@ -695,7 +712,7 @@ function StatCardModern({ label, value, goal, gradient, icon }) {
   const percentage = hasGoal && numericGoal > 0 ? Math.min(100, (numericValue / numericGoal) * 100) : null;
 
   return (
-  <div className="backdrop-blur-lg bg-theme-card-bg rounded-2xl border border-theme-card-border p-4 hover:scale-105 transition-transform">
+  <div className="p-4 border-l-4 border-theme-border-primary hover:border-yellow-500 transition-colors bg-theme-bg-primary/30">
       <div className="flex items-center justify-between mb-2">
         <p className="text-sm text-theme-text-tertiary font-medium">{label}</p>
         <span className="text-2xl">{icon}</span>
@@ -709,7 +726,7 @@ function StatCardModern({ label, value, goal, gradient, icon }) {
             <span>Goal: {goal}</span>
             <span>{Math.round(percentage)}%</span>
           </div>
-          <div className="h-2 bg-theme-bg-tertiary rounded-full overflow-hidden">
+          <div className="h-2 bg-theme-border-primary overflow-hidden">
             <div
               className={`h-full bg-gradient-to-r ${gradient} transition-all duration-500`}
               style={{ width: `${percentage}%` }}
@@ -728,7 +745,7 @@ function GoalCardModern({ label, value, current, showProgress }) {
   const isComplete = percentage >= 100;
 
   return (
-    <div className="rounded-xl bg-theme-bg-tertiary/50 backdrop-blur border border-theme-border-primary p-3">
+    <div className="p-3 border-l-2 border-theme-border-primary hover:border-yellow-500 transition-colors bg-theme-bg-primary/20">
       <p className="text-xs text-theme-text-tertiary mb-1">{label}</p>
       <div className="flex items-baseline gap-2 mb-2">
         <p className="text-lg font-bold text-theme-text-primary">{value}</p>
@@ -739,7 +756,7 @@ function GoalCardModern({ label, value, current, showProgress }) {
         )}
       </div>
       {showProgress && (
-  <div className="h-1.5 bg-theme-border-primary rounded-full overflow-hidden">
+  <div className="h-1.5 bg-theme-border-primary overflow-hidden">
           <div
             className={`h-full transition-all duration-500 ${
               isComplete ? 'bg-green-500' : 'bg-yellow-500'

@@ -7,6 +7,8 @@ import { deleteCookie, readCookie, writeCookie } from '../utils/cookies';
 
 const ACTIVITY_LOG_COOKIE_KEY = 'boilerfuel_activity_logs_v1';
 const GOALS_COOKIE_KEY = 'boilerfuel_goals_v1';
+const WORKOUT_TEMPLATES_COOKIE_KEY = 'boilerfuel_workout_templates_v1';
+const PERSONAL_RECORDS_COOKIE_KEY = 'boilerfuel_personal_records_v1';
 
 function parseGoalsCookie() {
   const raw = readCookie(GOALS_COOKIE_KEY);
@@ -69,12 +71,46 @@ function parseActivityLogsCookie() {
           activityId,
           duration,
           timestamp,
+          weight: entry?.weight ? Number(entry.weight) : null,
+          reps: entry?.reps ? Number(entry.reps) : null,
+          sets: entry?.sets ? Number(entry.sets) : null,
+          notes: entry?.notes || '',
         };
       })
       .filter(Boolean);
   } catch (error) {
     deleteCookie(ACTIVITY_LOG_COOKIE_KEY);
     return [];
+  }
+}
+
+function parseWorkoutTemplatesCookie() {
+  const raw = readCookie(WORKOUT_TEMPLATES_COOKIE_KEY);
+  if (!raw) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    deleteCookie(WORKOUT_TEMPLATES_COOKIE_KEY);
+    return [];
+  }
+}
+
+function parsePersonalRecordsCookie() {
+  const raw = readCookie(PERSONAL_RECORDS_COOKIE_KEY);
+  if (!raw) {
+    return {};
+  }
+
+  try {
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch (error) {
+    deleteCookie(PERSONAL_RECORDS_COOKIE_KEY);
+    return {};
   }
 }
 
@@ -105,34 +141,6 @@ function getMonthStart(date) {
 }
 
 export default function GymDashboard() {
-  // Temporary in-progress placeholder
-  return (
-    <>
-      <Head>
-        <title>Gym – Coming Soon</title>
-        <meta name="description" content="Gym activities and workout tracking are coming soon" />
-      </Head>
-      <div className="relative min-h-screen bg-theme-bg-primary">
-        {/* Full-page banner */}
-        <div className="absolute inset-0 z-10 flex items-center justify-center p-6">
-          <div className="w-full max-w-3xl rounded-2xl border border-theme-card-border bg-theme-card-bg/90 backdrop-blur-sm text-center px-8 py-12 shadow-soft">
-            <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-theme-border-secondary bg-theme-bg-secondary/70 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-theme-text-tertiary">
-              Coming soon
-            </p>
-            <h1 className="text-4xl md:text-5xl font-extrabold text-theme-text-primary">Gym tracking is on the way</h1>
-            <p className="mt-3 text-theme-text-secondary max-w-prose mx-auto">
-              We’re building workout logging, activity stats, and summaries. Check back soon!
-            </p>
-            <div className="mt-6">
-              <Link href="/dashboard" className="inline-block rounded bg-yellow-500 px-5 py-2 font-semibold text-theme-bg-primary hover:bg-yellow-600 transition-colors">
-                Back to Dashboard
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-    </>
-  );
   const [activities, setActivities] = useState([]);
   const [activityLogs, setActivityLogs] = useState(() => parseActivityLogsCookie());
   const [goals, setGoals] = useState(() => parseGoalsCookie());
@@ -337,8 +345,8 @@ export default function GymDashboard() {
         <title>Gym Dashboard - BoilerFuel</title>
         <meta name="description" content="Track your gym and fitness activities with BoilerFuel" />
       </Head>
-      <main className="min-h-screen bg-theme-bg-primary text-theme-text-primary p-6">
-        <div className="mx-auto max-w-7xl space-y-6">
+      <main className="min-h-screen bg-theme-bg-primary text-theme-text-primary">
+        <div className="mx-auto max-w-7xl space-y-6 p-6">
           {/* Navigation */}
           <nav className="flex items-center gap-4 text-sm text-theme-text-tertiary">
             <Link href="/" className="hover:text-yellow-400 transition-colors">← Home</Link>
@@ -392,39 +400,39 @@ export default function GymDashboard() {
 
           {/* Statistics Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <StatCard 
-              label="Total Calories Burned" 
-              value={stats.totalCalories} 
+            <StatCard
+              label="Total Calories Burned"
+              value={stats.totalCalories}
               unit="cal"
               icon="🔥"
-              accent="text-orange-500" 
+              accent="text-orange-500"
             />
-            <StatCard 
-              label="Total Duration" 
-              value={stats.totalDuration} 
+            <StatCard
+              label="Total Duration"
+              value={stats.totalDuration}
               unit="min"
               goal={viewMode === 'today' ? goals.activityMinutes : null}
               icon="⏱️"
-              accent="text-blue-500" 
+              accent="text-blue-500"
             />
-            <StatCard 
-              label="Workout Sessions" 
-              value={stats.totalSessions} 
+            <StatCard
+              label="Workout Sessions"
+              value={stats.totalSessions}
               unit=""
               icon="📊"
-              accent="text-green-500" 
+              accent="text-green-500"
             />
           </div>
 
           {/* Activity Breakdown */}
           {Object.keys(stats.activityBreakdown).length > 0 && (
-            <section className="rounded-lg bg-theme-card-bg p-6">
+            <section className="py-6">
               <h2 className="mb-4 text-2xl font-bold">Activity Breakdown</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {Object.entries(stats.activityBreakdown)
                   .sort((a, b) => b[1].calories - a[1].calories)
                   .map(([name, data]) => (
-                    <div key={name} className="rounded-lg bg-theme-bg-tertiary p-4 border-l-4 border-orange-500">
+                    <div key={name} className="p-4 border-l-4 border-orange-500 bg-theme-bg-primary/50">
                       <h3 className="font-bold text-lg mb-2">{name}</h3>
                       <div className="space-y-1 text-sm text-theme-text-secondary">
                         <p>🔥 {Math.round(data.calories)} calories burned</p>
@@ -438,7 +446,7 @@ export default function GymDashboard() {
           )}
 
           {/* Log New Activity */}
-          <section className="rounded-lg bg-theme-card-bg p-6">
+          <section className="py-6 border-t border-theme-border-primary">
             <h2 className="mb-4 text-2xl font-bold">Log New Activity</h2>
             {formError && (
               <div className="mb-4 rounded border border-red-500 bg-red-500/10 px-4 py-3 text-red-400">
@@ -497,7 +505,7 @@ export default function GymDashboard() {
           </section>
 
           {/* Activity History */}
-          <section className="rounded-lg bg-theme-card-bg p-6">
+          <section className="py-6 border-t border-theme-border-primary">
             <h2 className="mb-4 text-2xl font-bold">Activity History</h2>
             {filteredLogs.length === 0 ? (
               <p className="text-theme-text-tertiary">
@@ -534,9 +542,9 @@ export default function GymDashboard() {
                           });
 
                           return (
-                            <article 
-                              key={log.id} 
-                              className="rounded bg-theme-bg-tertiary p-4 hover:bg-slate-750 transition-colors"
+                            <article
+                              key={log.id}
+                              className="p-4 border-l border-theme-border-primary hover:border-orange-500 transition-colors"
                             >
                               <div className="flex items-start justify-between gap-4">
                                 <div className="flex-1">
@@ -584,7 +592,7 @@ function StatCard({ label, value, unit, icon, accent, goal }) {
   const percentage = hasGoal && goal > 0 ? Math.min(100, (value / goal) * 100) : null;
 
   return (
-    <div className="rounded-lg bg-theme-card-bg p-6 border-2 border-theme-border-primary hover:border-theme-border-primary transition-colors">
+    <div className="p-6 border-l-4 border-theme-border-primary hover:border-orange-500 transition-colors bg-theme-bg-primary/30">
       <div className="flex items-center justify-between mb-2">
         <p className="text-sm text-theme-text-tertiary">{label}</p>
         <span className="text-2xl">{icon}</span>
@@ -598,7 +606,7 @@ function StatCard({ label, value, unit, icon, accent, goal }) {
             <span>Daily Goal: {goal}{unit}</span>
             <span>{Math.round(percentage)}%</span>
           </div>
-          <div className="h-1.5 bg-theme-bg-hover rounded-full overflow-hidden">
+          <div className="h-1.5 bg-theme-border-primary overflow-hidden">
             <div
               className={`h-full ${accent.replace('text-', 'bg-')} transition-all duration-300`}
               style={{ width: `${percentage}%` }}
