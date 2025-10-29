@@ -620,7 +620,7 @@ export default function Dashboard() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-theme-text-tertiary">Calories burned:</span>
-                  <span className="text-orange-400 font-semibold">{Math.round(totals.burned)} cal</span>
+                  <span className="text-orange-400 font-semibold">{Math.round(totals?.burned || 0)} cal</span>
                 </div>
               </div>
             </Link>
