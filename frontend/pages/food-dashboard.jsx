@@ -243,6 +243,11 @@ export default function FoodDashboard() {
   const [success, setSuccess] = useState('');
   // Food details modal
   const [selectedFood, setSelectedFood] = useState(null);
+  // Add Meal modal
+  const [showAddMealModal, setShowAddMealModal] = useState(false);
+  const [addMealStep, setAddMealStep] = useState(1); // 1 = dining court, 2 = food selection
+  const [addMealDiningCourt, setAddMealDiningCourt] = useState('');
+  const [addMealMealTime, setAddMealMealTime] = useState('');
   const successTimeout = useRef(null);
 
   useEffect(() => {
@@ -513,6 +518,18 @@ export default function FoodDashboard() {
                 <p className="text-theme-text-tertiary mt-2">Track your meals and nutrition—all data stays on this device only.</p>
               </div>
               <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAddMealModal(true);
+                    setAddMealStep(1);
+                    setAddMealDiningCourt('');
+                    setAddMealMealTime('');
+                  }}
+                  className="px-6 py-2 rounded-xl bg-green-500/20 hover:bg-green-500/30 border border-green-500/50 text-green-300 font-semibold transition-all duration-300 glow-green"
+                >
+                  + Add Meal
+                </button>
                 <button
                   type="button"
                   onClick={handleClearLogs}
@@ -937,6 +954,154 @@ export default function FoodDashboard() {
               <button onClick={() => setSelectedFood(null)} className="rounded-lg bg-slate-700 px-4 py-2 text-sm text-slate-200 hover:bg-slate-600">Close</button>
               <button onClick={() => { handleQuickAdd(selectedFood.id, 1); setSelectedFood(null); }} className="rounded-lg bg-green-600 px-4 py-2 text-sm text-theme-text-primary hover:bg-green-700">+ Add 1 serving</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Meal Modal */}
+      {showAddMealModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={() => setShowAddMealModal(false)}>
+          <div className="absolute inset-0 bg-black/60" />
+          <div className="relative z-10 w-full max-w-2xl rounded-2xl border border-theme-card-border bg-theme-card-bg p-6 shadow-2xl max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
+
+            {/* Step 1: Choose Dining Court & Meal Time */}
+            {addMealStep === 1 && (
+              <>
+                <div className="flex items-start justify-between gap-3 mb-6">
+                  <div>
+                    <h3 className="text-2xl font-bold text-theme-text-primary">Add Meal - Step 1</h3>
+                    <p className="text-sm text-theme-text-tertiary mt-1">Where did you eat?</p>
+                  </div>
+                  <button onClick={() => setShowAddMealModal(false)} className="text-theme-text-secondary hover:text-theme-text-primary text-xl">✕</button>
+                </div>
+
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-medium text-theme-text-secondary mb-3">Dining Court</label>
+                    <div className="grid grid-cols-2 gap-3">
+                      {diningCourts.map((court) => (
+                        <button
+                          key={court}
+                          onClick={() => setAddMealDiningCourt(court)}
+                          className={`p-4 rounded-lg border transition-all duration-300 ${
+                            addMealDiningCourt === court
+                              ? 'bg-yellow-500/20 border-yellow-500 text-yellow-300 glow-yellow'
+                              : 'bg-theme-bg-tertiary border-theme-border-primary text-theme-text-primary hover:border-yellow-500/50'
+                          }`}
+                        >
+                          <span className="text-lg font-semibold">{court}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-theme-text-secondary mb-3">Meal Time</label>
+                    <div className="grid grid-cols-3 gap-3">
+                      {['Breakfast', 'Lunch', 'Dinner'].map((meal) => (
+                        <button
+                          key={meal}
+                          onClick={() => setAddMealMealTime(meal)}
+                          className={`p-3 rounded-lg border transition-all duration-300 ${
+                            addMealMealTime === meal
+                              ? 'bg-orange-500/20 border-orange-500 text-orange-300 glow-orange'
+                              : 'bg-theme-bg-tertiary border-theme-border-primary text-theme-text-primary hover:border-orange-500/50'
+                          }`}
+                        >
+                          {meal}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-3 pt-4">
+                    <button
+                      onClick={() => setShowAddMealModal(false)}
+                      className="px-6 py-2 rounded-lg bg-theme-bg-tertiary text-theme-text-primary hover:bg-theme-bg-hover transition-all duration-300"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (addMealDiningCourt && addMealMealTime) {
+                          setAddMealStep(2);
+                        }
+                      }}
+                      disabled={!addMealDiningCourt || !addMealMealTime}
+                      className="px-6 py-2 rounded-lg bg-green-500 text-slate-900 font-semibold hover:bg-green-600 transition-all duration-300 glow-green disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Next: Choose Food →
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Step 2: Choose Food */}
+            {addMealStep === 2 && (
+              <>
+                <div className="flex items-start justify-between gap-3 mb-6">
+                  <div>
+                    <h3 className="text-2xl font-bold text-theme-text-primary">Add Meal - Step 2</h3>
+                    <p className="text-sm text-theme-text-tertiary mt-1">
+                      {addMealDiningCourt} • {addMealMealTime}
+                    </p>
+                  </div>
+                  <button onClick={() => setShowAddMealModal(false)} className="text-theme-text-secondary hover:text-theme-text-primary text-xl">✕</button>
+                </div>
+
+                <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
+                  {foods
+                    .filter(f => f.dining_court === addMealDiningCourt && f.meal_time === addMealMealTime)
+                    .map((food) => {
+                      const macros = food.macros || {};
+                      return (
+                        <div
+                          key={food.id}
+                          onClick={() => {
+                            handleQuickAdd(food.id, 1);
+                            setShowAddMealModal(false);
+                          }}
+                          className="p-4 rounded-lg bg-theme-bg-tertiary/50 border border-theme-border-primary hover:border-green-500 transition-all cursor-pointer card-glow"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1">
+                              <h4 className="font-bold text-theme-text-primary mb-1">{food.name}</h4>
+                              <div className="text-sm text-theme-text-secondary">
+                                <span className="font-semibold text-yellow-400">{food.calories} cal</span>
+                                <span className="text-theme-text-tertiary ml-1">per serving</span>
+                              </div>
+                              {(macros.protein || macros.carbs || macros.fats) && (
+                                <div className="text-xs text-theme-text-tertiary mt-1">
+                                  P: {Math.round(macros.protein || 0)}g
+                                  • C: {Math.round(macros.carbs || 0)}g
+                                  • F: {Math.round(macros.fats || 0)}g
+                                </div>
+                              )}
+                            </div>
+                            <div className="text-3xl">+</div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+
+                <div className="flex justify-between gap-3 pt-6 border-t border-theme-border-primary mt-6">
+                  <button
+                    onClick={() => setAddMealStep(1)}
+                    className="px-6 py-2 rounded-lg bg-theme-bg-tertiary text-theme-text-primary hover:bg-theme-bg-hover transition-all duration-300"
+                  >
+                    ← Back
+                  </button>
+                  <button
+                    onClick={() => setShowAddMealModal(false)}
+                    className="px-6 py-2 rounded-lg bg-slate-700 text-slate-200 hover:bg-slate-600 transition-all duration-300"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
