@@ -7,6 +7,8 @@ import { deleteCookie, readCookie, writeCookie } from '../utils/cookies';
 
 const ACTIVITY_LOG_COOKIE_KEY = 'boilerfuel_activity_logs_v1';
 const GOALS_COOKIE_KEY = 'boilerfuel_goals_v1';
+const WORKOUT_TEMPLATES_COOKIE_KEY = 'boilerfuel_workout_templates_v1';
+const PERSONAL_RECORDS_COOKIE_KEY = 'boilerfuel_personal_records_v1';
 
 function parseGoalsCookie() {
   const raw = readCookie(GOALS_COOKIE_KEY);
@@ -69,12 +71,46 @@ function parseActivityLogsCookie() {
           activityId,
           duration,
           timestamp,
+          weight: entry?.weight ? Number(entry.weight) : null,
+          reps: entry?.reps ? Number(entry.reps) : null,
+          sets: entry?.sets ? Number(entry.sets) : null,
+          notes: entry?.notes || '',
         };
       })
       .filter(Boolean);
   } catch (error) {
     deleteCookie(ACTIVITY_LOG_COOKIE_KEY);
     return [];
+  }
+}
+
+function parseWorkoutTemplatesCookie() {
+  const raw = readCookie(WORKOUT_TEMPLATES_COOKIE_KEY);
+  if (!raw) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    deleteCookie(WORKOUT_TEMPLATES_COOKIE_KEY);
+    return [];
+  }
+}
+
+function parsePersonalRecordsCookie() {
+  const raw = readCookie(PERSONAL_RECORDS_COOKIE_KEY);
+  if (!raw) {
+    return {};
+  }
+
+  try {
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch (error) {
+    deleteCookie(PERSONAL_RECORDS_COOKIE_KEY);
+    return {};
   }
 }
 
@@ -105,34 +141,6 @@ function getMonthStart(date) {
 }
 
 export default function GymDashboard() {
-  // Temporary in-progress placeholder
-  return (
-    <>
-      <Head>
-        <title>Gym – Coming Soon</title>
-        <meta name="description" content="Gym activities and workout tracking are coming soon" />
-      </Head>
-      <div className="relative min-h-screen bg-theme-bg-primary">
-        {/* Full-page banner */}
-        <div className="absolute inset-0 z-10 flex items-center justify-center p-6">
-          <div className="w-full max-w-3xl rounded-2xl border border-theme-card-border bg-theme-card-bg/90 backdrop-blur-sm text-center px-8 py-12 shadow-soft">
-            <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-theme-border-secondary bg-theme-bg-secondary/70 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-theme-text-tertiary">
-              Coming soon
-            </p>
-            <h1 className="text-4xl md:text-5xl font-extrabold text-theme-text-primary">Gym tracking is on the way</h1>
-            <p className="mt-3 text-theme-text-secondary max-w-prose mx-auto">
-              We’re building workout logging, activity stats, and summaries. Check back soon!
-            </p>
-            <div className="mt-6">
-              <Link href="/dashboard" className="inline-block rounded bg-yellow-500 px-5 py-2 font-semibold text-theme-bg-primary hover:bg-yellow-600 transition-colors">
-                Back to Dashboard
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-    </>
-  );
   const [activities, setActivities] = useState([]);
   const [activityLogs, setActivityLogs] = useState(() => parseActivityLogsCookie());
   const [goals, setGoals] = useState(() => parseGoalsCookie());
