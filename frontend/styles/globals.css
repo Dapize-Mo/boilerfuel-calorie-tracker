@@ -119,12 +119,110 @@ body {
     radial-gradient(800px 600px at 50% 120%, rgba(16, 185, 129, 0.05), transparent 60%);
 }
 
+/* Glassmorphism utilities */
+@layer utilities {
+  .glass {
+    @apply backdrop-blur-xl bg-white/10 dark:bg-black/20 border border-white/20 dark:border-white/10;
+  }
+
+  .glass-strong {
+    @apply backdrop-blur-2xl bg-white/20 dark:bg-black/30 border border-white/30 dark:border-white/15;
+  }
+
+  .glass-card {
+    @apply backdrop-blur-lg bg-white/5 dark:bg-black/10 border border-white/10 dark:border-white/5 rounded-2xl;
+  }
+
+  /* Bento grid utilities */
+  .bento-item {
+    @apply glass-card p-6 transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl;
+  }
+
+  .bento-item-lg {
+    @apply col-span-2 row-span-2;
+  }
+
+  .bento-item-wide {
+    @apply col-span-2;
+  }
+
+  .bento-item-tall {
+    @apply row-span-2;
+  }
+
+  /* Immersive scroll effects */
+  .scroll-fade-in {
+    animation: fadeInUp 0.6s ease-out forwards;
+    opacity: 0;
+  }
+
+  .scroll-parallax {
+    will-change: transform;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar - light mode */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgb(var(--color-bg-secondary));
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgb(var(--color-border-primary));
+  border-radius: 6px;
+  border: 2px solid rgb(var(--color-bg-secondary));
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--color-text-tertiary));
+}
+
+/* Dark mode scrollbar */
+.dark ::-webkit-scrollbar-track {
+  background: rgb(var(--color-bg-secondary));
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgb(var(--color-bg-tertiary));
+  border: 2px solid rgb(var(--color-bg-secondary));
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--color-bg-hover));
+}
+
 /* Motion safety for users preferring reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  * {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  html {
+    scroll-behavior: auto;
   }
 }

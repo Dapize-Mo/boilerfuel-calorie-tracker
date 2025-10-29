@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import ThemeToggle from './ThemeToggle';
+import ThemeToggleButton from './ThemeToggleButton';
 
 export default function Layout({ children }) {
   const [open, setOpen] = useState(false);
@@ -21,6 +22,7 @@ export default function Layout({ children }) {
         {children}
       </main>
       <Footer />
+      <ThemeToggleButton />
     </div>
   );
 }
