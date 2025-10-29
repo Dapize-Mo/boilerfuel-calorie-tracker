@@ -244,21 +244,25 @@ export default function Dashboard() {
 
   const foodsById = useMemo(() => {
     const map = new Map();
-    foods.forEach((food) => {
-      if (food && typeof food.id === 'number') {
-        map.set(food.id, food);
-      }
-    });
+    if (Array.isArray(foods)) {
+      foods.forEach((food) => {
+        if (food && typeof food.id === 'number') {
+          map.set(food.id, food);
+        }
+      });
+    }
     return map;
   }, [foods]);
 
   const activitiesById = useMemo(() => {
     const map = new Map();
-    activities.forEach((activity) => {
-      if (activity && typeof activity.id === 'number') {
-        map.set(activity.id, activity);
-      }
-    });
+    if (Array.isArray(activities)) {
+      activities.forEach((activity) => {
+        if (activity && typeof activity.id === 'number') {
+          map.set(activity.id, activity);
+        }
+      });
+    }
     return map;
   }, [activities]);
 
@@ -275,44 +279,57 @@ export default function Dashboard() {
   );
 
   const totals = useMemo(() => {
-    const consumed = selectedDayLogs.reduce(
-      (acc, log) => {
-        const food = foodsById.get(log.foodId);
-        if (!food) {
+    try {
+      const consumed = (Array.isArray(selectedDayLogs) ? selectedDayLogs : []).reduce(
+        (acc, log) => {
+          const food = foodsById.get(log.foodId);
+          if (!food) {
+            return acc;
+          }
+
+          const servingsValue = Number(log.servings) || 0;
+          const macros = food.macros || {};
+
+          acc.calories += (food.calories || 0) * servingsValue;
+          acc.protein += (macros.protein || 0) * servingsValue;
+          acc.carbs += (macros.carbs || 0) * servingsValue;
+          acc.fats += (macros.fats || 0) * servingsValue;
           return acc;
+        },
+        { calories: 0, protein: 0, carbs: 0, fats: 0 }
+      );
+
+      const burned = (Array.isArray(selectedDayActivityLogs) ? selectedDayActivityLogs : []).reduce((total, log) => {
+        const activity = activitiesById.get(log.activityId);
+        if (!activity) {
+          return total;
         }
+        const durationValue = Number(log.duration) || 0;
+        return total + ((activity.calories_per_hour || 0) * durationValue) / 60;
+      }, 0);
 
-        const servingsValue = Number(log.servings) || 0;
-        const macros = food.macros || {};
+      const totalActivityMinutes = (Array.isArray(selectedDayActivityLogs) ? selectedDayActivityLogs : []).reduce((total, log) => {
+        return total + (Number(log.duration) || 0);
+      }, 0);
 
-        acc.calories += (food.calories || 0) * servingsValue;
-        acc.protein += (macros.protein || 0) * servingsValue;
-        acc.carbs += (macros.carbs || 0) * servingsValue;
-        acc.fats += (macros.fats || 0) * servingsValue;
-        return acc;
-      },
-      { calories: 0, protein: 0, carbs: 0, fats: 0 }
-    );
-
-    const burned = selectedDayActivityLogs.reduce((total, log) => {
-      const activity = activitiesById.get(log.activityId);
-      if (!activity) {
-        return total;
-      }
-      const durationValue = Number(log.duration) || 0;
-      return total + ((activity.calories_per_hour || 0) * durationValue) / 60;
-    }, 0);
-
-    const totalActivityMinutes = selectedDayActivityLogs.reduce((total, log) => {
-      return total + (Number(log.duration) || 0);
-    }, 0);
-
-    return {
-      ...consumed,
-      burned,
-      net: consumed.calories - burned,
-      activityMinutes: totalActivityMinutes,
-    };
+      return {
+        ...consumed,
+        burned,
+        net: consumed.calories - burned,
+        activityMinutes: totalActivityMinutes,
+      };
+    } catch (error) {
+      console.error('Error calculating totals:', error);
+      return {
+        calories: 0,
+        protein: 0,
+        carbs: 0,
+        fats: 0,
+        burned: 0,
+        net: 0,
+        activityMinutes: 0,
+      };
+    }
   }, [selectedDayLogs, selectedDayActivityLogs, foodsById, activitiesById]);
 
   function persistGoals(nextGoals) {
@@ -402,33 +419,33 @@ export default function Dashboard() {
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
             <StatCardModern
               label="Calories In"
-              value={Math.round(totals.calories)}
+              value={Math.round(totals?.calories || 0)}
               goal={userPrefs.showGoals ? goals.calories : null}
               gradient="from-yellow-500 to-orange-500"
               icon="🔥"
             />
             <StatCardModern
               label="Calories Out"
-              value={Math.round(totals.burned)}
+              value={Math.round(totals?.burned || 0)}
               gradient="from-orange-500 to-red-500"
               icon="💪"
             />
             <StatCardModern
               label="Net Calories"
-              value={Math.round(totals.net)}
+              value={Math.round(totals?.net || 0)}
               gradient="from-cyan-500 to-blue-500"
               icon="📊"
             />
             <StatCardModern
               label="Protein"
-              value={`${Math.round(totals.protein)}g`}
+              value={`${Math.round(totals?.protein || 0)}g`}
               goal={userPrefs.showGoals ? goals.protein : null}
               gradient="from-green-500 to-emerald-500"
               icon="🥩"
             />
             <StatCardModern
               label="Carbs"
-              value={`${Math.round(totals.carbs)}g`}
+              value={`${Math.round(totals?.carbs || 0)}g`}
               goal={userPrefs.showGoals ? goals.carbs : null}
               gradient="from-blue-500 to-indigo-500"
               icon="🍞"
@@ -539,11 +556,11 @@ export default function Dashboard() {
               </form>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                <GoalCardModern label="Calories" value={goals.calories} current={Math.round(totals.calories)} showProgress={userPrefs.showGoals} />
-                <GoalCardModern label="Protein" value={`${goals.protein}g`} current={`${Math.round(totals.protein)}g`} showProgress={userPrefs.showGoals} />
-                <GoalCardModern label="Carbs" value={`${goals.carbs}g`} current={`${Math.round(totals.carbs)}g`} showProgress={userPrefs.showGoals} />
-                <GoalCardModern label="Fats" value={`${goals.fats}g`} current={`${Math.round(totals.fats)}g`} showProgress={userPrefs.showGoals} />
-                <GoalCardModern label="Activity" value={`${goals.activityMinutes} min`} current={`${Math.round(totals.activityMinutes)} min`} showProgress={userPrefs.showGoals} />
+                <GoalCardModern label="Calories" value={goals.calories} current={Math.round(totals?.calories || 0)} showProgress={userPrefs.showGoals} />
+                <GoalCardModern label="Protein" value={`${goals.protein}g`} current={`${Math.round(totals?.protein || 0)}g`} showProgress={userPrefs.showGoals} />
+                <GoalCardModern label="Carbs" value={`${goals.carbs}g`} current={`${Math.round(totals?.carbs || 0)}g`} showProgress={userPrefs.showGoals} />
+                <GoalCardModern label="Fats" value={`${goals.fats}g`} current={`${Math.round(totals?.fats || 0)}g`} showProgress={userPrefs.showGoals} />
+                <GoalCardModern label="Activity" value={`${goals.activityMinutes} min`} current={`${Math.round(totals?.activityMinutes || 0)} min`} showProgress={userPrefs.showGoals} />
               </div>
             )}
           </div>
@@ -574,7 +591,7 @@ export default function Dashboard() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-theme-text-tertiary">Calories consumed:</span>
-                  <span className="text-yellow-400 font-semibold">{Math.round(totals.calories)} cal</span>
+                  <span className="text-yellow-400 font-semibold">{Math.round(totals?.calories || 0)} cal</span>
                 </div>
               </div>
             </Link>
