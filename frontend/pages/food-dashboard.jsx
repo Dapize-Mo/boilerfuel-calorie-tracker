@@ -574,19 +574,19 @@ export default function FoodDashboard() {
         <title>Food Tracker - BoilerFuel</title>
         <meta name="description" content="Track your meals with BoilerFuel calorie tracker" />
       </Head>
-  <div>
-        <div className="mx-auto max-w-7xl space-y-8">
-          {/* Page Header with Actions */}
-          <div className="backdrop-blur-lg bg-theme-card-bg rounded-2xl border border-theme-card-border p-6 shadow-2xl">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+  <div className="min-h-screen">
+        {/* Hero Header Section - Full Width */}
+        <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border-b border-theme-border-primary">
+          <div className="mx-auto max-w-7xl px-6 py-8">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
               <div>
-                <div className="flex items-center gap-3">
-                  <span className="text-4xl">🍽️</span>
-                  <h1 className="text-4xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="text-5xl">🍽️</span>
+                  <h1 className="text-5xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
                     Food Tracker
                   </h1>
                 </div>
-                <p className="text-theme-text-tertiary mt-2">Track your meals and nutrition—all data stays on this device only.</p>
+                <p className="text-theme-text-tertiary text-lg">Track your meals and nutrition—all data stays on this device only.</p>
               </div>
               <div className="flex flex-wrap gap-3">
                 <button
@@ -598,49 +598,53 @@ export default function FoodDashboard() {
                     setAddMealMealTime('');
                     setAddMealSearchQuery('');
                   }}
-                  className="flex-1 sm:flex-none px-6 py-2 rounded-xl bg-green-500/20 hover:bg-green-500/30 border border-green-500/50 text-green-300 font-semibold transition-all duration-300 glow-green whitespace-nowrap"
+                  className="flex-1 sm:flex-none px-6 py-3 rounded-xl bg-green-500/20 hover:bg-green-500/30 border border-green-500/50 text-green-300 font-semibold transition-all duration-300 glow-green whitespace-nowrap"
                 >
                   + Add Meal
                 </button>
                 <button
                   type="button"
                   onClick={handleClearLogs}
-                  className="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-300 font-semibold transition-all whitespace-nowrap"
+                  className="flex-1 sm:flex-none px-5 py-3 rounded-xl bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-300 font-semibold transition-all whitespace-nowrap"
                 >
                   Clear Logs
                 </button>
               </div>
             </div>
-          </div>
 
-          {menuError && (
-            <div className="rounded-xl border border-red-500 bg-red-500/10 px-4 py-3 text-red-400">
-              {menuError}
-            </div>
-          )}
-
-          {success && (
-            <div className="rounded-xl border border-green-500 bg-green-500/10 px-4 py-3 text-green-400">
-              {success}
-            </div>
-          )}
-
-          {/* Date Selector */}
-          <div className="backdrop-blur-lg bg-theme-card-bg rounded-2xl border border-theme-card-border p-6">
-            <div className="flex items-center justify-between gap-4">
-              <h2 className="text-xl font-bold text-theme-text-primary">📅 {formatDateDisplay(selectedDate)}</h2>
+            {/* Date Selector - Integrated in Header */}
+            <div className="mt-8 flex items-center justify-between gap-4 bg-theme-bg-tertiary/30 rounded-xl border border-theme-border-primary p-4">
+              <h2 className="text-xl font-bold text-theme-text-primary flex items-center gap-2">
+                <span>📅</span>
+                <span>{formatDateDisplay(selectedDate)}</span>
+              </h2>
               <input
                 type="date"
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
                 max={formatDateForInput(startOfToday())}
-                className="rounded-xl border border-theme-border-primary bg-theme-bg-tertiary/80 px-4 py-2 text-theme-text-primary focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                className="rounded-lg border border-theme-border-primary bg-theme-card-bg px-4 py-2 text-theme-text-primary focus:outline-none focus:ring-2 focus:ring-yellow-500"
               />
             </div>
           </div>
+        </div>
 
-          {/* Food Stats Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Main Content Area */}
+        <div className="mx-auto max-w-7xl px-6 py-6">
+          {menuError && (
+            <div className="rounded-xl border border-red-500 bg-red-500/10 px-4 py-3 text-red-400 mb-6">
+              {menuError}
+            </div>
+          )}
+
+          {success && (
+            <div className="rounded-xl border border-green-500 bg-green-500/10 px-4 py-3 text-green-400 mb-6">
+              {success}
+            </div>
+          )}
+
+          {/* Stats Row - Flush Design */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
             <StatCardModern
               label="Calories"
               value={Math.round(totals.calories)}
@@ -671,10 +675,13 @@ export default function FoodDashboard() {
             />
           </div>
 
-          {/* Goals Section */}
-          <div className="backdrop-blur-lg bg-theme-card-bg rounded-2xl border border-theme-card-border p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-2xl font-bold text-theme-text-primary">🎯 Food Goals</h3>
+          {/* Goals Section - Integrated Design */}
+          <div className="bg-gradient-to-r from-slate-800/50 to-slate-900/50 border border-theme-border-primary rounded-xl p-6 mb-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-bold text-theme-text-primary flex items-center gap-2">
+                <span>🎯</span>
+                <span>Food Goals</span>
+              </h3>
               <div className="flex items-center gap-3">
                 <label className="flex items-center gap-2 text-sm cursor-pointer">
                   <input
@@ -691,7 +698,7 @@ export default function FoodDashboard() {
                     setGoalForm(goals);
                     setEditingGoals(true);
                   }}
-                  className="rounded-xl bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/50 px-4 py-2 text-sm font-semibold text-yellow-300 transition-all"
+                  className="rounded-lg bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/50 px-4 py-2 text-sm font-semibold text-yellow-300 transition-all"
                 >
                   Edit Goals
                 </button>
@@ -699,7 +706,7 @@ export default function FoodDashboard() {
             </div>
 
             {editingGoals ? (
-              <form onSubmit={handleSaveGoals} className="bg-theme-bg-tertiary/50 rounded-xl p-4 border border-theme-border-primary">
+              <form onSubmit={handleSaveGoals} className="bg-theme-bg-tertiary/30 rounded-lg p-5 border border-theme-border-primary/50">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                   <div>
                     <label className="block text-xs font-medium text-theme-text-tertiary mb-1">Calories</label>
@@ -763,7 +770,7 @@ export default function FoodDashboard() {
                 </div>
               </form>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <GoalCardModern label="Calories" value={goals.calories} current={Math.round(totals.calories)} showProgress={userPrefs.showGoals} />
                 <GoalCardModern label="Protein" value={`${goals.protein}g`} current={`${Math.round(totals.protein)}g`} showProgress={userPrefs.showGoals} />
                 <GoalCardModern label="Carbs" value={`${goals.carbs}g`} current={`${Math.round(totals.carbs)}g`} showProgress={userPrefs.showGoals} />
@@ -772,18 +779,22 @@ export default function FoodDashboard() {
             )}
           </div>
 
-          {/* Food Section */}
-          <div className="backdrop-blur-lg bg-theme-card-bg rounded-2xl border border-theme-card-border p-6">
-            <h2 className="text-2xl font-bold mb-6 text-theme-text-primary">🍽️ Food Menu</h2>
+          {/* Food Section - Seamless Design */}
+          <div className="border-t border-theme-border-primary pt-6">
+            <h2 className="text-2xl font-bold mb-6 text-theme-text-primary flex items-center gap-2">
+              <span>🍽️</span>
+              <span>Food Menu</span>
+            </h2>
 
-            <div className="grid gap-4 md:grid-cols-2 mb-6">
+            {/* Filters - Inline Design */}
+            <div className="flex flex-wrap gap-3 mb-6 bg-theme-bg-tertiary/30 rounded-lg p-4 border border-theme-border-primary/50">
               {diningCourts.length > 0 && (
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-theme-text-secondary">Dining Court</label>
+                <div className="flex-1 min-w-[200px]">
+                  <label className="mb-2 block text-xs font-medium text-theme-text-tertiary">Dining Court</label>
                   <select
                     value={selectedDiningCourt}
                     onChange={(e) => setSelectedDiningCourt(e.target.value)}
-                    className="w-full rounded-xl border border-theme-border-primary bg-theme-bg-tertiary/80 px-4 py-2.5 text-theme-text-primary focus:ring-2 focus:ring-yellow-500"
+                    className="w-full rounded-lg border border-theme-border-primary bg-theme-card-bg px-3 py-2 text-theme-text-primary focus:ring-2 focus:ring-yellow-500 text-sm"
                   >
                     <option value="">All Dining Courts</option>
                     {diningCourts.map((court) => (
@@ -795,12 +806,12 @@ export default function FoodDashboard() {
                 </div>
               )}
 
-              <div>
-                <label className="mb-2 block text-sm font-medium text-theme-text-secondary">Meal Time</label>
+              <div className="flex-1 min-w-[200px]">
+                <label className="mb-2 block text-xs font-medium text-theme-text-tertiary">Meal Time</label>
                 <select
                   value={selectedMealTime}
                   onChange={(e) => setSelectedMealTime(e.target.value)}
-                  className="w-full rounded-xl border border-theme-border-primary bg-theme-bg-tertiary/80 px-4 py-2.5 text-theme-text-primary focus:ring-2 focus:ring-yellow-500"
+                  className="w-full rounded-lg border border-theme-border-primary bg-theme-card-bg px-3 py-2 text-theme-text-primary focus:ring-2 focus:ring-yellow-500 text-sm"
                 >
                   <option value="">All Meal Times</option>
                   <option value="breakfast">Breakfast</option>
@@ -812,23 +823,23 @@ export default function FoodDashboard() {
             </div>
 
             {foods.length === 0 ? (
-              <p className="text-theme-text-tertiary">No foods available</p>
+              <p className="text-theme-text-tertiary text-center py-8">No foods available</p>
             ) : (
-              <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
+              <div className="grid gap-3 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                 {Object.entries(foodsByStation)
                   .sort(([a], [b]) => a.localeCompare(b))
                   .map(([station, stationFoods]) => (
-                    <div key={station} className="rounded-xl bg-theme-card-bg border border-theme-card-border overflow-hidden">
-                      <div className="bg-gradient-to-r from-yellow-600 to-orange-500 px-4 py-3">
-                        <h3 className="text-lg font-bold text-slate-900">{station}</h3>
+                    <div key={station} className="rounded-lg bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-theme-border-primary overflow-hidden hover:border-yellow-500/50 transition-all">
+                      <div className="bg-gradient-to-r from-yellow-600/90 to-orange-500/90 px-4 py-2.5">
+                        <h3 className="text-base font-bold text-slate-900">{station}</h3>
                         <p className="text-xs text-slate-800">{stationFoods.length} items</p>
                       </div>
-                      <div className="p-4 space-y-2 max-h-[400px] overflow-y-auto">
+                      <div className="p-3 space-y-1.5 max-h-[400px] overflow-y-auto">
                         {stationFoods.map((food) => {
                           const macros = food.macros || {};
                           const nextAvail = food.next_available || [];
                           const hasForecast = nextAvail.length > 0;
-                          
+
                           return (
                             <div
                               key={food.id}
@@ -836,7 +847,7 @@ export default function FoodDashboard() {
                                 console.log('Card clicked:', food.name);
                                 setSelectedFood(food);
                               }}
-                              className="bg-slate-700/50 backdrop-blur rounded-lg px-3 py-2 hover:bg-slate-600/50 transition-all border border-theme-border-primary/30 cursor-pointer"
+                              className="bg-slate-700/40 backdrop-blur rounded-md px-3 py-2 hover:bg-slate-600/60 transition-all border border-theme-border-primary/20 hover:border-yellow-500/40 cursor-pointer"
                             >
                               <div className="flex items-start justify-between gap-2">
                                 <div className="flex-1">
@@ -910,13 +921,16 @@ export default function FoodDashboard() {
             )}
           </div>
 
-          {/* Meals Log */}
-          <div className="backdrop-blur-lg bg-white/5 rounded-2xl border border-white/10 p-6">
-            <h3 className="text-xl font-bold mb-4 text-theme-text-primary">📝 Logged Meals</h3>
+          {/* Meals Log - Seamless Design */}
+          <div className="border-t border-theme-border-primary pt-6 mt-6">
+            <h3 className="text-2xl font-bold mb-6 text-theme-text-primary flex items-center gap-2">
+              <span>📝</span>
+              <span>Logged Meals</span>
+            </h3>
             {selectedDayLogs.length === 0 ? (
-              <p className="text-theme-text-tertiary">No meals logged for this date.</p>
+              <p className="text-theme-text-tertiary text-center py-8">No meals logged for this date.</p>
             ) : (
-              <div className="grid gap-3 md:grid-cols-2">
+              <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
                 {selectedDayLogs.map((log) => {
                   const food = foodsById.get(log.foodId);
                   if (!food) return null;
@@ -925,7 +939,7 @@ export default function FoodDashboard() {
                   const servingsValue = Number(log.servings) || 0;
 
                   return (
-                    <div key={log.id} className="rounded-xl bg-theme-bg-tertiary/50 backdrop-blur border border-theme-border-primary p-4 hover:border-yellow-500/50 transition-all card-glow">
+                    <div key={log.id} className="rounded-lg bg-gradient-to-br from-slate-800/60 to-slate-900/60 border border-theme-border-primary p-4 hover:border-red-500/50 transition-all">
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
                           <h4 className="font-semibold text-theme-text-primary">{food.name}</h4>
