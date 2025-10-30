@@ -227,6 +227,7 @@ function isSameDay(timestamp, selectedDateStart) {
 
 export default function FoodDashboard() {
   const [foods, setFoods] = useState([]);
+  const [allFoods, setAllFoods] = useState([]); // Unfiltered foods for stats calculation
   const [activities, setActivities] = useState([]);
   const [diningCourts, setDiningCourts] = useState([]);
   const [selectedDiningCourt, setSelectedDiningCourt] = useState('');
@@ -276,8 +277,19 @@ export default function FoodDashboard() {
       }
     }
 
+    async function loadAllFoods() {
+      try {
+        const data = await apiCall('/api/foods');
+        if (!isMounted) return;
+        setAllFoods(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error('Failed to load all foods:', error);
+      }
+    }
+
     loadDiningCourts();
     loadActivities();
+    loadAllFoods();
     setLoading(false);
 
     return () => {
@@ -349,15 +361,16 @@ export default function FoodDashboard() {
     };
   }, [addMealStep, addMealDiningCourt, addMealMealTime]);
 
+  // Use allFoods for stats calculation so filters don't affect logged meals
   const foodsById = useMemo(() => {
     const map = new Map();
-    foods.forEach((food) => {
+    allFoods.forEach((food) => {
       if (food && typeof food.id === 'number') {
         map.set(food.id, food);
       }
     });
     return map;
-  }, [foods]);
+  }, [allFoods]);
 
   // Helper function to check if a food is available today
   const isFoodAvailableToday = useMemo(() => {
