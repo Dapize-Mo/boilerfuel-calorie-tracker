@@ -147,6 +147,7 @@ export default function GymDashboard() {
   const [personalRecords, setPersonalRecords] = useState(() => parsePersonalRecordsCookie());
   const [goals, setGoals] = useState(() => parseGoalsCookie());
   const [selectedActivity, setSelectedActivity] = useState('');
+  const [activitySearchQuery, setActivitySearchQuery] = useState('');
   const [duration, setDuration] = useState('30');
   const [weight, setWeight] = useState('');
   const [reps, setReps] = useState('');
@@ -203,6 +204,20 @@ export default function GymDashboard() {
     });
     return map;
   }, [activities]);
+
+  const filteredActivities = useMemo(() => {
+    if (!activitySearchQuery) return activities;
+
+    const query = activitySearchQuery.toLowerCase();
+    return activities.filter((activity) => {
+      return (
+        activity.name.toLowerCase().includes(query) ||
+        (activity.category || '').toLowerCase().includes(query) ||
+        (activity.equipment || '').toLowerCase().includes(query) ||
+        (activity.muscle_groups || []).some(mg => mg.toLowerCase().includes(query))
+      );
+    });
+  }, [activities, activitySearchQuery]);
 
   const filteredLogs = useMemo(() => {
     const now = new Date();
@@ -388,6 +403,7 @@ export default function GymDashboard() {
     }
 
     setSelectedActivity('');
+    setActivitySearchQuery('');
     setDuration('30');
     setWeight('');
     setReps('');
@@ -793,9 +809,17 @@ export default function GymDashboard() {
             <form onSubmit={handleAddActivity} className="space-y-4">
               <div className="grid gap-4 md:grid-cols-3">
                 <div className="md:col-span-1">
-                  <label htmlFor="activity" className="mb-2 block text-sm font-medium">
+                  <label htmlFor="activity-search" className="mb-2 block text-sm font-medium">
                     Activity Type
                   </label>
+                  <input
+                    id="activity-search"
+                    type="text"
+                    placeholder="Search exercises..."
+                    value={activitySearchQuery}
+                    onChange={(event) => setActivitySearchQuery(event.target.value)}
+                    className="w-full rounded border border-theme-border-primary bg-theme-bg-tertiary px-4 py-2 mb-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  />
                   <select
                     id="activity"
                     value={selectedActivity}
@@ -804,13 +828,20 @@ export default function GymDashboard() {
                     className="w-full rounded border border-theme-border-primary bg-theme-bg-tertiary px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
                   >
                     <option value="">Select an activity...</option>
-                    {activities.length === 0 && <option disabled value="">No activities available yet</option>}
-                    {activities.map((activity) => (
+                    {filteredActivities.length === 0 && activitySearchQuery && <option disabled value="">No matching activities found</option>}
+                    {filteredActivities.length === 0 && !activitySearchQuery && <option disabled value="">No activities available yet</option>}
+                    {filteredActivities.map((activity) => (
                       <option key={activity.id} value={activity.id}>
                         {activity.name} ({activity.calories_per_hour} cal/hr)
+                        {activity.category && ` - ${activity.category}`}
                       </option>
                     ))}
                   </select>
+                  {activitySearchQuery && (
+                    <p className="text-xs text-theme-text-tertiary mt-1">
+                      {filteredActivities.length} of {activities.length} exercises
+                    </p>
+                  )}
                 </div>
                 <div className="md:col-span-1">
                   <label htmlFor="duration" className="mb-2 block text-sm font-medium">
