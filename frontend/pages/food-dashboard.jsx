@@ -249,6 +249,7 @@ export default function FoodDashboard() {
   const [addMealDiningCourt, setAddMealDiningCourt] = useState('');
   const [addMealMealTime, setAddMealMealTime] = useState('');
   const [addMealSearchQuery, setAddMealSearchQuery] = useState('');
+  const [addingFoodId, setAddingFoodId] = useState(null); // Track which food is being added for animation
   const successTimeout = useRef(null);
 
   useEffect(() => {
@@ -481,6 +482,9 @@ export default function FoodDashboard() {
   }
 
   function handleQuickAdd(foodId, servingAmount = 1) {
+    // Add visual feedback
+    setAddingFoodId(foodId);
+
     const newLog = {
       id: Date.now(),
       foodId: Number(foodId),
@@ -496,6 +500,9 @@ export default function FoodDashboard() {
       clearTimeout(successTimeout.current);
     }
     successTimeout.current = window.setTimeout(() => setSuccess(''), 2500);
+
+    // Clear the animation after a short delay
+    setTimeout(() => setAddingFoodId(null), 600);
   }
 
   function handleRemoveLog(logId) {
@@ -873,9 +880,11 @@ export default function FoodDashboard() {
                                 <button
                                   type="button"
                                   onClick={(e) => { e.stopPropagation(); handleQuickAdd(food.id, 1); }}
-                                  className="rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-theme-text-primary font-bold w-8 h-8 flex items-center justify-center transition-all shadow-lg glow-green"
+                                  className={`rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-theme-text-primary font-bold w-8 h-8 flex items-center justify-center transition-all shadow-lg glow-green ${
+                                    addingFoodId === food.id ? 'scale-125 rotate-90' : ''
+                                  }`}
                                 >
-                                  +
+                                  {addingFoodId === food.id ? '✓' : '+'}
                                 </button>
                               </div>
                             </div>
@@ -909,26 +918,32 @@ export default function FoodDashboard() {
                           <h4 className="font-semibold text-theme-text-primary">{food.name}</h4>
                           <p className="text-sm text-theme-text-tertiary">
                             {servingsValue} {servingsValue === 1 ? 'serving' : 'servings'}
+                            {macros.serving_size && (
+                              <span className="ml-1">({macros.serving_size})</span>
+                            )}
                           </p>
                         </div>
-                        <div className="text-right">
-                          <p className="font-bold text-yellow-400">
-                            {Math.round((food.calories || 0) * servingsValue)} cal
-                          </p>
-                          <p className="text-xs text-theme-text-tertiary">
-                            P: {Math.round((macros.protein || 0) * servingsValue)}g
-                            • C: {Math.round((macros.carbs || 0) * servingsValue)}g
-                            • F: {Math.round((macros.fats || 0) * servingsValue)}g
-                          </p>
+                        <div className="flex items-start gap-3">
+                          <div className="text-right">
+                            <p className="font-bold text-yellow-400">
+                              {Math.round((food.calories || 0) * servingsValue)} cal
+                            </p>
+                            <p className="text-xs text-theme-text-tertiary">
+                              P: {Math.round((macros.protein || 0) * servingsValue)}g
+                              • C: {Math.round((macros.carbs || 0) * servingsValue)}g
+                              • F: {Math.round((macros.fats || 0) * servingsValue)}g
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveLog(log.id)}
+                            className="rounded-lg bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-300 font-bold w-8 h-8 flex items-center justify-center transition-all shadow-lg"
+                            title="Remove this meal"
+                          >
+                            ×
+                          </button>
                         </div>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveLog(log.id)}
-                        className="mt-3 text-sm text-theme-text-tertiary hover:text-red-400 transition-colors"
-                      >
-                        Remove
-                      </button>
                     </div>
                   );
                 })}
@@ -1119,9 +1134,8 @@ export default function FoodDashboard() {
                       const matchesSearch = !addMealSearchQuery ||
                         f.name.toLowerCase().includes(addMealSearchQuery.toLowerCase()) ||
                         (f.station || '').toLowerCase().includes(addMealSearchQuery.toLowerCase());
-                      const availableToday = isFoodAvailableToday(f);
-                      return matchesLocation && matchesSearch && availableToday;
-                    }).length} items available today
+                      return matchesLocation && matchesSearch;
+                    }).length} items found
                   </p>
                 </div>
 
@@ -1130,11 +1144,10 @@ export default function FoodDashboard() {
                   const matchesSearch = !addMealSearchQuery ||
                     f.name.toLowerCase().includes(addMealSearchQuery.toLowerCase()) ||
                     (f.station || '').toLowerCase().includes(addMealSearchQuery.toLowerCase());
-                  const availableToday = isFoodAvailableToday(f);
-                  return matchesLocation && matchesSearch && availableToday;
+                  return matchesLocation && matchesSearch;
                 }).length === 0 && (
                   <div className="text-center py-8 text-theme-text-tertiary">
-                    {addMealSearchQuery ? `No items found matching "${addMealSearchQuery}"` : `No menu items available today for ${addMealDiningCourt} at ${addMealMealTime}.`}
+                    {addMealSearchQuery ? `No items found matching "${addMealSearchQuery}"` : `No menu items found for ${addMealDiningCourt} at ${addMealMealTime}.`}
                   </div>
                 )}
 
@@ -1145,8 +1158,7 @@ export default function FoodDashboard() {
                       const matchesSearch = !addMealSearchQuery ||
                         f.name.toLowerCase().includes(addMealSearchQuery.toLowerCase()) ||
                         (f.station || '').toLowerCase().includes(addMealSearchQuery.toLowerCase());
-                      const availableToday = isFoodAvailableToday(f);
-                      return matchesLocation && matchesSearch && availableToday;
+                      return matchesLocation && matchesSearch;
                     })
                     .map((food) => {
                       const macros = food.macros || {};
