@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import ThemeToggle from './ThemeToggle';
-import ThemeToggleButton from './ThemeToggleButton';
 
 export default function Layout({ children }) {
   const [open, setOpen] = useState(false);
@@ -22,7 +20,6 @@ export default function Layout({ children }) {
         {children}
       </main>
       <Footer />
-      <ThemeToggleButton />
     </div>
   );
 }
@@ -55,10 +52,7 @@ function Header({ open, setOpen }) {
             <HeaderLink href="/food-dashboard">Food</HeaderLink>
             <HeaderLink href="/gym">Gym</HeaderLink>
             <HeaderLink href="/about">About</HeaderLink>
-            <div className="flex items-center gap-2">
-              <ThemeToggle />
-              <ProfileMenu />
-            </div>
+            <ProfileMenu />
           </nav>
 
           <button
@@ -92,8 +86,7 @@ function Header({ open, setOpen }) {
               <MobileLink href="/food-dashboard" onClick={() => setOpen(false)}>Food</MobileLink>
               <MobileLink href="/gym" onClick={() => setOpen(false)}>Gym</MobileLink>
               <MobileLink href="/about" onClick={() => setOpen(false)}>About</MobileLink>
-              <div className="px-3 py-2 flex items-center gap-3">
-                <ThemeToggle />
+              <div className="px-3 py-2">
                 <MobileProfileLinks />
               </div>
             </div>
