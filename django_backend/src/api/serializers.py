@@ -9,4 +9,4 @@ class FoodSerializer(serializers.ModelSerializer):
 class ActivitySerializer(serializers.ModelSerializer):
     class Meta:
         model = Activity
-        fields = ['id', 'name', 'calories_per_hour']
+        fields = ['id', 'name', 'calories_per_hour', 'category', 'intensity', 'muscle_groups', 'equipment', 'description']

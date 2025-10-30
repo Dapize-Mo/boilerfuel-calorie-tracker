@@ -25,9 +25,31 @@ class Food(models.Model):
 
 
 class Activity(models.Model):
+    CATEGORY_CHOICES = [
+        ('cardio', 'Cardio'),
+        ('strength', 'Strength'),
+        ('flexibility', 'Flexibility'),
+        ('sports', 'Sports'),
+        ('other', 'Other'),
+    ]
+
+    INTENSITY_CHOICES = [
+        ('light', 'Light'),
+        ('moderate', 'Moderate'),
+        ('vigorous', 'Vigorous'),
+    ]
+
     name = models.CharField(max_length=255)
     calories_per_hour = models.IntegerField()
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default='other')
+    intensity = models.CharField(max_length=50, choices=INTENSITY_CHOICES, default='moderate')
+    muscle_groups = JSONField(default=list, blank=True)  # e.g., ['chest', 'triceps']
+    equipment = models.CharField(max_length=255, blank=True, null=True)  # e.g., 'barbell', 'dumbbell'
+    description = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
         db_table = 'activities'
+        indexes = [
+            models.Index(fields=['category'], name='idx_activities_category')
+        ]

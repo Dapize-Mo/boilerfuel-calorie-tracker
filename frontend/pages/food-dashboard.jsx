@@ -316,6 +316,37 @@ export default function FoodDashboard() {
     };
   }, [selectedDiningCourt, selectedMealTime]);
 
+  // Load foods for Add Meal modal when moving to Step 2
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadModalFoods() {
+      if (addMealStep !== 2 || !addMealDiningCourt || !addMealMealTime) {
+        return;
+      }
+
+      try {
+        const params = new URLSearchParams();
+        params.append('dining_court', addMealDiningCourt);
+        params.append('meal_time', addMealMealTime);
+        const url = `/api/foods?${params.toString()}`;
+        const data = await apiCall(url);
+        if (!isMounted) return;
+        setFoods(Array.isArray(data) ? data : []);
+        setMenuError('');
+      } catch (error) {
+        if (!isMounted) return;
+        setMenuError(error?.message || 'Failed to load menu items.');
+      }
+    }
+
+    loadModalFoods();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [addMealStep, addMealDiningCourt, addMealMealTime]);
+
   const foodsById = useMemo(() => {
     const map = new Map();
     foods.forEach((food) => {
