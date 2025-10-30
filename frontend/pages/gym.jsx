@@ -1079,7 +1079,7 @@ export default function GymDashboard() {
 
                                   {log.notes && (
                                     <p className="mt-2 text-sm text-theme-text-tertiary italic border-l-2 border-theme-border-primary pl-2">
-                                      "{log.notes}"
+                                      &ldquo;{log.notes}&rdquo;
                                     </p>
                                   )}
                                 </div>
