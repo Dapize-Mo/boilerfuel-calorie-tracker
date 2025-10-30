@@ -358,9 +358,28 @@ export default function FoodDashboard() {
     return map;
   }, [foods]);
 
+  // Helper function to check if a food is available today
+  const isFoodAvailableToday = useMemo(() => {
+    const todayStr = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+    return (food) => {
+      // If no next_available data, assume it's available (for backwards compatibility)
+      if (!food.next_available || !Array.isArray(food.next_available) || food.next_available.length === 0) {
+        return true;
+      }
+      // Check if today's date is in the next_available array
+      return food.next_available.some(slot => {
+        if (!slot.date) return false;
+        const slotDate = new Date(slot.date).toISOString().split('T')[0];
+        return slotDate === todayStr;
+      });
+    };
+  }, []);
+
   const foodsByStation = useMemo(() => {
     const grouped = {};
-    foods.forEach((food) => {
+    // Only include foods that are available today
+    const availableToday = foods.filter(isFoodAvailableToday);
+    availableToday.forEach((food) => {
       const station = food.station || 'Other Items';
       if (!grouped[station]) {
         grouped[station] = [];
@@ -368,7 +387,7 @@ export default function FoodDashboard() {
       grouped[station].push(food);
     });
     return grouped;
-  }, [foods]);
+  }, [foods, isFoodAvailableToday]);
 
   const activitiesById = useMemo(() => {
     const map = new Map();
@@ -1100,8 +1119,9 @@ export default function FoodDashboard() {
                       const matchesSearch = !addMealSearchQuery ||
                         f.name.toLowerCase().includes(addMealSearchQuery.toLowerCase()) ||
                         (f.station || '').toLowerCase().includes(addMealSearchQuery.toLowerCase());
-                      return matchesLocation && matchesSearch;
-                    }).length} items found
+                      const availableToday = isFoodAvailableToday(f);
+                      return matchesLocation && matchesSearch && availableToday;
+                    }).length} items available today
                   </p>
                 </div>
 
@@ -1110,10 +1130,11 @@ export default function FoodDashboard() {
                   const matchesSearch = !addMealSearchQuery ||
                     f.name.toLowerCase().includes(addMealSearchQuery.toLowerCase()) ||
                     (f.station || '').toLowerCase().includes(addMealSearchQuery.toLowerCase());
-                  return matchesLocation && matchesSearch;
+                  const availableToday = isFoodAvailableToday(f);
+                  return matchesLocation && matchesSearch && availableToday;
                 }).length === 0 && (
                   <div className="text-center py-8 text-theme-text-tertiary">
-                    {addMealSearchQuery ? `No items found matching "${addMealSearchQuery}"` : `No menu items found for ${addMealDiningCourt} at ${addMealMealTime}.`}
+                    {addMealSearchQuery ? `No items found matching "${addMealSearchQuery}"` : `No menu items available today for ${addMealDiningCourt} at ${addMealMealTime}.`}
                   </div>
                 )}
 
@@ -1124,7 +1145,8 @@ export default function FoodDashboard() {
                       const matchesSearch = !addMealSearchQuery ||
                         f.name.toLowerCase().includes(addMealSearchQuery.toLowerCase()) ||
                         (f.station || '').toLowerCase().includes(addMealSearchQuery.toLowerCase());
-                      return matchesLocation && matchesSearch;
+                      const availableToday = isFoodAvailableToday(f);
+                      return matchesLocation && matchesSearch && availableToday;
                     })
                     .map((food) => {
                       const macros = food.macros || {};
