@@ -534,10 +534,10 @@ export default function FoodDashboard() {
         <title>Food Tracker - BoilerFuel</title>
         <meta name="description" content="Track your meals with BoilerFuel calorie tracker" />
       </Head>
-  <div className="min-h-screen bg-theme-bg-primary">
-        <div className="mx-auto max-w-7xl px-4 py-8 space-y-8">
-          {/* Header with Glass Effect */}
-          <header className="backdrop-blur-lg bg-theme-card-bg rounded-2xl border border-theme-card-border p-6 shadow-2xl">
+  <div>
+        <div className="mx-auto max-w-7xl space-y-8">
+          {/* Page Header with Actions */}
+          <div className="backdrop-blur-lg bg-theme-card-bg rounded-2xl border border-theme-card-border p-6 shadow-2xl">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
                 <div className="flex items-center gap-3">
@@ -570,7 +570,7 @@ export default function FoodDashboard() {
                 </button>
               </div>
             </div>
-          </header>
+          </div>
 
           {menuError && (
             <div className="rounded-xl border border-red-500 bg-red-500/10 px-4 py-3 text-red-400">
