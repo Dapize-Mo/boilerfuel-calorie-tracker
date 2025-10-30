@@ -398,27 +398,59 @@ function FoodsTab() {
 
       {/* Foods List */}
       <div className="space-y-2">
-        {paginatedFoods.map(food => (
-          <div
-            key={food.id}
-            className="p-4 rounded-xl bg-theme-bg-secondary border border-theme-border-primary hover:border-yellow-500 transition-colors card-glow"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <h3 className="font-bold">{food.name}</h3>
-                <p className="text-sm text-theme-text-tertiary">
-                  {food.calories} cal • {food.dining_court} • {food.meal_time}
-                </p>
+        {paginatedFoods.map(food => {
+          const nextAvailable = food.next_available || [];
+          const upcoming = nextAvailable.slice(0, 7); // Show up to next 7 occurrences
+
+          return (
+            <div
+              key={food.id}
+              className="p-4 rounded-xl bg-theme-bg-secondary border border-theme-border-primary hover:border-yellow-500 transition-colors card-glow"
+            >
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex-1">
+                  <h3 className="font-bold">{food.name}</h3>
+                  <p className="text-sm text-theme-text-tertiary">
+                    {food.calories} cal • {food.dining_court} • {food.meal_time}
+                  </p>
+                  {upcoming.length > 0 && (
+                    <div className="mt-2 text-xs text-purple-400">
+                      <span className="font-semibold">📅 Next 7 days: </span>
+                      {upcoming.map((slot, idx) => {
+                        const date = new Date(slot.date);
+                        const today = new Date();
+                        const tomorrow = new Date(today);
+                        tomorrow.setDate(tomorrow.getDate() + 1);
+
+                        let dayLabel;
+                        if (date.toDateString() === today.toDateString()) {
+                          dayLabel = 'Today';
+                        } else if (date.toDateString() === tomorrow.toDateString()) {
+                          dayLabel = 'Tomorrow';
+                        } else {
+                          dayLabel = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                        }
+
+                        return (
+                          <span key={idx} className="inline-block mr-2">
+                            {dayLabel} ({slot.meal_time})
+                            {idx < upcoming.length - 1 && ', '}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={() => handleDelete(food.id, food.name)}
+                  className="px-3 py-1 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors text-sm whitespace-nowrap"
+                >
+                  Delete
+                </button>
               </div>
-              <button
-                onClick={() => handleDelete(food.id, food.name)}
-                className="px-3 py-1 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors text-sm"
-              >
-                Delete
-              </button>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Pagination */}

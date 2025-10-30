@@ -23,7 +23,7 @@ export default async function handler(req, res) {
       }
 
       const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
-      const { rows } = await query(`SELECT id, name, calories, macros, dining_court, station, meal_time FROM foods ${where} ORDER BY name ASC`, params);
+      const { rows } = await query(`SELECT id, name, calories, macros, dining_court, station, meal_time, next_available FROM foods ${where} ORDER BY name ASC`, params);
       return res.status(200).json(rows);
     } catch (err) {
       return res.status(500).json({ error: err.message || 'Failed to fetch foods' });

@@ -14,7 +14,8 @@
       "Bash(taskkill:*)",
       "Bash(netstat:*)",
       "Bash(findstr:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(python scripts/scrape_to_db.py:*)"
     ],
     "deny": [],
     "ask": []
