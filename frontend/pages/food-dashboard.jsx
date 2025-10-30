@@ -549,7 +549,7 @@ export default function FoodDashboard() {
                 </div>
                 <p className="text-theme-text-tertiary mt-2">Track your meals and nutrition—all data stays on this device only.</p>
               </div>
-              <div className="flex gap-3">
+              <div className="flex flex-wrap gap-3">
                 <button
                   type="button"
                   onClick={() => {
@@ -559,16 +559,16 @@ export default function FoodDashboard() {
                     setAddMealMealTime('');
                     setAddMealSearchQuery('');
                   }}
-                  className="px-6 py-2 rounded-xl bg-green-500/20 hover:bg-green-500/30 border border-green-500/50 text-green-300 font-semibold transition-all duration-300 glow-green"
+                  className="flex-1 sm:flex-none px-6 py-2 rounded-xl bg-green-500/20 hover:bg-green-500/30 border border-green-500/50 text-green-300 font-semibold transition-all duration-300 glow-green whitespace-nowrap"
                 >
                   + Add Meal
                 </button>
                 <button
                   type="button"
                   onClick={handleClearLogs}
-                  className="px-4 py-2 rounded-xl bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-300 font-semibold transition-all"
+                  className="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-300 font-semibold transition-all whitespace-nowrap"
                 >
-                  Clear Food Logs
+                  Clear Logs
                 </button>
               </div>
             </div>
@@ -1049,10 +1049,10 @@ export default function FoodDashboard() {
                     </div>
                   </div>
 
-                  <div className="flex justify-end gap-3 pt-4">
+                  <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4">
                     <button
                       onClick={() => setShowAddMealModal(false)}
-                      className="px-6 py-2 rounded-lg bg-theme-bg-tertiary text-theme-text-primary hover:bg-theme-bg-hover transition-all duration-300"
+                      className="w-full sm:w-auto px-6 py-2 rounded-lg bg-theme-bg-tertiary text-theme-text-primary hover:bg-theme-bg-hover transition-all duration-300 order-2 sm:order-1"
                     >
                       Cancel
                     </button>
@@ -1063,7 +1063,7 @@ export default function FoodDashboard() {
                         }
                       }}
                       disabled={!addMealDiningCourt || !addMealMealTime}
-                      className="px-6 py-2 rounded-lg bg-green-500 text-slate-900 font-semibold hover:bg-green-600 transition-all duration-300 glow-green disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full sm:w-auto px-6 py-2 rounded-lg bg-green-500 text-slate-900 font-semibold hover:bg-green-600 transition-all duration-300 glow-green disabled:opacity-50 disabled:cursor-not-allowed order-1 sm:order-2"
                     >
                       Next: Choose Food →
                     </button>
@@ -1166,16 +1166,16 @@ export default function FoodDashboard() {
                     })}
                 </div>
 
-                <div className="flex justify-between gap-3 pt-6 border-t border-theme-border-primary mt-6">
+                <div className="flex flex-col sm:flex-row justify-between gap-3 pt-6 border-t border-theme-border-primary mt-6">
                   <button
                     onClick={() => setAddMealStep(1)}
-                    className="px-6 py-2 rounded-lg bg-theme-bg-tertiary text-theme-text-primary hover:bg-theme-bg-hover transition-all duration-300"
+                    className="w-full sm:w-auto px-6 py-2 rounded-lg bg-theme-bg-tertiary text-theme-text-primary hover:bg-theme-bg-hover transition-all duration-300"
                   >
                     ← Back
                   </button>
                   <button
                     onClick={() => setShowAddMealModal(false)}
-                    className="px-6 py-2 rounded-lg bg-slate-700 text-slate-200 hover:bg-slate-600 transition-all duration-300"
+                    className="w-full sm:w-auto px-6 py-2 rounded-lg bg-slate-700 text-slate-200 hover:bg-slate-600 transition-all duration-300"
                   >
                     Cancel
                   </button>
