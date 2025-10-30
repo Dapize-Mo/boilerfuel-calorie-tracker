@@ -14,9 +14,254 @@ django.setup()
 
 from src.api.models import Activity
 
-# Comprehensive exercise database
+# Comprehensive exercise database with Purdue Rec Center equipment
 EXERCISES = [
-    # Cardio exercises
+    # Purdue Rec Center Specific Equipment
+    {
+        'name': 'Treadmill',
+        'calories_per_hour': 550,
+        'category': 'cardio',
+        'intensity': 'moderate',
+        'muscle_groups': ['legs', 'core'],
+        'equipment': 'treadmill',
+        'description': 'Popular cardio equipment at Purdue Rec - walk, jog, or run at your own pace.'
+    },
+    {
+        'name': 'Elliptical Machine',
+        'calories_per_hour': 400,
+        'category': 'cardio',
+        'intensity': 'moderate',
+        'muscle_groups': ['legs', 'arms'],
+        'equipment': 'elliptical',
+        'description': 'Low-impact full-body cardio available at Purdue Rec.'
+    },
+    {
+        'name': 'Stationary Bike',
+        'calories_per_hour': 420,
+        'category': 'cardio',
+        'intensity': 'moderate',
+        'muscle_groups': ['legs', 'core'],
+        'equipment': 'stationary bike',
+        'description': 'Recumbent and upright bikes available at Purdue Rec.'
+    },
+    {
+        'name': 'Rowing Machine',
+        'calories_per_hour': 520,
+        'category': 'cardio',
+        'intensity': 'vigorous',
+        'muscle_groups': ['back', 'legs', 'arms', 'core'],
+        'equipment': 'rowing machine',
+        'description': 'Full-body cardio workout machine at Purdue Rec.'
+    },
+    {
+        'name': 'StairMaster',
+        'calories_per_hour': 500,
+        'category': 'cardio',
+        'intensity': 'vigorous',
+        'muscle_groups': ['legs', 'glutes'],
+        'equipment': 'stair climber',
+        'description': 'Intense stair climbing machine for lower body cardio.'
+    },
+    {
+        'name': 'Arc Trainer',
+        'calories_per_hour': 450,
+        'category': 'cardio',
+        'intensity': 'moderate',
+        'muscle_groups': ['legs', 'glutes'],
+        'equipment': 'arc trainer',
+        'description': 'Low-impact alternative to elliptical and treadmill.'
+    },
+    {
+        'name': 'VersaClimber',
+        'calories_per_hour': 600,
+        'category': 'cardio',
+        'intensity': 'vigorous',
+        'muscle_groups': ['full body'],
+        'equipment': 'versa climber',
+        'description': 'Vertical climbing machine for intense full-body cardio.'
+    },
+    {
+        'name': 'Assault Bike',
+        'calories_per_hour': 650,
+        'category': 'cardio',
+        'intensity': 'vigorous',
+        'muscle_groups': ['legs', 'arms', 'core'],
+        'equipment': 'assault bike',
+        'description': 'High-intensity air resistance bike for HIIT workouts.'
+    },
+    {
+        'name': 'Indoor Track Running',
+        'calories_per_hour': 580,
+        'category': 'cardio',
+        'intensity': 'vigorous',
+        'muscle_groups': ['legs', 'core'],
+        'equipment': None,
+        'description': 'Use the Purdue Rec indoor track for running.'
+    },
+    {
+        'name': 'Basketball (Rec)',
+        'calories_per_hour': 480,
+        'category': 'sports',
+        'intensity': 'vigorous',
+        'muscle_groups': ['legs', 'full body'],
+        'equipment': 'basketball',
+        'description': 'Play on Purdue Rec basketball courts.'
+    },
+    {
+        'name': 'Racquetball',
+        'calories_per_hour': 450,
+        'category': 'sports',
+        'intensity': 'vigorous',
+        'muscle_groups': ['legs', 'arms', 'core'],
+        'equipment': 'racquet',
+        'description': 'Use Purdue Rec racquetball courts.'
+    },
+    {
+        'name': 'Swimming (Lap)',
+        'calories_per_hour': 550,
+        'category': 'cardio',
+        'intensity': 'moderate',
+        'muscle_groups': ['full body'],
+        'equipment': None,
+        'description': 'Lap swimming at Purdue Aquatic Center.'
+    },
+    {
+        'name': 'Water Aerobics',
+        'calories_per_hour': 320,
+        'category': 'cardio',
+        'intensity': 'light',
+        'muscle_groups': ['full body'],
+        'equipment': None,
+        'description': 'Low-impact aquatic exercise classes at Purdue pool.'
+    },
+    {
+        'name': 'Group Fitness Class',
+        'calories_per_hour': 400,
+        'category': 'cardio',
+        'intensity': 'moderate',
+        'muscle_groups': ['full body'],
+        'equipment': None,
+        'description': 'Purdue Rec offers various group fitness classes (Zumba, Spin, Boot Camp, etc.).'
+    },
+    {
+        'name': 'Yoga Class',
+        'calories_per_hour': 200,
+        'category': 'flexibility',
+        'intensity': 'light',
+        'muscle_groups': ['full body'],
+        'equipment': None,
+        'description': 'Yoga classes offered at Purdue Rec.'
+    },
+    {
+        'name': 'Rock Climbing Wall',
+        'calories_per_hour': 500,
+        'category': 'sports',
+        'intensity': 'vigorous',
+        'muscle_groups': ['arms', 'back', 'core', 'legs'],
+        'equipment': 'climbing gear',
+        'description': 'Indoor rock climbing at Purdue Rec climbing wall.'
+    },
+    {
+        'name': 'Massage Chair',
+        'calories_per_hour': 50,
+        'category': 'flexibility',
+        'intensity': 'light',
+        'muscle_groups': ['full body'],
+        'equipment': 'massage chair',
+        'description': 'Recovery and relaxation in Purdue Rec massage chairs.'
+    },
+    {
+        'name': 'Foam Rolling',
+        'calories_per_hour': 80,
+        'category': 'flexibility',
+        'intensity': 'light',
+        'muscle_groups': ['full body'],
+        'equipment': 'foam roller',
+        'description': 'Self-myofascial release for recovery at Purdue Rec.'
+    },
+    {
+        'name': 'Free Weights (General)',
+        'calories_per_hour': 220,
+        'category': 'strength',
+        'intensity': 'moderate',
+        'muscle_groups': ['full body'],
+        'equipment': 'dumbbells',
+        'description': 'General free weight training at Purdue Rec weight room.'
+    },
+    {
+        'name': 'Cable Machine Workout',
+        'calories_per_hour': 200,
+        'category': 'strength',
+        'intensity': 'moderate',
+        'muscle_groups': ['full body'],
+        'equipment': 'cable machine',
+        'description': 'Use Purdue Rec cable machines for various exercises.'
+    },
+    {
+        'name': 'Smith Machine Workout',
+        'calories_per_hour': 240,
+        'category': 'strength',
+        'intensity': 'moderate',
+        'muscle_groups': ['full body'],
+        'equipment': 'smith machine',
+        'description': 'Guided barbell exercises at Purdue Rec.'
+    },
+    {
+        'name': 'Battle Ropes',
+        'calories_per_hour': 550,
+        'category': 'cardio',
+        'intensity': 'vigorous',
+        'muscle_groups': ['arms', 'shoulders', 'core'],
+        'equipment': 'battle ropes',
+        'description': 'High-intensity rope training available at Purdue Rec functional area.'
+    },
+    {
+        'name': 'TRX Suspension Training',
+        'calories_per_hour': 350,
+        'category': 'strength',
+        'intensity': 'moderate',
+        'muscle_groups': ['full body'],
+        'equipment': 'TRX straps',
+        'description': 'Bodyweight suspension training at Purdue Rec.'
+    },
+    {
+        'name': 'Kettlebell Workout',
+        'calories_per_hour': 400,
+        'category': 'strength',
+        'intensity': 'vigorous',
+        'muscle_groups': ['full body'],
+        'equipment': 'kettlebell',
+        'description': 'Dynamic kettlebell exercises at Purdue Rec functional area.'
+    },
+    {
+        'name': 'Medicine Ball Workout',
+        'calories_per_hour': 320,
+        'category': 'strength',
+        'intensity': 'moderate',
+        'muscle_groups': ['core', 'full body'],
+        'equipment': 'medicine ball',
+        'description': 'Core and power training with medicine balls at Purdue Rec.'
+    },
+    {
+        'name': 'Plyo Box Jumps',
+        'calories_per_hour': 450,
+        'category': 'cardio',
+        'intensity': 'vigorous',
+        'muscle_groups': ['legs', 'glutes'],
+        'equipment': 'plyo box',
+        'description': 'Plyometric box jump training at Purdue Rec.'
+    },
+    {
+        'name': 'Sauna Session',
+        'calories_per_hour': 150,
+        'category': 'flexibility',
+        'intensity': 'light',
+        'muscle_groups': [],
+        'equipment': None,
+        'description': 'Recovery and relaxation in Purdue Rec sauna.'
+    },
+
+    # Standard Cardio exercises
     {
         'name': 'Running',
         'calories_per_hour': 600,
