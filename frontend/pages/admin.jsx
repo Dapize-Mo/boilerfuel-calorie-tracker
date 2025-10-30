@@ -240,7 +240,7 @@ function StatsTab() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Food Stats */}
-        <div className="p-6 rounded-2xl bg-theme-bg-secondary border border-theme-border-primary">
+        <div className="p-6 rounded-2xl bg-theme-bg-secondary border border-theme-border-primary card-glow glow-yellow">
           <div className="flex items-center gap-3 mb-6">
             <span className="text-4xl">🍽️</span>
             <h3 className="text-xl font-bold">Food Database</h3>
@@ -253,7 +253,7 @@ function StatsTab() {
         </div>
 
         {/* Activity Stats */}
-        <div className="p-6 rounded-2xl bg-theme-bg-secondary border border-theme-border-primary">
+        <div className="p-6 rounded-2xl bg-theme-bg-secondary border border-theme-border-primary card-glow glow-orange">
           <div className="flex items-center gap-3 mb-6">
             <span className="text-4xl">💪</span>
             <h3 className="text-xl font-bold">Exercise Database</h3>
@@ -270,7 +270,7 @@ function StatsTab() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
         <Link
           href="/admin-scraper"
-          className="p-6 rounded-2xl bg-blue-500/10 border border-blue-500/30 hover:border-blue-500 transition-colors group"
+          className="p-6 rounded-2xl bg-blue-500/10 border border-blue-500/30 hover:border-blue-500 transition-colors group card-glow glow-blue"
         >
           <div className="flex items-center justify-between">
             <div>
@@ -285,7 +285,7 @@ function StatsTab() {
 
         <Link
           href="/settings"
-          className="p-6 rounded-2xl bg-purple-500/10 border border-purple-500/30 hover:border-purple-500 transition-colors group"
+          className="p-6 rounded-2xl bg-purple-500/10 border border-purple-500/30 hover:border-purple-500 transition-colors group card-glow glow-purple"
         >
           <div className="flex items-center justify-between">
             <div>
@@ -401,7 +401,7 @@ function FoodsTab() {
         {paginatedFoods.map(food => (
           <div
             key={food.id}
-            className="p-4 rounded-xl bg-theme-bg-secondary border border-theme-border-primary hover:border-yellow-500 transition-colors"
+            className="p-4 rounded-xl bg-theme-bg-secondary border border-theme-border-primary hover:border-yellow-500 transition-colors card-glow"
           >
             <div className="flex items-center justify-between">
               <div className="flex-1">
@@ -556,7 +556,7 @@ function ExercisesTab() {
         {paginatedActivities.map(activity => (
           <div
             key={activity.id}
-            className="p-4 rounded-xl bg-theme-bg-secondary border border-theme-border-primary hover:border-orange-500 transition-colors"
+            className="p-4 rounded-xl bg-theme-bg-secondary border border-theme-border-primary hover:border-orange-500 transition-colors card-glow glow-orange"
           >
             <div className="flex items-start justify-between mb-2">
               <div className="flex-1">
