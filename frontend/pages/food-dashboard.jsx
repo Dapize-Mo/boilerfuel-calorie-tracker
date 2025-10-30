@@ -248,6 +248,7 @@ export default function FoodDashboard() {
   const [addMealStep, setAddMealStep] = useState(1); // 1 = dining court, 2 = food selection
   const [addMealDiningCourt, setAddMealDiningCourt] = useState('');
   const [addMealMealTime, setAddMealMealTime] = useState('');
+  const [addMealSearchQuery, setAddMealSearchQuery] = useState('');
   const successTimeout = useRef(null);
 
   useEffect(() => {
@@ -556,6 +557,7 @@ export default function FoodDashboard() {
                     setAddMealStep(1);
                     setAddMealDiningCourt('');
                     setAddMealMealTime('');
+                    setAddMealSearchQuery('');
                   }}
                   className="px-6 py-2 rounded-xl bg-green-500/20 hover:bg-green-500/30 border border-green-500/50 text-green-300 font-semibold transition-all duration-300 glow-green"
                 >
@@ -1073,8 +1075,8 @@ export default function FoodDashboard() {
             {/* Step 2: Choose Food */}
             {addMealStep === 2 && (
               <>
-                <div className="flex items-start justify-between gap-3 mb-6">
-                  <div>
+                <div className="flex items-start justify-between gap-3 mb-4">
+                  <div className="flex-1">
                     <h3 className="text-2xl font-bold text-theme-text-primary">Add Meal - Step 2</h3>
                     <p className="text-sm text-theme-text-tertiary mt-1">
                       {addMealDiningCourt} • {addMealMealTime}
@@ -1083,9 +1085,47 @@ export default function FoodDashboard() {
                   <button onClick={() => setShowAddMealModal(false)} className="text-theme-text-secondary hover:text-theme-text-primary text-xl">✕</button>
                 </div>
 
+                {/* Search Box */}
+                <div className="mb-4">
+                  <input
+                    type="text"
+                    placeholder="Search foods or stations..."
+                    value={addMealSearchQuery}
+                    onChange={(e) => setAddMealSearchQuery(e.target.value)}
+                    className="w-full rounded-lg border border-theme-border-primary bg-theme-bg-tertiary px-4 py-2 text-theme-text-primary placeholder:text-theme-text-tertiary focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                  />
+                  <p className="text-xs text-theme-text-tertiary mt-2">
+                    {foods.filter(f => {
+                      const matchesLocation = f.dining_court === addMealDiningCourt && f.meal_time === addMealMealTime;
+                      const matchesSearch = !addMealSearchQuery ||
+                        f.name.toLowerCase().includes(addMealSearchQuery.toLowerCase()) ||
+                        (f.station || '').toLowerCase().includes(addMealSearchQuery.toLowerCase());
+                      return matchesLocation && matchesSearch;
+                    }).length} items found
+                  </p>
+                </div>
+
+                {foods.filter(f => {
+                  const matchesLocation = f.dining_court === addMealDiningCourt && f.meal_time === addMealMealTime;
+                  const matchesSearch = !addMealSearchQuery ||
+                    f.name.toLowerCase().includes(addMealSearchQuery.toLowerCase()) ||
+                    (f.station || '').toLowerCase().includes(addMealSearchQuery.toLowerCase());
+                  return matchesLocation && matchesSearch;
+                }).length === 0 && (
+                  <div className="text-center py-8 text-theme-text-tertiary">
+                    {addMealSearchQuery ? `No items found matching "${addMealSearchQuery}"` : `No menu items found for ${addMealDiningCourt} at ${addMealMealTime}.`}
+                  </div>
+                )}
+
                 <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
                   {foods
-                    .filter(f => f.dining_court === addMealDiningCourt && f.meal_time === addMealMealTime)
+                    .filter(f => {
+                      const matchesLocation = f.dining_court === addMealDiningCourt && f.meal_time === addMealMealTime;
+                      const matchesSearch = !addMealSearchQuery ||
+                        f.name.toLowerCase().includes(addMealSearchQuery.toLowerCase()) ||
+                        (f.station || '').toLowerCase().includes(addMealSearchQuery.toLowerCase());
+                      return matchesLocation && matchesSearch;
+                    })
                     .map((food) => {
                       const macros = food.macros || {};
                       return (
@@ -1099,7 +1139,14 @@ export default function FoodDashboard() {
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex-1">
-                              <h4 className="font-bold text-theme-text-primary mb-1">{food.name}</h4>
+                              <div className="flex items-center gap-2 mb-1">
+                                <h4 className="font-bold text-theme-text-primary">{food.name}</h4>
+                                {food.station && (
+                                  <span className="text-xs px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-300 border border-yellow-500/30">
+                                    {food.station}
+                                  </span>
+                                )}
+                              </div>
                               <div className="text-sm text-theme-text-secondary">
                                 <span className="font-semibold text-yellow-400">{food.calories} cal</span>
                                 <span className="text-theme-text-tertiary ml-1">({macros.serving_size || '1 serving'})</span>
