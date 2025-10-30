@@ -61,7 +61,43 @@ export async function ensureSchema() {
       id SERIAL PRIMARY KEY,
       name VARCHAR(255) NOT NULL,
       calories_per_hour INT NOT NULL,
+      category VARCHAR(50) DEFAULT 'other',
+      intensity VARCHAR(50) DEFAULT 'moderate',
+      muscle_groups JSONB DEFAULT '[]'::jsonb,
+      equipment VARCHAR(255),
+      description TEXT,
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
+  `);
+
+  // Add new columns to existing activities table if they don't exist
+  await query(`
+    DO $$
+    BEGIN
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                     WHERE table_name='activities' AND column_name='category') THEN
+        ALTER TABLE activities ADD COLUMN category VARCHAR(50) DEFAULT 'other';
+      END IF;
+
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                     WHERE table_name='activities' AND column_name='intensity') THEN
+        ALTER TABLE activities ADD COLUMN intensity VARCHAR(50) DEFAULT 'moderate';
+      END IF;
+
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                     WHERE table_name='activities' AND column_name='muscle_groups') THEN
+        ALTER TABLE activities ADD COLUMN muscle_groups JSONB DEFAULT '[]'::jsonb;
+      END IF;
+
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                     WHERE table_name='activities' AND column_name='equipment') THEN
+        ALTER TABLE activities ADD COLUMN equipment VARCHAR(255);
+      END IF;
+
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                     WHERE table_name='activities' AND column_name='description') THEN
+        ALTER TABLE activities ADD COLUMN description TEXT;
+      END IF;
+    END $$;
   `);
 }
