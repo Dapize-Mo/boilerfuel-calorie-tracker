@@ -232,6 +232,7 @@ export default function FoodDashboard() {
   const [diningCourts, setDiningCourts] = useState([]);
   const [selectedDiningCourt, setSelectedDiningCourt] = useState('');
   const [selectedMealTime, setSelectedMealTime] = useState('');
+  const [searchQuery, setSearchQuery] = useState(''); // Main search query for food menu
   const [selectedDate, setSelectedDate] = useState(() => formatDateForInput(startOfToday()));
   const [logs, setLogs] = useState(() => parseLogsCookie());
   const [activityLogs, setActivityLogs] = useState(() => parseActivityLogsCookie());
@@ -392,7 +393,17 @@ export default function FoodDashboard() {
   const foodsByStation = useMemo(() => {
     const grouped = {};
     // Only include foods that are available today
-    const availableToday = foods.filter(isFoodAvailableToday);
+    let availableToday = foods.filter(isFoodAvailableToday);
+
+    // Apply search filter if searchQuery is present
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      availableToday = availableToday.filter(food =>
+        food.name?.toLowerCase().includes(query) ||
+        food.station?.toLowerCase().includes(query)
+      );
+    }
+
     availableToday.forEach((food) => {
       const station = food.station || 'Other Items';
       if (!grouped[station]) {
@@ -401,7 +412,7 @@ export default function FoodDashboard() {
       grouped[station].push(food);
     });
     return grouped;
-  }, [foods, isFoodAvailableToday]);
+  }, [foods, isFoodAvailableToday, searchQuery]);
 
   const activitiesById = useMemo(() => {
     const map = new Map();
@@ -574,19 +585,19 @@ export default function FoodDashboard() {
         <title>Food Tracker - BoilerFuel</title>
         <meta name="description" content="Track your meals with BoilerFuel calorie tracker" />
       </Head>
-  <div className="min-h-screen">
-        {/* Hero Header Section - Full Width */}
-        <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border-b border-theme-border-primary">
-          <div className="mx-auto max-w-7xl px-6 py-8">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+  <div className="min-h-screen bg-[#1a1f2e]">
+        {/* Hero Header Section - Full Width with lighter background */}
+        <div className="bg-gradient-to-br from-slate-800/80 via-slate-700/60 to-slate-800/80 border-b border-slate-700/50 backdrop-blur-sm">
+          <div className="mx-auto max-w-7xl px-8 py-10">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8">
               <div>
-                <div className="flex items-center gap-3 mb-2">
-                  <span className="text-5xl">🍽️</span>
-                  <h1 className="text-5xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
+                <div className="flex items-center gap-4 mb-3">
+                  <span className="text-6xl">🍽️</span>
+                  <h1 className="text-6xl font-extrabold bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 bg-clip-text text-transparent">
                     Food Tracker
                   </h1>
                 </div>
-                <p className="text-theme-text-tertiary text-lg">Track your meals and nutrition—all data stays on this device only.</p>
+                <p className="text-slate-300 text-lg font-medium">Track your meals and nutrition—all data stays on this device only.</p>
               </div>
               <div className="flex flex-wrap gap-3">
                 <button
@@ -629,54 +640,54 @@ export default function FoodDashboard() {
           </div>
         </div>
 
-        {/* Main Content Area */}
-        <div className="mx-auto max-w-7xl px-6 py-6">
+        {/* Main Content Area - Increased padding and spacing */}
+        <div className="mx-auto max-w-7xl px-8 py-10">
           {menuError && (
-            <div className="rounded-xl border border-red-500 bg-red-500/10 px-4 py-3 text-red-400 mb-6">
+            <div className="rounded-xl border border-red-500/50 bg-red-500/10 px-5 py-4 text-red-300 mb-8 shadow-lg">
               {menuError}
             </div>
           )}
 
           {success && (
-            <div className="rounded-xl border border-green-500 bg-green-500/10 px-4 py-3 text-green-400 mb-6">
+            <div className="rounded-xl border border-green-500/50 bg-green-500/10 px-5 py-4 text-green-300 mb-8 shadow-lg">
               {success}
             </div>
           )}
 
-          {/* Stats Row - Flush Design */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+          {/* Stats Row - Enhanced with better spacing and depth */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
             <StatCardModern
               label="Calories"
               value={Math.round(totals.calories)}
               goal={userPrefs.showGoals ? goals.calories : null}
-              gradient="from-yellow-500 to-orange-500"
+              gradient="from-amber-500 to-orange-500"
               icon="🔥"
             />
             <StatCardModern
               label="Protein"
               value={`${Math.round(totals.protein)}g`}
               goal={userPrefs.showGoals ? goals.protein : null}
-              gradient="from-green-500 to-emerald-500"
+              gradient="from-emerald-500 to-green-600"
               icon="🥩"
             />
             <StatCardModern
               label="Carbs"
               value={`${Math.round(totals.carbs)}g`}
               goal={userPrefs.showGoals ? goals.carbs : null}
-              gradient="from-blue-500 to-indigo-500"
+              gradient="from-sky-500 to-blue-600"
               icon="🍞"
             />
             <StatCardModern
               label="Fats"
               value={`${Math.round(totals.fats)}g`}
               goal={userPrefs.showGoals ? goals.fats : null}
-              gradient="from-purple-500 to-pink-500"
+              gradient="from-violet-500 to-purple-600"
               icon="🥑"
             />
           </div>
 
-          {/* Goals Section - Integrated Design */}
-          <div className="bg-gradient-to-r from-slate-800/50 to-slate-900/50 border border-theme-border-primary rounded-xl p-6 mb-6">
+          {/* Goals Section - Integrated Design with refined styling */}
+          <div className="bg-gradient-to-r from-slate-800/40 to-slate-900/40 border border-slate-600/50 rounded-2xl p-8 mb-10 shadow-xl">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-2xl font-bold text-theme-text-primary flex items-center gap-2">
                 <span>🎯</span>
@@ -780,21 +791,47 @@ export default function FoodDashboard() {
           </div>
 
           {/* Food Section - Seamless Design */}
-          <div className="border-t border-theme-border-primary pt-6">
-            <h2 className="text-2xl font-bold mb-6 text-theme-text-primary flex items-center gap-2">
-              <span>🍽️</span>
+          <div className="border-t border-slate-600/50 pt-10">
+            <h2 className="text-3xl font-extrabold mb-8 text-slate-100 flex items-center gap-3">
+              <span className="text-4xl">🍽️</span>
               <span>Food Menu</span>
             </h2>
 
-            {/* Filters - Inline Design */}
-            <div className="flex flex-wrap gap-3 mb-6 bg-theme-bg-tertiary/30 rounded-lg p-4 border border-theme-border-primary/50">
+            {/* Search Bar - New Addition */}
+            <div className="mb-6">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search foods by name..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full rounded-xl border border-slate-600/50 bg-slate-800/60 backdrop-blur-sm px-5 py-4 pl-12 text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all shadow-lg text-base"
+                />
+                <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Filters - Enhanced Design */}
+            <div className="flex flex-wrap gap-5 mb-10 bg-slate-800/40 rounded-xl p-6 border border-slate-600/50 shadow-lg">
               {diningCourts.length > 0 && (
-                <div className="flex-1 min-w-[200px]">
-                  <label className="mb-2 block text-xs font-medium text-theme-text-tertiary">Dining Court</label>
+                <div className="flex-1 min-w-[220px]">
+                  <label className="mb-2.5 block text-xs font-bold text-slate-400 uppercase tracking-wider">Dining Court</label>
                   <select
                     value={selectedDiningCourt}
                     onChange={(e) => setSelectedDiningCourt(e.target.value)}
-                    className="w-full rounded-lg border border-theme-border-primary bg-theme-card-bg px-3 py-2 text-theme-text-primary focus:ring-2 focus:ring-yellow-500 text-sm"
+                    className="w-full rounded-lg border border-slate-600/50 bg-slate-700/60 backdrop-blur-sm px-4 py-3 text-slate-100 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all shadow-md text-base"
                   >
                     <option value="">All Dining Courts</option>
                     {diningCourts.map((court) => (
@@ -806,12 +843,12 @@ export default function FoodDashboard() {
                 </div>
               )}
 
-              <div className="flex-1 min-w-[200px]">
-                <label className="mb-2 block text-xs font-medium text-theme-text-tertiary">Meal Time</label>
+              <div className="flex-1 min-w-[220px]">
+                <label className="mb-2.5 block text-xs font-bold text-slate-400 uppercase tracking-wider">Meal Time</label>
                 <select
                   value={selectedMealTime}
                   onChange={(e) => setSelectedMealTime(e.target.value)}
-                  className="w-full rounded-lg border border-theme-border-primary bg-theme-card-bg px-3 py-2 text-theme-text-primary focus:ring-2 focus:ring-yellow-500 text-sm"
+                  className="w-full rounded-lg border border-slate-600/50 bg-slate-700/60 backdrop-blur-sm px-4 py-3 text-slate-100 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all shadow-md text-base"
                 >
                   <option value="">All Meal Times</option>
                   <option value="breakfast">Breakfast</option>
@@ -829,12 +866,15 @@ export default function FoodDashboard() {
                 {Object.entries(foodsByStation)
                   .sort(([a], [b]) => a.localeCompare(b))
                   .map(([station, stationFoods]) => (
-                    <div key={station} className="rounded-lg bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-theme-border-primary overflow-hidden hover:border-yellow-500/50 transition-all">
-                      <div className="bg-gradient-to-r from-yellow-600/90 to-orange-500/90 px-4 py-2.5">
-                        <h3 className="text-base font-bold text-slate-900">{station}</h3>
-                        <p className="text-xs text-slate-800">{stationFoods.length} items</p>
+                    <div key={station} className="rounded-xl bg-gradient-to-br from-slate-800/60 to-slate-900/60 border border-slate-600/50 overflow-hidden hover:border-amber-500/40 transition-all duration-300 shadow-lg hover:shadow-xl">
+                      <div className="bg-gradient-to-r from-amber-600/30 to-orange-500/30 border-b border-amber-500/20 px-5 py-3.5 backdrop-blur-sm">
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg">🍴</span>
+                          <h3 className="text-base font-bold text-slate-100">{station}</h3>
+                        </div>
+                        <p className="text-xs text-slate-400 mt-0.5">{stationFoods.length} items</p>
                       </div>
-                      <div className="p-3 space-y-1.5 max-h-[400px] overflow-y-auto">
+                      <div className="p-4 space-y-2.5 max-h-[400px] overflow-y-auto custom-scrollbar">
                         {stationFoods.map((food) => {
                           const macros = food.macros || {};
                           const nextAvail = food.next_available || [];
@@ -847,15 +887,15 @@ export default function FoodDashboard() {
                                 console.log('Card clicked:', food.name);
                                 setSelectedFood(food);
                               }}
-                              className="bg-slate-700/40 backdrop-blur rounded-md px-3 py-2 hover:bg-slate-600/60 transition-all border border-theme-border-primary/20 hover:border-yellow-500/40 cursor-pointer"
+                              className="bg-slate-700/50 backdrop-blur-sm rounded-lg px-4 py-3 hover:bg-slate-600/70 transition-all duration-200 border border-slate-600/40 hover:border-amber-500/50 cursor-pointer shadow-md hover:shadow-lg hover:scale-[1.02]"
                             >
-                              <div className="flex items-start justify-between gap-2">
+                              <div className="flex items-start justify-between gap-3">
                                 <div className="flex-1">
-                                  <div className="flex items-center gap-2 flex-wrap">
-                                    <div className="font-semibold text-theme-text-primary text-sm">{food.name}</div>
+                                  <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                                    <div className="font-bold text-slate-100 text-base leading-tight">{food.name}</div>
                                     {food.meal_time && hasForecast && (
                                       <div className="relative group">
-                                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-500/20 text-purple-300 border border-purple-500/30 cursor-help">
+                                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-violet-500/20 text-violet-300 border border-violet-500/30 cursor-help">
                                           {food.meal_time}
                                         </span>
                                         {/* Tooltip */}
@@ -889,14 +929,16 @@ export default function FoodDashboard() {
                                       </div>
                                     )}
                                   </div>
-                                  <div className="text-xs text-theme-text-secondary mt-1">
-                                    <span className="font-semibold text-yellow-400">{food.calories} cal</span>
-                                    <span className="text-theme-text-tertiary ml-1">({macros.serving_size || '1 serving'})</span>
+                                  <div className="text-sm text-slate-300">
+                                    <span className="font-bold text-amber-400 text-base">{food.calories} cal</span>
+                                    <span className="text-slate-400 ml-1.5 text-xs">({macros.serving_size || '1 serving'})</span>
                                     {(macros.protein || macros.carbs || macros.fats) && (
-                                      <span className="block mt-0.5">
+                                      <span className="block mt-1.5 text-xs font-medium text-slate-400">
                                         P: {Math.round(macros.protein || 0)}g
-                                        • C: {Math.round(macros.carbs || 0)}g
-                                        • F: {Math.round(macros.fats || 0)}g
+                                        <span className="mx-1.5">•</span>
+                                        C: {Math.round(macros.carbs || 0)}g
+                                        <span className="mx-1.5">•</span>
+                                        F: {Math.round(macros.fats || 0)}g
                                       </span>
                                     )}
                                   </div>
@@ -904,9 +946,10 @@ export default function FoodDashboard() {
                                 <button
                                   type="button"
                                   onClick={(e) => { e.stopPropagation(); handleQuickAdd(food.id, 1); }}
-                                  className={`rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-theme-text-primary font-bold w-8 h-8 flex items-center justify-center transition-all shadow-lg glow-green ${
+                                  className={`rounded-xl bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white font-bold w-10 h-10 flex items-center justify-center transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-110 ${
                                     addingFoodId === food.id ? 'scale-125 rotate-90' : ''
                                   }`}
+                                  title="Quick add 1 serving"
                                 >
                                   {addingFoodId === food.id ? '✓' : '+'}
                                 </button>
@@ -1259,23 +1302,23 @@ function StatCardModern({ label, value, goal, gradient, icon }) {
   const percentage = hasGoal && numericGoal > 0 ? Math.min(100, (numericValue / numericGoal) * 100) : null;
 
   return (
-  <div className="backdrop-blur-lg bg-theme-card-bg rounded-2xl border border-theme-card-border p-4 hover:scale-105 transition-transform">
-      <div className="flex items-center justify-between mb-2">
-        <p className="text-sm text-theme-text-tertiary font-medium">{label}</p>
-        <span className="text-2xl">{icon}</span>
+    <div className="backdrop-blur-lg bg-slate-800/60 rounded-2xl border border-slate-600/50 p-6 hover:scale-105 hover:shadow-2xl transition-all duration-300 shadow-xl">
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-sm text-slate-400 font-semibold uppercase tracking-wide">{label}</p>
+        <span className="text-3xl">{icon}</span>
       </div>
-      <p className={`text-3xl font-bold bg-gradient-to-r ${gradient} bg-clip-text text-transparent`}>
+      <p className={`text-4xl font-extrabold bg-gradient-to-r ${gradient} bg-clip-text text-transparent mb-1`}>
         {value}
       </p>
       {hasGoal && percentage !== null && (
-        <div className="mt-3">
-          <div className="flex items-center justify-between text-xs text-theme-text-tertiary mb-1">
+        <div className="mt-4">
+          <div className="flex items-center justify-between text-xs text-slate-400 mb-2 font-medium">
             <span>Goal: {goal}</span>
-            <span>{Math.round(percentage)}%</span>
+            <span className="font-bold">{Math.round(percentage)}%</span>
           </div>
-          <div className="h-2 bg-theme-bg-tertiary rounded-full overflow-hidden">
+          <div className="h-2.5 bg-slate-700/80 rounded-full overflow-hidden shadow-inner">
             <div
-              className={`h-full bg-gradient-to-r ${gradient} transition-all duration-500`}
+              className={`h-full bg-gradient-to-r ${gradient} transition-all duration-700 ease-out rounded-full shadow-lg`}
               style={{ width: `${percentage}%` }}
             />
           </div>
@@ -1292,21 +1335,21 @@ function GoalCardModern({ label, value, current, showProgress }) {
   const isComplete = percentage >= 100;
 
   return (
-    <div className="rounded-xl bg-theme-bg-tertiary/50 backdrop-blur border border-theme-border-primary p-3">
-      <p className="text-xs text-theme-text-tertiary mb-1">{label}</p>
-      <div className="flex items-baseline gap-2 mb-2">
-        <p className="text-lg font-bold text-theme-text-primary">{value}</p>
+    <div className="rounded-xl bg-slate-700/50 backdrop-blur border border-slate-600/50 p-4 shadow-md hover:shadow-lg transition-all duration-300">
+      <p className="text-xs text-slate-400 mb-2 font-semibold uppercase tracking-wide">{label}</p>
+      <div className="flex items-baseline gap-2 mb-3">
+        <p className="text-xl font-extrabold text-slate-100">{value}</p>
         {showProgress && (
-          <p className={`text-sm ${isComplete ? 'text-green-400' : 'text-theme-text-tertiary'}`}>
+          <p className={`text-sm font-semibold ${isComplete ? 'text-emerald-400' : 'text-slate-400'}`}>
             ({current})
           </p>
         )}
       </div>
       {showProgress && (
-        <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
+        <div className="h-2 bg-slate-800/80 rounded-full overflow-hidden shadow-inner">
           <div
-            className={`h-full transition-all duration-500 ${
-              isComplete ? 'bg-green-500' : 'bg-yellow-500'
+            className={`h-full transition-all duration-700 ease-out rounded-full shadow-md ${
+              isComplete ? 'bg-gradient-to-r from-emerald-500 to-green-500' : 'bg-gradient-to-r from-amber-500 to-orange-500'
             }`}
             style={{ width: `${percentage}%` }}
           />
@@ -1314,4 +1357,31 @@ function GoalCardModern({ label, value, current, showProgress }) {
       )}
     </div>
   );
+}
+
+// Add custom scrollbar styles
+const customScrollbarStyles = `
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(30, 41, 59, 0.5);
+    border-radius: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(100, 116, 139, 0.6);
+    border-radius: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.8);
+  }
+`;
+
+if (typeof document !== 'undefined') {
+  const styleEl = document.createElement('style');
+  styleEl.textContent = customScrollbarStyles;
+  if (!document.head.querySelector('style[data-scrollbar]')) {
+    styleEl.setAttribute('data-scrollbar', 'true');
+    document.head.appendChild(styleEl);
+  }
 }
