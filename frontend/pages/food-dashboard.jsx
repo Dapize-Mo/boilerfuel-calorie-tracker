@@ -342,7 +342,7 @@ export default function FoodDashboard() {
       try {
         const params = new URLSearchParams();
         params.append('dining_court', addMealDiningCourt);
-        params.append('meal_time', addMealMealTime);
+        params.append('meal_time', addMealMealTime.toLowerCase());
         const url = `/api/foods?${params.toString()}`;
         const data = await apiCall(url);
         if (!isMounted) return;
@@ -1143,7 +1143,7 @@ export default function FoodDashboard() {
                   />
                   <p className="text-xs text-theme-text-tertiary mt-2">
                     {foods.filter(f => {
-                      const matchesLocation = f.dining_court === addMealDiningCourt && f.meal_time === addMealMealTime;
+                      const matchesLocation = f.dining_court === addMealDiningCourt && f.meal_time === addMealMealTime.toLowerCase();
                       const matchesSearch = !addMealSearchQuery ||
                         f.name.toLowerCase().includes(addMealSearchQuery.toLowerCase()) ||
                         (f.station || '').toLowerCase().includes(addMealSearchQuery.toLowerCase());
@@ -1153,7 +1153,7 @@ export default function FoodDashboard() {
                 </div>
 
                 {foods.filter(f => {
-                  const matchesLocation = f.dining_court === addMealDiningCourt && f.meal_time === addMealMealTime;
+                  const matchesLocation = f.dining_court === addMealDiningCourt && f.meal_time === addMealMealTime.toLowerCase();
                   const matchesSearch = !addMealSearchQuery ||
                     f.name.toLowerCase().includes(addMealSearchQuery.toLowerCase()) ||
                     (f.station || '').toLowerCase().includes(addMealSearchQuery.toLowerCase());
@@ -1167,7 +1167,7 @@ export default function FoodDashboard() {
                 <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
                   {foods
                     .filter(f => {
-                      const matchesLocation = f.dining_court === addMealDiningCourt && f.meal_time === addMealMealTime;
+                      const matchesLocation = f.dining_court === addMealDiningCourt && f.meal_time === addMealMealTime.toLowerCase();
                       const matchesSearch = !addMealSearchQuery ||
                         f.name.toLowerCase().includes(addMealSearchQuery.toLowerCase()) ||
                         (f.station || '').toLowerCase().includes(addMealSearchQuery.toLowerCase());
