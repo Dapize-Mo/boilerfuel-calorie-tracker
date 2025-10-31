@@ -251,6 +251,8 @@ export default function FoodDashboard() {
   const [addMealDiningCourt, setAddMealDiningCourt] = useState('');
   const [addMealMealTime, setAddMealMealTime] = useState('');
   const [addMealSearchQuery, setAddMealSearchQuery] = useState('');
+  const [batchSelection, setBatchSelection] = useState(() => new Map());
+  const dateInputRef = useRef(null);
   const [addingFoodId, setAddingFoodId] = useState(null); // Track which food is being added for animation
   const successTimeout = useRef(null);
 
@@ -505,6 +507,12 @@ export default function FoodDashboard() {
     writeCookie(USER_PREFS_COOKIE_KEY, JSON.stringify(nextPrefs));
   }
 
+  function getTimestampForSelectedDate() {
+    const [y, m, d] = selectedDate.split('-').map(Number);
+    const ts = new Date(y, m - 1, d, 12, 0, 0, 0);
+    return ts.toISOString();
+  }
+
   function handleQuickAdd(foodId, servingAmount = 1) {
     // Add visual feedback
     setAddingFoodId(foodId);
@@ -513,7 +521,7 @@ export default function FoodDashboard() {
       id: Date.now(),
       foodId: Number(foodId),
       servings: servingAmount,
-      timestamp: new Date().toISOString(),
+      timestamp: getTimestampForSelectedDate(),
     };
 
     const nextLogs = [newLog, ...logs];
@@ -527,6 +535,27 @@ export default function FoodDashboard() {
 
     // Clear the animation after a short delay
     setTimeout(() => setAddingFoodId(null), 600);
+  }
+
+  function toggleBatchSelection(foodId) {
+    setBatchSelection((prev) => {
+      const next = new Map(prev);
+      if (next.has(foodId)) {
+        next.delete(foodId);
+      } else {
+        next.set(foodId, 1);
+      }
+      return next;
+    });
+  }
+
+  function commitBatchSelection() {
+    if (batchSelection.size === 0) return;
+    Array.from(batchSelection.entries()).forEach(([foodId, servings]) => {
+      handleQuickAdd(foodId, servings || 1);
+    });
+    setBatchSelection(new Map());
+    setShowAddMealModal(false);
   }
 
   function handleRemoveLog(logId) {
@@ -627,13 +656,29 @@ export default function FoodDashboard() {
             <div className="mt-8 flex items-center justify-between gap-4 bg-theme-bg-tertiary/30 rounded-xl border border-theme-border-primary p-4">
               <h2 className="text-xl font-bold text-theme-text-primary flex items-center gap-2">
                 <span>📅</span>
-                <span>{formatDateDisplay(selectedDate)}</span>
+                <button
+                  type="button"
+                  className="hover:underline underline-offset-4"
+                  onClick={() => {
+                    const el = dateInputRef.current;
+                    if (!el) return;
+                    if (typeof el.showPicker === 'function') {
+                      el.showPicker();
+                    } else {
+                      el.focus();
+                      el.click();
+                    }
+                  }}
+                >
+                  {formatDateDisplay(selectedDate)}
+                </button>
               </h2>
               <input
                 type="date"
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
                 max={formatDateForInput(startOfToday())}
+                ref={dateInputRef}
                 className="rounded-lg border border-theme-border-primary bg-theme-card-bg px-4 py-2 text-theme-text-primary focus:outline-none focus:ring-2 focus:ring-yellow-500"
               />
             </div>
@@ -947,7 +992,7 @@ export default function FoodDashboard() {
                                   type="button"
                                   onClick={(e) => { e.stopPropagation(); handleQuickAdd(food.id, 1); }}
                                   className={`rounded-xl bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white font-bold w-10 h-10 flex items-center justify-center transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-110 ${
-                                    addingFoodId === food.id ? 'scale-125 rotate-90' : ''
+                                    addingFoodId === food.id ? 'scale-125' : ''
                                   }`}
                                   title="Quick add 1 serving"
                                 >
@@ -1232,14 +1277,12 @@ export default function FoodDashboard() {
                     })
                     .map((food) => {
                       const macros = food.macros || {};
+                      const isSelected = batchSelection.has(food.id);
                       return (
                         <div
                           key={food.id}
-                          onClick={() => {
-                            handleQuickAdd(food.id, 1);
-                            setShowAddMealModal(false);
-                          }}
-                          className="p-4 rounded-lg bg-theme-bg-tertiary/50 border border-theme-border-primary hover:border-green-500 transition-all cursor-pointer card-glow"
+                          onClick={() => toggleBatchSelection(food.id)}
+                          className={`p-4 rounded-lg bg-theme-bg-tertiary/50 border transition-all cursor-pointer card-glow ${isSelected ? 'border-green-500' : 'border-theme-border-primary hover:border-green-500'}`}
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex-1">
@@ -1263,7 +1306,15 @@ export default function FoodDashboard() {
                                 </div>
                               )}
                             </div>
-                            <div className="text-3xl">+</div>
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); toggleBatchSelection(food.id); }}
+                              className={`rounded-xl ${isSelected ? 'bg-green-500/20 border-green-500 text-green-400' : 'bg-theme-bg-secondary border-theme-border-primary text-theme-text-primary'} border font-bold w-10 h-10 flex items-center justify-center transition-all`}
+                              aria-pressed={isSelected}
+                              title={isSelected ? 'Selected' : 'Select'}
+                            >
+                              {isSelected ? '✓' : '+'}
+                            </button>
                           </div>
                         </div>
                       );
@@ -1277,12 +1328,21 @@ export default function FoodDashboard() {
                   >
                     ← Back
                   </button>
-                  <button
-                    onClick={() => setShowAddMealModal(false)}
-                    className="w-full sm:w-auto px-6 py-2 rounded-lg bg-slate-700 text-slate-200 hover:bg-slate-600 transition-all duration-300"
-                  >
-                    Cancel
-                  </button>
+                  <div className="flex gap-3 w-full sm:w-auto">
+                    <button
+                      onClick={() => setShowAddMealModal(false)}
+                      className="flex-1 sm:flex-none px-6 py-2 rounded-lg bg-slate-700 text-slate-200 hover:bg-slate-600 transition-all duration-300"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={commitBatchSelection}
+                      disabled={batchSelection.size === 0}
+                      className="flex-1 sm:flex-none px-6 py-2 rounded-lg bg-green-500 text-slate-900 font-semibold hover:bg-green-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Done{batchSelection.size > 0 ? ` (${batchSelection.size})` : ''}
+                    </button>
+                  </div>
                 </div>
               </>
             )}
