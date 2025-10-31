@@ -14,13 +14,27 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
-# Purdue dining courts - mapping display names to URL identifiers
+# Purdue dining locations - mapping display names to API identifiers
+# Includes Dining Courts, Quick Bites, and On-the-GO! locations
+# API codes from: https://api.hfs.purdue.edu/menus/v2/locations
 DINING_COURTS = {
-    'Earhart': 'Earhart',
-    'Ford': 'Ford',
-    'Hillenbrand': 'Hillenbrand',
-    'Wiley': 'Wiley',
-    'Windsor': 'Windsor',
+    # Traditional Dining Courts
+    'Earhart': 'ERHT',
+    'Ford': 'FORD',
+    'Hillenbrand': 'HILL',
+    'Wiley': 'WILY',
+    'Windsor': 'WIND',
+
+    # Quick Bites locations
+    '1bowl at Meredith Hall': 'BOWL',
+    "Pete's Za at Tarkington Hall": 'PZZA',
+    'Sushi Boss at Meredith Hall': '@TGP',
+
+    # On-the-GO! locations
+    'Earhart On-the-GO!': 'EOTG',
+    'Ford On-the-GO!': 'FOTG',
+    'Lawson On-the-GO!': 'LWSN',
+    'Windsor On-the-GO!': 'WOTG',
 }
 
 def get_nutrition_cache(database_url=None):
