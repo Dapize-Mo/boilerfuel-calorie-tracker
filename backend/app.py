@@ -219,6 +219,22 @@ class Activity(db.Model):
 	)
 
 
+class User(db.Model):
+	__tablename__ = 'users'
+
+	id = db.Column(db.Integer, primary_key=True)
+	email = db.Column(db.String(255), unique=True, nullable=False, index=True)
+	name = db.Column(db.String(255), nullable=True)
+	google_id = db.Column(db.String(255), unique=True, nullable=True, index=True)
+	is_admin = db.Column(db.Boolean, default=False, nullable=False)
+	created_at = db.Column(
+		db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
+	)
+	last_login = db.Column(
+		db.DateTime(timezone=True), nullable=True
+	)
+
+
 def admin_enabled() -> bool:
 	return bool(app.config.get('ADMIN_PASSWORD'))
 

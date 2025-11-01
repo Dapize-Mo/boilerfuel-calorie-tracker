@@ -3,8 +3,9 @@ import Head from 'next/head';
 import { useEffect } from 'react';
 import Layout from '../components/Layout';
 import { ThemeProvider } from '../utils/ThemeContext';
+import { SessionProvider } from "next-auth/react";
 
-function MyApp({ Component, pageProps }) {
+function MyApp({ Component, pageProps: { session, ...pageProps } }) {
   useEffect(() => {
     // Set lang attribute on html element
     if (typeof document !== 'undefined') {
@@ -13,7 +14,7 @@ function MyApp({ Component, pageProps }) {
   }, []);
 
   return (
-    <>
+    <SessionProvider session={session}>
       <Head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         {/* Prevent flash of unstyled content during theme initialization */}
@@ -43,7 +44,7 @@ function MyApp({ Component, pageProps }) {
           <Component {...pageProps} />
         </Layout>
       </ThemeProvider>
-    </>
+    </SessionProvider>
   );
 }
 
