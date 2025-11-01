@@ -84,20 +84,20 @@ export default function AdminPanel() {
 
   if (loading) {
     return (
-      <>
+      <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary">
         <Head><title>Loading... - Admin</title></Head>
-        <main className="min-h-screen bg-theme-bg-primary text-theme-text-primary flex items-center justify-center">
+        <main className="min-h-screen flex items-center justify-center">
           <div className="text-xl">Loading...</div>
         </main>
-      </>
+      </div>
     );
   }
 
   if (!authenticated) {
     return (
-      <>
+      <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary">
         <Head><title>Admin Login - BoilerFuel</title></Head>
-        <main className="min-h-screen bg-theme-bg-primary text-theme-text-primary flex items-center justify-center p-6">
+        <main className="min-h-screen flex items-center justify-center p-6">
           <div className="w-full max-w-md">
             <div className="text-center mb-8">
               <h1 className="text-4xl font-bold mb-2">🔐 Admin Login</h1>
@@ -161,18 +161,18 @@ export default function AdminPanel() {
             </div>
           </div>
         </main>
-      </>
+      </div>
     );
   }
 
   return (
-    <>
+    <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary">
       <Head>
         <title>Admin Panel - BoilerFuel</title>
         <meta name="description" content="Manage foods, exercises, and view statistics" />
       </Head>
 
-      <main className="min-h-screen bg-theme-bg-primary text-theme-text-primary">
+      <main className="min-h-screen">
         <div className="mx-auto max-w-7xl px-6 py-8 space-y-6">
 
           {/* Header */}
@@ -236,9 +236,14 @@ export default function AdminPanel() {
           </div>
         </div>
       </main>
-    </>
+    </div>
   );
 }
+
+// Export with custom layout that bypasses the default Layout wrapper
+AdminPanel.getLayout = function getLayout(page) {
+  return page;
+};
 
 // Stats Tab Component
 function StatsTab() {

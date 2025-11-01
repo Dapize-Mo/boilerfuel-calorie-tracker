@@ -13,6 +13,9 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
     }
   }, []);
 
+  // Use the layout defined at the page level, or default to Layout
+  const getLayout = Component.getLayout || ((page) => <Layout>{page}</Layout>);
+
   return (
     <SessionProvider session={session}>
       <Head>
@@ -40,9 +43,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
         />
       </Head>
       <ThemeProvider>
-        <Layout>
-          <Component {...pageProps} />
-        </Layout>
+        {getLayout(<Component {...pageProps} />)}
       </ThemeProvider>
     </SessionProvider>
   );
