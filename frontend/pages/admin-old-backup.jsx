@@ -12,6 +12,8 @@ import {
   verifyAdminSession,
   getAdminToken,
 } from '../utils/auth';
+import AdminScrapeButton from '../components/AdminScrapeButton';
+import Toast from '../components/Toast';
 
 const initialFoodState = {
   name: '',
@@ -52,6 +54,9 @@ export default function AdminPage() {
   const [filterStation, setFilterStation] = useState('');
   const [sortBy, setSortBy] = useState('name');
   const [sortOrder, setSortOrder] = useState('asc');
+  
+  // Toast notifications
+  const [toast, setToast] = useState({ message: '', type: 'info' });
 
   useEffect(() => {
     async function bootstrap() {
@@ -190,87 +195,28 @@ export default function AdminPage() {
     setActivities([]);
   }
 
-  async function handleScrapeMenus() {
+  // Scrape button callbacks
+  function handleScrapeStart() {
     setScrapeLoading(true);
     setScrapeError('');
     setScrapeSuccess('');
-    setScrapeStatus('idle');
-    setScrapeMessage('');
+  }
 
-    // Helper: call an API path using stored admin JWT if available, otherwise fallback to X-ADMIN-PASSWORD header
-    const callWithAuth = async (path, { method = 'GET', password } = {}) => {
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || '';
-      const token = getAdminToken && getAdminToken();
-      if (token) {
-        return apiCall(path, { method }, { requireAdmin: true });
-      }
+  function handleScrapeProgress(message) {
+    // Optional: could update a progress message state if desired
+  }
 
-      // No token: need a password
-      let pw = password;
-      if (!pw) {
-        pw = typeof window !== 'undefined' ? window.prompt('Enter admin password to perform this action (local only):') : null;
-        if (!pw) throw new Error('Admin password required');
-      }
+  async function handleScrapeComplete(message) {
+    setScrapeLoading(false);
+    setScrapeSuccess(message);
+    setToast({ message: message || 'Menu scraping complete!', type: 'success' });
+    await loadFoods();
+  }
 
-      const resp = await fetch(`${apiBase}${path}`, {
-        method,
-        headers: { 'X-ADMIN-PASSWORD': pw },
-      });
-
-      const contentType = resp.headers.get('content-type') || '';
-      const data = contentType.includes('application/json') ? await resp.json() : await resp.text();
-      if (!resp.ok) throw new Error((data && data.error) || data || `Request failed: ${resp.status}`);
-      return data;
-    };
-
-    try {
-      // Start the scraping process
-      await callWithAuth('/api/admin/scrape', { method: 'POST' });
-      setScrapeStatus('in_progress');
-      setScrapeMessage('Scrape started — polling for status...');
-
-      // Poll until completion/error
-      const poll = async () => {
-        try {
-          const statusResp = await callWithAuth('/api/scrape-status', { method: 'GET' });
-          if (statusResp?.status === 'in_progress') {
-            setScrapeStatus('in_progress');
-            setScrapeMessage('Scraping in progress...');
-            setTimeout(poll, 2000);
-            return;
-          }
-
-          if (statusResp?.status === 'complete') {
-            setScrapeStatus('complete');
-            setScrapeMessage(statusResp.message || 'Scraping complete');
-            setScrapeSuccess(statusResp.message || 'Scraping complete');
-            await loadFoods();
-            return;
-          }
-
-          if (statusResp?.status === 'error') {
-            setScrapeStatus('error');
-            setScrapeMessage(statusResp.error || 'Scraping failed');
-            setScrapeError(statusResp.error || 'Scraping failed');
-            return;
-          }
-
-          setScrapeStatus('idle');
-          setScrapeMessage('No scrape status available');
-        } catch (e) {
-          setScrapeStatus('error');
-          setScrapeMessage(e.message || 'Failed to check scrape status');
-          setScrapeError(e.message || 'Failed to check scrape status');
-        }
-      };
-
-      poll();
-    } catch (error) {
-      setScrapeStatus('error');
-      setScrapeError(error.message || 'Failed to start scraping');
-    } finally {
-      setScrapeLoading(false);
-    }
+  function handleScrapeError(error) {
+    setScrapeLoading(false);
+    setScrapeError(error);
+    setToast({ message: error || 'Scraping failed', type: 'error' });
   }
 
   async function handleClearDatabase() {
@@ -451,25 +397,15 @@ export default function AdminPage() {
               Manage foods and activities available to the public dashboard.
             </p>
           </div>
-          <div className="flex gap-2 items-center">
-            <button
-              type="button"
-              onClick={handleScrapeMenus}
-              disabled={scrapeLoading || scrapeStatus === 'in_progress'}
-              className="self-start rounded bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {scrapeLoading || scrapeStatus === 'in_progress' ? (
-                <span className="flex items-center gap-2">
-                  <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" strokeOpacity="0.25" />
-                    <path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-                  </svg>
-                  <span>Scraping...</span>
-                </span>
-              ) : (
-                'Scrape Purdue Menus (Server)'
-              )}
-            </button>
+          <div className="flex gap-2 items-center flex-wrap">
+            <AdminScrapeButton
+              apiCall={apiCall}
+              getAdminToken={getAdminToken}
+              onStart={handleScrapeStart}
+              onProgress={handleScrapeProgress}
+              onComplete={handleScrapeComplete}
+              onError={handleScrapeError}
+            />
             <button
               type="button"
               onClick={async () => {
@@ -507,22 +443,6 @@ export default function AdminPage() {
           </div>
         </header>
 
-        {(scrapeError || scrapeStatus === 'error') && (
-          <div className="rounded border border-red-500 bg-red-500/10 px-4 py-3 text-red-400">
-            {scrapeError || scrapeMessage}
-          </div>
-        )}
-        {(scrapeSuccess || scrapeStatus === 'complete') && (
-          <div className="rounded border border-green-500 bg-green-500/10 px-4 py-3 text-green-400">
-            {scrapeSuccess || scrapeMessage}
-          </div>
-        )}
-        {(scrapeStatus === 'in_progress' || scrapeStatus === 'idle') && scrapeMessage && (
-          <div className="rounded border border-theme-border-primary bg-theme-bg-tertiary/60 px-4 py-3 text-theme-text-secondary">
-            {scrapeMessage}
-          </div>
-        )}
-        
         {clearError && (
           <div className="rounded border border-red-500 bg-red-500/10 px-4 py-3 text-red-400">
             {clearError}
@@ -916,6 +836,14 @@ export default function AdminPage() {
         </section>
       </div>
     </main>
+    
+    {/* Toast notifications */}
+    <Toast 
+      message={toast.message} 
+      type={toast.type} 
+      onClose={() => setToast({ message: '', type: 'info' })}
+      duration={5000}
+    />
     </>
   );
 }
