@@ -13,8 +13,10 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
     }
   }, []);
 
-  // Use the layout defined at the page level, or default to Layout
-  const getLayout = Component.getLayout || ((page) => <Layout>{page}</Layout>);
+  // Use the layout defined at the page level. Many pages already include
+  // <Layout> directly, so the default should not double-wrap. Pages that
+  // need a shared layout can export `getLayout`.
+  const getLayout = Component.getLayout || ((page) => page);
 
   return (
     <SessionProvider session={session}>

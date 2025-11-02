@@ -125,8 +125,8 @@ function MobileLink({ href, children, onClick }) {
 
 function Footer() {
   return (
-    <footer className="border-t border-theme-border-secondary">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-xs text-theme-text-tertiary flex flex-wrap items-center justify-between gap-3">
+    <footer className="border-t border-theme-border-secondary mt-16">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 text-xs text-theme-text-tertiary flex flex-wrap items-center justify-between gap-3">
         <p>
           Your data stays on this device. No accounts required.
         </p>

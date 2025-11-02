@@ -757,6 +757,23 @@ def save_to_database(menu_items, database_url=None):
             conn.rollback()
         raise
 
+
+def scrape_and_save(database_url=None, days_ahead=7, use_cache=True, date=None):
+    """Programmatic entrypoint: scrape and save to database.
+
+    Returns the list of items scraped.
+    """
+    print("Programmatic scrape_and_save starting...")
+    items = scrape_all_dining_courts(date=date, use_cache=use_cache, days_ahead=days_ahead)
+    print(f"Programmatic scrape found {len(items)} unique items")
+    if items:
+        try:
+            save_to_database(items, database_url=database_url)
+        except Exception as e:
+            print(f"Error saving scraped items: {e}")
+            raise
+    return items
+
 if __name__ == "__main__":
     import argparse
     
@@ -790,20 +807,12 @@ if __name__ == "__main__":
                     for app in appearances[:3]:
                         print(f"      • {app['day_name']}, {app['date']} - {app['meal_time']}")
     else:
-        # Normal mode: scrape and save
+        # Normal mode: scrape and save using the programmatic helper
         print(f"Scraping {days_ahead} day{'s' if days_ahead > 1 else ''} ahead for forecast data...\n")
-        items = scrape_all_dining_courts(date=args.date, use_cache=use_cache, days_ahead=days_ahead)
-        
+        items = scrape_and_save(database_url=os.getenv('DATABASE_URL'), days_ahead=days_ahead, use_cache=use_cache, date=args.date)
+
         print(f"\nTotal unique items scraped: {len(items)}")
-        
         if items:
-            print("\nSaving to database...")
-            save_to_database(items)
             print("\n✓ Scraping complete!")
-            print(f"✓ Added {days_ahead}-day forecast data to {len(items)} items")
-            
-            # Show stats
-            with_forecast = sum(1 for item in items if 'next_appearances' in item and len(item['next_appearances']) > 0)
-            print(f"✓ {with_forecast} items have forecast schedules")
         else:
             print("\n⚠ No items found to save")

@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import Head from 'next/head';
 
 export default function Changelog() {
@@ -8,31 +7,15 @@ export default function Changelog() {
         <title>Changelog - BoilerFuel</title>
         <meta name="description" content="BoilerFuel version history and updates" />
       </Head>
-      <main className="min-h-screen bg-theme-bg-primary text-theme-text-primary p-6">
-        <div className="mx-auto max-w-4xl space-y-8">
-          {/* Navigation */}
-          <nav className="flex items-center gap-4 text-sm">
-            <Link href="/" className="text-theme-text-secondary hover:text-theme-accent-hover transition-colors">
-              ← Home
-            </Link>
-            <span className="text-theme-text-tertiary">|</span>
-            <Link href="/dashboard" className="text-theme-text-secondary hover:text-theme-accent-hover transition-colors">
-              Dashboard
-            </Link>
-            <span className="text-theme-text-tertiary">|</span>
-            <Link href="/about" className="text-theme-text-secondary hover:text-theme-accent-hover transition-colors">
-              About
-            </Link>
-          </nav>
-
+      <div className="mx-auto max-w-4xl space-y-10">
           {/* Header */}
-          <header className="border-b border-theme-border-primary pb-6">
-            <h1 className="text-4xl font-bold mb-2">Changelog</h1>
+          <header className="border-b border-theme-border-primary pb-8">
+            <h1 className="text-5xl font-bold mb-4">Changelog</h1>
             <p className="text-xl text-theme-text-secondary">Version history and updates</p>
           </header>
 
           {/* Version 1.5.0 */}
-          <section className="rounded-lg bg-theme-card-bg p-6 border border-theme-card-border space-y-4">
+          <section className="rounded-lg bg-theme-card-bg p-8 border border-theme-card-border space-y-6">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 className="text-2xl font-bold text-theme-accent">Version 1.5.0</h2>
@@ -106,7 +89,7 @@ export default function Changelog() {
           </section>
 
           {/* Version 1.4.0 */}
-          <section className="rounded-lg bg-white dark:bg-theme-card-bg p-6 border border-theme-card-border space-y-4 border border-slate-200 dark:border-transparent">
+          <section className="rounded-lg bg-white dark:bg-theme-card-bg p-8 border border-slate-200 dark:border-theme-card-border space-y-6">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 className="text-2xl font-bold text-theme-text-secondary">Version 1.4.0</h2>
@@ -169,7 +152,7 @@ export default function Changelog() {
           </section>
 
           {/* Version 1.3.0 */}
-          <section className="rounded-lg bg-white dark:bg-theme-card-bg p-6 border border-theme-card-border space-y-4 border border-slate-200 dark:border-transparent">
+          <section className="rounded-lg bg-white dark:bg-theme-card-bg p-8 border border-slate-200 dark:border-theme-card-border space-y-6">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 className="text-2xl font-bold text-theme-text-secondary">Version 1.3.0</h2>
@@ -268,7 +251,7 @@ export default function Changelog() {
           </section>
 
           {/* Version 1.2.0 */}
-          <section className="rounded-lg bg-theme-card-bg p-6 border border-theme-card-border space-y-4">
+          <section className="rounded-lg bg-theme-card-bg p-8 border border-theme-card-border space-y-6">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 className="text-2xl font-bold text-slate-300">Version 1.2.0</h2>
@@ -311,7 +294,7 @@ export default function Changelog() {
           </section>
 
           {/* Version 1.1.0 */}
-          <section className="rounded-lg bg-theme-card-bg p-6 border border-theme-card-border space-y-4">
+          <section className="rounded-lg bg-theme-card-bg p-8 border border-theme-card-border space-y-6">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 className="text-2xl font-bold text-slate-300">Version 1.1.0</h2>
@@ -350,7 +333,7 @@ export default function Changelog() {
           </section>
 
           {/* Version 1.0.0 */}
-          <section className="rounded-lg bg-theme-card-bg p-6 border border-theme-card-border space-y-4">
+          <section className="rounded-lg bg-theme-card-bg p-8 border border-theme-card-border space-y-6">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 className="text-2xl font-bold text-slate-300">Version 1.0.0</h2>
@@ -391,16 +374,7 @@ export default function Changelog() {
             </div>
           </section>
 
-          {/* Footer */}
-          <footer className="text-center text-sm text-slate-500 pt-8 pb-4">
-            <p>
-              <Link href="/about" className="text-slate-400 hover:text-yellow-400 transition-colors">
-                Learn more about BoilerFuel
-              </Link>
-            </p>
-          </footer>
         </div>
-      </main>
     </>
   );
 }

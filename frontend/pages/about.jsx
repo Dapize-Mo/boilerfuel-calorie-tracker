@@ -8,33 +8,17 @@ export default function About() {
         <title>About - BoilerFuel</title>
         <meta name="description" content="Learn about BoilerFuel Calorie Tracker" />
       </Head>
-      <main className="min-h-screen bg-theme-bg-primary text-theme-text-primary p-6">
-        <div className="mx-auto max-w-4xl space-y-8">
-          {/* Navigation */}
-          <nav className="flex items-center gap-4 text-sm">
-            <Link href="/" className="text-theme-text-tertiary hover:text-theme-accent transition-colors">
-              ← Home
-            </Link>
-            <span className="text-theme-text-muted">|</span>
-            <Link href="/dashboard" className="text-theme-text-tertiary hover:text-theme-accent transition-colors">
-              Dashboard
-            </Link>
-            <span className="text-theme-text-muted">|</span>
-            <Link href="/changelog" className="text-theme-text-tertiary hover:text-theme-accent transition-colors">
-              Changelog
-            </Link>
-          </nav>
-
+      <div className="mx-auto max-w-4xl space-y-10">
           {/* Header */}
-          <header className="border-b border-theme-border-primary pb-6">
-            <h1 className="text-4xl font-bold mb-2">About BoilerFuel</h1>
+          <header className="border-b border-theme-border-primary pb-8">
+            <h1 className="text-5xl font-bold mb-4">About BoilerFuel</h1>
             <p className="text-xl text-theme-text-tertiary">Your personal dining hall nutrition tracker</p>
           </header>
 
           {/* What is BoilerFuel */}
-          <section className="rounded-lg bg-theme-card-bg p-6 space-y-4">
+          <section className="rounded-lg bg-theme-card-bg p-8 space-y-5">
             <h2 className="text-2xl font-bold text-yellow-500">What is BoilerFuel?</h2>
-            <p className="text-theme-text-secondary leading-relaxed">
+            <p className="text-theme-text-secondary leading-relaxed text-lg">
               BoilerFuel is a privacy-focused calorie and macro tracker designed for college students and campus
               dining halls. Track your meals, monitor your nutrition, and make informed decisions about your diet—all
               while keeping your data completely private on your device.
@@ -42,7 +26,7 @@ export default function About() {
           </section>
 
           {/* Key Features */}
-          <section className="rounded-lg bg-theme-card-bg p-6 space-y-4">
+          <section className="rounded-lg bg-theme-card-bg p-8 space-y-6">
             <h2 className="text-2xl font-bold text-yellow-500">Key Features</h2>
             <ul className="space-y-3 text-theme-text-secondary">
               <li className="flex items-start gap-3">
@@ -90,7 +74,7 @@ export default function About() {
           </section>
 
           {/* How It Works */}
-          <section className="rounded-lg bg-theme-card-bg p-6 space-y-4">
+          <section className="rounded-lg bg-theme-card-bg p-8 space-y-6">
             <h2 className="text-2xl font-bold text-yellow-500">How It Works</h2>
             <div className="space-y-4 text-theme-text-secondary">
               <div className="flex items-start gap-4">
@@ -133,7 +117,7 @@ export default function About() {
           </section>
 
           {/* Privacy & Security */}
-          <section className="rounded-lg bg-theme-card-bg p-6 space-y-4">
+          <section className="rounded-lg bg-theme-card-bg p-8 space-y-6">
             <h2 className="text-2xl font-bold text-yellow-500">Privacy & Security</h2>
             <div className="space-y-3 text-theme-text-secondary">
               <p>
@@ -154,7 +138,7 @@ export default function About() {
           </section>
 
           {/* Technology */}
-          <section className="rounded-lg bg-theme-card-bg p-6 space-y-4">
+          <section className="rounded-lg bg-theme-card-bg p-8 space-y-6">
             <h2 className="text-2xl font-bold text-yellow-500">Technology</h2>
             <p className="text-theme-text-secondary">
               BoilerFuel is built with modern web technologies:
@@ -180,7 +164,7 @@ export default function About() {
           </section>
 
           {/* Admin Info */}
-          <section className="rounded-lg bg-theme-card-bg p-6 space-y-4">
+          <section className="rounded-lg bg-theme-card-bg p-8 space-y-5">
             <h2 className="text-2xl font-bold text-yellow-500">For Administrators</h2>
             <p className="text-theme-text-secondary">
               Administrators can log in to manage the shared food database and activities list. The admin panel 
@@ -195,7 +179,7 @@ export default function About() {
           </section>
 
           {/* Get Started */}
-          <section className="rounded-lg bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/30 p-6 text-center space-y-4">
+          <section className="rounded-lg bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/30 p-10 text-center space-y-5">
             <h2 className="text-2xl font-bold">Ready to Start Tracking?</h2>
             <p className="text-theme-text-secondary">
               Head to the dashboard and begin logging your meals today!
@@ -208,17 +192,7 @@ export default function About() {
             </Link>
           </section>
 
-          {/* Footer */}
-          <footer className="text-center text-sm text-slate-500 pt-8 pb-4">
-            <p>Made for college students</p>
-            <p className="mt-2">
-              <Link href="/changelog" className="text-theme-text-tertiary hover:text-theme-accent transition-colors">
-                View Changelog
-              </Link>
-            </p>
-          </footer>
         </div>
-      </main>
     </>
   );
 }

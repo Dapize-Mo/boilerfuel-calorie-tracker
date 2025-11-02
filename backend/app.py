@@ -10,10 +10,11 @@ from datetime import datetime, timezone, timedelta
 from functools import wraps
 from urllib.parse import quote_plus, urlparse, urlunparse
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, current_app
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
-from flask_jwt_extended import JWTManager, create_access_token, get_jwt, jwt_required
+from flask_jwt_extended import JWTManager, create_access_token, get_jwt, jwt_required, decode_token
+import threading
 from sqlalchemy.sql.expression import text
 import requests
 
@@ -271,6 +272,69 @@ def admin_login():
 @admin_required
 def admin_session():
 	return jsonify({'status': 'ok'}), 200
+
+
+def _verify_admin_from_request():
+	"""Verify admin either via Bearer token with is_admin claim or via X-ADMIN-PASSWORD header."""
+	# Try Bearer token first
+	auth = request.headers.get('Authorization', '') or ''
+	if auth.startswith('Bearer '):
+		token = auth.split(' ', 1)[1].strip()
+		try:
+			decoded = decode_token(token)
+			# additional claims set by create_access_token are at the top-level of the decoded token
+			if decoded and decoded.get('is_admin'):
+				return True
+		except Exception:
+			# ignore decode errors, fall back to password header
+			pass
+
+	# Fallback: allow admin password via X-ADMIN-PASSWORD header
+	supplied = request.headers.get('X-ADMIN-PASSWORD', '')
+	expected = app.config.get('ADMIN_PASSWORD') or ''
+	if expected and supplied and supplied == expected:
+		return True
+
+	return False
+
+
+def _run_scrape_background():
+	try:
+		# Import here to avoid circular imports at module import time
+		from scraper import menu_scraper
+
+		db_url = app.config.get('SQLALCHEMY_DATABASE_URI')
+		# If SQLAlchemy is configured to a sqlite file that was forced for local dev,
+		# prefer using the DATABASE_URL env var if present. Use DB url from env if available.
+		env_db = os.getenv('DATABASE_URL')
+		if env_db:
+			db_url = env_db
+
+		# Run a full scrape and save
+		menu_scraper.scrape_and_save(database_url=db_url)
+	except Exception as exc:  # pragma: no cover - background task error handling
+		current_app.logger.exception('Background scraper failed: %s', exc)
+
+
+@app.route('/api/admin/scrape', methods=['POST'])
+def admin_scrape():
+	"""Trigger the Purdue menu scraper.
+
+	Authentication:
+	- Prefer a Bearer token issued by `/api/admin/login` (token must include is_admin claim), OR
+	- Provide header `X-ADMIN-PASSWORD: <ADMIN_PASSWORD>` when calling the endpoint.
+
+	Returns 202 Accepted and runs the scraper in a background thread.
+	"""
+	if not admin_enabled():
+		return jsonify({'error': 'Admin authentication is not configured'}), 503
+
+	if not _verify_admin_from_request():
+		return jsonify({'error': 'unauthorized'}), 401
+
+	thread = threading.Thread(target=_run_scrape_background, daemon=True)
+	thread.start()
+	return jsonify({'status': 'scrape started'}), 202
 
 
 @app.route('/api/dining-courts', methods=['GET'])
