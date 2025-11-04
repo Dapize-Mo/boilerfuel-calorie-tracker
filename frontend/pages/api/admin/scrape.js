@@ -5,7 +5,17 @@ export default async function handler(req, res) {
   }
 
   try {
-    const backendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    const backendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || '';
+
+    // Guard: in production we must have a real backend URL (not localhost)
+    if (process.env.VERCEL && (!backendUrl || /localhost|127\.0\.0\.1/.test(backendUrl))) {
+      return res.status(500).json({
+        error: 'Backend URL not configured',
+        details: 'Set BACKEND_URL in Vercel project settings to your Flask API base (e.g., https://your-backend.example.com).',
+      });
+    }
+
+    const base = backendUrl || 'http://localhost:5000';
     
     // Forward the request to the backend with authentication headers
     const headers = {};
@@ -22,7 +32,7 @@ export default async function handler(req, res) {
       headers['X-ADMIN-PASSWORD'] = adminPassword;
     }
 
-    const response = await fetch(`${backendUrl}/api/admin/scrape`, {
+    const response = await fetch(`${base}/api/admin/scrape`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

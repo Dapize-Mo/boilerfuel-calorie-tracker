@@ -5,7 +5,16 @@ export default async function handler(req, res) {
   }
   
   try {
-    const backendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    const backendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || '';
+
+    if (process.env.VERCEL && (!backendUrl || /localhost|127\.0\.0\.1/.test(backendUrl))) {
+      return res.status(200).json({
+        status: 'idle',
+        message: 'Backend URL not configured. Set BACKEND_URL in Vercel to enable status checks.',
+      });
+    }
+
+    const base = backendUrl || 'http://localhost:5000';
     
     // Forward authentication headers
     const headers = {};
@@ -20,7 +29,7 @@ export default async function handler(req, res) {
       headers['X-ADMIN-PASSWORD'] = adminPassword;
     }
 
-    const response = await fetch(`${backendUrl}/api/scrape-status`, {
+    const response = await fetch(`${base}/api/scrape-status`, {
       method: 'GET',
       headers
     });
