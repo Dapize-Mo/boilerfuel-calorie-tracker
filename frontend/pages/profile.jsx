@@ -96,7 +96,7 @@ export default function ProfilePage() {
         <title>Profile – BoilerFuel</title>
         <meta name="description" content="Your BoilerFuel profile and statistics" />
       </Head>
-      <Layout>
+      
         <div className="max-w-5xl mx-auto space-y-6">
           {/* Header */}
           <div className="py-6 border-b border-theme-border-primary">
@@ -274,7 +274,7 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
-      </Layout>
+      
     </>
   );
 }

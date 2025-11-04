@@ -135,7 +135,7 @@ export default function SettingsPage() {
         <title>Settings – BoilerFuel</title>
         <meta name="description" content="Manage your BoilerFuel settings and preferences" />
       </Head>
-      <Layout>
+      
         <div className="max-w-4xl mx-auto space-y-6">
           {/* Header */}
           <div className="py-6 border-b border-theme-border-primary">
@@ -385,7 +385,7 @@ export default function SettingsPage() {
             </div>
           </section>
         </div>
-      </Layout>
+      
     </>
   );
 }

@@ -13,10 +13,9 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
     }
   }, []);
 
-  // Use the layout defined at the page level. Many pages already include
-  // <Layout> directly, so the default should not double-wrap. Pages that
-  // need a shared layout can export `getLayout`.
-  const getLayout = Component.getLayout || ((page) => page);
+  // Prefer per-page custom layout when provided. Otherwise, wrap with the
+  // shared <Layout> so the header/footer appear across the site.
+  const getLayout = Component.getLayout || ((page) => <Layout>{page}</Layout>);
 
   return (
     <SessionProvider session={session}>

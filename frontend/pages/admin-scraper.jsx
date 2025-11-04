@@ -335,3 +335,9 @@ export default function AdminScraper() {
     </div>
   );
 }
+
+// Use a custom layout for this page: do NOT wrap with the default site Layout
+// so the admin header/actions remain focused and uncluttered.
+AdminScraper.getLayout = function getLayout(page) {
+  return page;
+};
