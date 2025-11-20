@@ -134,7 +134,7 @@ export default function Sidebar({ open, setOpen }) {
                         ) : (
                             <button
                                 onClick={() => signIn('google')}
-                                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-theme-text-primary text-theme-bg-primary font-medium hover:opacity-90 transition-opacity shadow-lg shadow-theme-text-primary/10"
+                                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-yellow-400 to-yellow-600 text-slate-900 font-medium hover:from-yellow-500 hover:to-yellow-700 transition-all shadow-lg shadow-yellow-500/20"
                             >
                                 <GoogleIcon />
                                 <span>Sign in</span>
