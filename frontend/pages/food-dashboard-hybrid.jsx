@@ -168,7 +168,7 @@ export default function FoodDashboardHybrid() {
                     <div className="md:col-span-2 lg:col-span-1 md:row-span-2 bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col h-[500px]">
                         <h3 className="font-medium text-gray-900 mb-6 flex items-center gap-2">
                             <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                            Today's Meals
+                            Today&apos;s Meals
                         </h3>
                         <div className="flex-1 overflow-y-auto pr-2 space-y-2 custom-scrollbar">
                             {selectedDayLogs.length === 0 ? (

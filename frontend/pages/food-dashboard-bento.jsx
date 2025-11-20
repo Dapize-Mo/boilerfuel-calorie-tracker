@@ -149,7 +149,7 @@ export default function FoodDashboardBento() {
 
                     {/* Logged Meals List (Tall) */}
                     <div className="md:col-span-2 lg:col-span-1 md:row-span-2 bg-white rounded-3xl p-6 shadow-sm overflow-hidden flex flex-col">
-                        <h3 className="font-bold text-slate-900 mb-4">Today's Meals</h3>
+                        <h3 className="font-bold text-slate-900 mb-4">Today&apos;s Meals</h3>
                         <div className="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar">
                             {selectedDayLogs.length === 0 ? (
                                 <p className="text-slate-400 text-center text-sm py-10">No meals yet.</p>
