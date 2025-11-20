@@ -32,42 +32,42 @@ export default function About() {
               <li className="flex items-start gap-3">
                 <span className="text-green-500 text-xl">✓</span>
                 <div>
-                  <strong className="text-white">100% Privacy-First:</strong> All your meal logs stay on your device. 
+                  <strong className="text-theme-text-primary">100% Privacy-First:</strong> All your meal logs stay on your device. 
                   No accounts, no cloud storage, no tracking.
                 </div>
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-green-500 text-xl">✓</span>
                 <div>
-                  <strong className="text-white">Complete Nutrition Info:</strong> Track calories, protein, carbs, 
+                  <strong className="text-theme-text-primary">Complete Nutrition Info:</strong> Track calories, protein, carbs, 
                   and fats for every meal.
                 </div>
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-green-500 text-xl">✓</span>
                 <div>
-                  <strong className="text-white">Activity Tracking:</strong> Log your workouts and see net calories 
+                  <strong className="text-theme-text-primary">Activity Tracking:</strong> Log your workouts and see net calories 
                   for the day.
                 </div>
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-green-500 text-xl">✓</span>
                 <div>
-                  <strong className="text-white">Filter by Dining Hall & Meal Time:</strong> Easily find foods from 
+                  <strong className="text-theme-text-primary">Filter by Dining Hall & Meal Time:</strong> Easily find foods from 
                   your favorite location and meal period.
                 </div>
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-green-500 text-xl">✓</span>
                 <div>
-                  <strong className="text-white">Organized by Station:</strong> Menu items grouped by dining hall 
+                  <strong className="text-theme-text-primary">Organized by Station:</strong> Menu items grouped by dining hall 
                   stations (Grill, Salad Bar, etc.).
                 </div>
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-green-500 text-xl">✓</span>
                 <div>
-                  <strong className="text-white">Quick Add:</strong> One-click meal logging for fast tracking.
+                  <strong className="text-theme-text-primary">Quick Add:</strong> One-click meal logging for fast tracking.
                 </div>
               </li>
             </ul>
@@ -82,7 +82,7 @@ export default function About() {
                   1
                 </div>
                 <div>
-                  <strong className="text-white">Browse the Menu:</strong> Select your dining hall and meal time 
+                  <strong className="text-theme-text-primary">Browse the Menu:</strong> Select your dining hall and meal time 
                   to see available foods.
                 </div>
               </div>
@@ -91,7 +91,7 @@ export default function About() {
                   2
                 </div>
                 <div>
-                  <strong className="text-white">Log Your Meals:</strong> Click the + button to quickly add foods 
+                  <strong className="text-theme-text-primary">Log Your Meals:</strong> Click the + button to quickly add foods 
                   to your daily log.
                 </div>
               </div>
@@ -100,7 +100,7 @@ export default function About() {
                   3
                 </div>
                 <div>
-                  <strong className="text-white">Track Activities:</strong> Log your workouts to see calories 
+                  <strong className="text-theme-text-primary">Track Activities:</strong> Log your workouts to see calories 
                   burned vs. consumed.
                 </div>
               </div>
@@ -109,7 +109,7 @@ export default function About() {
                   4
                 </div>
                 <div>
-                  <strong className="text-white">Monitor Your Progress:</strong> View your daily totals and make 
+                  <strong className="text-theme-text-primary">Monitor Your Progress:</strong> View your daily totals and make 
                   informed nutrition decisions.
                 </div>
               </div>
@@ -121,7 +121,7 @@ export default function About() {
             <h2 className="text-2xl font-bold text-yellow-500">Privacy & Security</h2>
             <div className="space-y-3 text-theme-text-secondary">
               <p>
-                <strong className="text-white">Your data is yours.</strong> BoilerFuel stores all meal and activity 
+                <strong className="text-theme-text-primary">Your data is yours.</strong> BoilerFuel stores all meal and activity 
                 logs locally in your browser using cookies. This means:
               </p>
               <ul className="list-disc list-inside space-y-2 ml-4">
@@ -145,7 +145,7 @@ export default function About() {
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
               <div className="bg-theme-bg-tertiary rounded p-4">
-                <h3 className="font-bold text-white mb-2">Frontend</h3>
+                <h3 className="font-bold text-theme-text-primary mb-2">Frontend</h3>
                 <ul className="text-sm text-theme-text-tertiary space-y-1">
                   <li>• Next.js & React</li>
                   <li>• TailwindCSS</li>
@@ -153,7 +153,7 @@ export default function About() {
                 </ul>
               </div>
               <div className="bg-theme-bg-tertiary rounded p-4">
-                <h3 className="font-bold text-white mb-2">Backend</h3>
+                <h3 className="font-bold text-theme-text-primary mb-2">Backend</h3>
                 <ul className="text-sm text-theme-text-tertiary space-y-1">
                   <li>• Flask (Python)</li>
                   <li>• PostgreSQL Database</li>
@@ -172,7 +172,7 @@ export default function About() {
             </p>
             <Link 
               href="/admin"
-              className="inline-block rounded bg-theme-bg-tertiary border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-200 hover:border-yellow-500 hover:text-theme-accent transition-colors"
+              className="inline-block rounded bg-theme-bg-tertiary border border-theme-card-border px-4 py-2 text-sm font-semibold text-theme-text-secondary hover:border-yellow-500 hover:text-theme-accent transition-colors"
             >
               Admin Login →
             </Link>

@@ -180,14 +180,14 @@ export default function ProfilePage() {
         <meta name="description" content="Your BoilerFuel profile and statistics" />
       </Head>
 
-      <div className="min-h-screen bg-gray-50 p-6 font-sans text-gray-900">
+      <div className="min-h-screen bg-theme-bg-primary p-6 font-sans text-theme-text-primary">
         <div className="max-w-6xl mx-auto space-y-6">
 
           {/* Header */}
-          <div className="flex flex-col md:flex-row justify-between items-end md:items-center pb-4 border-b border-gray-200">
+          <div className="flex flex-col md:flex-row justify-between items-end md:items-center pb-4 border-b border-theme-border-secondary">
             <div>
-              <h1 className="text-3xl font-light tracking-tight text-gray-900">Profile & Stats</h1>
-              <p className="text-gray-400 text-sm mt-1">Manage your personal data</p>
+              <h1 className="text-3xl font-light tracking-tight text-theme-text-primary">Profile & Stats</h1>
+              <p className="text-theme-text-tertiary text-sm mt-1">Manage your personal data</p>
             </div>
           </div>
 
@@ -195,9 +195,9 @@ export default function ProfilePage() {
             {/* Left Column: Profile & Stats Input */}
             <div className="space-y-6">
               {/* Profile Card */}
-              <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+              <div className="bg-theme-card-bg rounded-3xl p-6 shadow-sm border border-theme-card-border">
                 <div className="flex items-center gap-6">
-                  <div className="w-16 h-16 rounded-2xl bg-gray-900 flex items-center justify-center text-white text-2xl font-light">
+                  <div className="w-16 h-16 rounded-2xl bg-theme-bg-tertiary flex items-center justify-center text-theme-text-primary text-2xl font-light">
                     {getInitials()}
                   </div>
                   <div className="flex-1">
@@ -207,28 +207,28 @@ export default function ProfilePage() {
                           type="text"
                           name="name"
                           defaultValue={userName}
-                          className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:ring-2 focus:ring-gray-200 outline-none"
+                          className="w-full rounded-xl border border-theme-border-primary bg-theme-bg-tertiary px-3 py-2 text-sm focus:ring-2 focus:ring-theme-accent outline-none text-theme-text-primary"
                           placeholder="Your Name"
                         />
                         <input
                           type="email"
                           name="email"
                           defaultValue={userEmail}
-                          className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:ring-2 focus:ring-gray-200 outline-none"
+                          className="w-full rounded-xl border border-theme-border-primary bg-theme-bg-tertiary px-3 py-2 text-sm focus:ring-2 focus:ring-theme-accent outline-none text-theme-text-primary"
                           placeholder="Email"
                         />
                         <div className="flex gap-2">
-                          <button type="submit" className="px-3 py-1 bg-black text-white rounded-lg text-xs font-medium">Save</button>
-                          <button type="button" onClick={() => setIsEditingProfile(false)} className="px-3 py-1 bg-gray-100 text-gray-600 rounded-lg text-xs">Cancel</button>
+                          <button type="submit" className="px-3 py-1 rounded-lg text-xs font-medium bg-theme-text-primary text-theme-bg-secondary hover:opacity-90">Save</button>
+                          <button type="button" onClick={() => setIsEditingProfile(false)} className="px-3 py-1 bg-theme-bg-tertiary text-theme-text-secondary rounded-lg text-xs">Cancel</button>
                         </div>
                       </form>
                     ) : (
                       <>
-                        <h2 className="text-xl font-medium text-gray-900">{userName || 'Guest User'}</h2>
-                        <p className="text-gray-400 text-sm mb-2">{userEmail || 'No email set'}</p>
+                        <h2 className="text-xl font-medium text-theme-text-primary">{userName || 'Guest User'}</h2>
+                        <p className="text-theme-text-tertiary text-sm mb-2">{userEmail || 'No email set'}</p>
                         <button
                           onClick={() => setIsEditingProfile(true)}
-                          className="text-xs font-medium text-gray-500 hover:text-black transition-colors"
+                          className="text-xs font-medium text-theme-text-secondary hover:text-theme-text-primary transition-colors"
                         >
                           Edit Details →
                         </button>
@@ -239,67 +239,67 @@ export default function ProfilePage() {
               </div>
 
               {/* Body Stats Calculator */}
-              <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
-                <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
+              <div className="bg-theme-card-bg rounded-3xl p-6 shadow-sm border border-theme-card-border">
+                <h3 className="text-lg font-medium text-theme-text-primary mb-4 flex items-center gap-2">
                   Body Stats
                 </h3>
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-medium text-gray-400 mb-1">Gender</label>
+                      <label className="block text-xs font-medium text-theme-text-tertiary mb-1">Gender</label>
                       <select
                         name="gender"
                         value={bodyStats.gender}
                         onChange={handleStatsChange}
-                        className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-gray-900 text-sm focus:ring-2 focus:ring-gray-200 outline-none"
+                        className="w-full rounded-xl border border-theme-border-primary bg-theme-bg-tertiary px-3 py-2 text-theme-text-primary text-sm focus:ring-2 focus:ring-theme-accent outline-none"
                       >
                         <option value="male">Male</option>
                         <option value="female">Female</option>
                       </select>
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-400 mb-1">Age</label>
+                      <label className="block text-xs font-medium text-theme-text-tertiary mb-1">Age</label>
                       <input
                         type="number"
                         name="age"
                         value={bodyStats.age}
                         onChange={handleStatsChange}
-                        className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-gray-900 text-sm focus:ring-2 focus:ring-gray-200 outline-none"
+                        className="w-full rounded-xl border border-theme-border-primary bg-theme-bg-tertiary px-3 py-2 text-theme-text-primary text-sm focus:ring-2 focus:ring-theme-accent outline-none"
                         placeholder="Years"
                       />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-medium text-gray-400 mb-1">Height (cm)</label>
+                      <label className="block text-xs font-medium text-theme-text-tertiary mb-1">Height (cm)</label>
                       <input
                         type="number"
                         name="height"
                         value={bodyStats.height}
                         onChange={handleStatsChange}
-                        className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-gray-900 text-sm focus:ring-2 focus:ring-gray-200 outline-none"
+                        className="w-full rounded-xl border border-theme-border-primary bg-theme-bg-tertiary px-3 py-2 text-theme-text-primary text-sm focus:ring-2 focus:ring-theme-accent outline-none"
                         placeholder="cm"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-400 mb-1">Weight (kg)</label>
+                      <label className="block text-xs font-medium text-theme-text-tertiary mb-1">Weight (kg)</label>
                       <input
                         type="number"
                         name="weight"
                         value={bodyStats.weight}
                         onChange={handleStatsChange}
-                        className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-gray-900 text-sm focus:ring-2 focus:ring-gray-200 outline-none"
+                        className="w-full rounded-xl border border-theme-border-primary bg-theme-bg-tertiary px-3 py-2 text-theme-text-primary text-sm focus:ring-2 focus:ring-theme-accent outline-none"
                         placeholder="kg"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-400 mb-1">Activity Level</label>
+                    <label className="block text-xs font-medium text-theme-text-tertiary mb-1">Activity Level</label>
                     <select
                       name="activityLevel"
                       value={bodyStats.activityLevel}
                       onChange={handleStatsChange}
-                      className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-gray-900 text-sm focus:ring-2 focus:ring-gray-200 outline-none"
+                      className="w-full rounded-xl border border-theme-border-primary bg-theme-bg-tertiary px-3 py-2 text-theme-text-primary text-sm focus:ring-2 focus:ring-theme-accent outline-none"
                     >
                       <option value="1.2">Sedentary (Office job)</option>
                       <option value="1.375">Light Exercise (1-2 days/week)</option>
@@ -309,12 +309,12 @@ export default function ProfilePage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-400 mb-1">Goal</label>
+                    <label className="block text-xs font-medium text-theme-text-tertiary mb-1">Goal</label>
                     <select
                       name="goal"
                       value={bodyStats.goal}
                       onChange={handleStatsChange}
-                      className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-gray-900 text-sm focus:ring-2 focus:ring-gray-200 outline-none"
+                      className="w-full rounded-xl border border-theme-border-primary bg-theme-bg-tertiary px-3 py-2 text-theme-text-primary text-sm focus:ring-2 focus:ring-theme-accent outline-none"
                     >
                       <option value="lose">Lose Weight (-500 cal)</option>
                       <option value="maintain">Maintain Weight</option>
@@ -330,51 +330,51 @@ export default function ProfilePage() {
               {calculatedStats && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Health Overview */}
-                  <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">Health Overview</h3>
+                  <div className="bg-theme-card-bg rounded-3xl p-6 shadow-sm border border-theme-card-border">
+                    <h3 className="text-lg font-medium text-theme-text-primary mb-4">Health Overview</h3>
                     <div className="space-y-4">
-                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl border border-gray-100">
-                        <span className="text-gray-500 text-sm">BMI</span>
+                      <div className="flex justify-between items-center p-3 bg-theme-bg-tertiary rounded-xl border border-theme-card-border">
+                        <span className="text-theme-text-secondary text-sm">BMI</span>
                         <div className="text-right">
-                          <span className="block text-xl font-medium text-gray-900">{calculatedStats.bmi}</span>
+                          <span className="block text-xl font-medium text-theme-text-primary">{calculatedStats.bmi}</span>
                           <span className={`text-xs font-medium ${calculatedStats.bmiCategory === 'Normal weight' ? 'text-green-500' : 'text-orange-500'
                             }`}>{calculatedStats.bmiCategory}</span>
                         </div>
                       </div>
-                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl border border-gray-100">
-                        <span className="text-gray-500 text-sm">BMR (Resting)</span>
-                        <span className="text-xl font-medium text-gray-900">{calculatedStats.bmr} <span className="text-xs text-gray-400 font-normal">cal/day</span></span>
+                      <div className="flex justify-between items-center p-3 bg-theme-bg-tertiary rounded-xl border border-theme-card-border">
+                        <span className="text-theme-text-secondary text-sm">BMR (Resting)</span>
+                        <span className="text-xl font-medium text-theme-text-primary">{calculatedStats.bmr} <span className="text-xs text-theme-text-tertiary font-normal">cal/day</span></span>
                       </div>
-                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl border border-gray-100">
-                        <span className="text-gray-500 text-sm">TDEE (Maintenance)</span>
-                        <span className="text-xl font-medium text-gray-900">{calculatedStats.tdee} <span className="text-xs text-gray-400 font-normal">cal/day</span></span>
+                      <div className="flex justify-between items-center p-3 bg-theme-bg-tertiary rounded-xl border border-theme-card-border">
+                        <span className="text-theme-text-secondary text-sm">TDEE (Maintenance)</span>
+                        <span className="text-xl font-medium text-theme-text-primary">{calculatedStats.tdee} <span className="text-xs text-theme-text-tertiary font-normal">cal/day</span></span>
                       </div>
                     </div>
                   </div>
 
                   {/* Recommended Goals */}
-                  <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between">
+                  <div className="bg-theme-card-bg rounded-3xl p-6 shadow-sm border border-theme-card-border flex flex-col justify-between">
                     <div className="flex justify-between items-start mb-4">
-                      <h3 className="text-lg font-medium text-gray-900">Daily Targets</h3>
+                      <h3 className="text-lg font-medium text-theme-text-primary">Daily Targets</h3>
                       <button
                         onClick={applyCalculatedGoals}
-                        className="px-3 py-1.5 bg-black hover:bg-gray-800 text-white text-xs font-medium rounded-lg transition-colors"
+                        className="px-3 py-1.5 rounded-lg text-xs font-medium bg-theme-text-primary text-theme-bg-secondary hover:opacity-90 transition-colors"
                       >
                         Apply to Tracker
                       </button>
                     </div>
 
                     <div className="text-center mb-6">
-                      <span className="text-5xl font-light text-gray-900">
+                      <span className="text-5xl font-light text-theme-text-primary">
                         {calculatedStats.targetCalories}
                       </span>
-                      <span className="text-gray-400 ml-2 text-sm">calories</span>
+                      <span className="text-theme-text-tertiary ml-2 text-sm">calories</span>
                     </div>
 
                     <div className="grid grid-cols-3 gap-2">
-                      <MacroBox label="Protein" value={`${calculatedStats.macros.protein}g`} color="text-gray-900" bg="bg-gray-50" />
-                      <MacroBox label="Carbs" value={`${calculatedStats.macros.carbs}g`} color="text-gray-900" bg="bg-gray-50" />
-                      <MacroBox label="Fats" value={`${calculatedStats.macros.fats}g`} color="text-gray-900" bg="bg-gray-50" />
+                      <MacroBox label="Protein" value={`${calculatedStats.macros.protein}g`} color="text-theme-text-primary" bg="bg-theme-bg-tertiary" />
+                      <MacroBox label="Carbs" value={`${calculatedStats.macros.carbs}g`} color="text-theme-text-primary" bg="bg-theme-bg-tertiary" />
+                      <MacroBox label="Fats" value={`${calculatedStats.macros.fats}g`} color="text-theme-text-primary" bg="bg-theme-bg-tertiary" />
                     </div>
                   </div>
                 </div>
@@ -382,7 +382,7 @@ export default function ProfilePage() {
 
               {/* Statistics Grid */}
               <div>
-                <h2 className="text-xl font-medium text-gray-900 mb-6 flex items-center gap-2">
+                <h2 className="text-xl font-medium text-theme-text-primary mb-6 flex items-center gap-2">
                   Activity Stats
                 </h2>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -430,8 +430,8 @@ export default function ProfilePage() {
               </div>
 
               {/* Achievements */}
-              <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
-                <h2 className="text-xl font-medium text-gray-900 mb-6">Achievements</h2>
+              <div className="bg-theme-card-bg rounded-3xl p-8 shadow-sm border border-theme-card-border">
+                <h2 className="text-xl font-medium text-theme-text-primary mb-6">Achievements</h2>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                   <Achievement
                     icon="🎉"
@@ -469,12 +469,12 @@ export default function ProfilePage() {
 
 function StatCard({ label, value, icon }) {
   return (
-    <div className="p-4 rounded-2xl border border-gray-100 bg-white hover:shadow-sm transition-all duration-300 group">
+    <div className="p-4 rounded-2xl border border-theme-card-border bg-theme-card-bg hover:shadow-sm transition-all duration-300 group">
       <div className="flex items-center justify-between mb-2">
-        <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">{label}</p>
+        <p className="text-xs text-theme-text-tertiary font-medium uppercase tracking-wider">{label}</p>
         <span className="text-xl grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100 transition-all">{icon}</span>
       </div>
-      <p className="text-2xl font-light text-gray-900">
+      <p className="text-2xl font-light text-theme-text-primary">
         {value}
       </p>
     </div>
@@ -483,8 +483,8 @@ function StatCard({ label, value, icon }) {
 
 function MacroBox({ label, value, color, bg }) {
   return (
-    <div className={`p-3 rounded-xl ${bg} border border-gray-100 text-center`}>
-      <p className="text-xs text-gray-400 mb-1">{label}</p>
+    <div className={`p-3 rounded-xl ${bg} border border-theme-card-border text-center`}>
+      <p className="text-xs text-theme-text-tertiary mb-1">{label}</p>
       <p className={`text-lg font-medium ${color}`}>{value}</p>
     </div>
   );
@@ -493,12 +493,12 @@ function MacroBox({ label, value, color, bg }) {
 function Achievement({ icon, title, description, unlocked }) {
   return (
     <div className={`p-4 rounded-2xl border transition-all duration-300 relative overflow-hidden ${unlocked
-      ? 'bg-white border-gray-200'
-      : 'bg-gray-50 border-gray-100 opacity-50 grayscale'
+      ? 'bg-theme-card-bg border-theme-card-border'
+      : 'bg-theme-bg-tertiary border-theme-card-border opacity-50 grayscale'
       }`}>
       <div className="text-3xl mb-3">{icon}</div>
-      <h3 className="font-medium text-gray-900 mb-1 text-sm">{title}</h3>
-      <p className="text-xs text-gray-400">{description}</p>
+      <h3 className="font-medium text-theme-text-primary mb-1 text-sm">{title}</h3>
+      <p className="text-xs text-theme-text-tertiary">{description}</p>
       {unlocked && (
         <div className="absolute top-2 right-2 w-2 h-2 bg-green-500 rounded-full" />
       )}

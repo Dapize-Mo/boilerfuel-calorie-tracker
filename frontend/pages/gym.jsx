@@ -539,8 +539,8 @@ export default function GymDashboard() {
         <Head>
           <title>Loading... - Gym Dashboard</title>
         </Head>
-        <main className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <div className="text-gray-500">Loading activities...</div>
+        <main className="min-h-screen bg-theme-bg-primary flex items-center justify-center">
+          <div className="text-theme-text-secondary">Loading activities...</div>
         </main>
       </>
     );
@@ -552,19 +552,19 @@ export default function GymDashboard() {
         <title>Gym Dashboard - BoilerFuel</title>
         <meta name="description" content="Track your gym and fitness activities with BoilerFuel" />
       </Head>
-      <main className="min-h-screen bg-gray-50 font-sans text-gray-900 p-6">
+      <main className="min-h-screen bg-theme-bg-primary font-sans text-theme-text-primary p-6">
         <div className="max-w-7xl mx-auto space-y-6">
 
           {/* Header */}
-          <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between pb-4 border-b border-gray-200">
+          <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between pb-4 border-b border-theme-border-secondary">
             <div>
-              <h1 className="text-3xl font-light tracking-tight text-gray-900">Gym Dashboard</h1>
-              <p className="text-gray-400 text-sm mt-1">Track your workouts and fitness activities</p>
+              <h1 className="text-3xl font-light tracking-tight text-theme-text-primary">Gym Dashboard</h1>
+              <p className="text-theme-text-tertiary text-sm mt-1">Track your workouts and fitness activities</p>
             </div>
             <button
               type="button"
               onClick={handleClearAllLogs}
-              className="self-start px-4 py-2 rounded-xl bg-gray-100 text-gray-600 text-sm font-medium hover:bg-red-50 hover:text-red-600 transition-colors"
+              className="self-start px-4 py-2 rounded-xl bg-theme-bg-tertiary text-theme-text-secondary text-sm font-medium hover:text-red-600 transition-colors"
             >
               Clear all logs
             </button>
@@ -584,8 +584,8 @@ export default function GymDashboard() {
                 type="button"
                 onClick={() => setViewMode(mode)}
                 className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${viewMode === mode
-                    ? 'bg-black text-white shadow-md'
-                    : 'bg-white text-gray-500 hover:bg-gray-100 border border-gray-100'
+                    ? 'bg-theme-text-primary text-theme-bg-secondary shadow-md'
+                    : 'bg-theme-card-bg text-theme-text-secondary hover:bg-theme-bg-tertiary border border-theme-card-border'
                   }`}
               >
                 {mode.charAt(0).toUpperCase() + mode.slice(1)}
@@ -619,8 +619,8 @@ export default function GymDashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left Column: Log Activity */}
             <div className="lg:col-span-1 space-y-6">
-              <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
-                <h2 className="text-xl font-medium text-gray-900 mb-6">Log Activity</h2>
+              <div className="bg-theme-card-bg rounded-3xl p-6 shadow-sm border border-theme-card-border">
+                <h2 className="text-xl font-medium text-theme-text-primary mb-6">Log Activity</h2>
 
                 {formError && (
                   <div className="mb-4 p-3 rounded-xl bg-red-50 text-red-600 text-sm border border-red-100">
@@ -635,19 +635,19 @@ export default function GymDashboard() {
 
                 <form onSubmit={handleAddActivity} className="space-y-4">
                   <div>
-                    <label className="block text-xs font-medium text-gray-400 mb-1">Activity Type</label>
+                    <label className="block text-xs font-medium text-theme-text-tertiary mb-1">Activity Type</label>
                     <input
                       type="text"
                       placeholder="Search..."
                       value={activitySearchQuery}
                       onChange={(event) => setActivitySearchQuery(event.target.value)}
-                      className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm mb-2 focus:ring-2 focus:ring-gray-200 outline-none"
+                      className="w-full rounded-xl border border-theme-border-primary bg-theme-bg-tertiary px-3 py-2 text-sm mb-2 focus:ring-2 focus:ring-theme-accent outline-none text-theme-text-primary"
                     />
                     <select
                       value={selectedActivity}
                       onChange={(event) => setSelectedActivity(event.target.value)}
                       required
-                      className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:ring-2 focus:ring-gray-200 outline-none"
+                      className="w-full rounded-xl border border-theme-border-primary bg-theme-bg-tertiary px-3 py-2 text-sm focus:ring-2 focus:ring-theme-accent outline-none text-theme-text-primary"
                     >
                       <option value="">Select activity...</option>
                       {filteredActivities.map((activity) => (
@@ -659,60 +659,60 @@ export default function GymDashboard() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-gray-400 mb-1">Duration (min)</label>
+                    <label className="block text-xs font-medium text-theme-text-tertiary mb-1">Duration (min)</label>
                     <input
                       type="number"
                       min="1"
                       value={duration}
                       onChange={(event) => setDuration(event.target.value)}
-                      className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:ring-2 focus:ring-gray-200 outline-none"
+                      className="w-full rounded-xl border border-theme-border-primary bg-theme-bg-tertiary px-3 py-2 text-sm focus:ring-2 focus:ring-theme-accent outline-none text-theme-text-primary"
                     />
                   </div>
 
                   <button
                     type="button"
                     onClick={() => setShowAdvanced(!showAdvanced)}
-                    className="text-xs font-medium text-gray-500 hover:text-black transition-colors"
+                    className="text-xs font-medium text-theme-text-secondary hover:text-theme-text-primary transition-colors"
                   >
                     {showAdvanced ? '− Less Options' : '+ More Options (Weight, Reps, Sets)'}
                   </button>
 
                   {showAdvanced && (
-                    <div className="grid grid-cols-3 gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                    <div className="grid grid-cols-3 gap-3 p-3 bg-theme-bg-tertiary rounded-xl border border-theme-card-border">
                       <div>
-                        <label className="block text-[10px] font-medium text-gray-400 mb-1">Weight</label>
+                        <label className="block text-[10px] font-medium text-theme-text-tertiary mb-1">Weight</label>
                         <input
                           type="number"
                           value={weight}
                           onChange={(e) => setWeight(e.target.value)}
-                          className="w-full rounded-lg border border-gray-200 bg-white px-2 py-1 text-sm"
+                          className="w-full rounded-lg border border-theme-border-primary bg-theme-card-bg px-2 py-1 text-sm text-theme-text-primary"
                         />
                       </div>
                       <div>
-                        <label className="block text-[10px] font-medium text-gray-400 mb-1">Reps</label>
+                        <label className="block text-[10px] font-medium text-theme-text-tertiary mb-1">Reps</label>
                         <input
                           type="number"
                           value={reps}
                           onChange={(e) => setReps(e.target.value)}
-                          className="w-full rounded-lg border border-gray-200 bg-white px-2 py-1 text-sm"
+                          className="w-full rounded-lg border border-theme-border-primary bg-theme-card-bg px-2 py-1 text-sm text-theme-text-primary"
                         />
                       </div>
                       <div>
-                        <label className="block text-[10px] font-medium text-gray-400 mb-1">Sets</label>
+                        <label className="block text-[10px] font-medium text-theme-text-tertiary mb-1">Sets</label>
                         <input
                           type="number"
                           value={sets}
                           onChange={(e) => setSets(e.target.value)}
-                          className="w-full rounded-lg border border-gray-200 bg-white px-2 py-1 text-sm"
+                          className="w-full rounded-lg border border-theme-border-primary bg-theme-card-bg px-2 py-1 text-sm text-theme-text-primary"
                         />
                       </div>
                       <div className="col-span-3">
-                        <label className="block text-[10px] font-medium text-gray-400 mb-1">Notes</label>
+                        <label className="block text-[10px] font-medium text-theme-text-tertiary mb-1">Notes</label>
                         <textarea
                           value={notes}
                           onChange={(e) => setNotes(e.target.value)}
                           rows="2"
-                          className="w-full rounded-lg border border-gray-200 bg-white px-2 py-1 text-sm resize-none"
+                          className="w-full rounded-lg border border-theme-border-primary bg-theme-card-bg px-2 py-1 text-sm resize-none text-theme-text-primary"
                         />
                       </div>
                     </div>
@@ -721,33 +721,33 @@ export default function GymDashboard() {
                   <div className="grid grid-cols-2 gap-3 pt-2">
                     <button
                       type="submit"
-                      className="w-full rounded-xl bg-black text-white py-2.5 text-sm font-medium hover:bg-gray-800 transition-colors shadow-lg shadow-gray-200"
+                      className="w-full rounded-xl bg-theme-text-primary text-theme-bg-secondary py-2.5 text-sm font-medium hover:opacity-90 transition-colors"
                     >
                       Log Activity
                     </button>
                     <button
                       type="button"
                       onClick={() => setShowSaveTemplate(!showSaveTemplate)}
-                      className="w-full rounded-xl bg-gray-100 text-gray-600 py-2.5 text-sm font-medium hover:bg-gray-200 transition-colors"
+                      className="w-full rounded-xl bg-theme-bg-tertiary text-theme-text-secondary py-2.5 text-sm font-medium hover:opacity-90 transition-colors"
                     >
                       {showSaveTemplate ? 'Cancel' : 'Save Template'}
                     </button>
                   </div>
 
                   {showSaveTemplate && (
-                    <div className="pt-4 border-t border-gray-100">
+                    <div className="pt-4 border-t border-theme-card-border">
                       <div className="flex gap-2">
                         <input
                           type="text"
                           value={templateName}
                           onChange={(e) => setTemplateName(e.target.value)}
                           placeholder="Template Name"
-                          className="flex-1 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm"
+                          className="flex-1 rounded-xl border border-theme-border-primary bg-theme-bg-tertiary px-3 py-2 text-sm text-theme-text-primary"
                         />
                         <button
                           type="button"
                           onClick={handleSaveAsTemplate}
-                          className="px-4 py-2 rounded-xl bg-black text-white text-sm font-medium"
+                          className="px-4 py-2 rounded-xl bg-theme-text-primary text-theme-bg-secondary text-sm font-medium"
                         >
                           Save
                         </button>
@@ -759,12 +759,12 @@ export default function GymDashboard() {
 
               {/* Templates List */}
               {workoutTemplates.length > 0 && (
-                <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+                <div className="bg-theme-card-bg rounded-3xl p-6 shadow-sm border border-theme-card-border">
                   <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-medium text-gray-900">Templates</h3>
+                    <h3 className="text-lg font-medium text-theme-text-primary">Templates</h3>
                     <button
                       onClick={() => setShowTemplates(!showTemplates)}
-                      className="text-xs font-medium text-gray-500 hover:text-black"
+                      className="text-xs font-medium text-theme-text-secondary hover:text-theme-text-primary"
                     >
                       {showTemplates ? 'Hide' : 'Show'} ({workoutTemplates.length})
                     </button>
@@ -776,17 +776,17 @@ export default function GymDashboard() {
                         const activity = activitiesById.get(template.activityId);
                         if (!activity) return null;
                         return (
-                          <div key={template.id} className="p-3 rounded-xl border border-gray-100 hover:border-gray-200 transition-colors bg-gray-50">
+                          <div key={template.id} className="p-3 rounded-xl border border-theme-card-border hover:border-theme-border-secondary transition-colors bg-theme-bg-tertiary">
                             <div className="flex justify-between items-start mb-2">
                               <div>
-                                <h4 className="font-medium text-sm text-gray-900">{template.name}</h4>
-                                <p className="text-xs text-gray-500">{activity.name}</p>
+                                <h4 className="font-medium text-sm text-theme-text-primary">{template.name}</h4>
+                                <p className="text-xs text-theme-text-secondary">{activity.name}</p>
                               </div>
-                              <button onClick={() => handleDeleteTemplate(template.id)} className="text-gray-400 hover:text-red-500">×</button>
+                              <button onClick={() => handleDeleteTemplate(template.id)} className="text-theme-text-tertiary hover:text-red-500">×</button>
                             </div>
                             <button
                               onClick={() => handleLoadTemplate(template)}
-                              className="w-full py-1.5 rounded-lg bg-white border border-gray-200 text-xs font-medium text-gray-600 hover:bg-gray-50 hover:text-black transition-colors"
+                              className="w-full py-1.5 rounded-lg bg-theme-card-bg border border-theme-card-border text-xs font-medium text-theme-text-secondary hover:bg-theme-bg-tertiary hover:text-theme-text-primary transition-colors"
                             >
                               Load Template
                             </button>
@@ -804,10 +804,10 @@ export default function GymDashboard() {
 
               {/* Personal Records */}
               {Object.keys(personalRecords).length > 0 && (
-                <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+                <div className="bg-theme-card-bg rounded-3xl p-6 shadow-sm border border-theme-card-border">
                   <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-medium text-gray-900">Personal Records</h2>
-                    <button onClick={() => setShowPRs(!showPRs)} className="text-xs font-medium text-gray-500 hover:text-black">
+                    <h2 className="text-xl font-medium text-theme-text-primary">Personal Records</h2>
+                    <button onClick={() => setShowPRs(!showPRs)} className="text-xs font-medium text-theme-text-secondary hover:text-theme-text-primary">
                       {showPRs ? 'Hide' : 'Show'}
                     </button>
                   </div>
@@ -837,18 +837,18 @@ export default function GymDashboard() {
               )}
 
               {/* Activity History */}
-              <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 min-h-[500px]">
-                <h2 className="text-xl font-medium text-gray-900 mb-6">History</h2>
+              <div className="bg-theme-card-bg rounded-3xl p-6 shadow-sm border border-theme-card-border min-h-[500px]">
+                <h2 className="text-xl font-medium text-theme-text-primary mb-6">History</h2>
 
                 {filteredLogs.length === 0 ? (
-                  <div className="text-center py-12 text-gray-400">
+                  <div className="text-center py-12 text-theme-text-tertiary">
                     <p>No activities found for this period.</p>
                   </div>
                 ) : (
                   <div className="space-y-8">
                     {logsByDate.map((dateGroup) => (
                       <div key={dateGroup.date.toISOString()}>
-                        <h3 className="text-sm font-medium text-gray-400 mb-4 sticky top-0 bg-white py-2">
+                        <h3 className="text-sm font-medium text-theme-text-tertiary mb-4 sticky top-0 bg-theme-card-bg py-2">
                           {formatDate(dateGroup.date)}
                         </h3>
                         <div className="space-y-3">
@@ -858,21 +858,21 @@ export default function GymDashboard() {
                             const caloriesBurned = Math.round((activity.calories_per_hour * log.duration) / 60);
 
                             return (
-                              <div key={log.id} className="group flex items-center justify-between p-4 rounded-2xl bg-gray-50 hover:bg-gray-100 transition-colors border border-gray-100">
+                              <div key={log.id} className="group flex items-center justify-between p-4 rounded-2xl bg-theme-bg-tertiary hover:bg-theme-bg-hover transition-colors border border-theme-card-border">
                                 <div className="flex items-center gap-4">
-                                  <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-lg shadow-sm">
+                                  <div className="w-10 h-10 rounded-full bg-theme-card-bg flex items-center justify-center text-lg shadow-sm">
                                     💪
                                   </div>
                                   <div>
-                                    <h4 className="font-medium text-gray-900">{activity.name}</h4>
-                                    <div className="flex gap-2 text-xs text-gray-500 mt-0.5">
+                                    <h4 className="font-medium text-theme-text-primary">{activity.name}</h4>
+                                    <div className="flex gap-2 text-xs text-theme-text-secondary mt-0.5">
                                       <span>{log.duration} min</span>
                                       <span>•</span>
                                       <span>{caloriesBurned} cal</span>
                                       {(log.weight || log.reps) && (
                                         <>
                                           <span>•</span>
-                                          <span className="text-gray-700 font-medium">
+                                          <span className="text-theme-text-primary font-medium">
                                             {log.weight ? `${log.weight}lbs` : ''}
                                             {log.weight && log.reps ? ' × ' : ''}
                                             {log.reps ? `${log.reps} reps` : ''}
@@ -884,7 +884,7 @@ export default function GymDashboard() {
                                 </div>
                                 <button
                                   onClick={() => handleRemoveLog(log.id)}
-                                  className="opacity-0 group-hover:opacity-100 p-2 text-gray-400 hover:text-red-500 transition-all"
+                                  className="opacity-0 group-hover:opacity-100 p-2 text-theme-text-tertiary hover:text-red-500 transition-all"
                                 >
                                   ×
                                 </button>
@@ -910,24 +910,24 @@ function StatCard({ label, value, unit, icon, goal }) {
   const percentage = hasGoal && goal > 0 ? Math.min(100, (value / goal) * 100) : null;
 
   return (
-    <div className="p-6 rounded-3xl bg-white border border-gray-100 shadow-sm">
+    <div className="p-6 rounded-3xl bg-theme-card-bg border border-theme-card-border shadow-sm">
       <div className="flex items-center justify-between mb-4">
-        <p className="text-sm text-gray-500 font-medium">{label}</p>
+        <p className="text-sm text-theme-text-secondary font-medium">{label}</p>
         <span className="text-xl opacity-80 grayscale">{icon}</span>
       </div>
       <div className="flex items-baseline gap-1">
-        <span className="text-3xl font-light text-gray-900">{value}</span>
-        {unit && <span className="text-sm text-gray-400">{unit}</span>}
+        <span className="text-3xl font-light text-theme-text-primary">{value}</span>
+        {unit && <span className="text-sm text-theme-text-tertiary">{unit}</span>}
       </div>
       {hasGoal && (
         <div className="mt-4">
-          <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+          <div className="h-1.5 w-full bg-theme-bg-tertiary rounded-full overflow-hidden">
             <div
-              className="h-full bg-black rounded-full transition-all duration-500"
+              className="h-full bg-theme-text-primary rounded-full transition-all duration-500"
               style={{ width: `${percentage}%` }}
             />
           </div>
-          <p className="text-xs text-gray-400 mt-2 text-right">{Math.round(percentage)}% of goal</p>
+          <p className="text-xs text-theme-text-tertiary mt-2 text-right">{Math.round(percentage)}% of goal</p>
         </div>
       )}
     </div>

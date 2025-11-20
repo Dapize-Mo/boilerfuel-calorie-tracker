@@ -195,8 +195,8 @@ export default function Dashboard() {
     return (
       <>
         <Head><title>Loading... - Dashboard</title></Head>
-        <main className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <div className="text-gray-500">Loading...</div>
+        <main className="min-h-screen bg-theme-bg-primary flex items-center justify-center">
+          <div className="text-theme-text-secondary">Loading...</div>
         </main>
       </>
     );
@@ -209,13 +209,13 @@ export default function Dashboard() {
         <meta name="description" content="Your health and fitness dashboard" />
       </Head>
 
-      <main className="min-h-screen bg-gray-50 font-sans text-gray-900">
+      <main className="font-sans text-theme-text-primary">
         {/* Hero Section */}
-        <section className="relative py-20 px-6 flex flex-col items-center justify-center text-center space-y-6 bg-white border-b border-gray-100">
-          <h1 className="text-6xl md:text-8xl font-light tracking-tighter text-gray-900">
+        <section className="relative py-20 px-6 flex flex-col items-center justify-center text-center space-y-6 bg-theme-bg-secondary border-b border-theme-border-primary">
+          <h1 className="text-6xl md:text-8xl font-light tracking-tighter text-theme-text-primary">
             BoilerFuel
           </h1>
-          <p className="text-xl text-gray-400 font-light max-w-2xl">
+          <p className="text-xl text-theme-text-tertiary font-light max-w-2xl">
             Your daily health overview. Track calories, macros, and workouts with precision.
           </p>
 
@@ -226,7 +226,7 @@ export default function Dashboard() {
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
               max={formatDateForInput(startOfToday())}
-              className="text-lg font-medium rounded-xl border border-gray-200 bg-gray-50 px-4 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-black transition-all hover:bg-gray-100"
+              className="text-lg font-medium rounded-xl border border-theme-border-primary bg-theme-bg-tertiary px-4 py-2 text-theme-text-primary focus:outline-none focus:ring-2 focus:ring-theme-accent transition-all hover:bg-theme-bg-hover"
             />
           </div>
         </section>
@@ -272,8 +272,8 @@ export default function Dashboard() {
           </div>
 
           {/* Macros Detail */}
-          <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
-            <h2 className="text-xl font-medium text-gray-900 mb-6">Daily Nutrition</h2>
+          <div className="bg-theme-card-bg rounded-3xl p-8 shadow-sm border border-theme-card-border">
+            <h2 className="text-xl font-medium text-theme-text-primary mb-6">Daily Nutrition</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <MacroCard label="Protein" value={Math.round(totals?.protein || 0)} goal={goals.protein} unit="g" />
               <MacroCard label="Carbs" value={Math.round(totals?.carbs || 0)} goal={goals.carbs} unit="g" />
@@ -282,11 +282,11 @@ export default function Dashboard() {
           </div>
 
           {/* Footer Links */}
-          <div className="flex justify-center gap-6 pt-12 border-t border-gray-200">
-            <Link href="/profile" className="text-sm text-gray-400 hover:text-black transition-colors">
+          <div className="flex justify-center gap-6 pt-12 border-t border-theme-border-secondary">
+            <Link href="/profile" className="text-sm text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
               Profile
             </Link>
-            <Link href="/about" className="text-sm text-gray-400 hover:text-black transition-colors">
+            <Link href="/about" className="text-sm text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
               About
             </Link>
           </div>
@@ -300,23 +300,23 @@ function StatCard({ label, value, goal, icon }) {
   const percentage = goal ? Math.min(100, (value / goal) * 100) : null;
 
   return (
-    <div className="p-8 rounded-3xl bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300">
+    <div className="p-8 rounded-3xl bg-theme-card-bg border border-theme-card-border shadow-sm hover:shadow-md transition-all duration-300">
       <div className="flex items-center justify-between mb-4">
-        <p className="text-sm text-gray-500 font-medium uppercase tracking-wider">{label}</p>
+        <p className="text-sm text-theme-text-secondary font-medium uppercase tracking-wider">{label}</p>
         <span className="text-2xl opacity-50 grayscale">{icon}</span>
       </div>
-      <p className="text-5xl font-light text-gray-900 mb-2">
+      <p className="text-5xl font-light text-theme-text-primary mb-2">
         {value}
       </p>
       {goal && (
         <div className="mt-4">
-          <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+          <div className="h-1.5 w-full bg-theme-bg-tertiary rounded-full overflow-hidden">
             <div
-              className="h-full bg-black rounded-full transition-all duration-500"
+              className="h-full bg-theme-text-primary rounded-full transition-all duration-500"
               style={{ width: `${percentage}%` }}
             />
           </div>
-          <p className="text-xs text-gray-400 mt-2 text-right">{Math.round(percentage)}% of goal</p>
+          <p className="text-xs text-theme-text-tertiary mt-2 text-right">{Math.round(percentage)}% of goal</p>
         </div>
       )}
     </div>
@@ -325,19 +325,19 @@ function StatCard({ label, value, goal, icon }) {
 
 function QuickActionCard({ href, icon, title, description, stat }) {
   return (
-    <Link href={href} className="group block p-8 rounded-3xl bg-white border border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200 transition-all duration-300">
+    <Link href={href} className="group block p-8 rounded-3xl bg-theme-card-bg border border-theme-card-border shadow-sm hover:shadow-md hover:border-theme-border-secondary transition-all duration-300">
       <div className="flex items-start gap-6">
-        <div className="w-16 h-16 rounded-2xl bg-gray-50 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform duration-300">
+        <div className="w-16 h-16 rounded-2xl bg-theme-bg-tertiary flex items-center justify-center text-3xl group-hover:scale-110 transition-transform duration-300">
           {icon}
         </div>
         <div className="flex-1">
-          <h3 className="text-xl font-medium text-gray-900 mb-1 group-hover:text-black transition-colors">{title}</h3>
-          <p className="text-gray-400 text-sm mb-4">{description}</p>
-          <div className="inline-block px-3 py-1 rounded-lg bg-gray-50 text-xs font-medium text-gray-600">
+          <h3 className="text-xl font-medium text-theme-text-primary mb-1 group-hover:text-theme-text-primary transition-colors">{title}</h3>
+          <p className="text-theme-text-tertiary text-sm mb-4">{description}</p>
+          <div className="inline-block px-3 py-1 rounded-lg bg-theme-bg-tertiary text-xs font-medium text-theme-text-secondary">
             {stat}
           </div>
         </div>
-        <div className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 group-hover:border-black group-hover:text-black transition-all">
+        <div className="w-8 h-8 rounded-full border border-theme-card-border flex items-center justify-center text-theme-text-tertiary group-hover:border-theme-text-primary group-hover:text-theme-text-primary transition-all">
           →
         </div>
       </div>
@@ -351,18 +351,18 @@ function MacroCard({ label, value, goal, unit }) {
   return (
     <div>
       <div className="flex justify-between items-end mb-2">
-        <p className="text-sm text-gray-500 font-medium">{label}</p>
-        <p className="text-2xl font-light text-gray-900">
-          {value}<span className="text-sm text-gray-400 ml-0.5">{unit}</span>
+        <p className="text-sm text-theme-text-secondary font-medium">{label}</p>
+        <p className="text-2xl font-light text-theme-text-primary">
+          {value}<span className="text-sm text-theme-text-tertiary ml-0.5">{unit}</span>
         </p>
       </div>
-      <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+      <div className="h-1.5 w-full bg-theme-bg-tertiary rounded-full overflow-hidden">
         <div
-          className="h-full bg-black rounded-full transition-all duration-500"
+          className="h-full bg-theme-text-primary rounded-full transition-all duration-500"
           style={{ width: `${percentage}%` }}
         />
       </div>
-      <p className="text-xs text-gray-400 mt-2 text-right">Goal: {goal}{unit}</p>
+      <p className="text-xs text-theme-text-tertiary mt-2 text-right">Goal: {goal}{unit}</p>
     </div>
   );
 }
