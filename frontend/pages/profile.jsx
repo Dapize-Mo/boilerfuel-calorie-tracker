@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
 import Head from 'next/head';
-import Layout from '../components/Layout';
 import { readCookie, writeCookie } from '../utils/cookies';
 
 export default function ProfilePage() {
@@ -11,18 +10,35 @@ export default function ProfilePage() {
   const [userEmail, setUserEmail] = useState('');
   const [isEditingProfile, setIsEditingProfile] = useState(false);
 
+  // New Body Stats State
+  const [bodyStats, setBodyStats] = useState({
+    gender: 'male',
+    age: '',
+    height: '',
+    weight: '',
+    activityLevel: '1.2',
+    goal: 'maintain'
+  });
+  const [calculatedStats, setCalculatedStats] = useState(null);
+
   useEffect(() => {
     const savedLogs = readCookie('boilerfuel_logs_v1');
     const savedActivityLogs = readCookie('boilerfuel_activity_logs_v1');
     const savedGoals = readCookie('boilerfuel_goals_v1');
     const savedUserName = readCookie('userName');
     const savedUserEmail = readCookie('userEmail');
+    const savedBodyStats = readCookie('boilerfuel_body_stats_v1');
 
     if (savedLogs) setLogs(JSON.parse(savedLogs));
     if (savedActivityLogs) setActivityLogs(JSON.parse(savedActivityLogs));
     if (savedGoals) setGoals(JSON.parse(savedGoals));
     if (savedUserName) setUserName(savedUserName);
     if (savedUserEmail) setUserEmail(savedUserEmail);
+    if (savedBodyStats) {
+      const parsedStats = JSON.parse(savedBodyStats);
+      setBodyStats(parsedStats);
+      calculateStats(parsedStats);
+    }
   }, []);
 
   const stats = useMemo(() => {
@@ -36,7 +52,6 @@ export default function ProfilePage() {
     const allDates = [...new Set([...logs, ...activityLogs].map(log => log.date))].sort();
     let streak = 0;
     let currentStreak = 0;
-    const today = new Date().toISOString().split('T')[0];
 
     for (let i = allDates.length - 1; i >= 0; i--) {
       const date = allDates[i];
@@ -85,6 +100,74 @@ export default function ProfilePage() {
     setIsEditingProfile(false);
   };
 
+  const handleStatsChange = (e) => {
+    const { name, value } = e.target;
+    const newStats = { ...bodyStats, [name]: value };
+    setBodyStats(newStats);
+    writeCookie('boilerfuel_body_stats_v1', JSON.stringify(newStats));
+    calculateStats(newStats);
+  };
+
+  const calculateStats = (stats) => {
+    if (!stats.age || !stats.height || !stats.weight) return;
+
+    const age = Number(stats.age);
+    const height = Number(stats.height); // cm
+    const weight = Number(stats.weight); // kg
+    const gender = stats.gender;
+    const activity = Number(stats.activityLevel);
+
+    // Mifflin-St Jeor Equation
+    let bmr = (10 * weight) + (6.25 * height) - (5 * age);
+    bmr += gender === 'male' ? 5 : -161;
+
+    const tdee = Math.round(bmr * activity);
+
+    // Calculate BMI
+    const heightM = height / 100;
+    const bmi = (weight / (heightM * heightM)).toFixed(1);
+
+    let bmiCategory = '';
+    if (bmi < 18.5) bmiCategory = 'Underweight';
+    else if (bmi < 25) bmiCategory = 'Normal weight';
+    else if (bmi < 30) bmiCategory = 'Overweight';
+    else bmiCategory = 'Obese';
+
+    // Goal Adjustment
+    let targetCalories = tdee;
+    if (stats.goal === 'lose') targetCalories -= 500;
+    else if (stats.goal === 'gain') targetCalories += 500;
+
+    // Macro Split (40/30/30 default)
+    const protein = Math.round((targetCalories * 0.3) / 4);
+    const fats = Math.round((targetCalories * 0.3) / 9);
+    const carbs = Math.round((targetCalories * 0.4) / 4);
+
+    setCalculatedStats({
+      bmr: Math.round(bmr),
+      tdee,
+      bmi,
+      bmiCategory,
+      targetCalories,
+      macros: { protein, fats, carbs }
+    });
+  };
+
+  const applyCalculatedGoals = () => {
+    if (!calculatedStats) return;
+
+    const newGoals = {
+      ...goals,
+      calories: calculatedStats.targetCalories,
+      protein: calculatedStats.macros.protein,
+      carbs: calculatedStats.macros.carbs,
+      fats: calculatedStats.macros.fats,
+    };
+    setGoals(newGoals);
+    writeCookie('boilerfuel_goals_v1', JSON.stringify(newGoals));
+    alert('Goals updated successfully!');
+  };
+
   const getInitials = () => {
     if (!userName) return 'U';
     return userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
@@ -96,224 +179,328 @@ export default function ProfilePage() {
         <title>Profile – BoilerFuel</title>
         <meta name="description" content="Your BoilerFuel profile and statistics" />
       </Head>
-      
-        <div className="max-w-5xl mx-auto space-y-6">
+
+      <div className="min-h-screen bg-gray-50 p-6 font-sans text-gray-900">
+        <div className="max-w-6xl mx-auto space-y-6">
+
           {/* Header */}
-          <div className="py-6 border-b border-theme-border-primary">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
-              Profile
-            </h1>
-            <p className="text-theme-text-tertiary mt-2">Manage your profile and view your progress</p>
+          <div className="flex flex-col md:flex-row justify-between items-end md:items-center pb-4 border-b border-gray-200">
+            <div>
+              <h1 className="text-3xl font-light tracking-tight text-gray-900">Profile & Stats</h1>
+              <p className="text-gray-400 text-sm mt-1">Manage your personal data</p>
+            </div>
           </div>
 
-          {/* Profile Card */}
-          <div className="backdrop-blur-lg bg-theme-card-bg rounded-2xl border border-theme-card-border p-8 card-glow">
-            <div className="flex flex-col md:flex-row gap-8 items-start">
-              {/* Avatar */}
-              <div className="flex-shrink-0">
-                <div className="w-32 h-32 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center text-slate-900 text-5xl font-bold shadow-2xl">
-                  {getInitials()}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left Column: Profile & Stats Input */}
+            <div className="space-y-6">
+              {/* Profile Card */}
+              <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+                <div className="flex items-center gap-6">
+                  <div className="w-16 h-16 rounded-2xl bg-gray-900 flex items-center justify-center text-white text-2xl font-light">
+                    {getInitials()}
+                  </div>
+                  <div className="flex-1">
+                    {isEditingProfile ? (
+                      <form onSubmit={handleSaveProfile} className="space-y-3">
+                        <input
+                          type="text"
+                          name="name"
+                          defaultValue={userName}
+                          className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:ring-2 focus:ring-gray-200 outline-none"
+                          placeholder="Your Name"
+                        />
+                        <input
+                          type="email"
+                          name="email"
+                          defaultValue={userEmail}
+                          className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:ring-2 focus:ring-gray-200 outline-none"
+                          placeholder="Email"
+                        />
+                        <div className="flex gap-2">
+                          <button type="submit" className="px-3 py-1 bg-black text-white rounded-lg text-xs font-medium">Save</button>
+                          <button type="button" onClick={() => setIsEditingProfile(false)} className="px-3 py-1 bg-gray-100 text-gray-600 rounded-lg text-xs">Cancel</button>
+                        </div>
+                      </form>
+                    ) : (
+                      <>
+                        <h2 className="text-xl font-medium text-gray-900">{userName || 'Guest User'}</h2>
+                        <p className="text-gray-400 text-sm mb-2">{userEmail || 'No email set'}</p>
+                        <button
+                          onClick={() => setIsEditingProfile(true)}
+                          className="text-xs font-medium text-gray-500 hover:text-black transition-colors"
+                        >
+                          Edit Details →
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
 
-              {/* Profile Info */}
-              <div className="flex-1 w-full">
-                {isEditingProfile ? (
-                  <form onSubmit={handleSaveProfile} className="space-y-4">
+              {/* Body Stats Calculator */}
+              <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+                <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
+                  Body Stats
+                </h3>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-theme-text-secondary mb-2">Name</label>
+                      <label className="block text-xs font-medium text-gray-400 mb-1">Gender</label>
+                      <select
+                        name="gender"
+                        value={bodyStats.gender}
+                        onChange={handleStatsChange}
+                        className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-gray-900 text-sm focus:ring-2 focus:ring-gray-200 outline-none"
+                      >
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-400 mb-1">Age</label>
                       <input
-                        type="text"
-                        name="name"
-                        defaultValue={userName}
-                        className="w-full rounded-lg border border-theme-border-primary bg-theme-bg-tertiary px-4 py-2 text-theme-text-primary"
-                        placeholder="Your name"
+                        type="number"
+                        name="age"
+                        value={bodyStats.age}
+                        onChange={handleStatsChange}
+                        className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-gray-900 text-sm focus:ring-2 focus:ring-gray-200 outline-none"
+                        placeholder="Years"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-400 mb-1">Height (cm)</label>
+                      <input
+                        type="number"
+                        name="height"
+                        value={bodyStats.height}
+                        onChange={handleStatsChange}
+                        className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-gray-900 text-sm focus:ring-2 focus:ring-gray-200 outline-none"
+                        placeholder="cm"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-theme-text-secondary mb-2">Email</label>
+                      <label className="block text-xs font-medium text-gray-400 mb-1">Weight (kg)</label>
                       <input
-                        type="email"
-                        name="email"
-                        defaultValue={userEmail}
-                        className="w-full rounded-lg border border-theme-border-primary bg-theme-bg-tertiary px-4 py-2 text-theme-text-primary"
-                        placeholder="your.email@example.com"
+                        type="number"
+                        name="weight"
+                        value={bodyStats.weight}
+                        onChange={handleStatsChange}
+                        className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-gray-900 text-sm focus:ring-2 focus:ring-gray-200 outline-none"
+                        placeholder="kg"
                       />
                     </div>
-                    <div className="flex gap-3">
-                      <button
-                        type="submit"
-                        className="px-6 py-2 rounded-lg bg-yellow-500 text-slate-900 font-semibold hover:bg-yellow-600 transition-all duration-300 glow-yellow"
-                      >
-                        Save
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setIsEditingProfile(false)}
-                        className="px-6 py-2 rounded-lg bg-theme-bg-tertiary text-theme-text-primary hover:bg-theme-bg-hover transition-all duration-300"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </form>
-                ) : (
-                  <>
-                    <h2 className="text-3xl font-bold text-theme-text-primary mb-2">
-                      {userName || 'Guest User'}
-                    </h2>
-                    <p className="text-theme-text-tertiary mb-4">
-                      {userEmail || 'No email set'}
-                    </p>
-                    <button
-                      onClick={() => setIsEditingProfile(true)}
-                      className="px-6 py-2 rounded-lg bg-yellow-500/20 border border-yellow-500/50 text-yellow-300 font-semibold hover:bg-yellow-500/30 transition-all duration-300 glow-yellow"
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-400 mb-1">Activity Level</label>
+                    <select
+                      name="activityLevel"
+                      value={bodyStats.activityLevel}
+                      onChange={handleStatsChange}
+                      className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-gray-900 text-sm focus:ring-2 focus:ring-gray-200 outline-none"
                     >
-                      Edit Profile
-                    </button>
-                  </>
-                )}
+                      <option value="1.2">Sedentary (Office job)</option>
+                      <option value="1.375">Light Exercise (1-2 days/week)</option>
+                      <option value="1.55">Moderate Exercise (3-5 days/week)</option>
+                      <option value="1.725">Heavy Exercise (6-7 days/week)</option>
+                      <option value="1.9">Athlete (2x per day)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-400 mb-1">Goal</label>
+                    <select
+                      name="goal"
+                      value={bodyStats.goal}
+                      onChange={handleStatsChange}
+                      className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-gray-900 text-sm focus:ring-2 focus:ring-gray-200 outline-none"
+                    >
+                      <option value="lose">Lose Weight (-500 cal)</option>
+                      <option value="maintain">Maintain Weight</option>
+                      <option value="gain">Gain Muscle (+500 cal)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Middle Column: Results & Goals */}
+            <div className="lg:col-span-2 space-y-6">
+              {calculatedStats && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Health Overview */}
+                  <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">Health Overview</h3>
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl border border-gray-100">
+                        <span className="text-gray-500 text-sm">BMI</span>
+                        <div className="text-right">
+                          <span className="block text-xl font-medium text-gray-900">{calculatedStats.bmi}</span>
+                          <span className={`text-xs font-medium ${calculatedStats.bmiCategory === 'Normal weight' ? 'text-green-500' : 'text-orange-500'
+                            }`}>{calculatedStats.bmiCategory}</span>
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl border border-gray-100">
+                        <span className="text-gray-500 text-sm">BMR (Resting)</span>
+                        <span className="text-xl font-medium text-gray-900">{calculatedStats.bmr} <span className="text-xs text-gray-400 font-normal">cal/day</span></span>
+                      </div>
+                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl border border-gray-100">
+                        <span className="text-gray-500 text-sm">TDEE (Maintenance)</span>
+                        <span className="text-xl font-medium text-gray-900">{calculatedStats.tdee} <span className="text-xs text-gray-400 font-normal">cal/day</span></span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Recommended Goals */}
+                  <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between">
+                    <div className="flex justify-between items-start mb-4">
+                      <h3 className="text-lg font-medium text-gray-900">Daily Targets</h3>
+                      <button
+                        onClick={applyCalculatedGoals}
+                        className="px-3 py-1.5 bg-black hover:bg-gray-800 text-white text-xs font-medium rounded-lg transition-colors"
+                      >
+                        Apply to Tracker
+                      </button>
+                    </div>
+
+                    <div className="text-center mb-6">
+                      <span className="text-5xl font-light text-gray-900">
+                        {calculatedStats.targetCalories}
+                      </span>
+                      <span className="text-gray-400 ml-2 text-sm">calories</span>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2">
+                      <MacroBox label="Protein" value={`${calculatedStats.macros.protein}g`} color="text-gray-900" bg="bg-gray-50" />
+                      <MacroBox label="Carbs" value={`${calculatedStats.macros.carbs}g`} color="text-gray-900" bg="bg-gray-50" />
+                      <MacroBox label="Fats" value={`${calculatedStats.macros.fats}g`} color="text-gray-900" bg="bg-gray-50" />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Statistics Grid */}
+              <div>
+                <h2 className="text-xl font-medium text-gray-900 mb-6 flex items-center gap-2">
+                  Activity Stats
+                </h2>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  <StatCard
+                    label="Total Meals"
+                    value={stats.totalMeals}
+                    icon="🍽️"
+                  />
+                  <StatCard
+                    label="Total Workouts"
+                    value={stats.totalWorkouts}
+                    icon="💪"
+                  />
+                  <StatCard
+                    label="Current Streak"
+                    value={`${stats.streak} days`}
+                    icon="🔥"
+                  />
+                  <StatCard
+                    label="Days Active"
+                    value={stats.daysActive}
+                    icon="📅"
+                  />
+                  <StatCard
+                    label="Total Calories In"
+                    value={stats.totalCaloriesConsumed.toLocaleString()}
+                    icon="📈"
+                  />
+                  <StatCard
+                    label="Total Calories Out"
+                    value={stats.totalCaloriesBurned.toLocaleString()}
+                    icon="🔥"
+                  />
+                  <StatCard
+                    label="Avg Calories/Day"
+                    value={stats.avgCaloriesPerDay.toLocaleString()}
+                    icon="📊"
+                  />
+                  <StatCard
+                    label="Workouts/Week"
+                    value={stats.avgWorkoutsPerWeek}
+                    icon="💯"
+                  />
+                </div>
+              </div>
+
+              {/* Achievements */}
+              <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+                <h2 className="text-xl font-medium text-gray-900 mb-6">Achievements</h2>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  <Achievement
+                    icon="🎉"
+                    title="First Meal"
+                    description="Logged your first meal"
+                    unlocked={stats.totalMeals > 0}
+                  />
+                  <Achievement
+                    icon="💪"
+                    title="Workout Warrior"
+                    description="Completed 10 workouts"
+                    unlocked={stats.totalWorkouts >= 10}
+                  />
+                  <Achievement
+                    icon="🔥"
+                    title="Week Streak"
+                    description="7 day streak"
+                    unlocked={stats.streak >= 7}
+                  />
+                  <Achievement
+                    icon="📅"
+                    title="Month Strong"
+                    description="30 days active"
+                    unlocked={stats.daysActive >= 30}
+                  />
+                </div>
               </div>
             </div>
           </div>
-
-          {/* Statistics Grid */}
-          <div>
-            <h2 className="text-2xl font-bold text-theme-text-primary mb-4">📊 Your Statistics</h2>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <StatCard
-                label="Total Meals"
-                value={stats.totalMeals}
-                icon="🍽️"
-                gradient="from-yellow-500 to-orange-500"
-              />
-              <StatCard
-                label="Total Workouts"
-                value={stats.totalWorkouts}
-                icon="💪"
-                gradient="from-orange-500 to-red-500"
-              />
-              <StatCard
-                label="Current Streak"
-                value={`${stats.streak} days`}
-                icon="🔥"
-                gradient="from-red-500 to-pink-500"
-              />
-              <StatCard
-                label="Days Active"
-                value={stats.daysActive}
-                icon="📅"
-                gradient="from-cyan-500 to-blue-500"
-              />
-              <StatCard
-                label="Total Calories In"
-                value={stats.totalCaloriesConsumed.toLocaleString()}
-                icon="📈"
-                gradient="from-green-500 to-emerald-500"
-              />
-              <StatCard
-                label="Total Calories Out"
-                value={stats.totalCaloriesBurned.toLocaleString()}
-                icon="🔥"
-                gradient="from-purple-500 to-pink-500"
-              />
-              <StatCard
-                label="Avg Calories/Day"
-                value={stats.avgCaloriesPerDay.toLocaleString()}
-                icon="📊"
-                gradient="from-blue-500 to-indigo-500"
-              />
-              <StatCard
-                label="Workouts/Week"
-                value={stats.avgWorkoutsPerWeek}
-                icon="💯"
-                gradient="from-indigo-500 to-purple-500"
-              />
-            </div>
-          </div>
-
-          {/* Goals Overview */}
-          <div className="backdrop-blur-lg bg-theme-card-bg rounded-2xl border border-theme-card-border p-8 card-glow">
-            <h2 className="text-2xl font-bold text-theme-text-primary mb-6">🎯 Your Daily Goals</h2>
-            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-              <GoalItem label="Calories" value={`${goals.calories} cal`} />
-              <GoalItem label="Protein" value={`${goals.protein}g`} />
-              <GoalItem label="Carbs" value={`${goals.carbs}g`} />
-              <GoalItem label="Fats" value={`${goals.fats}g`} />
-              <GoalItem label="Activity" value={`${goals.activityMinutes} min`} />
-            </div>
-          </div>
-
-          {/* Achievements */}
-          <div className="backdrop-blur-lg bg-theme-card-bg rounded-2xl border border-theme-card-border p-8 card-glow">
-            <h2 className="text-2xl font-bold text-theme-text-primary mb-6">🏆 Achievements</h2>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <Achievement
-                icon="🎉"
-                title="First Meal"
-                description="Logged your first meal"
-                unlocked={stats.totalMeals > 0}
-              />
-              <Achievement
-                icon="💪"
-                title="Workout Warrior"
-                description="Completed 10 workouts"
-                unlocked={stats.totalWorkouts >= 10}
-              />
-              <Achievement
-                icon="🔥"
-                title="Week Streak"
-                description="7 day streak"
-                unlocked={stats.streak >= 7}
-              />
-              <Achievement
-                icon="📅"
-                title="Month Strong"
-                description="30 days active"
-                unlocked={stats.daysActive >= 30}
-              />
-            </div>
-          </div>
         </div>
-      
+      </div>
     </>
   );
 }
 
-function StatCard({ label, value, icon, gradient }) {
+function StatCard({ label, value, icon }) {
   return (
-    <div className="p-4 border-l-4 border-theme-border-primary hover:border-yellow-500 transition-all duration-300 bg-theme-bg-primary/30 card-glow">
+    <div className="p-4 rounded-2xl border border-gray-100 bg-white hover:shadow-sm transition-all duration-300 group">
       <div className="flex items-center justify-between mb-2">
-        <p className="text-sm text-theme-text-tertiary font-medium">{label}</p>
-        <span className="text-2xl">{icon}</span>
+        <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">{label}</p>
+        <span className="text-xl grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100 transition-all">{icon}</span>
       </div>
-      <p className={`text-3xl font-bold bg-gradient-to-r ${gradient} bg-clip-text text-transparent`}>
+      <p className="text-2xl font-light text-gray-900">
         {value}
       </p>
     </div>
   );
 }
 
-function GoalItem({ label, value }) {
+function MacroBox({ label, value, color, bg }) {
   return (
-    <div className="text-center p-4 rounded-lg bg-theme-bg-tertiary/50 border border-theme-border-primary">
-      <p className="text-xs text-theme-text-tertiary mb-1">{label}</p>
-      <p className="text-lg font-bold text-theme-text-primary">{value}</p>
+    <div className={`p-3 rounded-xl ${bg} border border-gray-100 text-center`}>
+      <p className="text-xs text-gray-400 mb-1">{label}</p>
+      <p className={`text-lg font-medium ${color}`}>{value}</p>
     </div>
   );
 }
 
 function Achievement({ icon, title, description, unlocked }) {
   return (
-    <div className={`p-4 rounded-lg border transition-all duration-300 ${
-      unlocked
-        ? 'bg-yellow-500/10 border-yellow-500/50 card-glow'
-        : 'bg-theme-bg-tertiary/30 border-theme-border-primary opacity-50'
-    }`}>
-      <div className="text-4xl mb-2">{icon}</div>
-      <h3 className="font-bold text-theme-text-primary mb-1">{title}</h3>
-      <p className="text-xs text-theme-text-tertiary">{description}</p>
+    <div className={`p-4 rounded-2xl border transition-all duration-300 relative overflow-hidden ${unlocked
+      ? 'bg-white border-gray-200'
+      : 'bg-gray-50 border-gray-100 opacity-50 grayscale'
+      }`}>
+      <div className="text-3xl mb-3">{icon}</div>
+      <h3 className="font-medium text-gray-900 mb-1 text-sm">{title}</h3>
+      <p className="text-xs text-gray-400">{description}</p>
       {unlocked && (
-        <div className="mt-2 text-xs text-green-400 font-semibold">✓ Unlocked</div>
+        <div className="absolute top-2 right-2 w-2 h-2 bg-green-500 rounded-full" />
       )}
     </div>
   );

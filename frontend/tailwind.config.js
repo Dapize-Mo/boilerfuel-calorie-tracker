@@ -42,7 +42,8 @@ module.exports = {
           
           'card-bg': 'rgb(var(--color-card-bg) / <alpha-value>)',
           'card-border': 'rgb(var(--color-card-border) / <alpha-value>)',
-          'header-bg': 'rgb(var(--color-header-bg) / <alpha-value>)',
+          'sidebar-bg': 'rgb(var(--color-sidebar-bg) / <alpha-value>)',
+          'sidebar-border': 'rgb(var(--color-sidebar-border) / <alpha-value>)',
         },
       },
       boxShadow: {

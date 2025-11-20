@@ -3,7 +3,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 
 import { apiCall } from '../utils/auth';
-import { deleteCookie, readCookie, writeCookie } from '../utils/cookies';
+import { deleteCookie, readCookie } from '../utils/cookies';
 
 const LOG_COOKIE_KEY = 'boilerfuel_logs_v1';
 const ACTIVITY_LOG_COOKIE_KEY = 'boilerfuel_activity_logs_v1';
@@ -95,15 +95,6 @@ export default function Dashboard() {
   const [goals, setGoals] = useState(() => parseGoalsCookie());
   const [selectedDate, setSelectedDate] = useState(() => formatDateForInput(startOfToday()));
   const [loading, setLoading] = useState(true);
-
-  const [scrollY, setScrollY] = useState(0);
-  const heroRef = useRef(null);
-
-  useEffect(() => {
-    const handleScroll = () => setScrollY(window.scrollY);
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -200,15 +191,12 @@ export default function Dashboard() {
     };
   }, [selectedDayLogs, selectedDayActivityLogs, foodsById, activitiesById]);
 
-  const opacity = Math.max(0, 1 - scrollY / 300);
-  const scale = Math.max(0.8, 1 - scrollY / 1000);
-
   if (loading) {
     return (
       <>
         <Head><title>Loading... - Dashboard</title></Head>
-        <main className="min-h-screen bg-theme-bg-primary text-theme-text-primary flex items-center justify-center">
-          <div className="text-xl">Loading...</div>
+        <main className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-gray-500">Loading...</div>
         </main>
       </>
     );
@@ -221,223 +209,160 @@ export default function Dashboard() {
         <meta name="description" content="Your health and fitness dashboard" />
       </Head>
 
-      <main className="min-h-screen bg-theme-bg-primary text-theme-text-primary">
-        {/* Hero Section - Fades out on scroll */}
-        <section
-          ref={heroRef}
-          className="relative min-h-screen flex items-center justify-center overflow-hidden"
-          style={{ opacity, transform: `scale(${scale})` }}
-        >
-          <div className="text-center space-y-6 px-6">
-            <h1 className="text-7xl md:text-9xl font-bold bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent">
-              BoilerFuel
-            </h1>
-            <p className="text-2xl md:text-3xl text-theme-text-secondary">
-              Your Daily Health Overview
-            </p>
-            <div className="flex flex-col items-center gap-2 pt-8">
-              <p className="text-sm text-theme-text-tertiary">Scroll to explore</p>
-              <svg className="w-6 h-6 text-theme-text-tertiary animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </div>
+      <main className="min-h-screen bg-gray-50 font-sans text-gray-900">
+        {/* Hero Section */}
+        <section className="relative py-20 px-6 flex flex-col items-center justify-center text-center space-y-6 bg-white border-b border-gray-100">
+          <h1 className="text-6xl md:text-8xl font-light tracking-tighter text-gray-900">
+            BoilerFuel
+          </h1>
+          <p className="text-xl text-gray-400 font-light max-w-2xl">
+            Your daily health overview. Track calories, macros, and workouts with precision.
+          </p>
+
+          {/* Date Selector */}
+          <div className="pt-8">
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              max={formatDateForInput(startOfToday())}
+              className="text-lg font-medium rounded-xl border border-gray-200 bg-gray-50 px-4 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-black transition-all hover:bg-gray-100"
+            />
           </div>
         </section>
 
-        {/* Content Section - Fades in on scroll */}
-        <div
-          className="relative bg-theme-bg-primary"
-          style={{ opacity: Math.min(1, scrollY / 300) }}
-        >
-          <div className="mx-auto max-w-6xl px-6 py-12 space-y-16">
+        <div className="max-w-6xl mx-auto px-6 py-12 space-y-12">
 
-            {/* Date Selector */}
-            <div className="flex items-center justify-center gap-4 opacity-0 animate-fadeIn" style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}>
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                max={formatDateForInput(startOfToday())}
-                className="text-2xl font-bold rounded-2xl border-2 border-theme-border-primary bg-theme-bg-tertiary/80 px-6 py-3 text-theme-text-primary focus:outline-none focus:ring-2 focus:ring-yellow-500 transition-all hover:border-yellow-500"
-              />
+          {/* Main Stats Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <StatCard
+              label="Calories In"
+              value={Math.round(totals?.calories || 0)}
+              goal={goals.calories}
+              icon="🔥"
+            />
+            <StatCard
+              label="Calories Out"
+              value={Math.round(totals?.burned || 0)}
+              icon="⚡"
+            />
+            <StatCard
+              label="Net Balance"
+              value={Math.round(totals?.net || 0)}
+              icon="⚖️"
+            />
+          </div>
+
+          {/* Quick Actions */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <QuickActionCard
+              href="/food-dashboard"
+              icon="🍽️"
+              title="Food Tracker"
+              description="Log meals & track macros"
+              stat={`${selectedDayLogs.length} meals today`}
+            />
+            <QuickActionCard
+              href="/gym"
+              icon="💪"
+              title="Gym Tracker"
+              description="Log workouts & exercises"
+              stat={`${Math.round(totals?.activityMinutes || 0)} min active`}
+            />
+          </div>
+
+          {/* Macros Detail */}
+          <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+            <h2 className="text-xl font-medium text-gray-900 mb-6">Daily Nutrition</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <MacroCard label="Protein" value={Math.round(totals?.protein || 0)} goal={goals.protein} unit="g" />
+              <MacroCard label="Carbs" value={Math.round(totals?.carbs || 0)} goal={goals.carbs} unit="g" />
+              <MacroCard label="Fats" value={Math.round(totals?.fats || 0)} goal={goals.fats} unit="g" />
             </div>
+          </div>
 
-            {/* Main Stats - 3 Key Numbers */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 opacity-0 animate-fadeIn" style={{ animationDelay: '0.4s', animationFillMode: 'forwards' }}>
-              <StatCard
-                label="Calories In"
-                value={Math.round(totals?.calories || 0)}
-                goal={goals.calories}
-                icon="🔥"
-                color="yellow"
-              />
-              <StatCard
-                label="Calories Out"
-                value={Math.round(totals?.burned || 0)}
-                icon="💪"
-                color="orange"
-              />
-              <StatCard
-                label="Net Balance"
-                value={Math.round(totals?.net || 0)}
-                icon="⚖️"
-                color="blue"
-              />
-            </div>
-
-            {/* Quick Actions */}
-            <div className="grid gap-6 md:grid-cols-2 opacity-0 animate-fadeIn" style={{ animationDelay: '0.6s', animationFillMode: 'forwards' }}>
-              <QuickActionCard
-                href="/food-dashboard"
-                icon="🍽️"
-                title="Food Tracker"
-                description="Track your meals"
-                stat={`${selectedDayLogs.length} meals logged`}
-                color="yellow"
-              />
-              <QuickActionCard
-                href="/gym"
-                icon="💪"
-                title="Gym Tracker"
-                description="Log your workouts"
-                stat={`${Math.round(totals?.activityMinutes || 0)} min today`}
-                color="orange"
-              />
-            </div>
-
-            {/* Macros Detail - Collapsible */}
-            <details className="group opacity-0 animate-fadeIn" style={{ animationDelay: '0.8s', animationFillMode: 'forwards' }}>
-              <summary className="cursor-pointer list-none flex items-center justify-between p-6 rounded-2xl bg-theme-bg-tertiary/50 border border-theme-border-primary hover:border-yellow-500 transition-all">
-                <span className="text-xl font-bold">📊 Detailed Nutrition</span>
-                <svg className="w-6 h-6 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </summary>
-              <div className="mt-4 grid grid-cols-3 gap-4 p-6 rounded-2xl bg-theme-bg-secondary border border-theme-border-primary">
-                <MacroCard label="Protein" value={Math.round(totals?.protein || 0)} goal={goals.protein} unit="g" color="green" />
-                <MacroCard label="Carbs" value={Math.round(totals?.carbs || 0)} goal={goals.carbs} unit="g" color="blue" />
-                <MacroCard label="Fats" value={Math.round(totals?.fats || 0)} goal={goals.fats} unit="g" color="purple" />
-              </div>
-            </details>
-
-            {/* Quick Links */}
-            <div className="flex justify-center gap-4 opacity-0 animate-fadeIn" style={{ animationDelay: '1s', animationFillMode: 'forwards' }}>
-              <Link href="/profile" className="text-theme-text-tertiary hover:text-yellow-400 transition-colors">
-                Profile
-              </Link>
-              <span className="text-theme-text-tertiary">•</span>
-              <Link href="/settings" className="text-theme-text-tertiary hover:text-yellow-400 transition-colors">
-                Settings
-              </Link>
-              <span className="text-theme-text-tertiary">•</span>
-              <Link href="/about" className="text-theme-text-tertiary hover:text-yellow-400 transition-colors">
-                About
-              </Link>
-            </div>
+          {/* Footer Links */}
+          <div className="flex justify-center gap-6 pt-12 border-t border-gray-200">
+            <Link href="/profile" className="text-sm text-gray-400 hover:text-black transition-colors">
+              Profile
+            </Link>
+            <Link href="/about" className="text-sm text-gray-400 hover:text-black transition-colors">
+              About
+            </Link>
           </div>
         </div>
       </main>
-
-      <style jsx>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .animate-fadeIn {
-          animation: fadeIn 0.8s ease-out;
-        }
-      `}</style>
     </>
   );
 }
 
-function StatCard({ label, value, goal, icon, color }) {
-  const colors = {
-    yellow: 'from-yellow-500 to-orange-500',
-    orange: 'from-orange-500 to-red-500',
-    blue: 'from-cyan-500 to-blue-500',
-  };
-
+function StatCard({ label, value, goal, icon }) {
   const percentage = goal ? Math.min(100, (value / goal) * 100) : null;
 
   return (
-    <div className="relative p-8 rounded-3xl bg-theme-bg-secondary border border-theme-border-primary hover:border-yellow-500 transition-all group overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br opacity-5 group-hover:opacity-10 transition-opacity" style={{ background: `linear-gradient(to bottom right, ${colors[color] || colors.yellow})` }} />
-      <div className="relative">
-        <div className="flex items-center justify-between mb-4">
-          <p className="text-sm text-theme-text-tertiary font-medium">{label}</p>
-          <span className="text-4xl">{icon}</span>
-        </div>
-        <p className={`text-5xl font-bold bg-gradient-to-r ${colors[color] || colors.yellow} bg-clip-text text-transparent`}>
-          {value}
-        </p>
-        {goal && (
-          <div className="mt-4">
-            <div className="h-2 bg-theme-bg-primary rounded-full overflow-hidden">
-              <div
-                className={`h-full bg-gradient-to-r ${colors[color] || colors.yellow} transition-all duration-500`}
-                style={{ width: `${percentage}%` }}
-              />
-            </div>
-            <p className="text-xs text-theme-text-tertiary mt-1">Goal: {goal}</p>
-          </div>
-        )}
+    <div className="p-8 rounded-3xl bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300">
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-sm text-gray-500 font-medium uppercase tracking-wider">{label}</p>
+        <span className="text-2xl opacity-50 grayscale">{icon}</span>
       </div>
+      <p className="text-5xl font-light text-gray-900 mb-2">
+        {value}
+      </p>
+      {goal && (
+        <div className="mt-4">
+          <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-black rounded-full transition-all duration-500"
+              style={{ width: `${percentage}%` }}
+            />
+          </div>
+          <p className="text-xs text-gray-400 mt-2 text-right">{Math.round(percentage)}% of goal</p>
+        </div>
+      )}
     </div>
   );
 }
 
-function QuickActionCard({ href, icon, title, description, stat, color }) {
-  const borderColors = {
-    yellow: 'hover:border-yellow-500',
-    orange: 'hover:border-orange-500',
-  };
-
+function QuickActionCard({ href, icon, title, description, stat }) {
   return (
-    <Link href={href} className={`group relative p-8 rounded-3xl bg-theme-bg-secondary border-2 border-theme-border-primary ${borderColors[color]} transition-all overflow-hidden`}>
-      <div className="flex items-start gap-4">
-        <span className="text-6xl">{icon}</span>
-        <div className="flex-1">
-          <h3 className="text-2xl font-bold mb-2 group-hover:text-yellow-400 transition-colors">{title}</h3>
-          <p className="text-theme-text-tertiary mb-4">{description}</p>
-          <p className="text-sm font-semibold text-yellow-400">{stat}</p>
+    <Link href={href} className="group block p-8 rounded-3xl bg-white border border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200 transition-all duration-300">
+      <div className="flex items-start gap-6">
+        <div className="w-16 h-16 rounded-2xl bg-gray-50 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform duration-300">
+          {icon}
         </div>
-        <svg className="w-8 h-8 text-theme-text-tertiary group-hover:text-yellow-400 group-hover:translate-x-2 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-        </svg>
+        <div className="flex-1">
+          <h3 className="text-xl font-medium text-gray-900 mb-1 group-hover:text-black transition-colors">{title}</h3>
+          <p className="text-gray-400 text-sm mb-4">{description}</p>
+          <div className="inline-block px-3 py-1 rounded-lg bg-gray-50 text-xs font-medium text-gray-600">
+            {stat}
+          </div>
+        </div>
+        <div className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 group-hover:border-black group-hover:text-black transition-all">
+          →
+        </div>
       </div>
     </Link>
   );
 }
 
-function MacroCard({ label, value, goal, unit, color }) {
-  const colors = {
-    green: 'from-green-500 to-emerald-500',
-    blue: 'from-blue-500 to-indigo-500',
-    purple: 'from-purple-500 to-pink-500',
-  };
-
+function MacroCard({ label, value, goal, unit }) {
   const percentage = goal ? Math.min(100, (value / goal) * 100) : 0;
 
   return (
-    <div className="p-4 rounded-xl bg-theme-bg-primary">
-      <p className="text-xs text-theme-text-tertiary mb-2">{label}</p>
-      <p className={`text-3xl font-bold bg-gradient-to-r ${colors[color]} bg-clip-text text-transparent mb-2`}>
-        {value}{unit}
-      </p>
-      <div className="h-1.5 bg-theme-bg-tertiary rounded-full overflow-hidden">
+    <div>
+      <div className="flex justify-between items-end mb-2">
+        <p className="text-sm text-gray-500 font-medium">{label}</p>
+        <p className="text-2xl font-light text-gray-900">
+          {value}<span className="text-sm text-gray-400 ml-0.5">{unit}</span>
+        </p>
+      </div>
+      <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
         <div
-          className={`h-full bg-gradient-to-r ${colors[color]} transition-all duration-500`}
+          className="h-full bg-black rounded-full transition-all duration-500"
           style={{ width: `${percentage}%` }}
         />
       </div>
-      <p className="text-xs text-theme-text-tertiary mt-1">{goal}{unit}</p>
+      <p className="text-xs text-gray-400 mt-2 text-right">Goal: {goal}{unit}</p>
     </div>
   );
 }

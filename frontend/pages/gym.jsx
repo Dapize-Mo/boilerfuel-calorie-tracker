@@ -228,7 +228,7 @@ export default function GymDashboard() {
     return activityLogs
       .filter((log) => {
         const logDate = new Date(log.timestamp);
-        
+
         switch (viewMode) {
           case 'today':
             return startOfDay(logDate).getTime() === today.getTime();
@@ -318,17 +318,17 @@ export default function GymDashboard() {
     filteredLogs.forEach((log) => {
       const date = startOfDay(new Date(log.timestamp));
       const dateKey = date.toISOString();
-      
+
       if (!grouped[dateKey]) {
         grouped[dateKey] = {
           date,
           logs: [],
         };
       }
-      
+
       grouped[dateKey].logs.push(log);
     });
-    
+
     return Object.values(grouped).sort((a, b) => b.date - a.date);
   }, [filteredLogs]);
 
@@ -539,8 +539,8 @@ export default function GymDashboard() {
         <Head>
           <title>Loading... - Gym Dashboard</title>
         </Head>
-        <main className="min-h-screen bg-theme-bg-primary text-theme-text-primary flex items-center justify-center">
-          <div className="text-xl">Loading activities...</div>
+        <main className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-gray-500">Loading activities...</div>
         </main>
       </>
     );
@@ -552,53 +552,41 @@ export default function GymDashboard() {
         <title>Gym Dashboard - BoilerFuel</title>
         <meta name="description" content="Track your gym and fitness activities with BoilerFuel" />
       </Head>
-      <main className="min-h-screen bg-theme-bg-primary text-theme-text-primary">
-        <div className="mx-auto max-w-7xl space-y-6 p-6">
-          {/* Navigation */}
-          <nav className="flex items-center gap-4 text-sm text-theme-text-tertiary">
-            <Link href="/" className="hover:text-yellow-400 transition-colors">← Home</Link>
-            <span className="text-theme-text-tertiary">|</span>
-            <Link href="/dashboard" className="hover:text-yellow-400 transition-colors">Dashboard</Link>
-            <span className="text-theme-text-tertiary">|</span>
-            <Link href="/about" className="hover:text-yellow-400 transition-colors">About</Link>
-          </nav>
+      <main className="min-h-screen bg-gray-50 font-sans text-gray-900 p-6">
+        <div className="max-w-7xl mx-auto space-y-6">
 
           {/* Header */}
-          <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between pb-4 border-b border-gray-200">
             <div>
-              <h1 className="text-4xl font-bold flex items-center gap-3">
-                <span>💪</span>
-                Gym Dashboard
-              </h1>
-              <p className="text-theme-text-tertiary">Track your workouts and fitness activities—all data stays on this device only.</p>
+              <h1 className="text-3xl font-light tracking-tight text-gray-900">Gym Dashboard</h1>
+              <p className="text-gray-400 text-sm mt-1">Track your workouts and fitness activities</p>
             </div>
             <button
               type="button"
               onClick={handleClearAllLogs}
-              className="self-start rounded bg-theme-bg-tertiary px-4 py-2 text-sm font-semibold text-theme-text-secondary hover:bg-theme-bg-hover"
+              className="self-start px-4 py-2 rounded-xl bg-gray-100 text-gray-600 text-sm font-medium hover:bg-red-50 hover:text-red-600 transition-colors"
             >
               Clear all logs
             </button>
           </header>
 
           {error && (
-            <div className="rounded border border-red-500 bg-red-500/10 px-4 py-3 text-red-400">
+            <div className="p-4 rounded-2xl bg-red-50 border border-red-100 text-red-600 text-sm">
               {error}
             </div>
           )}
 
           {/* View Mode Selector */}
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-2 overflow-x-auto pb-2">
             {['today', 'week', 'month', 'all'].map((mode) => (
               <button
                 key={mode}
                 type="button"
                 onClick={() => setViewMode(mode)}
-                className={`px-4 py-2 rounded font-semibold transition-colors ${
-                  viewMode === mode
-                    ? 'bg-orange-500 text-slate-900'
-                    : 'bg-theme-bg-tertiary text-theme-text-secondary hover:bg-theme-bg-hover'
-                }`}
+                className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${viewMode === mode
+                    ? 'bg-black text-white shadow-md'
+                    : 'bg-white text-gray-500 hover:bg-gray-100 border border-gray-100'
+                  }`}
               >
                 {mode.charAt(0).toUpperCase() + mode.slice(1)}
               </button>
@@ -606,13 +594,12 @@ export default function GymDashboard() {
           </div>
 
           {/* Statistics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <StatCard
-              label="Total Calories Burned"
+              label="Calories Burned"
               value={stats.totalCalories}
               unit="cal"
               icon="🔥"
-              accent="text-orange-500"
             />
             <StatCard
               label="Total Duration"
@@ -620,557 +607,327 @@ export default function GymDashboard() {
               unit="min"
               goal={viewMode === 'today' ? goals.activityMinutes : null}
               icon="⏱️"
-              accent="text-blue-500"
             />
             <StatCard
-              label="Workout Sessions"
+              label="Sessions"
               value={stats.totalSessions}
               unit=""
               icon="📊"
-              accent="text-green-500"
             />
           </div>
 
-          {/* Personal Records */}
-          {Object.keys(personalRecords).length > 0 && (
-            <section className="py-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold">🏆 Personal Records</h2>
-                <button
-                  type="button"
-                  onClick={() => setShowPRs(!showPRs)}
-                  className="text-sm font-semibold text-yellow-400 hover:text-yellow-300 transition-colors"
-                >
-                  {showPRs ? '▼ Hide' : '▶ Show'} ({Object.keys(personalRecords).length})
-                </button>
-              </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left Column: Log Activity */}
+            <div className="lg:col-span-1 space-y-6">
+              <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+                <h2 className="text-xl font-medium text-gray-900 mb-6">Log Activity</h2>
 
-              {showPRs && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {Object.entries(personalRecords).map(([key, pr]) => {
-                    const activity = activitiesById.get(pr.activityId);
-                    if (!activity) return null;
-
-                    const prDate = new Date(pr.date).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
-                    });
-
-                    return (
-                      <div
-                        key={key}
-                        className="p-4 border-l-4 border-yellow-500 bg-gradient-to-r from-yellow-500/10 to-transparent hover:from-yellow-500/20 transition-colors"
-                      >
-                        <h3 className="font-bold text-lg mb-2 text-yellow-400">{activity.name}</h3>
-                        <div className="space-y-1 text-sm">
-                          <p className="text-theme-text-primary">
-                            <span className="font-semibold">💪 {pr.weight} lbs</span>
-                            <span className="text-theme-text-tertiary"> × </span>
-                            <span className="font-semibold">{pr.reps} reps</span>
-                          </p>
-                          <p className="text-theme-text-secondary">
-                            Total Volume: <span className="font-semibold">{pr.volume} lbs</span>
-                          </p>
-                          <p className="text-xs text-theme-text-tertiary">Set on {prDate}</p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </section>
-          )}
-
-          {/* Advanced Analytics */}
-          {filteredLogs.length > 0 && (
-            <section className="py-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold">📊 Workout Insights</h2>
-                <button
-                  type="button"
-                  onClick={() => setShowAnalytics(!showAnalytics)}
-                  className="text-sm font-semibold text-purple-400 hover:text-purple-300 transition-colors"
-                >
-                  {showAnalytics ? '▼ Hide' : '▶ Show'} Analytics
-                </button>
-              </div>
-
-              {showAnalytics && (
-                <div className="space-y-6">
-                  {/* Category Breakdown */}
-                  {Object.keys(stats.categoryBreakdown).length > 0 && (
-                    <div>
-                      <h3 className="text-lg font-semibold mb-3">By Category</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {Object.entries(stats.categoryBreakdown)
-                          .sort((a, b) => b[1].duration - a[1].duration)
-                          .map(([category, data]) => (
-                            <div key={category} className="p-4 border border-theme-border-primary rounded bg-theme-bg-primary/30">
-                              <h4 className="font-bold capitalize mb-2">{category}</h4>
-                              <div className="space-y-1 text-sm text-theme-text-secondary">
-                                <p>⏱️ {Math.round(data.duration)} minutes</p>
-                                <p>🔥 {Math.round(data.calories)} calories</p>
-                                <p>📊 {data.count} sessions</p>
-                              </div>
-                            </div>
-                          ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Muscle Group Frequency */}
-                  {Object.keys(stats.muscleGroupFrequency).length > 0 && (
-                    <div>
-                      <h3 className="text-lg font-semibold mb-3">Muscle Groups Trained</h3>
-                      <div className="flex flex-wrap gap-2">
-                        {Object.entries(stats.muscleGroupFrequency)
-                          .sort((a, b) => b[1] - a[1])
-                          .map(([group, count]) => (
-                            <div
-                              key={group}
-                              className="px-4 py-2 rounded bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30"
-                            >
-                              <span className="font-semibold capitalize">{group}</span>
-                              <span className="ml-2 text-sm text-theme-text-tertiary">× {count}</span>
-                            </div>
-                          ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Volume Stats */}
-                  {stats.totalVolume > 0 && (
-                    <div className="p-4 border-l-4 border-purple-500 bg-purple-500/10">
-                      <h3 className="text-lg font-semibold mb-2">💪 Total Volume Lifted</h3>
-                      <p className="text-3xl font-bold text-purple-400">
-                        {stats.totalVolume.toLocaleString()} lbs
-                      </p>
-                      <p className="text-sm text-theme-text-tertiary mt-1">
-                        Weight × Reps × Sets across all strength exercises
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Consistency Metrics */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-4 border border-theme-border-primary rounded">
-                      <h4 className="font-semibold mb-2">Average Session Duration</h4>
-                      <p className="text-2xl font-bold text-blue-400">
-                        {stats.totalSessions > 0 ? Math.round(stats.totalDuration / stats.totalSessions) : 0} min
-                      </p>
-                    </div>
-                    <div className="p-4 border border-theme-border-primary rounded">
-                      <h4 className="font-semibold mb-2">Average Calories/Session</h4>
-                      <p className="text-2xl font-bold text-orange-400">
-                        {stats.totalSessions > 0 ? Math.round(stats.totalCalories / stats.totalSessions) : 0} cal
-                      </p>
-                    </div>
+                {formError && (
+                  <div className="mb-4 p-3 rounded-xl bg-red-50 text-red-600 text-sm border border-red-100">
+                    {formError}
                   </div>
-                </div>
-              )}
-            </section>
-          )}
+                )}
+                {success && (
+                  <div className="mb-4 p-3 rounded-xl bg-green-50 text-green-600 text-sm border border-green-100">
+                    {success}
+                  </div>
+                )}
 
-          {/* Activity Breakdown */}
-          {Object.keys(stats.activityBreakdown).length > 0 && (
-            <section className="py-6">
-              <h2 className="mb-4 text-2xl font-bold">Activity Breakdown</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {Object.entries(stats.activityBreakdown)
-                  .sort((a, b) => b[1].calories - a[1].calories)
-                  .map(([name, data]) => (
-                    <div key={name} className="p-4 border-l-4 border-orange-500 bg-theme-bg-primary/50">
-                      <h3 className="font-bold text-lg mb-2">{name}</h3>
-                      <div className="space-y-1 text-sm text-theme-text-secondary">
-                        <p>🔥 {Math.round(data.calories)} calories burned</p>
-                        <p>⏱️ {Math.round(data.duration)} minutes total</p>
-                        <p>📊 {data.count} {data.count === 1 ? 'session' : 'sessions'}</p>
-                      </div>
-                    </div>
-                  ))}
-              </div>
-            </section>
-          )}
+                <form onSubmit={handleAddActivity} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-400 mb-1">Activity Type</label>
+                    <input
+                      type="text"
+                      placeholder="Search..."
+                      value={activitySearchQuery}
+                      onChange={(event) => setActivitySearchQuery(event.target.value)}
+                      className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm mb-2 focus:ring-2 focus:ring-gray-200 outline-none"
+                    />
+                    <select
+                      value={selectedActivity}
+                      onChange={(event) => setSelectedActivity(event.target.value)}
+                      required
+                      className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:ring-2 focus:ring-gray-200 outline-none"
+                    >
+                      <option value="">Select activity...</option>
+                      {filteredActivities.map((activity) => (
+                        <option key={activity.id} value={activity.id}>
+                          {activity.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-          {/* Log New Activity */}
-          <section className="py-6 border-t border-theme-border-primary">
-            <h2 className="mb-4 text-2xl font-bold">Log New Activity</h2>
-            {formError && (
-              <div className="mb-4 rounded border border-red-500 bg-red-500/10 px-4 py-3 text-red-400">
-                {formError}
-              </div>
-            )}
-            {success && (
-              <div className="mb-4 rounded border border-green-500 bg-green-500/10 px-4 py-3 text-green-400">
-                {success}
-              </div>
-            )}
-            <form onSubmit={handleAddActivity} className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-3">
-                <div className="md:col-span-1">
-                  <label htmlFor="activity-search" className="mb-2 block text-sm font-medium">
-                    Activity Type
-                  </label>
-                  <input
-                    id="activity-search"
-                    type="text"
-                    placeholder="Search exercises..."
-                    value={activitySearchQuery}
-                    onChange={(event) => setActivitySearchQuery(event.target.value)}
-                    className="w-full rounded border border-theme-border-primary bg-theme-bg-tertiary px-4 py-2 mb-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  />
-                  <select
-                    id="activity"
-                    value={selectedActivity}
-                    onChange={(event) => setSelectedActivity(event.target.value)}
-                    required
-                    className="w-full rounded border border-theme-border-primary bg-theme-bg-tertiary px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  >
-                    <option value="">Select an activity...</option>
-                    {filteredActivities.length === 0 && activitySearchQuery && <option disabled value="">No matching activities found</option>}
-                    {filteredActivities.length === 0 && !activitySearchQuery && <option disabled value="">No activities available yet</option>}
-                    {filteredActivities.map((activity) => (
-                      <option key={activity.id} value={activity.id}>
-                        {activity.name} ({activity.calories_per_hour} cal/hr)
-                        {activity.category && ` - ${activity.category}`}
-                      </option>
-                    ))}
-                  </select>
-                  {activitySearchQuery && (
-                    <p className="text-xs text-theme-text-tertiary mt-1">
-                      {filteredActivities.length} of {activities.length} exercises
-                    </p>
-                  )}
-                </div>
-                <div className="md:col-span-1">
-                  <label htmlFor="duration" className="mb-2 block text-sm font-medium">
-                    Duration (minutes)
-                  </label>
-                  <input
-                    id="duration"
-                    type="number"
-                    min="1"
-                    step="1"
-                    value={duration}
-                    onChange={(event) => setDuration(event.target.value)}
-                    className="w-full rounded border border-theme-border-primary bg-theme-bg-tertiary px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  />
-                </div>
-                <div className="md:col-span-1 flex items-end">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-400 mb-1">Duration (min)</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={duration}
+                      onChange={(event) => setDuration(event.target.value)}
+                      className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:ring-2 focus:ring-gray-200 outline-none"
+                    />
+                  </div>
+
                   <button
                     type="button"
                     onClick={() => setShowAdvanced(!showAdvanced)}
-                    className="w-full rounded bg-theme-bg-tertiary px-4 py-2 font-semibold text-theme-text-secondary hover:bg-theme-bg-hover transition-colors"
+                    className="text-xs font-medium text-gray-500 hover:text-black transition-colors"
                   >
-                    {showAdvanced ? '− Less Options' : '+ More Options'}
+                    {showAdvanced ? '− Less Options' : '+ More Options (Weight, Reps, Sets)'}
                   </button>
-                </div>
-              </div>
 
-              {/* Advanced Fields */}
-              {showAdvanced && (
-                <div className="grid gap-4 md:grid-cols-3 p-4 border border-theme-border-primary rounded bg-theme-bg-primary/20">
-                  <div>
-                    <label htmlFor="weight" className="mb-2 block text-sm font-medium">
-                      Weight (lbs/kg) <span className="text-theme-text-tertiary">- Optional</span>
-                    </label>
-                    <input
-                      id="weight"
-                      type="number"
-                      min="0"
-                      step="0.5"
-                      value={weight}
-                      onChange={(event) => setWeight(event.target.value)}
-                      placeholder="e.g., 135"
-                      className="w-full rounded border border-theme-border-primary bg-theme-bg-tertiary px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="reps" className="mb-2 block text-sm font-medium">
-                      Reps <span className="text-theme-text-tertiary">- Optional</span>
-                    </label>
-                    <input
-                      id="reps"
-                      type="number"
-                      min="1"
-                      step="1"
-                      value={reps}
-                      onChange={(event) => setReps(event.target.value)}
-                      placeholder="e.g., 10"
-                      className="w-full rounded border border-theme-border-primary bg-theme-bg-tertiary px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="sets" className="mb-2 block text-sm font-medium">
-                      Sets <span className="text-theme-text-tertiary">- Optional</span>
-                    </label>
-                    <input
-                      id="sets"
-                      type="number"
-                      min="1"
-                      step="1"
-                      value={sets}
-                      onChange={(event) => setSets(event.target.value)}
-                      placeholder="e.g., 3"
-                      className="w-full rounded border border-theme-border-primary bg-theme-bg-tertiary px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                    />
-                  </div>
-                  <div className="md:col-span-3">
-                    <label htmlFor="notes" className="mb-2 block text-sm font-medium">
-                      Notes <span className="text-theme-text-tertiary">- Optional</span>
-                    </label>
-                    <textarea
-                      id="notes"
-                      value={notes}
-                      onChange={(event) => setNotes(event.target.value)}
-                      placeholder="e.g., Felt strong today, focus on form..."
-                      rows="2"
-                      className="w-full rounded border border-theme-border-primary bg-theme-bg-tertiary px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
-                    />
-                  </div>
-                </div>
-              )}
+                  {showAdvanced && (
+                    <div className="grid grid-cols-3 gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                      <div>
+                        <label className="block text-[10px] font-medium text-gray-400 mb-1">Weight</label>
+                        <input
+                          type="number"
+                          value={weight}
+                          onChange={(e) => setWeight(e.target.value)}
+                          className="w-full rounded-lg border border-gray-200 bg-white px-2 py-1 text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-medium text-gray-400 mb-1">Reps</label>
+                        <input
+                          type="number"
+                          value={reps}
+                          onChange={(e) => setReps(e.target.value)}
+                          className="w-full rounded-lg border border-gray-200 bg-white px-2 py-1 text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-medium text-gray-400 mb-1">Sets</label>
+                        <input
+                          type="number"
+                          value={sets}
+                          onChange={(e) => setSets(e.target.value)}
+                          className="w-full rounded-lg border border-gray-200 bg-white px-2 py-1 text-sm"
+                        />
+                      </div>
+                      <div className="col-span-3">
+                        <label className="block text-[10px] font-medium text-gray-400 mb-1">Notes</label>
+                        <textarea
+                          value={notes}
+                          onChange={(e) => setNotes(e.target.value)}
+                          rows="2"
+                          className="w-full rounded-lg border border-gray-200 bg-white px-2 py-1 text-sm resize-none"
+                        />
+                      </div>
+                    </div>
+                  )}
 
-              <div className="grid gap-2 md:grid-cols-2">
-                <button
-                  type="submit"
-                  className="w-full rounded bg-orange-500 px-4 py-2 font-semibold text-slate-900 hover:bg-orange-600 transition-all duration-300 glow-orange"
-                >
-                  Log Activity
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowSaveTemplate(!showSaveTemplate)}
-                  className="w-full rounded bg-blue-500 px-4 py-2 font-semibold text-slate-900 hover:bg-blue-600 transition-all duration-300 glow-blue"
-                >
-                  {showSaveTemplate ? 'Cancel' : 'Save as Template'}
-                </button>
-              </div>
-
-              {/* Save Template Form */}
-              {showSaveTemplate && (
-                <div className="p-4 border border-blue-500 rounded bg-blue-500/10">
-                  <label htmlFor="templateName" className="mb-2 block text-sm font-medium">
-                    Template Name
-                  </label>
-                  <div className="flex gap-2">
-                    <input
-                      id="templateName"
-                      type="text"
-                      value={templateName}
-                      onChange={(event) => setTemplateName(event.target.value)}
-                      placeholder="e.g., Morning Run, Chest Day..."
-                      className="flex-1 rounded border border-theme-border-primary bg-theme-bg-tertiary px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
+                  <div className="grid grid-cols-2 gap-3 pt-2">
+                    <button
+                      type="submit"
+                      className="w-full rounded-xl bg-black text-white py-2.5 text-sm font-medium hover:bg-gray-800 transition-colors shadow-lg shadow-gray-200"
+                    >
+                      Log Activity
+                    </button>
                     <button
                       type="button"
-                      onClick={handleSaveAsTemplate}
-                      className="rounded bg-blue-500 px-4 py-2 font-semibold text-slate-900 hover:bg-blue-600 transition-colors"
+                      onClick={() => setShowSaveTemplate(!showSaveTemplate)}
+                      className="w-full rounded-xl bg-gray-100 text-gray-600 py-2.5 text-sm font-medium hover:bg-gray-200 transition-colors"
                     >
-                      Save
+                      {showSaveTemplate ? 'Cancel' : 'Save Template'}
                     </button>
                   </div>
+
+                  {showSaveTemplate && (
+                    <div className="pt-4 border-t border-gray-100">
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={templateName}
+                          onChange={(e) => setTemplateName(e.target.value)}
+                          placeholder="Template Name"
+                          className="flex-1 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleSaveAsTemplate}
+                          className="px-4 py-2 rounded-xl bg-black text-white text-sm font-medium"
+                        >
+                          Save
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </form>
+              </div>
+
+              {/* Templates List */}
+              {workoutTemplates.length > 0 && (
+                <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-medium text-gray-900">Templates</h3>
+                    <button
+                      onClick={() => setShowTemplates(!showTemplates)}
+                      className="text-xs font-medium text-gray-500 hover:text-black"
+                    >
+                      {showTemplates ? 'Hide' : 'Show'} ({workoutTemplates.length})
+                    </button>
+                  </div>
+
+                  {showTemplates && (
+                    <div className="space-y-3">
+                      {workoutTemplates.map((template) => {
+                        const activity = activitiesById.get(template.activityId);
+                        if (!activity) return null;
+                        return (
+                          <div key={template.id} className="p-3 rounded-xl border border-gray-100 hover:border-gray-200 transition-colors bg-gray-50">
+                            <div className="flex justify-between items-start mb-2">
+                              <div>
+                                <h4 className="font-medium text-sm text-gray-900">{template.name}</h4>
+                                <p className="text-xs text-gray-500">{activity.name}</p>
+                              </div>
+                              <button onClick={() => handleDeleteTemplate(template.id)} className="text-gray-400 hover:text-red-500">×</button>
+                            </div>
+                            <button
+                              onClick={() => handleLoadTemplate(template)}
+                              className="w-full py-1.5 rounded-lg bg-white border border-gray-200 text-xs font-medium text-gray-600 hover:bg-gray-50 hover:text-black transition-colors"
+                            >
+                              Load Template
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               )}
-            </form>
+            </div>
 
-            {/* Workout Templates Section */}
-            {workoutTemplates.length > 0 && (
-              <div className="mt-6">
-                <button
-                  type="button"
-                  onClick={() => setShowTemplates(!showTemplates)}
-                  className="mb-3 text-sm font-semibold text-blue-400 hover:text-blue-300 transition-colors"
-                >
-                  {showTemplates ? '▼ Hide Templates' : '▶ Show Saved Templates'} ({workoutTemplates.length})
-                </button>
+            {/* Right Column: History & Analytics */}
+            <div className="lg:col-span-2 space-y-6">
 
-                {showTemplates && (
-                  <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-                    {workoutTemplates.map((template) => {
-                      const activity = activitiesById.get(template.activityId);
-                      if (!activity) return null;
+              {/* Personal Records */}
+              {Object.keys(personalRecords).length > 0 && (
+                <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-medium text-gray-900">Personal Records</h2>
+                    <button onClick={() => setShowPRs(!showPRs)} className="text-xs font-medium text-gray-500 hover:text-black">
+                      {showPRs ? 'Hide' : 'Show'}
+                    </button>
+                  </div>
 
-                      return (
-                        <div
-                          key={template.id}
-                          className="p-3 border border-theme-border-primary rounded bg-theme-bg-primary/30 hover:border-blue-500 transition-colors"
-                        >
-                          <h4 className="font-semibold text-blue-400 mb-1">{template.name}</h4>
-                          <p className="text-sm text-theme-text-secondary mb-2">{activity.name}</p>
-                          <div className="flex flex-wrap gap-2 text-xs text-theme-text-tertiary mb-3">
-                            <span>⏱️ {template.duration}min</span>
-                            {template.sets && template.reps && <span>🏋️ {template.sets}×{template.reps}</span>}
-                            {template.weight && <span>💪 {template.weight}lbs</span>}
+                  {showPRs && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {Object.entries(personalRecords).map(([key, pr]) => {
+                        const activity = activitiesById.get(pr.activityId);
+                        if (!activity) return null;
+                        return (
+                          <div key={key} className="p-4 rounded-2xl bg-yellow-50 border border-yellow-100">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <h3 className="font-medium text-yellow-900">{activity.name}</h3>
+                                <p className="text-sm text-yellow-700 mt-1">
+                                  {pr.weight}lbs × {pr.reps} reps
+                                </p>
+                              </div>
+                              <span className="text-2xl">🏆</span>
+                            </div>
                           </div>
-                          <div className="flex gap-2">
-                            <button
-                              type="button"
-                              onClick={() => handleLoadTemplate(template)}
-                              className="flex-1 px-3 py-1 rounded bg-blue-500 text-slate-900 text-sm font-semibold hover:bg-blue-600 transition-colors"
-                            >
-                              Load
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteTemplate(template.id)}
-                              className="px-3 py-1 rounded bg-theme-bg-tertiary text-theme-text-tertiary text-sm hover:text-red-400 transition-colors"
-                            >
-                              Delete
-                            </button>
-                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Activity History */}
+              <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 min-h-[500px]">
+                <h2 className="text-xl font-medium text-gray-900 mb-6">History</h2>
+
+                {filteredLogs.length === 0 ? (
+                  <div className="text-center py-12 text-gray-400">
+                    <p>No activities found for this period.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-8">
+                    {logsByDate.map((dateGroup) => (
+                      <div key={dateGroup.date.toISOString()}>
+                        <h3 className="text-sm font-medium text-gray-400 mb-4 sticky top-0 bg-white py-2">
+                          {formatDate(dateGroup.date)}
+                        </h3>
+                        <div className="space-y-3">
+                          {dateGroup.logs.map((log) => {
+                            const activity = activitiesById.get(log.activityId);
+                            if (!activity) return null;
+                            const caloriesBurned = Math.round((activity.calories_per_hour * log.duration) / 60);
+
+                            return (
+                              <div key={log.id} className="group flex items-center justify-between p-4 rounded-2xl bg-gray-50 hover:bg-gray-100 transition-colors border border-gray-100">
+                                <div className="flex items-center gap-4">
+                                  <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-lg shadow-sm">
+                                    💪
+                                  </div>
+                                  <div>
+                                    <h4 className="font-medium text-gray-900">{activity.name}</h4>
+                                    <div className="flex gap-2 text-xs text-gray-500 mt-0.5">
+                                      <span>{log.duration} min</span>
+                                      <span>•</span>
+                                      <span>{caloriesBurned} cal</span>
+                                      {(log.weight || log.reps) && (
+                                        <>
+                                          <span>•</span>
+                                          <span className="text-gray-700 font-medium">
+                                            {log.weight ? `${log.weight}lbs` : ''}
+                                            {log.weight && log.reps ? ' × ' : ''}
+                                            {log.reps ? `${log.reps} reps` : ''}
+                                          </span>
+                                        </>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                                <button
+                                  onClick={() => handleRemoveLog(log.id)}
+                                  className="opacity-0 group-hover:opacity-100 p-2 text-gray-400 hover:text-red-500 transition-all"
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            );
+                          })}
                         </div>
-                      );
-                    })}
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
-            )}
-          </section>
-
-          {/* Activity History */}
-          <section className="py-6 border-t border-theme-border-primary">
-            <h2 className="mb-4 text-2xl font-bold">Activity History</h2>
-            {filteredLogs.length === 0 ? (
-              <p className="text-theme-text-tertiary">
-                No activities logged for this period. Start logging your workouts above!
-              </p>
-            ) : (
-              <div className="space-y-6">
-                {logsByDate.map((dateGroup) => {
-                  const totalDayCalories = dateGroup.logs.reduce((sum, log) => {
-                    const activity = activitiesById.get(log.activityId);
-                    if (!activity) return sum;
-                    return sum + (activity.calories_per_hour * log.duration) / 60;
-                  }, 0);
-                  
-                  const totalDayDuration = dateGroup.logs.reduce((sum, log) => sum + log.duration, 0);
-
-                  return (
-                    <div key={dateGroup.date.toISOString()} className="border-l-4 border-orange-500 pl-4">
-                      <div className="mb-3 flex items-center justify-between">
-                        <h3 className="text-xl font-bold">{formatDate(dateGroup.date)}</h3>
-                        <div className="text-sm text-theme-text-tertiary">
-                          🔥 {Math.round(totalDayCalories)} cal • ⏱️ {Math.round(totalDayDuration)} min
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        {dateGroup.logs.map((log) => {
-                          const activity = activitiesById.get(log.activityId);
-                          if (!activity) return null;
-
-                          const caloriesBurned = Math.round((activity.calories_per_hour * log.duration) / 60);
-                          const logTime = new Date(log.timestamp).toLocaleTimeString('en-US', { 
-                            hour: 'numeric', 
-                            minute: '2-digit' 
-                          });
-
-                          const hasExtraDetails = log.weight || log.reps || log.sets || log.notes;
-
-                          return (
-                            <article
-                              key={log.id}
-                              className="p-4 border-l border-theme-border-primary hover:border-orange-500 transition-all duration-300 card-glow"
-                            >
-                              <div className="flex items-start justify-between gap-4">
-                                <div className="flex-1">
-                                  <h4 className="font-semibold text-lg">{activity.name}</h4>
-                                  <p className="text-sm text-theme-text-tertiary mt-1">
-                                    ⏱️ {log.duration} {log.duration === 1 ? 'minute' : 'minutes'}
-                                    <span className="mx-2">•</span>
-                                    🕐 {logTime}
-                                  </p>
-
-                                  {/* Extra workout details */}
-                                  {hasExtraDetails && (
-                                    <div className="mt-2 flex flex-wrap gap-3 text-sm">
-                                      {log.sets && log.reps && (
-                                        <span className="px-2 py-1 rounded bg-theme-bg-tertiary text-theme-text-secondary">
-                                          🏋️ {log.sets} × {log.reps} reps
-                                        </span>
-                                      )}
-                                      {log.sets && !log.reps && (
-                                        <span className="px-2 py-1 rounded bg-theme-bg-tertiary text-theme-text-secondary">
-                                          🏋️ {log.sets} sets
-                                        </span>
-                                      )}
-                                      {!log.sets && log.reps && (
-                                        <span className="px-2 py-1 rounded bg-theme-bg-tertiary text-theme-text-secondary">
-                                          🏋️ {log.reps} reps
-                                        </span>
-                                      )}
-                                      {log.weight && (
-                                        <span className="px-2 py-1 rounded bg-theme-bg-tertiary text-theme-text-secondary">
-                                          💪 {log.weight} lbs
-                                        </span>
-                                      )}
-                                    </div>
-                                  )}
-
-                                  {log.notes && (
-                                    <p className="mt-2 text-sm text-theme-text-tertiary italic border-l-2 border-theme-border-primary pl-2">
-                                      &ldquo;{log.notes}&rdquo;
-                                    </p>
-                                  )}
-                                </div>
-                                <div className="text-right">
-                                  <p className="font-semibold text-orange-500 text-lg">
-                                    🔥 {caloriesBurned} cal
-                                  </p>
-                                  <p className="text-xs text-theme-text-tertiary mt-1">
-                                    {activity.calories_per_hour} cal/hr
-                                  </p>
-                                </div>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveLog(log.id)}
-                                className="mt-3 text-sm text-theme-text-tertiary hover:text-red-400 transition-colors"
-                              >
-                                Remove
-                              </button>
-                            </article>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </section>
+            </div>
+          </div>
         </div>
       </main>
     </>
   );
 }
 
-function StatCard({ label, value, unit, icon, accent, goal }) {
+function StatCard({ label, value, unit, icon, goal }) {
   const hasGoal = goal !== null && goal !== undefined;
   const percentage = hasGoal && goal > 0 ? Math.min(100, (value / goal) * 100) : null;
 
   return (
-    <div className="p-6 border-l-4 border-theme-border-primary hover:border-orange-500 transition-colors bg-theme-bg-primary/30">
-      <div className="flex items-center justify-between mb-2">
-        <p className="text-sm text-theme-text-tertiary">{label}</p>
-        <span className="text-2xl">{icon}</span>
+    <div className="p-6 rounded-3xl bg-white border border-gray-100 shadow-sm">
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-sm text-gray-500 font-medium">{label}</p>
+        <span className="text-xl opacity-80 grayscale">{icon}</span>
       </div>
-      <p className={`text-4xl font-bold ${accent}`}>
-        {value}{unit && <span className="text-xl ml-1">{unit}</span>}
-      </p>
-      {hasGoal && percentage !== null && (
-        <div className="mt-3">
-          <div className="flex items-center justify-between text-xs text-theme-text-tertiary mb-1">
-            <span>Daily Goal: {goal}{unit}</span>
-            <span>{Math.round(percentage)}%</span>
-          </div>
-          <div className="h-1.5 bg-theme-border-primary overflow-hidden">
+      <div className="flex items-baseline gap-1">
+        <span className="text-3xl font-light text-gray-900">{value}</span>
+        {unit && <span className="text-sm text-gray-400">{unit}</span>}
+      </div>
+      {hasGoal && (
+        <div className="mt-4">
+          <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
             <div
-              className={`h-full ${accent.replace('text-', 'bg-')} transition-all duration-300`}
+              className="h-full bg-black rounded-full transition-all duration-500"
               style={{ width: `${percentage}%` }}
             />
           </div>
+          <p className="text-xs text-gray-400 mt-2 text-right">{Math.round(percentage)}% of goal</p>
         </div>
       )}
     </div>
