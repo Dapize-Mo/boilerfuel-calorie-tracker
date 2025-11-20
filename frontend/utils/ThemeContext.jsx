@@ -44,8 +44,11 @@ export function ThemeProvider({ children }) {
     const root = document.documentElement;
     if (resolvedTheme === 'dark') {
       root.classList.add('dark');
+      root.classList.remove('light');
     } else {
       root.classList.remove('dark');
+      // Provide an explicit light marker so CSS can target `.light` if desired
+      root.classList.add('light');
     }
   }, [resolvedTheme]);
 

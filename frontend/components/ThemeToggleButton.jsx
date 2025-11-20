@@ -10,7 +10,7 @@ export default function ThemeToggleButton() {
   return (
     <button
       onClick={toggleTheme}
-      className="fixed bottom-6 right-6 z-50 p-4 backdrop-blur-xl bg-white/10 dark:bg-black/20 border border-white/20 dark:border-white/10 rounded-2xl shadow-2xl hover:scale-110 transition-all duration-300 group"
+      className="fixed bottom-6 right-6 z-50 p-4 backdrop-blur-xl bg-theme-bg-secondary/60 dark:bg-theme-bg-secondary/40 border border-theme-border-primary dark:border-theme-border-secondary rounded-2xl shadow-2xl hover:scale-110 transition-all duration-300 group"
       aria-label="Toggle theme"
     >
       <div className="relative w-6 h-6">
