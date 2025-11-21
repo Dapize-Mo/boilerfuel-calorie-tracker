@@ -584,8 +584,8 @@ export default function GymDashboard() {
                 type="button"
                 onClick={() => setViewMode(mode)}
                 className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${viewMode === mode
-                    ? 'bg-theme-text-primary text-theme-bg-secondary shadow-md'
-                    : 'bg-theme-card-bg text-theme-text-secondary hover:bg-theme-bg-tertiary border border-theme-card-border'
+                  ? 'bg-theme-text-primary text-theme-bg-secondary shadow-md'
+                  : 'bg-theme-card-bg text-theme-text-secondary hover:bg-theme-bg-tertiary border border-theme-card-border'
                   }`}
               >
                 {mode.charAt(0).toUpperCase() + mode.slice(1)}
@@ -637,6 +637,7 @@ export default function GymDashboard() {
                   <div>
                     <label className="block text-xs font-medium text-theme-text-tertiary mb-1">Activity Type</label>
                     <input
+                      id="activity-search"
                       type="text"
                       placeholder="Search..."
                       value={activitySearchQuery}
@@ -644,6 +645,7 @@ export default function GymDashboard() {
                       className="w-full rounded-xl border border-theme-border-primary bg-theme-bg-tertiary px-3 py-2 text-sm mb-2 focus:ring-2 focus:ring-theme-accent outline-none text-theme-text-primary"
                     />
                     <select
+                      id="activity-select"
                       value={selectedActivity}
                       onChange={(event) => setSelectedActivity(event.target.value)}
                       required
@@ -661,6 +663,7 @@ export default function GymDashboard() {
                   <div>
                     <label className="block text-xs font-medium text-theme-text-tertiary mb-1">Duration (min)</label>
                     <input
+                      id="duration-input"
                       type="number"
                       min="1"
                       value={duration}
@@ -682,6 +685,7 @@ export default function GymDashboard() {
                       <div>
                         <label className="block text-[10px] font-medium text-theme-text-tertiary mb-1">Weight</label>
                         <input
+                          id="weight-input"
                           type="number"
                           value={weight}
                           onChange={(e) => setWeight(e.target.value)}
@@ -691,6 +695,7 @@ export default function GymDashboard() {
                       <div>
                         <label className="block text-[10px] font-medium text-theme-text-tertiary mb-1">Reps</label>
                         <input
+                          id="reps-input"
                           type="number"
                           value={reps}
                           onChange={(e) => setReps(e.target.value)}
@@ -700,6 +705,7 @@ export default function GymDashboard() {
                       <div>
                         <label className="block text-[10px] font-medium text-theme-text-tertiary mb-1">Sets</label>
                         <input
+                          id="sets-input"
                           type="number"
                           value={sets}
                           onChange={(e) => setSets(e.target.value)}
@@ -709,6 +715,7 @@ export default function GymDashboard() {
                       <div className="col-span-3">
                         <label className="block text-[10px] font-medium text-theme-text-tertiary mb-1">Notes</label>
                         <textarea
+                          id="notes-input"
                           value={notes}
                           onChange={(e) => setNotes(e.target.value)}
                           rows="2"
@@ -720,6 +727,7 @@ export default function GymDashboard() {
 
                   <div className="grid grid-cols-2 gap-3 pt-2">
                     <button
+                      id="log-activity-btn"
                       type="submit"
                       className="w-full rounded-xl bg-theme-text-primary text-theme-bg-secondary py-2.5 text-sm font-medium hover:opacity-90 transition-colors"
                     >
