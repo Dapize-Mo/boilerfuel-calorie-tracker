@@ -24,6 +24,11 @@ const MOCK_FOODS = [
     { id: 112, name: 'Late Lunch Tacos', calories: 300, macros: { protein: 15, carbs: 25, fats: 12 }, dining_court: 'Windsor', station: 'Mexican', meal_time: 'Late Lunch' },
 ];
 
+// Known meal availability schedule (fallback when DB lacks data for a meal)
+const MEAL_COURT_SCHEDULE = {
+    'Late Lunch': ['Windsor', 'Hillenbrand'],
+};
+
 function parseGoalsCookie() {
     const raw = readCookie(GOALS_COOKIE_KEY);
     if (!raw) return { calories: 2000, protein: 150, carbs: 250, fats: 65, activityMinutes: 30 };
@@ -120,12 +125,23 @@ export default function FoodDashboardGlass() {
                 const courts = await apiCall(url).catch(() => []);
                 if (Array.isArray(courts) && courts.length > 0) {
                     setDiningCourts(courts);
-                } else {
-                    // fallback to all distinct courts from existing foods data
-                    const allDistinct = [...new Set(allFoods.map(f => f.dining_court).filter(Boolean))];
-                    setDiningCourts(allDistinct.length > 0 ? allDistinct : ['Earhart', 'Ford', 'Wiley', 'Windsor', 'Hillenbrand']);
+                    return;
                 }
+                // If no courts from DB, use known schedule mapping if available
+                const scheduled = MEAL_COURT_SCHEDULE[selectedMealTime];
+                if (scheduled) {
+                    setDiningCourts(scheduled);
+                    return;
+                }
+                // Final fallback: distinct courts from allFoods
+                const allDistinct = [...new Set(allFoods.map(f => f.dining_court).filter(Boolean))];
+                setDiningCourts(allDistinct.length > 0 ? allDistinct : ['Earhart', 'Ford', 'Wiley', 'Windsor', 'Hillenbrand']);
             } catch (e) {
+                const scheduled = MEAL_COURT_SCHEDULE[selectedMealTime];
+                if (scheduled) {
+                    setDiningCourts(scheduled);
+                    return;
+                }
                 const allDistinct = [...new Set(allFoods.map(f => f.dining_court).filter(Boolean))];
                 setDiningCourts(allDistinct.length > 0 ? allDistinct : ['Earhart', 'Ford', 'Wiley', 'Windsor', 'Hillenbrand']);
             }
@@ -449,16 +465,24 @@ export default function FoodDashboardGlass() {
                                 )}
 
                                 {addMealStep === 'court' && (
-                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                        {diningCourts.map(court => (
-                                            <button
-                                                key={court}
-                                                onClick={() => handleCourtSelect(court)}
-                                                className="h-24 rounded-3xl bg-theme-card-bg border border-theme-border-light hover:border-theme-info hover:shadow-lg transition-all flex items-center justify-center font-bold text-theme-text-primary"
-                                            >
-                                                {court}
-                                            </button>
-                                        ))}
+                                    <div>
+                                        {diningCourts.length === 0 ? (
+                                            <div className="text-center py-10 text-theme-text-muted text-sm">
+                                                No dining courts serving {selectedMealTime}.
+                                            </div>
+                                        ) : (
+                                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                                {diningCourts.map(court => (
+                                                    <button
+                                                        key={court}
+                                                        onClick={() => handleCourtSelect(court)}
+                                                        className="h-24 rounded-3xl bg-theme-card-bg border border-theme-border-light hover:border-theme-info hover:shadow-lg transition-all flex items-center justify-center font-bold text-theme-text-primary"
+                                                    >
+                                                        {court}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
