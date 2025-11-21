@@ -318,7 +318,7 @@ export default function FoodDashboardGlass() {
 
                                 {/* Recent Logs */}
                                 <div className="bg-theme-card-bg/40 backdrop-blur-md rounded-[2.5rem] p-8 border border-theme-border-light">
-                                    <h3 className="text-xl font-bold text-theme-text-primary mb-6">Today's Meals</h3>
+                                    <h3 className="text-xl font-bold text-theme-text-primary mb-6">Today&apos;s Meals</h3>
                                     {selectedDayLogs.length === 0 ? (
                                         <div className="text-center py-10 text-theme-text-muted">No meals logged today.</div>
                                     ) : (
