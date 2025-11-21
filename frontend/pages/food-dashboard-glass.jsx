@@ -97,15 +97,13 @@ export default function FoodDashboardGlass() {
                 const params = new URLSearchParams();
                 if (selectedDiningCourt) params.append('dining_court', selectedDiningCourt);
                 if (selectedMealTime) params.append('meal_time', selectedMealTime);
-                if (selectedDate) params.append('date', selectedDate);
 
                 if (params.toString()) url += `?${params.toString()}`;
 
                 let f = await apiCall(url).catch(() => []);
 
-                // Fallback Mock Data for Verification ONLY if API fails completely (network error)
-                // But if API returns empty list, trust it.
-                if (!f && MOCK_FOODS.length > 0) {
+                // Fallback Mock Data for Verification
+                if ((!f || f.length === 0)) {
                     f = MOCK_FOODS.filter(item =>
                         (!selectedDiningCourt || item.dining_court === selectedDiningCourt) &&
                         (!selectedMealTime || item.meal_time === selectedMealTime)
@@ -116,24 +114,40 @@ export default function FoodDashboardGlass() {
             } catch (e) { }
         }
         fetchFoods();
-    }, [selectedDiningCourt, selectedMealTime, selectedDate, loading, viewMode]);
+    }, [selectedDiningCourt, selectedMealTime, loading, viewMode]);
 
-    // Fetch dining courts filtered by selected meal time and date
+    // Fetch dining courts filtered by selected meal time
     useEffect(() => {
         async function fetchCourtsForMeal() {
             if (!selectedMealTime) return; // keep initial courts
             try {
-                const url = `/api/dining-courts?meal_time=${encodeURIComponent(selectedMealTime)}&date=${encodeURIComponent(selectedDate)}`;
+                const url = `/api/dining-courts?meal_time=${encodeURIComponent(selectedMealTime)}`;
                 const courts = await apiCall(url).catch(() => []);
-
-                // Trust the API result. If empty, it means no courts are open.
-                setDiningCourts(Array.isArray(courts) ? courts : []);
+                if (Array.isArray(courts) && courts.length > 0) {
+                    setDiningCourts(courts);
+                    return;
+                }
+                // If no courts from DB, use known schedule mapping if available
+                const scheduled = MEAL_COURT_SCHEDULE[selectedMealTime];
+                if (scheduled) {
+                    setDiningCourts(scheduled);
+                    return;
+                }
+                // Final fallback: distinct courts from allFoods
+                const allDistinct = [...new Set(allFoods.map(f => f.dining_court).filter(Boolean))];
+                setDiningCourts(allDistinct.length > 0 ? allDistinct : ['Earhart', 'Ford', 'Wiley', 'Windsor', 'Hillenbrand']);
             } catch (e) {
-                setDiningCourts([]);
+                const scheduled = MEAL_COURT_SCHEDULE[selectedMealTime];
+                if (scheduled) {
+                    setDiningCourts(scheduled);
+                    return;
+                }
+                const allDistinct = [...new Set(allFoods.map(f => f.dining_court).filter(Boolean))];
+                setDiningCourts(allDistinct.length > 0 ? allDistinct : ['Earhart', 'Ford', 'Wiley', 'Windsor', 'Hillenbrand']);
             }
         }
         fetchCourtsForMeal();
-    }, [selectedMealTime, selectedDate]);
+    }, [selectedMealTime, allFoods]);
 
     // --- Logic ---
     const foodsById = useMemo(() => { const m = new Map(); allFoods.forEach(f => m.set(f.id, f)); return m; }, [allFoods]);
@@ -274,16 +288,10 @@ export default function FoodDashboardGlass() {
                             )}
                             <div
                                 onClick={() => dateInputRef.current?.showPicker()}
-                                className="flex items-center gap-2 bg-theme-bg-secondary/60 px-4 py-2 rounded-xl cursor-pointer hover:bg-theme-bg-secondary transition-colors relative"
+                                className="flex items-center gap-2 bg-theme-bg-secondary/60 px-4 py-2 rounded-xl cursor-pointer hover:bg-theme-bg-secondary transition-colors"
                             >
                                 <span className="text-sm font-semibold text-theme-text-secondary">{formatDateDisplay(selectedDate)}</span>
-                                <input
-                                    ref={dateInputRef}
-                                    type="date"
-                                    value={selectedDate}
-                                    onChange={e => setSelectedDate(e.target.value)}
-                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                />
+                                <input ref={dateInputRef} type="date" value={selectedDate} onChange={e => setSelectedDate(e.target.value)} className="w-0 h-0 opacity-0" />
                             </div>
                         </div>
                     </div>

@@ -342,30 +342,6 @@ def get_dining_courts():
 	"""Get list of available dining courts from the foods table."""
 	try:
 		meal_time = (request.args.get('meal_time') or '').strip()
-		date_str = (request.args.get('date') or '').strip()
-		
-		query = Food.query
-		
-		# If date is provided, we need to filter by checking next_available JSON
-		# This is complex to do purely in SQL with SQLite/Postgres compatibility in raw SQL
-		# So we'll fetch relevant rows and filter in Python
-		if date_str:
-			# Get all foods that have a dining court
-			foods = query.filter(Food.dining_court.isnot(None)).all()
-			
-			courts = set()
-			for food in foods:
-				# Check if this food is available on the requested date and meal time
-				if food.next_available:
-					for slot in food.next_available:
-						if slot.get('date') == date_str:
-							# If meal_time is also requested, match it
-							if not meal_time or slot.get('meal_time') == meal_time:
-								courts.add(food.dining_court)
-			
-			return jsonify(sorted(list(courts))), 200
-			
-		# Fallback to simple query if no date provided (legacy behavior)
 		sql = 'SELECT DISTINCT dining_court FROM foods WHERE dining_court IS NOT NULL'
 		params = {}
 		if meal_time:
@@ -395,33 +371,9 @@ def get_foods():
 	# Filter by meal time if specified
 	meal_time = request.args.get('meal_time')
 	if meal_time:
-		# If date is NOT provided, use the static meal_time column (legacy)
-		if not request.args.get('date'):
-			query = query.filter(Food.meal_time == meal_time)
+		query = query.filter(Food.meal_time == meal_time)
 	
 	foods = query.all()
-	
-	# Filter by date if specified
-	date_str = request.args.get('date')
-	if date_str:
-		filtered_foods = []
-		for food in foods:
-			if food.next_available:
-				# Check if food is available on this date
-				is_available = False
-				for slot in food.next_available:
-					if slot.get('date') == date_str:
-						# If meal_time is also specified, it must match the slot's meal_time
-						if not meal_time or slot.get('meal_time') == meal_time:
-							is_available = True
-							# Update the food's meal_time to match the specific slot for this date
-							# This ensures the frontend sees the correct meal time for this date
-							food.meal_time = slot.get('meal_time') 
-							break
-				if is_available:
-					filtered_foods.append(food)
-		foods = filtered_foods
-
 	return (
 		jsonify([
 			{
