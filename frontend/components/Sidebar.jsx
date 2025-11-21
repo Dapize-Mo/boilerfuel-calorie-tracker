@@ -2,10 +2,13 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useSession, signIn, signOut } from "next-auth/react";
 import { useState, useEffect } from 'react';
+import { readCookie } from '../utils/cookies';
+import { useDashboard } from '../utils/DashboardContext';
 
 export default function Sidebar({ open, setOpen }) {
     const router = useRouter();
     const { data: session } = useSession();
+    const { dashboardDesign } = useDashboard();
 
     const isActive = (path) => router.pathname === path;
 
@@ -60,9 +63,9 @@ export default function Sidebar({ open, setOpen }) {
                         </NavLink>
 
                         <NavLink
-                            href="/food-dashboard"
+                            href={`/food-dashboard-${dashboardDesign.toLowerCase()}`}
                             icon={<FoodIcon />}
-                            active={isActive('/food-dashboard')}
+                            active={isActive(`/food-dashboard-${dashboardDesign.toLowerCase()}`)}
                             onClick={() => setOpen(false)}
                         >
                             Food Catalog

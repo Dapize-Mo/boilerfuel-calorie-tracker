@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import Layout from '../components/Layout';
 import { ThemeProvider } from '../utils/ThemeContext';
 import { SessionProvider } from "next-auth/react";
+import { DashboardProvider } from '../utils/DashboardContext';
 
 function MyApp({ Component, pageProps: { session, ...pageProps } }) {
   useEffect(() => {
@@ -44,7 +45,9 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
         />
       </Head>
       <ThemeProvider>
-        {getLayout(<Component {...pageProps} />)}
+        <DashboardProvider>
+          {getLayout(<Component {...pageProps} />)}
+        </DashboardProvider>
       </ThemeProvider>
     </SessionProvider>
   );
