@@ -1,18 +1,14 @@
 import { useState, useEffect, useMemo } from 'react';
 import Head from 'next/head';
-import { readCookie, writeCookie, deleteCookie } from '../utils/cookies';
-import { useTheme } from '../utils/ThemeContext';
-import { useDashboard } from '../utils/DashboardContext';
+import { readCookie, writeCookie } from '../utils/cookies';
 
 export default function ProfilePage() {
-  const { theme, setTheme, resolvedTheme } = useTheme();
   const [logs, setLogs] = useState([]);
   const [activityLogs, setActivityLogs] = useState([]);
   const [goals, setGoals] = useState({ calories: 2000, protein: 150, carbs: 250, fats: 65, activityMinutes: 30 });
   const [userName, setUserName] = useState('');
   const [userEmail, setUserEmail] = useState('');
   const [isEditingProfile, setIsEditingProfile] = useState(false);
-  const { dashboardDesign, setDashboardDesign } = useDashboard();
 
   // New Body Stats State
   const [bodyStats, setBodyStats] = useState({
@@ -33,13 +29,11 @@ export default function ProfilePage() {
     const savedUserEmail = readCookie('userEmail');
     const savedBodyStats = readCookie('boilerfuel_body_stats_v1');
 
-
     if (savedLogs) setLogs(JSON.parse(savedLogs));
     if (savedActivityLogs) setActivityLogs(JSON.parse(savedActivityLogs));
     if (savedGoals) setGoals(JSON.parse(savedGoals));
     if (savedUserName) setUserName(savedUserName);
     if (savedUserEmail) setUserEmail(savedUserEmail);
-
     if (savedBodyStats) {
       const parsedStats = JSON.parse(savedBodyStats);
       setBodyStats(parsedStats);
@@ -179,88 +173,6 @@ export default function ProfilePage() {
     return userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
-  // --- Data Management Functions ---
-  const handleExportData = () => {
-    const foodsRaw = readCookie('foods');
-    const logsRaw = readCookie('boilerfuel_logs_v1');
-    const activitiesRaw = readCookie('activities');
-    const activityLogsRaw = readCookie('boilerfuel_activity_logs_v1');
-    const goalsRaw = readCookie('boilerfuel_goals_v1');
-    const prefsRaw = readCookie('boilerfuel_user_prefs_v1');
-
-    const data = {
-      foods: foodsRaw ? JSON.parse(foodsRaw) : [],
-      foodLogs: logsRaw ? JSON.parse(logsRaw) : [],
-      activities: activitiesRaw ? JSON.parse(activitiesRaw) : [],
-      activityLogs: activityLogsRaw ? JSON.parse(activityLogsRaw) : [],
-      goals: goalsRaw ? JSON.parse(goalsRaw) : {},
-      userPrefs: prefsRaw ? JSON.parse(prefsRaw) : {},
-      userName: readCookie('userName') || '',
-      userEmail: readCookie('userEmail') || '',
-    };
-
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `boilerfuel-backup-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    alert('Data exported successfully!');
-  };
-
-  const handleImportData = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const data = JSON.parse(event.target.result);
-
-        if (data.foods) writeCookie('foods', JSON.stringify(data.foods));
-        if (data.foodLogs) writeCookie('boilerfuel_logs_v1', JSON.stringify(data.foodLogs));
-        if (data.activities) writeCookie('activities', JSON.stringify(data.activities));
-        if (data.activityLogs) writeCookie('boilerfuel_activity_logs_v1', JSON.stringify(data.activityLogs));
-        if (data.goals) {
-          writeCookie('boilerfuel_goals_v1', JSON.stringify(data.goals));
-          setGoals(data.goals);
-        }
-        if (data.userPrefs) {
-          writeCookie('boilerfuel_user_prefs_v1', JSON.stringify(data.userPrefs));
-        }
-        if (data.userName) writeCookie('userName', data.userName);
-        if (data.userEmail) writeCookie('userEmail', data.userEmail);
-
-        alert('Data imported successfully! Reloading...');
-        setTimeout(() => window.location.reload(), 1000);
-      } catch (error) {
-        alert('Invalid backup file.');
-      }
-    };
-    reader.readAsText(file);
-  };
-
-  const handleClearAllData = () => {
-    if (window.confirm('Are you sure you want to clear ALL data? This cannot be undone.')) {
-      deleteCookie('foods');
-      deleteCookie('boilerfuel_logs_v1');
-      deleteCookie('activities');
-      deleteCookie('boilerfuel_activity_logs_v1');
-      deleteCookie('boilerfuel_goals_v1');
-      deleteCookie('boilerfuel_user_prefs_v1');
-      deleteCookie('userName');
-      deleteCookie('userEmail');
-      deleteCookie('boilerfuel_body_stats_v1');
-      deleteCookie('boilerfuel_dashboard_pref_v1');
-
-      alert('All data has been cleared.');
-      window.location.reload();
-    }
-  };
-
   return (
     <>
       <Head>
@@ -323,99 +235,6 @@ export default function ProfilePage() {
                       </>
                     )}
                   </div>
-                </div>
-              </div>
-
-              {/* Dashboard Preferences */}
-              <div className="bg-theme-card-bg rounded-3xl p-6 shadow-sm border border-theme-card-border">
-                <h3 className="text-lg font-medium text-theme-text-primary mb-4 flex items-center gap-2">
-                  App Preferences
-                </h3>
-                <div className="space-y-6">
-                  {/* Theme Selector */}
-                  <div>
-                    <label className="block text-xs font-medium text-theme-text-tertiary mb-2">Theme</label>
-                    <div className="flex gap-2">
-                      {['light', 'dark', 'system'].map((t) => (
-                        <button
-                          key={t}
-                          onClick={() => setTheme(t)}
-                          className={`flex-1 px-3 py-2 rounded-xl text-sm font-medium transition-all capitalize ${theme === t
-                            ? 'bg-theme-text-primary text-theme-bg-secondary shadow-md'
-                            : 'bg-theme-bg-tertiary text-theme-text-secondary hover:bg-theme-bg-hover'
-                            }`}
-                        >
-                          {t}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Dashboard Design Selector */}
-                  <div>
-                    <label className="block text-xs font-medium text-theme-text-tertiary mb-2">Food Dashboard Layout</label>
-
-                    <div className="space-y-3">
-                      <div>
-                        <span className="text-[10px] uppercase tracking-wider text-theme-text-tertiary font-bold mb-1 block">Desktop / Laptop</span>
-                        <div className="grid grid-cols-2 gap-2">
-                          {['Glass', 'Data'].map((design) => (
-                            <button
-                              key={design}
-                              onClick={() => setDashboardDesign(design)}
-                              className={`px-3 py-2 rounded-xl text-sm font-medium transition-all ${dashboardDesign === design
-                                ? 'bg-blue-500 text-white shadow-md shadow-blue-500/20'
-                                : 'bg-theme-bg-tertiary text-theme-text-secondary hover:bg-theme-bg-hover'
-                                }`}
-                            >
-                              {design}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div>
-                        <span className="text-[10px] uppercase tracking-wider text-theme-text-tertiary font-bold mb-1 block">Mobile</span>
-                        <div className="grid grid-cols-1 gap-2">
-                          <button
-                            onClick={() => setDashboardDesign('Stream')}
-                            className={`px-3 py-2 rounded-xl text-sm font-medium transition-all ${dashboardDesign === 'Stream'
-                              ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20'
-                              : 'bg-theme-bg-tertiary text-theme-text-secondary hover:bg-theme-bg-hover'
-                              }`}
-                          >
-                            Stream
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                </div>
-              </div>
-
-              {/* Data Management */}
-              <div className="bg-theme-card-bg rounded-3xl p-6 shadow-sm border border-theme-card-border">
-                <h3 className="text-lg font-medium text-theme-text-primary mb-4 flex items-center gap-2">
-                  Data Management
-                </h3>
-                <div className="space-y-3">
-                  <button
-                    onClick={handleExportData}
-                    className="w-full px-4 py-2 rounded-xl bg-theme-bg-tertiary text-theme-text-primary text-sm font-medium hover:bg-theme-bg-hover transition-colors text-left flex items-center gap-2"
-                  >
-                    📥 Export Data
-                  </button>
-                  <label className="w-full px-4 py-2 rounded-xl bg-theme-bg-tertiary text-theme-text-primary text-sm font-medium hover:bg-theme-bg-hover transition-colors text-left flex items-center gap-2 cursor-pointer">
-                    📤 Import Data
-                    <input type="file" accept=".json" onChange={handleImportData} className="hidden" />
-                  </label>
-                  <button
-                    onClick={handleClearAllData}
-                    className="w-full px-4 py-2 rounded-xl bg-red-50 text-red-500 text-sm font-medium hover:bg-red-100 transition-colors text-left flex items-center gap-2"
-                  >
-                    🗑️ Clear All Data
-                  </button>
                 </div>
               </div>
 

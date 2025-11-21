@@ -94,13 +94,7 @@ export default function Dashboard() {
   const [activityLogs, setActivityLogs] = useState(() => parseActivityLogsCookie());
   const [goals, setGoals] = useState(() => parseGoalsCookie());
   const [selectedDate, setSelectedDate] = useState(() => formatDateForInput(startOfToday()));
-  const [dashboardDesign, setDashboardDesign] = useState('Glass');
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const savedDesign = readCookie('boilerfuel_dashboard_pref_v1');
-    if (savedDesign) setDashboardDesign(savedDesign);
-  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -262,7 +256,7 @@ export default function Dashboard() {
           {/* Quick Actions */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <QuickActionCard
-              href={`/food-dashboard-${dashboardDesign.toLowerCase()}`}
+              href="/food-dashboard"
               icon="🍽️"
               title="Food Tracker"
               description="Log meals & track macros"
