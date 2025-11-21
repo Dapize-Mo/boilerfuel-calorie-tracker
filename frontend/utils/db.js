@@ -52,9 +52,28 @@ export async function ensureSchema() {
       dining_court VARCHAR(100),
       station VARCHAR(255),
       meal_time VARCHAR(50),
-      created_at TIMESTAMPTZ DEFAULT NOW()
+      next_available JSONB,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW()
     );
   `);
+
+  // Add columns missing from older deployments
+  await query(`
+    DO $$
+    BEGIN
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='foods' AND column_name='next_available') THEN
+        ALTER TABLE foods ADD COLUMN next_available JSONB;
+      END IF;
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='foods' AND column_name='updated_at') THEN
+        ALTER TABLE foods ADD COLUMN updated_at TIMESTAMPTZ DEFAULT NOW();
+      END IF;
+    END $$;
+  `);
+
+  // Useful indexes
+  await query(`CREATE INDEX IF NOT EXISTS idx_foods_dining_meal ON foods(dining_court, meal_time);`);
+  await query(`CREATE INDEX IF NOT EXISTS idx_foods_next_available ON foods USING GIN (next_available);`);
 
   await query(`
     CREATE TABLE IF NOT EXISTS activities (

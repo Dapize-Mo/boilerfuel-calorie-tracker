@@ -14,28 +14,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
-# Purdue dining locations - mapping display names to API identifiers
-# Includes Dining Courts, Quick Bites, and On-the-GO! locations
-# API codes from: https://api.hfs.purdue.edu/menus/v2/locations
-DINING_COURTS = {
-    # Traditional Dining Courts
-    'Earhart': 'ERHT',
-    'Ford': 'FORD',
-    'Hillenbrand': 'HILL',
-    'Wiley': 'WILY',
-    'Windsor': 'WIND',
+from dining_locations import DINING_LOCATIONS
 
-    # Quick Bites locations
-    '1bowl at Meredith Hall': 'BOWL',
-    "Pete's Za at Tarkington Hall": 'PZZA',
-    'Sushi Boss at Meredith Hall': '@TGP',
-
-    # On-the-GO! locations
-    'Earhart On-the-GO!': 'EOTG',
-    'Ford On-the-GO!': 'FOTG',
-    'Lawson On-the-GO!': 'LWSN',
-    'Windsor On-the-GO!': 'WOTG',
-}
 
 def get_nutrition_cache(database_url=None):
     """
@@ -139,7 +119,8 @@ def fetch_item_nutrition(item_id, headers):
     except Exception as e:
         return None
 
-def scrape_purdue_menu_api(dining_court='Wiley', date_str=None, nutrition_cache=None):
+def scrape_purdue_menu_api(api_location='Wiley', date_str=None, nutrition_cache=None,
+                           display_name=None, court_code=None, available_date=None):
     """
     Scrape Purdue dining menu using the API endpoint directly.
     Uses cached nutrition data when available.
@@ -160,7 +141,8 @@ def scrape_purdue_menu_api(dining_court='Wiley', date_str=None, nutrition_cache=
         nutrition_cache = {}
     
     # Try the API endpoint
-    api_url = f"https://api.hfs.purdue.edu/menus/v2/locations/{dining_court}/{date_str}"
+    location_param = api_location
+    api_url = f"https://api.hfs.purdue.edu/menus/v2/locations/{location_param}/{date_str}"
     
     try:
         headers = {
@@ -208,7 +190,8 @@ def scrape_purdue_menu_api(dining_court='Wiley', date_str=None, nutrition_cache=
                             'name': name,
                             'item_id': item_id,
                             'nutrition_ready': nutrition_ready,
-                            'dining_court': dining_court,
+                            'dining_court': display_name or api_location,
+                            'dining_court_code': court_code or api_location,
                             'station': station_name,
                             'meal_period': meal_name
                         })
@@ -267,8 +250,10 @@ def scrape_purdue_menu_api(dining_court='Wiley', date_str=None, nutrition_cache=
                 'fats': fats,
                 'serving_size': serving_size,
                 'dining_court': item_info['dining_court'],
+                'dining_court_code': item_info.get('dining_court_code'),
                 'station': item_info['station'],
-                'meal_period': item_info['meal_period']
+                'meal_period': item_info['meal_period'],
+                'available_date': available_date or date_str
             })
         
         if cached_count > 0 or fetched_count > 0:
@@ -304,8 +289,9 @@ def scrape_purdue_menu(dining_court='Wiley', date=None, driver=None):
         now = datetime.now()
         date = f"{now.year}/{now.month}/{now.day}"
     
-    # Purdue Dining website URL
-    url = f"https://dining.purdue.edu/menus/{dining_court}/{date}/"
+    # Purdue Dining website uses slugged path segments
+    slug = re.sub(r'[^A-Za-z0-9]+', '-', dining_court.strip()).strip('-').lower()
+    url = f"https://dining.purdue.edu/menus/{slug}/{date}/"
     
     close_driver = False
     if driver is None:
@@ -533,7 +519,7 @@ def scrape_all_dining_courts(date=None, use_cache=True, days_ahead=7):
     from datetime import datetime, timedelta
     
     all_items = []
-    food_schedules = {}  # Track when each food appears: {(name, dining_court): [(date, meal_time)]}
+    food_schedules = {}  # Track when each food appears: {(name, dining_court, meal_time): [(date, meal_time)]}
     
     # Load nutrition cache from database
     nutrition_cache = {}
@@ -559,9 +545,19 @@ def scrape_all_dining_courts(date=None, use_cache=True, days_ahead=7):
         print(f"Scraping for {day_name}, {current_date.strftime('%B %d, %Y')}")
         print(f"{'='*60}")
         
-        for court_name, court_id in DINING_COURTS.items():
-            print(f"\n  {court_name}...")
-            items = scrape_purdue_menu_api(court_id, date_str, nutrition_cache)
+        for court in DINING_LOCATIONS:
+            display_name = court['display_name']
+            api_name = court['api_name']
+            court_code = court['code']
+            print(f"\n  {display_name} ({court_code})...")
+            items = scrape_purdue_menu_api(
+                api_location=api_name,
+                date_str=date_str,
+                nutrition_cache=nutrition_cache,
+                display_name=display_name,
+                court_code=court_code,
+                available_date=date_str
+            )
             
             if not items:
                 print(f"    API failed, trying web scraping...")
@@ -571,7 +567,7 @@ def scrape_all_dining_courts(date=None, use_cache=True, days_ahead=7):
                 try:
                     driver = create_driver()
                     try:
-                        items = scrape_purdue_menu(court_id, None, driver)
+                        items = scrape_purdue_menu(api_name, None, driver)
                     finally:
                         try:
                             driver.quit()
@@ -583,12 +579,16 @@ def scrape_all_dining_courts(date=None, use_cache=True, days_ahead=7):
             
             # Track schedule for each item
             for item in items:
-                key = (item['name'].lower().strip(), item['dining_court'].lower().strip())
                 meal_time = item.get('meal_period', 'Unknown')
-                
+                key = (
+                    item['name'].lower().strip(),
+                    item['dining_court'].lower().strip() if item.get('dining_court') else '',
+                    meal_time.lower() if isinstance(meal_time, str) else 'unknown'
+                )
+
                 if key not in food_schedules:
                     food_schedules[key] = []
-                
+
                 food_schedules[key].append({
                     'date': date_str,
                     'day_name': day_name,
@@ -602,17 +602,23 @@ def scrape_all_dining_courts(date=None, use_cache=True, days_ahead=7):
     print(f"\n\nProcessing {len(food_schedules)} unique food items...")
     items_with_schedule = []
     
+    seen = set()
     for item in all_items:
-        key = (item['name'].lower().strip(), item['dining_court'].lower().strip())
+        meal_time = item.get('meal_period', 'Unknown')
+        key = (
+            item['name'].lower().strip(),
+            item['dining_court'].lower().strip() if item.get('dining_court') else '',
+            meal_time.lower() if isinstance(meal_time, str) else 'unknown'
+        )
         schedule = food_schedules.get(key, [])
-        
-        # Only add the first occurrence of each item with full schedule info
-        if schedule and not any(i['name'] == item['name'] and 
-                                i['dining_court'] == item['dining_court'] and 
-                                'next_appearances' in i 
-                                for i in items_with_schedule):
+
+        if key in seen:
+            continue
+        seen.add(key)
+
+        if schedule:
             item['next_appearances'] = schedule
-            items_with_schedule.append(item)
+        items_with_schedule.append(item)
     
     return items_with_schedule
 
@@ -671,35 +677,49 @@ def save_to_database(menu_items, database_url=None):
         skipped_count = 0
         
         for item in menu_items:
-            # Skip items with no nutrition data
-            if item['calories'] == 0 and item['protein'] == 0 and item['carbs'] == 0 and item['fats'] == 0:
-                skipped_count += 1
-                continue
             
             # Prepare schedule data
             schedule_data = item.get('next_appearances', [])
-            primary_meal_time = item.get('meal_period', 'Unknown')
+            primary_meal_time = item.get('meal_period', 'Unknown') or 'Unknown'
             
-            # If we have schedule, use the first occurrence for meal_time
-            if schedule_data and len(schedule_data) > 0:
+            # If we have schedule but meal_period is missing, fall back to schedule
+            if (not primary_meal_time or primary_meal_time == 'Unknown') and schedule_data:
                 primary_meal_time = schedule_data[0]['meal_time']
+
+            display_court = item.get('dining_court')
+            court_code = item.get('dining_court_code')
+            court_for_storage = display_court or court_code
+            possible_courts = [court_for_storage] if court_for_storage else []
+            if court_code and court_code not in possible_courts:
+                possible_courts.append(court_code)
+            if display_court and display_court not in possible_courts:
+                possible_courts.append(display_court)
+            possible_courts = [c for c in possible_courts if c]
+            if not possible_courts:
+                possible_courts = ['Unknown']
+            if not court_for_storage:
+                court_for_storage = possible_courts[0]
             
             # Check if item already exists (match by name and dining_court only)
+            placeholders = ','.join(['%s'] * len(possible_courts))
+            params = [item['name'], primary_meal_time]
+            params.extend(possible_courts)
             cursor.execute(
-                "SELECT id, calories FROM foods WHERE name = %s AND dining_court = %s",
-                (item['name'], item.get('dining_court'))
+                f"SELECT id, calories, dining_court FROM foods WHERE name = %s AND meal_time = %s AND dining_court IN ({placeholders}) LIMIT 1",
+                tuple(params)
             )
             
             existing = cursor.fetchone()
             
             if existing:
-                existing_id, existing_calories = existing
+                existing_id, existing_calories, existing_court_value = existing
                 
                 # Always update with new schedule information
                 cursor.execute(
                     """
                     UPDATE foods
                     SET calories = %s, macros = %s, station = %s, meal_time = %s,
+                        dining_court = %s,
                         next_available = %s, updated_at = CURRENT_TIMESTAMP
                     WHERE id = %s
                     """,
@@ -713,6 +733,7 @@ def save_to_database(menu_items, database_url=None):
                         }),
                         item.get('station'),
                         primary_meal_time,
+                        display_court or existing_court_value,
                         json.dumps(schedule_data) if schedule_data else None,
                         existing_id
                     )
@@ -734,7 +755,7 @@ def save_to_database(menu_items, database_url=None):
                             'fats': item['fats'],
                             'serving_size': item.get('serving_size', '1 serving')
                         }),
-                        item.get('dining_court'),
+                        court_for_storage,
                         item.get('station'),
                         primary_meal_time,
                         json.dumps(schedule_data) if schedule_data else None
@@ -746,7 +767,8 @@ def save_to_database(menu_items, database_url=None):
         print(f"\n✓ Added {added_count} new items to database")
         if updated_count > 0:
             print(f"✓ Updated {updated_count} items with new nutrition data")
-        print(f"✓ Skipped {skipped_count} items (duplicates or no nutrition)")
+        if skipped_count > 0:
+            print(f"✓ Skipped {skipped_count} items (missing required fields)")
         
         cursor.close()
         conn.close()
