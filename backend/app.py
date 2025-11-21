@@ -556,55 +556,9 @@ def init_database():
 	try:
 		db.create_all()
 
-		existing_foods = Food.query.count()
-		existing_activities = Activity.query.count()
-		if existing_foods > 0 or existing_activities > 0:
-			return (
-				jsonify({'message': f'Database already initialized with {existing_foods} foods and {existing_activities} activities'}),
-				200,
-			)
-
-		sample_foods = [
-			{'name': 'Grilled Chicken Breast', 'calories': 165, 'macros': {'protein': 31, 'carbs': 0, 'fats': 3.6}},
-			{'name': 'Brown Rice (1 cup)', 'calories': 216, 'macros': {'protein': 5, 'carbs': 45, 'fats': 1.8}},
-			{'name': 'Broccoli (1 cup)', 'calories': 25, 'macros': {'protein': 3, 'carbs': 5, 'fats': 0.3}},
-			{'name': 'Salmon Fillet', 'calories': 206, 'macros': {'protein': 22, 'carbs': 0, 'fats': 12}},
-			{'name': 'Oatmeal (1 cup)', 'calories': 147, 'macros': {'protein': 6, 'carbs': 25, 'fats': 3}},
-		]
-
-		for food_data in sample_foods:
-			food = Food(
-				name=food_data['name'],
-				calories=food_data['calories'],
-				macros=food_data['macros'],
-			)
-			db.session.add(food)
-
-		sample_activities = [
-			{'name': 'Running', 'calories_per_hour': 600},
-			{'name': 'Walking', 'calories_per_hour': 280},
-			{'name': 'Cycling', 'calories_per_hour': 500},
-			{'name': 'Swimming', 'calories_per_hour': 450},
-			{'name': 'Weight Training', 'calories_per_hour': 365},
-			{'name': 'Yoga', 'calories_per_hour': 180},
-			{'name': 'Basketball', 'calories_per_hour': 440},
-			{'name': 'Elliptical', 'calories_per_hour': 400},
-		]
-
-		for activity_data in sample_activities:
-			activity = Activity(
-				name=activity_data['name'],
-				calories_per_hour=activity_data['calories_per_hour'],
-			)
-			db.session.add(activity)
-
-		db.session.commit()
-
 		return jsonify({
 			'message': 'Database initialized successfully!',
-			'foods_added': len(sample_foods),
-			'activities_added': len(sample_activities)
-		}), 201
+		}), 200
 	except Exception as exc:  # pragma: no cover - defensive guard
 		db.session.rollback()
 		return jsonify({'error': f'Database initialization failed: {exc}'}), 500

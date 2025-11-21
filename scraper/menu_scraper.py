@@ -753,36 +753,6 @@ def save_to_database(menu_items, database_url=None):
                             'protein': item['protein'],
                             'carbs': item['carbs'],
                             'fats': item['fats'],
-                            'serving_size': item.get('serving_size', '1 serving')
-                        }),
-                        court_for_storage,
-                        item.get('station'),
-                        primary_meal_time,
-                        json.dumps(schedule_data) if schedule_data else None
-                    )
-                )
-                added_count += 1
-        
-        conn.commit()
-        print(f"\n✓ Added {added_count} new items to database")
-        if updated_count > 0:
-            print(f"✓ Updated {updated_count} items with new nutrition data")
-        if skipped_count > 0:
-            print(f"✓ Skipped {skipped_count} items (missing required fields)")
-        
-        cursor.close()
-        conn.close()
-        
-    except Exception as e:
-        print(f"ERROR saving to database: {e}")
-        if 'conn' in locals():
-            conn.rollback()
-        raise
-
-
-def scrape_and_save(database_url=None, days_ahead=7, use_cache=True, date=None):
-    """Programmatic entrypoint: scrape and save to database.
-
     Returns the list of items scraped.
     """
     print("Programmatic scrape_and_save starting...")
