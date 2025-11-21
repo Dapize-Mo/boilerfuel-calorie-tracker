@@ -341,9 +341,14 @@ def admin_scrape():
 def get_dining_courts():
 	"""Get list of available dining courts from the foods table."""
 	try:
-		result = db.session.execute(
-			text('SELECT DISTINCT dining_court FROM foods WHERE dining_court IS NOT NULL ORDER BY dining_court')
-		)
+		meal_time = (request.args.get('meal_time') or '').strip()
+		sql = 'SELECT DISTINCT dining_court FROM foods WHERE dining_court IS NOT NULL'
+		params = {}
+		if meal_time:
+			sql += ' AND meal_time = :meal_time'
+			params['meal_time'] = meal_time
+		sql += ' ORDER BY dining_court'
+		result = db.session.execute(text(sql), params)
 		courts = [row[0] for row in result if row[0]]
 		return jsonify(courts), 200
 	except Exception as exc:

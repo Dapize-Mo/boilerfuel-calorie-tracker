@@ -111,21 +111,27 @@ export default function FoodDashboardGlass() {
         fetchFoods();
     }, [selectedDiningCourt, selectedMealTime, loading, viewMode]);
 
-    // Mock Dining Courts if empty
-    // Update Dining Courts based on Meal Time
+    // Fetch dining courts filtered by selected meal time
     useEffect(() => {
-        if (selectedMealTime) {
-            // Filter courts that have items for this meal time
-            const availableCourts = [...new Set(MOCK_FOODS
-                .filter(f => f.meal_time === selectedMealTime)
-                .map(f => f.dining_court)
-            )];
-            setDiningCourts(availableCourts.length > 0 ? availableCourts : ['Earhart', 'Ford', 'Wiley', 'Windsor', 'Hillenbrand']);
-        } else {
-            // Show all courts if no meal selected
-            setDiningCourts(['Earhart', 'Ford', 'Wiley', 'Windsor', 'Hillenbrand']);
+        async function fetchCourtsForMeal() {
+            if (!selectedMealTime) return; // keep initial courts
+            try {
+                const url = `/api/dining-courts?meal_time=${encodeURIComponent(selectedMealTime)}`;
+                const courts = await apiCall(url).catch(() => []);
+                if (Array.isArray(courts) && courts.length > 0) {
+                    setDiningCourts(courts);
+                } else {
+                    // fallback to all distinct courts from existing foods data
+                    const allDistinct = [...new Set(allFoods.map(f => f.dining_court).filter(Boolean))];
+                    setDiningCourts(allDistinct.length > 0 ? allDistinct : ['Earhart', 'Ford', 'Wiley', 'Windsor', 'Hillenbrand']);
+                }
+            } catch (e) {
+                const allDistinct = [...new Set(allFoods.map(f => f.dining_court).filter(Boolean))];
+                setDiningCourts(allDistinct.length > 0 ? allDistinct : ['Earhart', 'Ford', 'Wiley', 'Windsor', 'Hillenbrand']);
+            }
         }
-    }, [selectedMealTime]);
+        fetchCourtsForMeal();
+    }, [selectedMealTime, allFoods]);
 
     // --- Logic ---
     const foodsById = useMemo(() => { const m = new Map(); allFoods.forEach(f => m.set(f.id, f)); return m; }, [allFoods]);

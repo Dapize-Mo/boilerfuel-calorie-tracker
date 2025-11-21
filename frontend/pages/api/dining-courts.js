@@ -4,7 +4,17 @@ export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
   try {
     await ensureSchema();
-    const { rows } = await query('SELECT DISTINCT dining_court FROM foods WHERE dining_court IS NOT NULL ORDER BY dining_court');
+    const mealTime = (req.query.meal_time || '').trim();
+
+    let sql = 'SELECT DISTINCT dining_court FROM foods WHERE dining_court IS NOT NULL';
+    const params = [];
+    if (mealTime) {
+      sql += ' AND meal_time = $1';
+      params.push(mealTime);
+    }
+    sql += ' ORDER BY dining_court';
+
+    const { rows } = await query(sql, params);
     const courts = rows.map(r => r.dining_court).filter(Boolean);
     return res.status(200).json(courts);
   } catch (err) {
