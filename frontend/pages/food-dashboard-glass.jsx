@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import Head from 'next/head';
 import { apiCall } from '../utils/auth';
 
@@ -70,6 +70,7 @@ export default function FoodDashboardGlass() {
     const [loading, setLoading] = useState(true);
     const [hoveredFood, setHoveredFood] = useState(null);
     const dateInputRef = useRef(null);
+    const deferredSearch = useDeferredValue(searchQuery);
 
     // --- Load Data ---
     useEffect(() => {
@@ -165,6 +166,12 @@ export default function FoodDashboardGlass() {
     const selectedDateStart = useMemo(() => { const d = new Date(selectedDate + 'T00:00:00'); return d; }, [selectedDate]);
     const selectedDayLogs = useMemo(() => logs.filter(l => isSameDay(l.timestamp, selectedDateStart)), [logs, selectedDateStart]);
 
+    const normalizedSearch = useMemo(() => deferredSearch.trim().toLowerCase(), [deferredSearch]);
+    const globalSearchResults = useMemo(() => {
+        if (!normalizedSearch) return [];
+        return allFoods.filter(f => f.name?.toLowerCase().includes(normalizedSearch)).slice(0, 10);
+    }, [allFoods, normalizedSearch]);
+
     const totals = useMemo(() => {
         return selectedDayLogs.reduce((acc, log) => {
             const f = foodsById.get(log.foodId);
@@ -219,24 +226,12 @@ export default function FoodDashboardGlass() {
         setSearchQuery(''); // Clear search after adding
     };
 
-    if (loading) return <div className="min-h-screen bg-theme-bg-primary flex items-center justify-center text-theme-text-muted font-light">Loading...</div>;
+    if (loading) return <div className="min-h-screen bg-black flex items-center justify-center text-theme-text-muted font-light">Loading...</div>;
 
     return (
         <>
             <Head><title>Glass Tracker</title></Head>
-            <div className="min-h-screen bg-theme-bg-primary font-sans text-theme-text-primary relative overflow-hidden selection:bg-theme-accent/30 selection:text-theme-accent flex transition-colors duration-300">
-                {/* Background Gradients */}
-                <div className="fixed top-[-20%] left-[-10%] w-[50%] h-[50%] bg-theme-purple/20 rounded-full blur-[120px] pointer-events-none"></div>
-                <div className="fixed bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-theme-info/20 rounded-full blur-[120px] pointer-events-none"></div>
-
-                {/* Sidebar - Always Visible (Global Search & Nav) */}
-                <div className="w-24 bg-theme-sidebar-bg backdrop-blur-xl border-r border-theme-sidebar-border flex flex-col items-center py-8 gap-6 z-20">
-                    <div className="w-12 h-12 rounded-xl bg-theme-text-primary text-theme-bg-primary flex items-center justify-center font-bold text-xl mb-4">B</div>
-                    {/* Global Search Trigger (could be a button that opens a search modal, or just a visual placeholder for now if we put search in header) */}
-                    <button onClick={() => setViewMode('dashboard')} className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${viewMode === 'dashboard' ? 'bg-theme-info text-white' : 'bg-theme-bg-secondary/40 text-theme-text-muted hover:bg-theme-bg-secondary'}`}>
-                        🏠
-                    </button>
-                </div>
+            <div className="min-h-screen bg-black font-sans text-theme-text-primary relative overflow-hidden selection:bg-theme-accent/30 selection:text-theme-accent flex transition-colors duration-300">
 
                 {/* Main Content Area */}
                 <div className="flex-1 flex flex-col h-screen overflow-hidden relative z-10">
@@ -262,9 +257,9 @@ export default function FoodDashboardGlass() {
                                     onChange={e => setSearchQuery(e.target.value)}
                                     className="bg-theme-bg-secondary/60 border-none rounded-xl px-4 py-2 w-64 focus:w-80 focus:bg-theme-bg-secondary transition-all shadow-sm placeholder:text-theme-text-muted text-theme-text-primary"
                                 />
-                                {searchQuery && (
+                                {normalizedSearch && (
                                     <div className="absolute top-full right-0 mt-2 w-80 bg-theme-card-bg rounded-xl shadow-xl border border-theme-border-light max-h-96 overflow-y-auto z-50 p-2">
-                                        {allFoods.filter(f => f.name.toLowerCase().includes(searchQuery.toLowerCase())).slice(0, 10).map(food => (
+                                        {globalSearchResults.map(food => (
                                             <button
                                                 key={food.id}
                                                 onClick={() => handleGlobalSearchSelect(food)}
@@ -274,7 +269,7 @@ export default function FoodDashboardGlass() {
                                                 <span className="text-xs text-theme-text-muted group-hover/item:text-theme-info">+ Add</span>
                                             </button>
                                         ))}
-                                        {allFoods.filter(f => f.name.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
+                                        {globalSearchResults.length === 0 && (
                                             <div className="p-3 text-center text-theme-text-muted text-sm">No foods found</div>
                                         )}
                                     </div>
