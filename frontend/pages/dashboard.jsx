@@ -1,9 +1,22 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
+import useSWR from 'swr';
 
 import { apiCall } from '../utils/auth';
 import { deleteCookie, readCookie } from '../utils/cookies';
+import StatCard from '../components/StatCard';
+import QuickActionCard from '../components/QuickActionCard';
+import WaterTracker from '../components/WaterTracker';
+import StreakTracker from '../components/StreakTracker';
+import BMICalculator from '../components/BMICalculator';
+
+// Lazy load heavy chart component
+const WeightChart = dynamic(() => import('../components/WeightChart'), {
+  loading: () => <div className="h-full w-full min-h-[300px] bg-theme-card-bg animate-pulse rounded-3xl border border-theme-card-border" />,
+  ssr: false
+});
 
 const LOG_COOKIE_KEY = 'boilerfuel_logs_v1';
 const ACTIVITY_LOG_COOKIE_KEY = 'boilerfuel_activity_logs_v1';
@@ -87,37 +100,21 @@ function formatDateForInput(date) {
   return `${y}-${m}-${d}`;
 }
 
+const fetcher = (url) => apiCall(url);
+
 export default function Dashboard() {
-  const [foods, setFoods] = useState([]);
-  const [activities, setActivities] = useState([]);
-  const [logs, setLogs] = useState(() => parseLogsCookie());
-  const [activityLogs, setActivityLogs] = useState(() => parseActivityLogsCookie());
-  const [goals, setGoals] = useState(() => parseGoalsCookie());
+  const { data: foodsData, error: foodsError } = useSWR('/api/foods', fetcher);
+  const { data: activitiesData, error: activitiesError } = useSWR('/api/activities', fetcher);
+
+  const foods = Array.isArray(foodsData) ? foodsData : [];
+  const activities = Array.isArray(activitiesData) ? activitiesData : [];
+
+  const [logs] = useState(() => parseLogsCookie());
+  const [activityLogs] = useState(() => parseActivityLogsCookie());
+  const [goals] = useState(() => parseGoalsCookie());
   const [selectedDate, setSelectedDate] = useState(() => formatDateForInput(startOfToday()));
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    let isMounted = true;
-
-    async function loadData() {
-      try {
-        const [foodsData, activitiesData] = await Promise.all([
-          apiCall('/api/foods'),
-          apiCall('/api/activities')
-        ]);
-        if (!isMounted) return;
-        setFoods(Array.isArray(foodsData) ? foodsData : []);
-        setActivities(Array.isArray(activitiesData) ? activitiesData : []);
-      } catch (error) {
-        console.error('Failed to load data:', error);
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    }
-
-    loadData();
-    return () => { isMounted = false; };
-  }, []);
+  const loading = !foodsData && !foodsError && !activitiesData && !activitiesError;
 
   const foodsById = useMemo(() => {
     const map = new Map();
@@ -192,14 +189,7 @@ export default function Dashboard() {
   }, [selectedDayLogs, selectedDayActivityLogs, foodsById, activitiesById]);
 
   if (loading) {
-    return (
-      <>
-        <Head><title>Loading... - Dashboard</title></Head>
-        <main className="min-h-screen bg-theme-bg-primary flex items-center justify-center">
-          <div className="text-theme-text-secondary">Loading...</div>
-        </main>
-      </>
-    );
+    return <DashboardSkeleton />;
   }
 
   return (
@@ -209,18 +199,21 @@ export default function Dashboard() {
         <meta name="description" content="Your health and fitness dashboard" />
       </Head>
 
-      <main className="font-sans text-theme-text-primary">
+      <main className="font-sans text-theme-text-primary pb-20">
         {/* Hero Section */}
         <section className="relative py-20 px-6 flex flex-col items-center justify-center text-center space-y-6 bg-theme-bg-secondary border-b border-theme-border-primary">
-          <h1 className="text-6xl md:text-8xl font-light tracking-tighter text-theme-text-primary">
+          {/* Streak Tracker */}
+          <StreakTracker />
+
+          <h1 className="text-6xl md:text-8xl font-light tracking-tighter text-theme-text-primary animate-fade-in-up">
             BoilerFuel
           </h1>
-          <p className="text-xl text-theme-text-tertiary font-light max-w-2xl">
+          <p className="text-xl text-theme-text-tertiary font-light max-w-2xl animate-fade-in-up delay-100">
             Your daily health overview. Track calories, macros, and workouts with precision.
           </p>
 
           {/* Date Selector */}
-          <div className="pt-8">
+          <div className="pt-8 animate-fade-in-up delay-200">
             <input
               type="date"
               value={selectedDate}
@@ -251,6 +244,24 @@ export default function Dashboard() {
               value={Math.round(totals?.net || 0)}
               icon="⚖️"
             />
+          </div>
+
+          {/* New Features Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <WaterTracker />
+            <WeightChart />
+          </div>
+
+          {/* BMI Calculator */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <BMICalculator />
+            {/* Placeholder for future feature or ad */}
+            <div className="p-8 rounded-3xl bg-theme-card-bg border border-theme-card-border shadow-sm flex items-center justify-center text-theme-text-tertiary">
+              <div className="text-center">
+                <span className="text-4xl block mb-2">🚀</span>
+                <p>More features coming soon...</p>
+              </div>
+            </div>
           </div>
 
           {/* Quick Actions */}
@@ -296,55 +307,6 @@ export default function Dashboard() {
   );
 }
 
-function StatCard({ label, value, goal, icon }) {
-  const percentage = goal ? Math.min(100, (value / goal) * 100) : null;
-
-  return (
-    <div className="p-8 rounded-3xl bg-theme-card-bg border border-theme-card-border shadow-sm hover:shadow-md transition-all duration-300">
-      <div className="flex items-center justify-between mb-4">
-        <p className="text-sm text-theme-text-secondary font-medium uppercase tracking-wider">{label}</p>
-        <span className="text-2xl opacity-50 grayscale">{icon}</span>
-      </div>
-      <p className="text-5xl font-light text-theme-text-primary mb-2">
-        {value}
-      </p>
-      {goal && (
-        <div className="mt-4">
-          <div className="h-1.5 w-full bg-theme-bg-tertiary rounded-full overflow-hidden">
-            <div
-              className="h-full bg-theme-text-primary rounded-full transition-all duration-500"
-              style={{ width: `${percentage}%` }}
-            />
-          </div>
-          <p className="text-xs text-theme-text-tertiary mt-2 text-right">{Math.round(percentage)}% of goal</p>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function QuickActionCard({ href, icon, title, description, stat }) {
-  return (
-    <Link href={href} className="group block p-8 rounded-3xl bg-theme-card-bg border border-theme-card-border shadow-sm hover:shadow-md hover:border-theme-border-secondary transition-all duration-300">
-      <div className="flex items-start gap-6">
-        <div className="w-16 h-16 rounded-2xl bg-theme-bg-tertiary flex items-center justify-center text-3xl group-hover:scale-110 transition-transform duration-300">
-          {icon}
-        </div>
-        <div className="flex-1">
-          <h3 className="text-xl font-medium text-theme-text-primary mb-1 group-hover:text-theme-text-primary transition-colors">{title}</h3>
-          <p className="text-theme-text-tertiary text-sm mb-4">{description}</p>
-          <div className="inline-block px-3 py-1 rounded-lg bg-theme-bg-tertiary text-xs font-medium text-theme-text-secondary">
-            {stat}
-          </div>
-        </div>
-        <div className="w-8 h-8 rounded-full border border-theme-card-border flex items-center justify-center text-theme-text-tertiary group-hover:border-theme-text-primary group-hover:text-theme-text-primary transition-all">
-          →
-        </div>
-      </div>
-    </Link>
-  );
-}
-
 function MacroCard({ label, value, goal, unit }) {
   const percentage = goal ? Math.min(100, (value / goal) * 100) : 0;
 
@@ -363,6 +325,41 @@ function MacroCard({ label, value, goal, unit }) {
         />
       </div>
       <p className="text-xs text-theme-text-tertiary mt-2 text-right">Goal: {goal}{unit}</p>
+    </div>
+  );
+}
+
+function DashboardSkeleton() {
+  return (
+    <div className="min-h-screen bg-theme-bg-primary animate-pulse">
+      {/* Hero Skeleton */}
+      <div className="h-[40vh] bg-theme-bg-secondary border-b border-theme-border-primary flex flex-col items-center justify-center space-y-6">
+        <div className="h-20 w-64 bg-theme-bg-tertiary rounded-2xl"></div>
+        <div className="h-6 w-96 bg-theme-bg-tertiary rounded-full"></div>
+        <div className="h-12 w-48 bg-theme-bg-tertiary rounded-xl mt-8"></div>
+      </div>
+
+      <div className="max-w-6xl mx-auto px-6 py-12 space-y-12">
+        {/* Stats Grid Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-48 bg-theme-card-bg rounded-3xl border border-theme-card-border p-8 space-y-4">
+              <div className="flex justify-between">
+                <div className="h-4 w-24 bg-theme-bg-tertiary rounded"></div>
+                <div className="h-8 w-8 bg-theme-bg-tertiary rounded-full"></div>
+              </div>
+              <div className="h-12 w-32 bg-theme-bg-tertiary rounded"></div>
+              <div className="h-2 w-full bg-theme-bg-tertiary rounded-full mt-4"></div>
+            </div>
+          ))}
+        </div>
+
+        {/* Features Grid Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="h-64 bg-theme-card-bg rounded-3xl border border-theme-card-border"></div>
+          <div className="h-64 bg-theme-card-bg rounded-3xl border border-theme-card-border"></div>
+        </div>
+      </div>
     </div>
   );
 }
