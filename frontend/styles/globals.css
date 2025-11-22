@@ -3,7 +3,9 @@
 @tailwind utilities;
 
 @layer base {
-  :root, .light {
+
+  :root,
+  .light {
     color-scheme: light;
 
     /* Light mode color palette - Premium Clean */
@@ -338,11 +340,11 @@ html {
 
 /* Motion safety for users preferring reduced motion */
 @media (prefers-reduced-motion: reduce) {
+  background: rgba(250, 204, 21, 0.25);
+  /* yellow-400/25 */
+}
 
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
+/* Focus styles for keyboard users */
 :where(a, button, input, select, textarea):focus-visible {
   outline: 2px solid rgba(250, 204, 21, 0.85);
   outline-offset: 2px;
