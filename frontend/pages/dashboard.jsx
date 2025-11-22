@@ -201,7 +201,7 @@ export default function Dashboard() {
 
       <main className="font-sans text-theme-text-primary pb-20">
         {/* Hero Section */}
-        <section className="relative py-20 px-6 flex flex-col items-center justify-center text-center space-y-6 bg-theme-bg-secondary border-b border-theme-border-primary">
+        <section className="relative py-20 px-6 flex flex-col items-center justify-center text-center space-y-6 bg-theme-bg-secondary dark:bg-hero-black border-b border-theme-border-primary">
           {/* Streak Tracker */}
           <StreakTracker />
 
