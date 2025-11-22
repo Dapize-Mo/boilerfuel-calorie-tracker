@@ -27,3 +27,8 @@ export function deleteCookie(name) {
   if (!isBrowser()) return;
   document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
 }
+
+export function createCookie(name, value, days) {
+  const maxAge = days * 24 * 60 * 60;
+  writeCookie(name, value, { maxAge });
+}
