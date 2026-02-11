@@ -14,7 +14,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
-from dining_locations import DINING_LOCATIONS
+from scraper.dining_locations import DINING_LOCATIONS
 
 
 def get_nutrition_cache(database_url=None):
