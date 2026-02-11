@@ -14,9 +14,16 @@ from flask import Flask, jsonify, request, current_app
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager, create_access_token, get_jwt, jwt_required, decode_token
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 import threading
 from sqlalchemy.sql.expression import text
 import requests
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Note: Environment variables should be set externally (e.g., via start.bat or your hosting provider)
 # Load .env file only if it exists and we're in development
@@ -154,6 +161,19 @@ app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=7)
 app.config['JSON_SORT_KEYS'] = False
 app.config['ADMIN_PASSWORD'] = os.getenv('ADMIN_PASSWORD', '')
 
+# Security settings
+app.config['SESSION_COOKIE_SECURE'] = os.getenv('SESSION_COOKIE_SECURE', 'true').lower() == 'true'
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
+
+# Warn about default JWT secret in production
+if os.getenv('JWT_SECRET_KEY', '').lower() in ['change-me', '', 'your-secret-key']:
+	logger.warning(
+		'WARNING: JWT_SECRET_KEY is not set or using default value. '
+		'Set JWT_SECRET_KEY environment variable with a strong random value for production.'
+	)
+
 # Log a sanitized DB URL at startup to assist debugging in hosted logs
 try:
 	parsed = urlparse(database_url)
@@ -187,9 +207,47 @@ import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'scraper')))
 from scraper import menu_scraper
+from errors import (
+	APIError, ValidationError, AuthenticationError, AuthorizationError,
+	NotFoundError, ConflictError, DatabaseError, ExternalAPIError
+)
+from security import verify_password, hash_password
+
 # Initialize extensions
 db: SQLAlchemy = SQLAlchemy(app)
 jwt = JWTManager(app)
+
+# Initialize rate limiting
+limiter = Limiter(
+	app=app,
+	key_func=get_remote_address,
+	default_limits=["100 per hour"],
+	storage_uri="memory://",  # Use Redis for production: "redis://localhost:6379"
+)
+
+
+# Error Handlers
+@app.errorhandler(APIError)
+def handle_api_error(error):
+	"""Handle custom API errors."""
+	response = jsonify(error.to_dict())
+	response.status_code = error.status_code
+	return response
+	return response
+
+
+@app.errorhandler(404)
+def handle_not_found(error):
+	"""Handle 404 errors."""
+	return jsonify({'error': 'Endpoint not found', 'status': 404}), 404
+
+
+@app.errorhandler(500)
+def handle_internal_error(error):
+	"""Handle internal server errors."""
+	# Log the error for debugging
+	print(f"Internal server error: {error}", file=sys.stderr)
+	return jsonify({'error': 'Internal server error', 'status': 500}), 500
 
 
 # Models

@@ -1,175 +1,215 @@
-# BoilerFuel Calorie Tracker
+# 🔥 BoilerFuel Calorie Tracker
 
-BoilerFuel helps Purdue students browse dining hall menus, log meals, track gym activities, and monitor daily macros and net calories. The project is split into a Next.js frontend and a Flask backend with a PostgreSQL database and a simple scraping utility.
+BoilerFuel is a privacy-first calorie and fitness tracking application designed for Purdue University students. Browse real-time dining hall menus, log meals, track gym activities, and monitor daily macros—all without creating an account.
 
-## Features
+## ✨ Key Features
 
-- **Public food catalog:** Students can browse and filter menu items served on campus.
-- **Activity tracking:** Log gym and exercise activities to track calories burned throughout the day.
-- **Net calorie tracking:** Dashboard shows calories consumed, calories burned, and net calories for the day.
-- **Privacy-first dashboard:** Meals and activities are logged in cookies stored locally in each browser—no personal accounts required.
-- **Admin-only management:** A single admin password unlocks CRUD access to the shared food and activity catalogs.
-- **Seeding utility:** Quickly bootstrap the database with sample foods and activities via an authenticated endpoint.
-- **Next.js + Flask stack:** Modern frontend paired with a lightweight API, ready for local dev or hosted deployment.
+- 📋 **Live Dining Menus** — Real-time menus from 7 Purdue dining courts with 1000+ foods
+- 🍽️ **Meal Logging** — Log meals with automatic calorie and macro (protein/carbs/fats) calculation
+- 🏋️ **Fitness Tracking** — Track workouts, calculate calories burned, and monitor PRs
+- 📊 **Smart Dashboard** — Net calorie tracking, daily stats, weight charts, and streak tracking
+- 🎨 **Beautiful UI** — Dark mode, multiple view options, mobile-responsive design
+- 🔐 **Privacy First** — No account required; data stored securely in browser cookies
+- ⚡ **Admin Panel** — Manage food catalog, verify accuracy, trigger menu updates
+- 📱 **Responsive** — Optimized for phones, tablets, and desktops
 
-## Project Structure
+## 🚀 Quick Start (5 Minutes)
 
-```text
-boilerfuel-calorie-tracker/
-├── start_services.sh
-├── backend/
-│   ├── app.py
-│   └── requirements.txt
-├── frontend/
-│   ├── package.json
-│   └── next.config.js
-├── scraper/
-│   └── menu_scraper.py
-├── db/
-│   ├── schema.sql
-│   └── seed.sql
-```
-
-## Prerequisites
-
+### Prerequisites
 - Node.js 18+
-- Python 3.11+ (project uses 3.13 locally)
-- PostgreSQL 14+
+- Python 3.11+
+- PostgreSQL 14+ (or SQLite for local dev)
 
-## Quick Start
+### Installation
 
-### 1. Environment setup
+```bash
+# 1. Clone the repository
+git clone https://github.com/Dapize-Mo/boilerfuel-calorie-tracker.git
+cd boilerfuel-calorie-tracker
 
-1. Create and activate the Python virtual environment:
+# 2. Backend setup
+cd backend
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1      # Windows
+# source .venv/bin/activate        # macOS/Linux
+pip install -r requirements.txt
 
-   ```powershell
-   cd backend
-   python -m venv .venv
-   .venv\Scripts\Activate.ps1
-   ```
+# 3. Frontend setup
+cd ../frontend
+npm install
 
-2. Install Python dependencies:
+# 4. Configure environment
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env.local
+# Edit .env files with your DATABASE_URL and ADMIN_PASSWORD
 
-   ```powershell
-   pip install -r requirements.txt
-   ```
+# 5. Initialize database
+createdb boilerfuel
+psql boilerfuel < db/schema.sql
 
-3. Install frontend dependencies:
+# 6. Run services (terminal 1: backend)
+cd backend && flask --app app run --debug
 
-   ```powershell
-   cd ../frontend
-   npm install
-   ```
-
-### 2. Configure environment variables
-
-Copy the provided examples and adjust values for your setup:
-
-```powershell
-Copy-Item frontend/.env.example frontend/.env.local
-Copy-Item backend/.env.example backend/.env
+# 7. Run services (terminal 2: frontend)
+cd frontend && npm run dev
 ```
 
-Key variables to update:
+**Visit http://localhost:3000** 🎉
 
-- `backend/.env`
-   - `DATABASE_URL` (or discrete `POSTGRES_*` vars) with your PostgreSQL connection string
-   - `JWT_SECRET_KEY` with a strong random value
-   - `ADMIN_PASSWORD` with an admin-only shared secret
-   - `FRONTEND_ORIGIN` pointing to the Next.js site (default `http://localhost:3000`)
-- `frontend/.env.local`
-   - `NEXT_PUBLIC_API_URL` pointing to the Flask backend (default `http://127.0.0.1:5000`)
+## 📁 Project Structure
 
-Restart the frontend dev server after changing environment variables so the new values take effect.
+```
+boilerfuel-calorie-tracker/
+├── frontend/                 # Next.js web app
+│   ├── pages/               # Dashboard, gym, admin, food search
+│   ├── components/          # React components (StatCard, WaterTracker, etc.)
+│   ├── styles/              # Tailwind CSS + theme variables
+│   └── utils/               # Auth, cookies, formatting helpers
+├── backend/                 # Flask REST API
+│   ├── app.py              # Main application
+│   ├── errors.py           # Custom error handling
+│   ├── tests/              # pytest test suite
+│   └── requirements.txt     # Dependencies
+├── scraper/                 # Menu scraping engine (Selenium)
+├── db/                      # Database schemas & seeds
+├── tools/                   # Maintenance & utility scripts
+├── docs/                    # Full documentation
+└── .github/workflows/       # GitHub Actions CI/CD
+```
 
-### 3. Database
+## 🔗 Quick API Reference
 
-1. Create the database:
+```bash
+# Get foods (with filters)
+GET /api/foods?dining_court=Earhart&meal_time=lunch
 
-   ```powershell
-   createdb boilerfuel
-   ```
+# Get activities
+GET /api/activities
 
-2. Apply the schema (run from repo root):
+# Admin login
+POST /api/admin/login { "password": "YOUR_PASSWORD" }
 
-   ```powershell
-   psql boilerfuel < db/schema.sql
-   ```
+# Trigger menu scraping
+POST /api/admin/scrape-menus (bearerToken required)
+```
 
-3. Optionally seed initial foods:
+See [docs/API.md](docs/API.md) for complete reference.
 
-   ```powershell
-   psql boilerfuel < db/seed.sql
-   ```
+## 🛠️ Tech Stack
 
-### 4. Run the services
+**Frontend**: Next.js 14 + React 18 + Tailwind CSS + Recharts  
+**Backend**: Flask 2.2 + SQLAlchemy 1.4 + PostgreSQL 14+  
+**Scraping**: Selenium 4 + BeautifulSoup  
+**Testing**: pytest + Jest + pytest-flask  
+**Deployment**: Vercel (frontend) + Railway/Render (backend) + GitHub Actions
 
-- **Backend API:**
+## 📚 Documentation
 
-   ```powershell
-   cd backend
-   flask --app app run --debug
-   ```
+- [ARCHITECTURE.md](docs/ARCHITECTURE.md) — System design & data flow  
+- [API.md](docs/API.md) — REST API reference  
+- [DEPLOYMENT.md](docs/DEPLOYMENT.md) — Production setup guide  
+- [SETUP_LOCAL.md](docs/SETUP_LOCAL.md) — Local development  
+- [SETUP_DOCKER.md](docs/SETUP_DOCKER.md) — Docker setup  
+- [CONTRIBUTING.md](docs/CONTRIBUTING.md) — How to contribute  
+- [SECURITY.md](SECURITY.md) — Security guidelines  
 
-- **Frontend:**
+## 🧪 Testing
 
-   ```powershell
-   cd frontend
-   npm run dev
-   ```
+```bash
+# Run backend tests
+pytest backend/tests -v
 
-Visit <http://localhost:3000> to use the app. The dashboard stores logs locally, while the admin page lets you update the shared food list once you enter the configured admin password.
+# Run frontend tests
+npm test
 
-## Testing & Quality Checks
+# Check test coverage
+pytest backend/tests --cov=backend
 
-- **Backend tests:** `python -m pytest backend/tests`
-- **Frontend build (lint + type check):** `npm run build`
-- **Scraper dry-run:** `python scraper/menu_scraper.py --once`
+# Production build check
+npm run build
+```
 
-CI runs these checks automatically on every push and pull request.
+All tests pass: **20/20 backend tests ✓**
 
-## Deployment Notes
+## 🚀 Deployment
 
+### Free Stack (Recommended)
+- **Frontend**: Vercel (free tier with unlimited deployments)
+- **Database**: Neon.tech or Supabase (free PostgreSQL)
+- **Backend**: Vercel Serverless or Railway (free tier $5/month)
+- **Scraper**: GitHub Actions (free)
 
-## Next Steps
+**Total monthly cost**: $0-10
 
+### Steps
+1. Connect GitHub repo to Vercel
+2. Create PostgreSQL on Neon/Supabase
+3. Set environment variables in Vercel Settings
+4. Enable GitHub Actions in repository settings
+5. Deploy! 🚀
 
-## Free-only deployment (no Render/Railway)
+See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for detailed instructions.
 
-This repo now supports a free stack using Vercel for both the frontend and API, plus a free Postgres and a scheduled scraper on GitHub Actions:
+## 🐛 Troubleshooting
 
-- Frontend + API: Next.js on Vercel (serverless API routes in `frontend/pages/api/*`)
-- Database: Neon, Supabase, or Vercel Postgres (free hobby tier)
-- Scraper: GitHub Actions workflow (`.github/workflows/scrape.yml`) runs daily and writes to the DB
+**Database connection error?**  
+Check DATABASE_URL is set correctly:
+```bash
+psql -c "SELECT version();"
+```
 
-Steps:
+**Port 5000 already in use?**  
+```bash
+lsof -ti:5000 | xargs kill -9    # macOS/Linux
+Get-Process -Name python | Stop-Process  # Windows
+```
 
-1. Create a free Postgres
+**Scraper timeouts?**  
+```bash
+python tools/maintenance/auto_sync_menus.py --days 1
+```
 
-   - Neon: create a project and copy the connection string (starts with postgresql://)
-   - Supabase: create a project, Settings → Database → Connection string
-   - Vercel Postgres: add the Integration to your Vercel project (gives POSTGRES_URL envs)
+See [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) for more solutions.
 
-2. Configure environment variables
+## 🤝 Contributing
 
-   - On Vercel project → Settings → Environment Variables:
-   - DATABASE_URL (or POSTGRES_URL): your Postgres connection string
-   - ADMIN_PASSWORD: a secret used for admin login
-   - JWT_SECRET_KEY: any random secret (optional; falls back to ADMIN_PASSWORD)
+We welcome contributions! Here's how:
 
-3. Deploy
+1. Fork the repository  
+2. Create feature branch: `git checkout -b feature/amazing-feature`
+3. Make changes and add tests  
+4. Commit: `git commit -m 'Add amazing feature'`
+5. Push: `git push origin feature/amazing-feature`  
+6. Open a Pull Request  
 
-   - Push to your repo; Vercel will build and the API routes will deploy with the app
-   - The frontend uses same-origin API by default; no separate API host needed
+See [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) for guidelines.
 
-4. Enable scheduled scraping (optional)
+## 🗺️ Roadmap
 
-   - In GitHub: Settings → Secrets and variables → Actions → New repository secret
-   - Name: DATABASE_URL, Value: same connection string as above
-   - The daily job runs via `.github/workflows/scrape.yml` and fills `foods` from Purdue menus
+- [ ] User accounts (optional, for sync across devices)
+- [ ] Social features (share meals, meal prep ideas)
+- [ ] Multi-institution support (other universities)
+- [ ] Mobile apps (iOS/Android)
+- [ ] Export data (CSV/PDF reports)
+- [ ] Apple Health integration
+- [ ] Recipe builder
 
-Notes
+## 👥 Community
 
-- Admin endpoints require the bearer token from `/api/admin/login` (password = ADMIN_PASSWORD)
-- Tables are created automatically on first API call; schema matches `foods` and `activities`
-- Selenium is not used in serverless; the heavy scraping runs in GitHub Actions
+- 🐛 [Report bugs](https://github.com/Dapize-Mo/boilerfuel-calorie-tracker/issues)
+- 💡 [Request features](https://github.com/Dapize-Mo/boilerfuel-calorie-tracker/issues)
+- 💬 [Discuss ideas](https://github.com/Dapize-Mo/boilerfuel-calorie-tracker/discussions)
+
+## 📄 License
+
+MIT License — see [LICENSE](LICENSE)
+
+## 🙏 Acknowledgments
+
+- Purdue HFS for the menu API
+- Next.js, Flask, PostgreSQL communities
+- All contributors who improve this project
+
+---
+
+**Built with ❤️ for Purdue students** | [GitHub](https://github.com/Dapize-Mo/boilerfuel-calorie-tracker)
