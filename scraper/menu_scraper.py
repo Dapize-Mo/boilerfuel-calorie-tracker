@@ -753,6 +753,37 @@ def save_to_database(menu_items, database_url=None):
                             'protein': item['protein'],
                             'carbs': item['carbs'],
                             'fats': item['fats'],
+                            'serving_size': item.get('serving_size', '1 serving')
+                        }),
+                        court_for_storage,
+                        item.get('station'),
+                        primary_meal_time,
+                        json.dumps(schedule_data) if schedule_data else None
+                    )
+                )
+                added_count += 1
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        print(f"  Saved to DB: {added_count} added, {updated_count} updated")
+        
+    except Exception as e:
+        print(f"  Error saving to database: {e}")
+        if 'conn' in locals() and conn:
+            conn.rollback()
+
+def scrape_and_save(database_url=None, days_ahead=7, use_cache=True, date=None):
+    """
+    Scrape menu items and save them to the database.
+    
+    Args:
+        database_url: Database connection string
+        days_ahead: Number of days to scrape
+        use_cache: Whether to use nutrition cache
+        date: Start date
+
     Returns the list of items scraped.
     """
     print("Programmatic scrape_and_save starting...")
@@ -805,6 +836,6 @@ if __name__ == "__main__":
 
         print(f"\nTotal unique items scraped: {len(items)}")
         if items:
-            print("\n✓ Scraping complete!")
+            print("\n[OK] Scraping complete!")
         else:
-            print("\n⚠ No items found to save")
+            print("\n[WARN] No items found to save")
