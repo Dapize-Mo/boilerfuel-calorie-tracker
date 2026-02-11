@@ -264,17 +264,23 @@ export default async function handler(req, res) {
         const extra = [];
         let nutritionMismatches = 0;
         let matched = 0;
+        let extraCount = 0;
+        let missingCount = 0;
 
         for (const [key, apiItem] of apiMap.entries()) {
           if (dbMap.has(key)) {
             matched += 1;
-          } else if (missing.length < limit) {
-            missing.push(`${apiItem.name} (${apiItem.meal_time} / ${apiItem.station})`);
+          } else {
+            missingCount += 1;
+            if (missing.length < limit) {
+              missing.push(`${apiItem.name} (${apiItem.meal_time} / ${apiItem.station})`);
+            }
           }
         }
 
         for (const [key, dbItem] of dbMap.entries()) {
           if (!apiMap.has(key)) {
+            extraCount += 1;
             if (extra.length < limit) {
               extra.push(`${dbItem.name} (${dbItem.meal_time} / ${dbItem.station})`);
             }
@@ -290,8 +296,8 @@ export default async function handler(req, res) {
 
         totalApiItems += apiMap.size;
         totalDbItems += dbMap.size;
-        totalMissing += Math.max(0, apiMap.size - matched);
-        totalExtra += Math.max(0, dbMap.size - matched);
+        totalMissing += missingCount;
+        totalExtra += extraCount;
         totalNutritionMismatches += nutritionMismatches;
 
         results.push({
@@ -304,8 +310,8 @@ export default async function handler(req, res) {
           db_count: dbMap.size,
           matched_count: matched,
           coverage_percent: apiMap.size ? Number(((matched / apiMap.size) * 100).toFixed(1)) : 0,
-          missing_count: Math.max(0, apiMap.size - matched),
-          extra_count: Math.max(0, dbMap.size - matched),
+          missing_count: missingCount,
+          extra_count: extraCount,
           nutrition_mismatch_count: nutritionMismatches,
           missing,
           extra

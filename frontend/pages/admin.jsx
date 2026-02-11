@@ -370,8 +370,11 @@ function MenuAccuracyTab() {
                 <span className="text-xs text-theme-text-tertiary">Range source: {report.range?.start} → {report.range?.end}</span>
               </div>
               <div className="space-y-3">
-                {groupedByDate[date].map((item, idx) => (
-                  <div key={`${item.court_code}-${idx}`} className="p-3 rounded-xl bg-theme-bg-primary border border-theme-border-primary">
+                {groupedByDate[date].map((item, idx) => {
+                  const hasMismatches = item.status === 'open' && (item.missing_count > 0 || item.extra_count > 0 || item.nutrition_mismatch_count > 0);
+                  const borderColor = hasMismatches ? 'border-red-500/50' : 'border-theme-border-primary';
+                  return (
+                  <div key={`${item.court_code}-${idx}`} className={`p-3 rounded-xl bg-theme-bg-primary border ${borderColor}`}>
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="font-semibold">{item.display_name}</div>
                       <div className="text-xs text-theme-text-tertiary">Source: {item.source}</div>
@@ -382,21 +385,22 @@ function MenuAccuracyTab() {
                       </div>
                     ) : (
                       <div className="text-sm text-theme-text-tertiary mt-1">
-                        Coverage: <span className="font-semibold">{item.coverage_percent}%</span> • API {item.api_count} • DB {item.db_count} • Missing {item.missing_count} • Extra {item.extra_count} • Nutrition {item.nutrition_mismatch_count}
+                        Coverage: <span className={`font-semibold ${item.coverage_percent === 100 ? 'text-green-400' : 'text-yellow-400'}`}>{item.coverage_percent}%</span> • API {item.api_count} • DB {item.db_count} • <span className={item.missing_count > 0 ? 'text-red-400 font-semibold' : ''}>Missing {item.missing_count}</span> • <span className={item.extra_count > 0 ? 'text-yellow-400 font-semibold' : ''}>Extra {item.extra_count}</span> • Nutrition {item.nutrition_mismatch_count}
                       </div>
                     )}
                     {item.missing?.length > 0 && (
                       <div className="mt-2 text-xs text-red-400">
-                        Missing: {item.missing.join('; ')}{item.missing_count > item.missing.length ? ' ...' : ''}
+                        Missing: {item.missing.join('; ')}{item.missing_count > item.missing.length ? ` (+${item.missing_count - item.missing.length} more)` : ''}
                       </div>
                     )}
                     {item.extra?.length > 0 && (
                       <div className="mt-2 text-xs text-yellow-300">
-                        Extra: {item.extra.join('; ')}{item.extra_count > item.extra.length ? ' ...' : ''}
+                        Extra: {item.extra.join('; ')}{item.extra_count > item.extra.length ? ` (+${item.extra_count - item.extra.length} more)` : ''}
                       </div>
                     )}
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           ))}
