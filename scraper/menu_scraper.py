@@ -589,10 +589,12 @@ def _scrape_all_dining_courts_internal(date=None, use_cache=True, days_ahead=7,
             # Track schedule for each item
             for item in items:
                 meal_time = item.get('meal_period', 'Unknown')
+                station_name = item.get('station', 'Unknown')
                 key = (
                     item['name'].lower().strip(),
                     item['dining_court'].lower().strip() if item.get('dining_court') else '',
-                    meal_time.lower() if isinstance(meal_time, str) else 'unknown'
+                    meal_time.lower() if isinstance(meal_time, str) else 'unknown',
+                    station_name.lower().strip() if isinstance(station_name, str) else 'unknown'
                 )
 
                 if key not in food_schedules:
@@ -615,10 +617,12 @@ def _scrape_all_dining_courts_internal(date=None, use_cache=True, days_ahead=7,
     seen = set()
     for item in all_items:
         meal_time = item.get('meal_period', 'Unknown')
+        station_name = item.get('station', 'Unknown')
         key = (
             item['name'].lower().strip(),
             item['dining_court'].lower().strip() if item.get('dining_court') else '',
-            meal_time.lower() if isinstance(meal_time, str) else 'unknown'
+            meal_time.lower() if isinstance(meal_time, str) else 'unknown',
+            station_name.lower().strip() if isinstance(station_name, str) else 'unknown'
         )
         schedule = food_schedules.get(key, [])
 
@@ -738,12 +742,14 @@ def save_to_database(menu_items, database_url=None):
             if not court_for_storage:
                 court_for_storage = possible_courts[0]
             
-            # Check if item already exists (match by name and dining_court only)
+            station_name = item.get('station', 'Unknown')
+            
+            # Check if item already exists (match by name, dining_court, meal_time, AND station)
             placeholders = ','.join(['%s'] * len(possible_courts))
-            params = [item['name'], primary_meal_time]
+            params = [item['name'], primary_meal_time, station_name]
             params.extend(possible_courts)
             cursor.execute(
-                f"SELECT id, calories, dining_court FROM foods WHERE name = %s AND meal_time = %s AND dining_court IN ({placeholders}) LIMIT 1",
+                f"SELECT id, calories, dining_court FROM foods WHERE name = %s AND meal_time = %s AND station = %s AND dining_court IN ({placeholders}) LIMIT 1",
                 tuple(params)
             )
             
