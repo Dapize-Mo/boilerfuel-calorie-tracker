@@ -271,6 +271,7 @@ function MenuAccuracyTab() {
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [expandedItems, setExpandedItems] = useState(new Set());
 
   async function runComparison() {
     try {
@@ -373,6 +374,10 @@ function MenuAccuracyTab() {
                 {groupedByDate[date].map((item, idx) => {
                   const hasMismatches = item.status === 'open' && (item.missing_count > 0 || item.extra_count > 0 || item.nutrition_mismatch_count > 0);
                   const borderColor = hasMismatches ? 'border-red-500/50' : 'border-theme-border-primary';
+                  const itemKey = `${date}-${item.court_code}-${idx}`;
+                  const isExpanded = expandedItems.has(itemKey);
+                  const PREVIEW_LIMIT = 3;
+                  
                   return (
                   <div key={`${item.court_code}-${idx}`} className={`p-3 rounded-xl bg-theme-bg-primary border ${borderColor}`}>
                     <div className="flex flex-wrap items-center justify-between gap-2">
@@ -389,13 +394,49 @@ function MenuAccuracyTab() {
                       </div>
                     )}
                     {item.missing?.length > 0 && (
-                      <div className="mt-2 text-xs text-red-400">
-                        Missing: {item.missing.join('; ')}{item.missing_count > item.missing.length ? ` (+${item.missing_count - item.missing.length} more)` : ''}
+                      <div className="mt-2">
+                        <div className="text-xs font-semibold text-red-400 mb-1">Missing in DB ({item.missing_count}):</div>
+                        <div className="text-xs text-red-400/80 space-y-0.5">
+                          {(isExpanded ? item.missing : item.missing.slice(0, PREVIEW_LIMIT)).map((missingItem, i) => (
+                            <div key={i}>• {missingItem}</div>
+                          ))}
+                          {item.missing.length > PREVIEW_LIMIT && (
+                            <button
+                              onClick={() => {
+                                const newSet = new Set(expandedItems);
+                                if (isExpanded) newSet.delete(itemKey);
+                                else newSet.add(itemKey);
+                                setExpandedItems(newSet);
+                              }}
+                              className="text-red-300 hover:text-red-200 underline"
+                            >
+                              {isExpanded ? '▲ Show less' : `▼ Show ${item.missing.length - PREVIEW_LIMIT} more`}
+                            </button>
+                          )}
+                        </div>
                       </div>
                     )}
                     {item.extra?.length > 0 && (
-                      <div className="mt-2 text-xs text-yellow-300">
-                        Extra: {item.extra.join('; ')}{item.extra_count > item.extra.length ? ` (+${item.extra_count - item.extra.length} more)` : ''}
+                      <div className="mt-2">
+                        <div className="text-xs font-semibold text-yellow-400 mb-1">Extra in DB ({item.extra_count}):</div>
+                        <div className="text-xs text-yellow-300/80 space-y-0.5">
+                          {(isExpanded ? item.extra : item.extra.slice(0, PREVIEW_LIMIT)).map((extraItem, i) => (
+                            <div key={i}>• {extraItem}</div>
+                          ))}
+                          {item.extra.length > PREVIEW_LIMIT && (
+                            <button
+                              onClick={() => {
+                                const newSet = new Set(expandedItems);
+                                if (isExpanded) newSet.delete(itemKey);
+                                else newSet.add(itemKey);
+                                setExpandedItems(newSet);
+                              }}
+                              className="text-yellow-300 hover:text-yellow-200 underline"
+                            >
+                              {isExpanded ? '▲ Show less' : `▼ Show ${item.extra.length - PREVIEW_LIMIT} more`}
+                            </button>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>
