@@ -67,7 +67,7 @@ export default function FoodDashboardData() {
                 let url = '/api/foods';
                 const params = new URLSearchParams();
                 if (selectedDiningCourt) params.append('dining_court', selectedDiningCourt);
-                if (selectedMealTime) params.append('meal_time', selectedMealTime);
+                if (selectedMealTime) params.append('meal_time', selectedMealTime.toLowerCase());
 
                 if (params.toString()) url += `?${params.toString()}`;
 
