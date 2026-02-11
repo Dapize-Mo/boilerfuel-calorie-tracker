@@ -201,26 +201,35 @@ export default function Dashboard() {
 
       <main className="font-sans text-theme-text-primary pb-20">
         {/* Hero Section */}
-        <section className="relative py-20 px-6 flex flex-col items-center justify-center text-center space-y-6 bg-theme-bg-secondary dark:bg-hero-black border-b border-theme-border-primary">
-          {/* Streak Tracker */}
-          <StreakTracker />
+        <section className="relative py-24 px-6 flex flex-col items-center justify-center text-center space-y-8 bg-theme-bg-secondary dark:bg-hero-black border-b border-theme-border-primary overflow-hidden">
+          {/* Animated background elements */}
+          <div className="absolute inset-0 gradient-mesh opacity-40" />
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-yellow-400/10 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-1000" />
+          
+          <div className="relative z-10 space-y-8">
+            {/* Streak Tracker */}
+            <div className="floating">
+              <StreakTracker />
+            </div>
 
-          <h1 className="text-6xl md:text-8xl font-light tracking-tighter text-theme-text-primary animate-fade-in-up">
-            BoilerFuel
-          </h1>
-          <p className="text-xl text-theme-text-tertiary font-light max-w-2xl animate-fade-in-up delay-100">
-            Your daily health overview. Track calories, macros, and workouts with precision.
-          </p>
+            <h1 className="text-7xl md:text-9xl font-extralight tracking-tighter text-theme-text-primary animate-fade-in-up bg-clip-text text-transparent bg-gradient-to-r from-theme-text-primary via-yellow-400 to-theme-text-primary">
+              BoilerFuel
+            </h1>
+            <p className="text-xl md:text-2xl text-theme-text-tertiary font-light max-w-2xl animate-fade-in-up delay-100 leading-relaxed">
+              Your daily health overview. Track calories, macros, and workouts with precision.
+            </p>
 
-          {/* Date Selector */}
-          <div className="pt-8 animate-fade-in-up delay-200">
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              max={formatDateForInput(startOfToday())}
-              className="text-lg font-medium rounded-xl border border-theme-border-primary bg-theme-bg-tertiary px-4 py-2 text-theme-text-primary focus:outline-none focus:ring-2 focus:ring-theme-accent transition-all hover:bg-theme-bg-hover"
-            />
+            {/* Date Selector */}
+            <div className="pt-4 animate-fade-in-up delay-200">
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                max={formatDateForInput(startOfToday())}
+                className="text-lg font-semibold rounded-2xl border-2 border-theme-border-primary bg-theme-bg-tertiary/50 backdrop-blur-sm px-6 py-3 text-theme-text-primary focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 transition-all hover:bg-theme-bg-hover hover:scale-105 shadow-lg cursor-pointer"
+              />
+            </div>
           </div>
         </section>
 

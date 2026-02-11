@@ -155,17 +155,22 @@ function NavLink({ href, icon, children, active, onClick }) {
         <Link
             href={href}
             onClick={onClick}
-            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group ${active
-                ? 'bg-yellow-400/10 text-yellow-600 dark:text-yellow-400 font-medium shadow-sm ring-1 ring-yellow-400/20'
-                : 'text-theme-text-secondary hover:text-theme-text-primary hover:bg-theme-bg-hover/60'
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group relative overflow-hidden ${active
+                ? 'bg-gradient-to-r from-yellow-400/15 to-yellow-500/10 text-yellow-600 dark:text-yellow-400 font-semibold shadow-lg ring-2 ring-yellow-400/30'
+                : 'text-theme-text-secondary hover:text-theme-text-primary hover:bg-theme-bg-hover/70'
                 }`}
         >
-            <span className={`transition-colors ${active ? 'text-yellow-500' : 'text-theme-text-tertiary group-hover:text-theme-text-primary'}`}>
+            {/* Active indicator line */}
+            {active && (
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-yellow-400 to-yellow-500 rounded-r-full shadow-[0_0_10px_rgba(250,204,21,0.5)]" />
+            )}
+            
+            <span className={`transition-all duration-300 ${active ? 'text-yellow-500 scale-110' : 'text-theme-text-tertiary group-hover:text-yellow-400 group-hover:scale-105'}`}>
                 {icon}
             </span>
-            {children}
+            <span className="relative z-10">{children}</span>
             {active && (
-                <div className="ml-auto w-1.5 h-1.5 rounded-full bg-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.6)]" />
+                <div className="ml-auto w-2 h-2 rounded-full bg-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.8)] pulse-glow" />
             )}
         </Link>
     );
