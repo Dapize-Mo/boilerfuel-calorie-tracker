@@ -4,6 +4,10 @@ import { ensureSchema, query } from '../../utils/db';
 // Returns flat list or grouped hierarchy if group=1
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+  
+  // Enable caching for GET requests (5 minutes, revalidate in background)
+  res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
+  
   try {
     await ensureSchema();
     const { dining_court, meal_time, station, group } = req.query;

@@ -5,6 +5,20 @@ import Layout from '../components/Layout';
 import { ThemeProvider } from '../utils/ThemeContext';
 import { SessionProvider } from "next-auth/react";
 import { DashboardProvider } from '../utils/DashboardContext';
+import { SWRConfig } from 'swr';
+
+// SWR configuration for optimized data fetching
+const swrConfig = {
+  revalidateOnFocus: false,
+  revalidateOnReconnect: true,
+  dedupingInterval: 5000,
+  focusThrottleInterval: 10000,
+  errorRetryInterval: 5000,
+  errorRetryCount: 3,
+  suspense: false,
+  shouldRetryOnError: true,
+  keepPreviousData: true,
+};
 
 function MyApp({ Component, pageProps: { session, ...pageProps } }) {
   useEffect(() => {
@@ -44,11 +58,13 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
           }}
         />
       </Head>
-      <ThemeProvider>
-        <DashboardProvider>
-          {getLayout(<Component {...pageProps} />)}
-        </DashboardProvider>
-      </ThemeProvider>
+      <SWRConfig value={swrConfig}>
+        <ThemeProvider>
+          <DashboardProvider>
+            {getLayout(<Component {...pageProps} />)}
+          </DashboardProvider>
+        </ThemeProvider>
+      </SWRConfig>
     </SessionProvider>
   );
 }

@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function StatCard({ label, value, goal, icon }) {
+const StatCard = React.memo(function StatCard({ label, value, goal, icon }) {
     const percentage = goal ? Math.min(100, (value / goal) * 100) : null;
 
     return (
@@ -25,4 +25,6 @@ export default function StatCard({ label, value, goal, icon }) {
             )}
         </div>
     );
-}
+});
+
+export default StatCard;

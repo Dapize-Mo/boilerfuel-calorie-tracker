@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 
-export default function QuickActionCard({ href, icon, title, description, stat }) {
+const QuickActionCard = React.memo(function QuickActionCard({ href, icon, title, description, stat }) {
     return (
         <Link href={href} className="group block p-8 rounded-3xl bg-theme-card-bg border border-theme-card-border shadow-sm hover:shadow-md hover:border-theme-border-secondary transition-all duration-300">
             <div className="flex items-start gap-6">
@@ -21,4 +21,6 @@ export default function QuickActionCard({ href, icon, title, description, stat }
             </div>
         </Link>
     );
-}
+});
+
+export default QuickActionCard;

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import Link from 'next/link';
 import Sidebar from './Sidebar';
 import ThemeToggleButton from './ThemeToggleButton';
@@ -36,7 +36,7 @@ export default function Layout({ children }) {
   );
 }
 
-function MobileHeader({ open, setOpen }) {
+const MobileHeader = memo(function MobileHeader({ open, setOpen }) {
   return (
     <header className="sticky top-0 z-30 lg:hidden border-b border-theme-border-secondary bg-theme-bg-secondary/80 backdrop-blur-md">
       <div className="px-4 h-16 flex items-center justify-between">
@@ -61,9 +61,9 @@ function MobileHeader({ open, setOpen }) {
       </div>
     </header>
   );
-}
+});
 
-function Footer() {
+const Footer = memo(function Footer() {
   return (
     <footer className="border-t border-theme-border-secondary mt-auto bg-theme-bg-secondary/30">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 text-xs text-theme-text-tertiary flex flex-wrap items-center justify-between gap-3">
@@ -78,4 +78,4 @@ function Footer() {
       </div>
     </footer>
   );
-}
+});

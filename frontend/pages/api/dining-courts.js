@@ -2,6 +2,10 @@ import { ensureSchema, query } from '../../utils/db';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+  
+  // Cache for 10 minutes since dining courts change infrequently
+  res.setHeader('Cache-Control', 's-maxage=600, stale-while-revalidate=1800');
+  
   try {
     await ensureSchema();
     const mealTime = (req.query.meal_time || '').trim();

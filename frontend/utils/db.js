@@ -11,6 +11,7 @@ if (!connectionString) {
 
 // In serverless, avoid long-lived pools across cold starts; keep a global
 let pool;
+let schemaInitialized = false;
 
 function getPool() {
   if (!pool) {
@@ -20,6 +21,14 @@ function getPool() {
       ssl: shouldUseSSL(connectionString) ? { rejectUnauthorized: false } : undefined,
       max: 3,
       idleTimeoutMillis: 10000,
+      connectionTimeoutMillis: 5000,
+      // Optimize for serverless
+      allowExitOnIdle: true,
+    });
+    
+    // Handle pool errors gracefully
+    pool.on('error', (err) => {
+      console.error('[db] Unexpected pool error:', err);
     });
   }
   return pool;
@@ -36,14 +45,21 @@ export async function query(text, params) {
   const client = await getPool().connect();
   try {
     return await client.query(text, params);
+  } catch (error) {
+    console.error('[db] Query error:', error.message);
+    throw error;
   } finally {
     client.release();
   }
 }
 
 export async function ensureSchema() {
-  // Create tables if they don't exist
-  await query(`
+  // Skip if already initialized in this serverless instance
+  if (schemaInitialized) return;
+  
+  try {
+    // Create tables if they don't exist
+    await query(`
     CREATE TABLE IF NOT EXISTS foods (
       id SERIAL PRIMARY KEY,
       name VARCHAR(255) NOT NULL,
@@ -155,4 +171,12 @@ export async function ensureSchema() {
       END IF;
     END $$;
   `);
+  
+    schemaInitialized = true;
+  } catch (error) {
+    console.error('[db] Schema initialization error:', error.message);
+    // Don't cache on error - allow retry
+    schemaInitialized = false;
+    throw error;
+  }
 }
