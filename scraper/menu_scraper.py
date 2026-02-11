@@ -504,17 +504,21 @@ def extract_item_data_selenium(item_div, dining_court, meal_name='Unknown', stat
     except Exception as e:
         return None
 
-def scrape_all_dining_courts(date=None, use_cache=True, days_ahead=7):
+def _scrape_all_dining_courts_internal(date=None, use_cache=True, days_ahead=7,
+                                       include_snapshots=False, schedule_start_date=None):
     """
-    Scrape all Purdue dining courts for upcoming menus using the API.
-    
+    Scrape all Purdue dining courts for menus using the API.
+
     Args:
         date: Date in YYYY/MM/DD format (optional, defaults to today)
         use_cache: Whether to use the nutrition cache from database (default: True)
-        days_ahead: Number of days to scrape ahead (default: 7 for next week)
-    
+        days_ahead: Number of days to scrape ahead
+        include_snapshots: Whether to return per-date snapshot items
+        schedule_start_date: Earliest date to include in next_appearances
+
     Returns:
-        List of all menu items with schedule information
+        If include_snapshots is False: list of unique menu items with schedule
+        If include_snapshots is True: (items_with_schedule, snapshot_items)
     """
     from datetime import datetime, timedelta
     
@@ -532,6 +536,11 @@ def scrape_all_dining_courts(date=None, use_cache=True, days_ahead=7):
         start_date = datetime.strptime(date.replace('/', '-'), '%Y-%m-%d')
     else:
         start_date = datetime.now()
+
+    if schedule_start_date is None:
+        schedule_start_date = datetime.now().date()
+    elif isinstance(schedule_start_date, str):
+        schedule_start_date = datetime.strptime(schedule_start_date, '%Y-%m-%d').date()
     
     print(f"\nStarting scrape for {days_ahead} days ahead...")
     
@@ -589,11 +598,12 @@ def scrape_all_dining_courts(date=None, use_cache=True, days_ahead=7):
                 if key not in food_schedules:
                     food_schedules[key] = []
 
-                food_schedules[key].append({
-                    'date': date_str,
-                    'day_name': day_name,
-                    'meal_time': meal_time
-                })
+                if current_date.date() >= schedule_start_date:
+                    food_schedules[key].append({
+                        'date': date_str,
+                        'day_name': day_name,
+                        'meal_time': meal_time
+                    })
             
             all_items.extend(items)
             print(f"    Found {len(items)} items")
@@ -620,7 +630,35 @@ def scrape_all_dining_courts(date=None, use_cache=True, days_ahead=7):
             item['next_appearances'] = schedule
         items_with_schedule.append(item)
     
+    if include_snapshots:
+        return items_with_schedule, all_items
     return items_with_schedule
+
+def scrape_all_dining_courts(date=None, use_cache=True, days_ahead=7):
+    """
+    Scrape all Purdue dining courts for upcoming menus using the API.
+
+    Returns:
+        List of all menu items with schedule information
+    """
+    return _scrape_all_dining_courts_internal(
+        date=date,
+        use_cache=use_cache,
+        days_ahead=days_ahead,
+        include_snapshots=False
+    )
+
+def scrape_all_dining_courts_with_snapshots(date=None, use_cache=True, days_ahead=7, schedule_start_date=None):
+    """
+    Scrape all dining courts and return unique items plus per-date snapshots.
+    """
+    return _scrape_all_dining_courts_internal(
+        date=date,
+        use_cache=use_cache,
+        days_ahead=days_ahead,
+        include_snapshots=True,
+        schedule_start_date=schedule_start_date
+    )
 
 def save_to_database(menu_items, database_url=None):
     """
@@ -771,6 +809,124 @@ def save_to_database(menu_items, database_url=None):
         
     except Exception as e:
         print(f"  Error saving to database: {e}")
+        if 'conn' in locals() and conn:
+            conn.rollback()
+
+def save_menu_snapshots(menu_items, database_url=None, source='api'):
+    """
+    Save per-date menu snapshots to the database for historical verification.
+    """
+    if not database_url:
+        database_url = os.getenv('DATABASE_URL')
+
+    if not database_url:
+        print("ERROR: No DATABASE_URL provided")
+        return
+
+    if database_url.startswith('postgres://'):
+        database_url = database_url.replace('postgres://', 'postgresql://', 1)
+
+    try:
+        conn = psycopg2.connect(database_url)
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS menu_snapshots (
+                id SERIAL PRIMARY KEY,
+                menu_date DATE NOT NULL,
+                name VARCHAR(255) NOT NULL,
+                calories INT NOT NULL,
+                macros JSONB NOT NULL,
+                dining_court VARCHAR(100) NOT NULL,
+                dining_court_code VARCHAR(10),
+                station VARCHAR(255),
+                meal_time VARCHAR(50),
+                source VARCHAR(20) DEFAULT 'api',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        cursor.execute("""
+            DO $$
+            BEGIN
+                IF NOT EXISTS (
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_name='menu_snapshots' AND column_name='dining_court_code'
+                ) THEN
+                    ALTER TABLE menu_snapshots ADD COLUMN dining_court_code VARCHAR(10);
+                END IF;
+                IF NOT EXISTS (
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_name='menu_snapshots' AND column_name='source'
+                ) THEN
+                    ALTER TABLE menu_snapshots ADD COLUMN source VARCHAR(20) DEFAULT 'api';
+                END IF;
+                IF NOT EXISTS (
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_name='menu_snapshots' AND column_name='updated_at'
+                ) THEN
+                    ALTER TABLE menu_snapshots ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+                END IF;
+            END $$;
+        """)
+
+        cursor.execute("""
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_menu_snapshots_unique
+            ON menu_snapshots(menu_date, dining_court, meal_time, station, name)
+        """)
+
+        saved = 0
+
+        for item in menu_items:
+            menu_date = item.get('available_date') or item.get('menu_date')
+            if not menu_date:
+                continue
+
+            meal_time = item.get('meal_period', 'Unknown') or 'Unknown'
+            dining_court = item.get('dining_court') or item.get('dining_court_code') or 'Unknown'
+            dining_court_code = item.get('dining_court_code')
+
+            cursor.execute(
+                """
+                INSERT INTO menu_snapshots
+                    (menu_date, name, calories, macros, dining_court, dining_court_code, station, meal_time, source, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP)
+                ON CONFLICT (menu_date, dining_court, meal_time, station, name)
+                DO UPDATE SET
+                    calories = EXCLUDED.calories,
+                    macros = EXCLUDED.macros,
+                    dining_court_code = EXCLUDED.dining_court_code,
+                    source = EXCLUDED.source,
+                    updated_at = CURRENT_TIMESTAMP
+                """,
+                (
+                    menu_date,
+                    item['name'],
+                    item['calories'],
+                    json.dumps({
+                        'protein': item['protein'],
+                        'carbs': item['carbs'],
+                        'fats': item['fats'],
+                        'serving_size': item.get('serving_size', '1 serving')
+                    }),
+                    dining_court,
+                    dining_court_code,
+                    item.get('station'),
+                    meal_time,
+                    source
+                )
+            )
+            saved += 1
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        print(f"  Snapshot rows saved: {saved}")
+
+    except Exception as e:
+        print(f"  Error saving menu snapshots: {e}")
         if 'conn' in locals() and conn:
             conn.rollback()
 

@@ -38,3 +38,23 @@ CREATE TABLE IF NOT EXISTS foods (
 
 -- Create index for faster filtering by dining court
 CREATE INDEX IF NOT EXISTS idx_foods_dining_court ON foods(dining_court);
+
+CREATE TABLE IF NOT EXISTS menu_snapshots (
+    id SERIAL PRIMARY KEY,
+    menu_date DATE NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    calories INT NOT NULL,
+    macros JSONB NOT NULL,
+    dining_court VARCHAR(100) NOT NULL,
+    dining_court_code VARCHAR(10),
+    station VARCHAR(255),
+    meal_time VARCHAR(50),
+    source VARCHAR(20) DEFAULT 'api',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_menu_snapshots_date ON menu_snapshots(menu_date);
+CREATE INDEX IF NOT EXISTS idx_menu_snapshots_court ON menu_snapshots(dining_court);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_menu_snapshots_unique
+    ON menu_snapshots(menu_date, dining_court, meal_time, station, name);

@@ -76,6 +76,42 @@ export async function ensureSchema() {
   await query(`CREATE INDEX IF NOT EXISTS idx_foods_next_available ON foods USING GIN (next_available);`);
 
   await query(`
+    CREATE TABLE IF NOT EXISTS menu_snapshots (
+      id SERIAL PRIMARY KEY,
+      menu_date DATE NOT NULL,
+      name VARCHAR(255) NOT NULL,
+      calories INT NOT NULL,
+      macros JSONB NOT NULL,
+      dining_court VARCHAR(100) NOT NULL,
+      dining_court_code VARCHAR(10),
+      station VARCHAR(255),
+      meal_time VARCHAR(50),
+      source VARCHAR(20) DEFAULT 'api',
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    );
+  `);
+
+  await query(`
+    DO $$
+    BEGIN
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='menu_snapshots' AND column_name='dining_court_code') THEN
+        ALTER TABLE menu_snapshots ADD COLUMN dining_court_code VARCHAR(10);
+      END IF;
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='menu_snapshots' AND column_name='source') THEN
+        ALTER TABLE menu_snapshots ADD COLUMN source VARCHAR(20) DEFAULT 'api';
+      END IF;
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='menu_snapshots' AND column_name='updated_at') THEN
+        ALTER TABLE menu_snapshots ADD COLUMN updated_at TIMESTAMPTZ DEFAULT NOW();
+      END IF;
+    END $$;
+  `);
+
+  await query(`CREATE INDEX IF NOT EXISTS idx_menu_snapshots_date ON menu_snapshots(menu_date);`);
+  await query(`CREATE INDEX IF NOT EXISTS idx_menu_snapshots_court ON menu_snapshots(dining_court);`);
+  await query(`CREATE UNIQUE INDEX IF NOT EXISTS idx_menu_snapshots_unique ON menu_snapshots(menu_date, dining_court, meal_time, station, name);`);
+
+  await query(`
     CREATE TABLE IF NOT EXISTS activities (
       id SERIAL PRIMARY KEY,
       name VARCHAR(255) NOT NULL,

@@ -21,7 +21,7 @@ export default function AdminPanel() {
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('stats'); // stats, foods, exercises
+  const [activeTab, setActiveTab] = useState('stats'); // stats, accuracy, foods, exercises
 
   useEffect(() => {
     async function bootstrap() {
@@ -207,6 +207,16 @@ export default function AdminPanel() {
               📊 Stats
             </button>
             <button
+              onClick={() => setActiveTab('accuracy')}
+              className={`px-6 py-3 font-semibold border-b-2 transition-colors ${
+                activeTab === 'accuracy'
+                  ? 'border-yellow-500 text-yellow-400'
+                  : 'border-transparent text-theme-text-tertiary hover:text-theme-text-primary'
+              }`}
+            >
+              ✅ Accuracy
+            </button>
+            <button
               onClick={() => setActiveTab('foods')}
               className={`px-6 py-3 font-semibold border-b-2 transition-colors ${
                 activeTab === 'foods'
@@ -231,6 +241,7 @@ export default function AdminPanel() {
           {/* Tab Content */}
           <div className="mt-6">
             {activeTab === 'stats' && <StatsTab />}
+            {activeTab === 'accuracy' && <MenuAccuracyTab />}
             {activeTab === 'foods' && <FoodsTab />}
             {activeTab === 'exercises' && <ExercisesTab />}
           </div>
@@ -241,6 +252,160 @@ export default function AdminPanel() {
 }
 
 // Export with custom layout that bypasses the default Layout wrapper
+function getDefaultDateRange() {
+  const now = new Date();
+  const start = new Date(now);
+  start.setDate(start.getDate() - 7);
+  const end = new Date(now);
+  end.setDate(end.getDate() + 2);
+  return {
+    start: start.toISOString().slice(0, 10),
+    end: end.toISOString().slice(0, 10)
+  };
+}
+
+function MenuAccuracyTab() {
+  const defaults = getDefaultDateRange();
+  const [startDate, setStartDate] = useState(defaults.start);
+  const [endDate, setEndDate] = useState(defaults.end);
+  const [report, setReport] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  async function runComparison() {
+    try {
+      setLoading(true);
+      setError('');
+      const data = await apiCall(
+        `/api/admin/menu-compare?start=${encodeURIComponent(startDate)}&end=${encodeURIComponent(endDate)}`,
+        { method: 'GET' },
+        { requireAdmin: true }
+      );
+      setReport(data || null);
+    } catch (err) {
+      setError(err.message || 'Failed to run comparison');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    runComparison();
+  }, []);
+
+  const groupedByDate = useMemo(() => {
+    if (!report?.results) return {};
+    return report.results.reduce((acc, item) => {
+      acc[item.date] ||= [];
+      acc[item.date].push(item);
+      return acc;
+    }, {});
+  }, [report]);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">Menu Accuracy</h2>
+          <p className="text-theme-text-tertiary">Compare site data to Purdue menus (API + snapshots)</p>
+        </div>
+        <button
+          onClick={runComparison}
+          disabled={loading}
+          className="px-4 py-2 rounded-xl bg-green-500 text-slate-900 font-semibold hover:bg-green-600 transition-colors disabled:opacity-60"
+        >
+          {loading ? 'Running...' : 'Run Comparison'}
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="p-4 rounded-xl bg-theme-bg-secondary border border-theme-border-primary">
+          <label className="block text-sm text-theme-text-tertiary mb-2">Start date</label>
+          <input
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            className="w-full px-3 py-2 rounded-lg border border-theme-border-primary bg-theme-bg-tertiary"
+          />
+        </div>
+        <div className="p-4 rounded-xl bg-theme-bg-secondary border border-theme-border-primary">
+          <label className="block text-sm text-theme-text-tertiary mb-2">End date</label>
+          <input
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            className="w-full px-3 py-2 rounded-lg border border-theme-border-primary bg-theme-bg-tertiary"
+          />
+        </div>
+        <div className="p-4 rounded-xl bg-theme-bg-secondary border border-theme-border-primary">
+          <label className="block text-sm text-theme-text-tertiary mb-2">Summary</label>
+          {report?.summary ? (
+            <div className="text-sm space-y-1">
+              <div>Missing: <span className="font-semibold">{report.summary.total_missing}</span></div>
+              <div>Extra: <span className="font-semibold">{report.summary.total_extra}</span></div>
+              <div>Nutrition mismatches: <span className="font-semibold">{report.summary.total_nutrition_mismatches}</span></div>
+            </div>
+          ) : (
+            <div className="text-sm text-theme-text-tertiary">Run comparison to see results</div>
+          )}
+        </div>
+      </div>
+
+      {error && (
+        <div className="p-4 rounded-xl bg-red-500/10 border border-red-500 text-red-400">
+          {error}
+        </div>
+      )}
+
+      {!report && !loading && !error && (
+        <div className="text-center py-10 text-theme-text-tertiary">No report available</div>
+      )}
+
+      {report && (
+        <div className="space-y-6">
+          {Object.keys(groupedByDate).sort().map(date => (
+            <div key={date} className="p-4 rounded-2xl bg-theme-bg-secondary border border-theme-border-primary">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold">{date}</h3>
+                <span className="text-xs text-theme-text-tertiary">Range source: {report.range?.start} → {report.range?.end}</span>
+              </div>
+              <div className="space-y-3">
+                {groupedByDate[date].map((item, idx) => (
+                  <div key={`${item.court_code}-${idx}`} className="p-3 rounded-xl bg-theme-bg-primary border border-theme-border-primary">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="font-semibold">{item.display_name}</div>
+                      <div className="text-xs text-theme-text-tertiary">Source: {item.source}</div>
+                    </div>
+                    {item.status !== 'open' ? (
+                      <div className="text-sm text-theme-text-tertiary mt-1">
+                        {item.status === 'closed' ? `Closed: ${item.reason}` : `Error: ${item.error}`}
+                      </div>
+                    ) : (
+                      <div className="text-sm text-theme-text-tertiary mt-1">
+                        Coverage: <span className="font-semibold">{item.coverage_percent}%</span> • API {item.api_count} • DB {item.db_count} • Missing {item.missing_count} • Extra {item.extra_count} • Nutrition {item.nutrition_mismatch_count}
+                      </div>
+                    )}
+                    {item.missing?.length > 0 && (
+                      <div className="mt-2 text-xs text-red-400">
+                        Missing: {item.missing.join('; ')}{item.missing_count > item.missing.length ? ' ...' : ''}
+                      </div>
+                    )}
+                    {item.extra?.length > 0 && (
+                      <div className="mt-2 text-xs text-yellow-300">
+                        Extra: {item.extra.join('; ')}{item.extra_count > item.extra.length ? ' ...' : ''}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 AdminPanel.getLayout = function getLayout(page) {
   return page;
 };
