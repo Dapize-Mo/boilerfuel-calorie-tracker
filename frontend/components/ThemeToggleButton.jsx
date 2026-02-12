@@ -1,10 +1,15 @@
-import { useTheme } from '../utils/ThemeContext';
+import { useTheme } from '../context/ThemeContext';
 
 export default function ThemeToggleButton() {
-  const { theme, resolvedTheme, setTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
+
+  // In the new system, 'default' is the dark theme. 
+  // 'soft', 'swiss', 'glass' are generally light themes.
+  const isDark = theme === 'default';
 
   const toggleTheme = () => {
-    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
+    // Toggle between Default (Dark) and Soft (Light) as a simple switch
+    setTheme(isDark ? 'soft' : 'default');
   };
 
   return (
@@ -14,11 +19,10 @@ export default function ThemeToggleButton() {
       aria-label="Toggle theme"
     >
       <div className="relative w-6 h-6">
-        {/* Sun Icon */}
+        {/* Sun Icon (Show when Dark to toggle to Light) */}
         <svg
-          className={`absolute inset-0 w-6 h-6 text-yellow-400 transition-all duration-300 ${
-            resolvedTheme === 'light' ? 'rotate-0 scale-100 opacity-100' : 'rotate-90 scale-0 opacity-0'
-          }`}
+          className={`absolute inset-0 w-6 h-6 text-yellow-400 transition-all duration-300 ${!isDark ? 'rotate-0 scale-100 opacity-100' : 'rotate-90 scale-0 opacity-0'
+            }`}
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -31,11 +35,10 @@ export default function ThemeToggleButton() {
           />
         </svg>
 
-        {/* Moon Icon */}
+        {/* Moon Icon (Show when Light to toggle to Dark) */}
         <svg
-          className={`absolute inset-0 w-6 h-6 text-blue-300 transition-all duration-300 ${
-            resolvedTheme === 'dark' ? 'rotate-0 scale-100 opacity-100' : '-rotate-90 scale-0 opacity-0'
-          }`}
+          className={`absolute inset-0 w-6 h-6 text-blue-300 transition-all duration-300 ${isDark ? 'rotate-0 scale-100 opacity-100' : '-rotate-90 scale-0 opacity-0'
+            }`}
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
