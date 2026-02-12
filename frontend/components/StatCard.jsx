@@ -31,6 +31,7 @@ const StatCard = React.memo(function StatCard({ label, value, goal, icon }) {
                         </p>
                     </div>
                 )}
+            </div>
         </div>
     );
 });
