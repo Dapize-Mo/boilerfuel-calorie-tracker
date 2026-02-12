@@ -1,25 +1,21 @@
-import { useState, useEffect, memo } from 'react';
+import { memo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import ThemeToggleButton from './ThemeToggleButton';
-import BottomNav from './BottomNav';
 import SkipToContent from './SkipToContent';
-import CommandPalette from './CommandPalette';
 
 export default function Layout({ children }) {
   return (
     <>
       <SkipToContent />
-      <CommandPalette />
       <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary antialiased flex flex-col">
         <TopNav />
 
-        <main id="main-content" className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-10 pb-20 md:pb-6">
+        <main id="main-content" className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-10">
           {children}
         </main>
 
         <Footer />
-        <BottomNav />
       </div>
 
       <div className="fixed bottom-6 right-6 z-50">
@@ -33,16 +29,15 @@ const TopNav = memo(function TopNav() {
   const router = useRouter();
   const navItems = [
     { href: '/', label: 'Home', icon: '🏠' },
-    { href: '/food-dashboard-glass', label: 'Menu', icon: '🍽️' },
-    { href: '/insights', label: 'Insights', icon: '📊' },
-    { href: '/profile', label: 'Profile', icon: '👤' },
+    { href: '/about', label: 'About', icon: 'ℹ️' },
+    { href: '/changelog', label: 'Changelog', icon: '📝' },
+    { href: '/admin', label: 'Admin', icon: '⚙️' },
   ];
 
   return (
     <header className="sticky top-0 z-40 border-b border-theme-border-secondary bg-theme-bg-secondary/80 backdrop-blur-md">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="h-16 flex items-center justify-between">
-          {/* Logo */}
           <Link href="/" className="flex items-center gap-2 font-bold text-lg text-theme-text-primary hover:opacity-80 transition-opacity">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center shadow-md">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-slate-900">
@@ -50,11 +45,10 @@ const TopNav = memo(function TopNav() {
                 <path d="M12 5.432l8.159 8.159c.03.03.06.058.091.086v6.198c0 1.035-.84 1.875-1.875 1.875H15a.75.75 0 01-.75-.75v-4.5a.75.75 0 00-.75-.75h-3a.75.75 0 00-.75.75V21a.75.75 0 01-.75.75H5.625a1.875 1.875 0 01-1.875-1.875v-6.198a2.29 2.29 0 00.091-.086L12 5.43z" />
               </svg>
             </div>
-            <span className="tracking-tight hidden sm:inline">BoilerFuel 2.0</span>
+            <span className="tracking-tight hidden sm:inline">BoilerFuel</span>
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="flex items-center gap-1">
             {navItems.map(item => (
               <Link
                 key={item.href}
@@ -65,16 +59,11 @@ const TopNav = memo(function TopNav() {
                     : 'text-theme-text-secondary hover:bg-theme-bg-hover'
                 }`}
               >
-                <span className="mr-1">{item.icon}</span>
+                <span className="mr-1 hidden sm:inline">{item.icon}</span>
                 {item.label}
               </Link>
             ))}
           </nav>
-
-          {/* Right Section - Cmd+K hint */}
-          <div className="hidden lg:flex items-center gap-2 text-xs text-theme-text-tertiary">
-            <kbd className="px-2 py-1 bg-theme-bg-tertiary border border-theme-border-primary rounded-lg">⌘K</kbd>
-          </div>
         </div>
       </div>
     </header>

@@ -99,3 +99,6 @@ export default function Home() {
     </div>
   );
 }
+
+// index has its own layout — skip the shared Layout wrapper
+Home.getLayout = (page) => page;
