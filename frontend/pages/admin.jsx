@@ -949,74 +949,28 @@ function SettingsTab() {
   );
 }
 
-+ Add Exercise
-      </Link >
-    </div >
 
-  { error && (
-    <div className="p-4 rounded-xl bg-red-500/10 border border-red-500 text-red-400">
-      {error}
-    </div>
-  )}
-
-{/* Filters */ }
-<div className="flex gap-4">
-  <input
-    type="text"
-    placeholder="Search exercises..."
-    value={searchTerm}
-    onChange={(e) => {
-      setSearchTerm(e.target.value);
-      setCurrentPage(1);
-    }}
-    className="flex-1 px-4 py-3 rounded-xl border border-theme-border-primary bg-theme-bg-tertiary focus:outline-none focus:ring-2 focus:ring-yellow-500"
-  />
-  <select
-    value={filterCategory}
-    onChange={(e) => {
-      setFilterCategory(e.target.value);
-      setCurrentPage(1);
-    }}
-    className="px-4 py-3 rounded-xl border border-theme-border-primary bg-theme-bg-tertiary"
+<p className="text-sm text-theme-text-tertiary">
+  {activity.calories_per_hour} cal/hr • {activity.category || 'other'} • {activity.intensity || 'moderate'}
+</p>
+        </div >
+  <button
+    onClick={() => handleDelete(activity.id, activity.name)}
+    className="px-3 py-1 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors text-sm"
   >
-    <option value="all">All Categories</option>
-    <option value="cardio">Cardio</option>
-    <option value="strength">Strength</option>
-    <option value="flexibility">Flexibility</option>
-    <option value="sports">Sports</option>
-    <option value="other">Other</option>
-  </select>
-</div>
-
-{/* Exercises List */ }
-<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-  {paginatedActivities.map(activity => (
-    <div
-      key={activity.id}
-      className="p-4 rounded-xl bg-theme-bg-secondary border border-theme-border-primary hover:border-orange-500 transition-colors card-glow glow-orange"
-    >
-      <div className="flex items-start justify-between mb-2">
-        <div className="flex-1">
-          <h3 className="font-bold text-lg">{activity.name}</h3>
-          <p className="text-sm text-theme-text-tertiary">
-            {activity.calories_per_hour} cal/hr • {activity.category || 'other'} • {activity.intensity || 'moderate'}
-          </p>
-        </div>
-        <button
-          onClick={() => handleDelete(activity.id, activity.name)}
-          className="px-3 py-1 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors text-sm"
-        >
-          Delete
-        </button>
-      </div>
-      {activity.description && (
-        <p className="text-xs text-theme-text-tertiary mt-2">{activity.description}</p>
-      )}
-    </div>
+    Delete
+  </button>
+      </div >
+{
+  activity.description && (
+    <p className="text-xs text-theme-text-tertiary mt-2">{activity.description}</p>
+  )
+}
+    </div >
   ))}
-</div>
+</div >
 
-{/* Pagination */ }
+  {/* Pagination */ }
 {
   totalPages > 1 && (
     <div className="flex items-center justify-center gap-2">
