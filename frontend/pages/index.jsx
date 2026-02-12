@@ -1,6 +1,6 @@
-import ModernDashboard from './modern-dashboard';
+import HomeSimple from './home-simple';
 
 export default function Home() {
-  return <ModernDashboard />;
+  return <HomeSimple />;
 }
 

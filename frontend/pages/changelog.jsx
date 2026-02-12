@@ -14,16 +14,103 @@ export default function Changelog() {
             <p className="text-xl text-theme-text-secondary">Version history and updates</p>
           </header>
 
-          {/* Version 1.5.0 */}
+          {/* Version 2.0.0 */}
           <section className="rounded-lg bg-theme-card-bg p-8 border border-theme-card-border space-y-6">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-bold text-theme-accent">Version 1.5.0</h2>
-                <p className="text-sm text-theme-text-secondary">October 24, 2025</p>
+                <h2 className="text-2xl font-bold text-theme-accent">Version 2.0.0</h2>
+                <p className="text-sm text-theme-text-secondary">February 12, 2026</p>
               </div>
               <span className="rounded-full bg-theme-success/20 text-theme-success px-3 py-1 text-xs font-semibold">
                 Latest
               </span>
+            </div>
+            <div className="space-y-3 text-theme-text-secondary">
+              <h3 className="font-bold text-theme-text-primary">✨ Major Features</h3>
+              <ul className="space-y-2 ml-4">
+                <li className="flex items-start gap-2">
+                  <span className="text-theme-accent">•</span>
+                  <span><strong>Redesigned Home Page:</strong> Clean, minimal interface showing only daily calories with one-click goal modification and meal tracking</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-theme-accent">•</span>
+                  <span><strong>Advanced Macro Tracker:</strong> New dedicated Macros tab displaying real-time protein, carbs, and fats progress with visual rings and meal breakdown</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-theme-accent">•</span>
+                  <span><strong>Enhanced Dining Menu Browser:</strong> Filter by individual macros (protein/carbs/fats), sort by any nutrient, and search across all dining courts</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-theme-accent">•</span>
+                  <span><strong>Retail Food Database:</strong> 60+ items from popular chains (Chick-fil-A, McDonald&apos;s, Subway, Chipotle, etc.) with complete nutritional data</span>
+                </li>
+              </ul>
+
+              <h3 className="font-bold text-theme-text-primary mt-4">🎨 UI/UX Improvements</h3>
+              <ul className="space-y-2 ml-4">
+                <li className="flex items-start gap-2">
+                  <span className="text-theme-info">•</span>
+                  <span>Streamlined meal addition flow: Dining Courts → Retail → Custom meal options</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-theme-info">•</span>
+                  <span>Modal-based meal logging with location and macro filtering integrated</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-theme-info">•</span>
+                  <span>Goals modal for editing daily calorie and macro targets</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-theme-info">•</span>
+                  <span>Bottom navigation now includes Macros tab for mobile accessibility</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-theme-info">•</span>
+                  <span>Date navigation on home page and macros page for viewing past/future days</span>
+                </li>
+              </ul>
+
+              <h3 className="font-bold text-theme-text-primary mt-4">🔧 Technical Enhancements</h3>
+              <ul className="space-y-2 ml-4">
+                <li className="flex items-start gap-2">
+                  <span className="text-theme-purple">•</span>
+                  <span>New components: MealAdditionModal, GoalsModal for better code organization</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-theme-purple">•</span>
+                  <span>Retail foods database seeding in init_db.py</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-theme-purple">•</span>
+                  <span>Enhanced home page with simplified logic focused on core functionality</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-theme-purple">•</span>
+                  <span>Cookie-based local storage for goals and meal logs (no backend sync required)</span>
+                </li>
+              </ul>
+
+              <h3 className="font-bold text-theme-text-primary mt-4">📱 New Pages</h3>
+              <ul className="space-y-2 ml-4">
+                <li className="flex items-start gap-2">
+                  <span className="text-theme-accent">•</span>
+                  <span><code>/</code> - Redesigned home page (home-simple.jsx)</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-theme-accent">•</span>
+                  <span><code>/macros</code> - New macro tracking dashboard</span>
+                </li>
+              </ul>
+            </div>
+          </section>
+
+          {/* Version 1.5.0 */}
+          <section className="rounded-lg bg-theme-card-bg p-8 border border-theme-card-border space-y-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-2xl font-bold text-theme-text-secondary">Version 1.5.0</h2>
+                <p className="text-sm text-theme-text-secondary">October 24, 2025</p>
+              </div>
             </div>
             <div className="space-y-3 text-theme-text-secondary">
               <h3 className="font-bold text-theme-text-primary">✨ New Features</h3>
