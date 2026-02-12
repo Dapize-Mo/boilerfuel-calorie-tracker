@@ -17,6 +17,7 @@ from flask_jwt_extended import JWTManager, create_access_token, get_jwt, jwt_req
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import threading
+from sqlalchemy import func
 from sqlalchemy.sql.expression import text
 import requests
 import logging
@@ -424,12 +425,12 @@ def get_foods():
 	# Filter by dining court if specified
 	dining_court = request.args.get('dining_court')
 	if dining_court:
-		query = query.filter(Food.dining_court == dining_court)
+		query = query.filter(func.lower(Food.dining_court) == dining_court.strip().lower())
 	
 	# Filter by meal time if specified
 	meal_time = request.args.get('meal_time')
 	if meal_time:
-		query = query.filter(Food.meal_time == meal_time)
+		query = query.filter(func.lower(Food.meal_time) == meal_time.strip().lower())
 	
 	foods = query.all()
 	return (
