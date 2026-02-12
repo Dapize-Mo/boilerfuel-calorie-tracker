@@ -6,34 +6,31 @@ const ThemeContext = createContext({
 });
 
 export function ThemeProvider({ children }) {
-    const [theme, setTheme] = useState('default');
+    const [theme, setTheme] = useState('bare');
 
     // Load theme from saved preference on mount
     useEffect(() => {
-        // Check local storage or cookies logic here
-        const savedTheme = localStorage.getItem('boilerfuel_theme') || 'default';
-        setTheme(savedTheme);
+        // Enforce bare theme
+        setTheme('bare');
+        localStorage.setItem('boilerfuel_theme', 'bare');
     }, []);
 
     // Apply theme to document
     useEffect(() => {
         const root = document.documentElement;
-        if (theme === 'default') {
-            root.removeAttribute('data-theme');
-        } else {
-            root.setAttribute('data-theme', theme);
-        }
+        // Always apply 'bare' data-theme
+        root.setAttribute('data-theme', 'bare');
+
+        // Ensure no other classes interfere
+        root.classList.remove('dark', 'light');
 
         // Save to local storage
-        localStorage.setItem('boilerfuel_theme', theme);
+        localStorage.setItem('boilerfuel_theme', 'bare');
     }, [theme]);
 
     // Handle font loading if themes use different fonts
     useEffect(() => {
-        if (theme === 'soft') {
-            // Import Nunito or Quicksand if needed, or rely on locally installed/Google Fonts
-            // For now we assume they are available or fallback
-        }
+        // No special fonts needed for bare theme (Times New Roman)
     }, [theme]);
 
     return (

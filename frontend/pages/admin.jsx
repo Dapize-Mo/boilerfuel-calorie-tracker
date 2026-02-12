@@ -906,45 +906,21 @@ function ExercisesTab() {
 // Settings Tab Component
 
 function SettingsTab() {
-  const { theme, setTheme } = useTheme();
-
-  const themes = [
-    { id: 'default', name: 'Premium Clean', description: 'Original modern design with slate colors.', color: 'bg-slate-900' },
-    { id: 'soft', name: 'Soft Minimalist', description: 'Warm greys, rounded corners, soothing vibe.', color: 'bg-stone-100' },
-    { id: 'swiss', name: 'Swiss Editorial', description: 'Stark black & white, sharp corners, grid-based.', color: 'bg-white border-2 border-black' },
-    { id: 'glass', name: 'Ethereal Glass', description: 'Frosted glass effects, light and airy.', color: 'bg-blue-50' },
-    { id: 'bare', name: 'Bare Bones', description: 'No design. Just the essentials. High contrast.', color: 'bg-white border border-slate-300' },
-  ];
+  const { theme } = useTheme();
 
   return (
     <div className="space-y-8">
       <div>
         <h2 className="text-2xl font-bold">Interface Settings</h2>
-        <p className="text-theme-text-tertiary">Customize the look and feel of the application.</p>
+        <p className="text-theme-text-tertiary">Site visuals and theming options.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {themes.map((t) => (
-          <button
-            key={t.id}
-            onClick={() => setTheme(t.id)}
-            className={`text-left relative overflow-hidden p-6 rounded-2xl border-2 transition-all duration-300 ${theme === t.id
-              ? 'border-yellow-500 bg-yellow-500/5 ring-2 ring-yellow-500/20'
-              : 'border-theme-border-primary bg-theme-bg-secondary hover:border-theme-text-tertiary'
-              }`}
-          >
-            <div className="flex items-start justify-between mb-4">
-              <div className={`w-12 h-12 rounded-full shadow-sm ${t.color}`}></div>
-              {theme === t.id && (
-                <span className="px-3 py-1 rounded-full bg-yellow-500 text-slate-900 text-xs font-bold">
-                  ACTIVE
-                </span>
-              )}
-            </div>
-            <h3 className="text-lg font-bold mb-1">{t.name}</h3>
-            <p className="text-sm text-theme-text-tertiary">{t.description}</p>
-          </button>
-        ))}
+      <div className="p-8 border border-black text-center space-y-4">
+        <h3 className="text-xl font-bold">Simple Mode Active</h3>
+        <p>The "Bare Bones" theme is currently enforced for all users to maximize performance and simplicity.</p>
+        <div className="inline-block px-4 py-2 bg-black text-white font-mono text-sm">
+          CURRENT THEME: BARE BONES
+        </div>
       </div>
     </div>
   );
