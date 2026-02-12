@@ -132,11 +132,6 @@ def _preferred_database_url():
 # Database configuration
 database_url = _preferred_database_url()
 
-# Force SQLite for local development if no DATABASE_URL is set
-if not os.getenv('DATABASE_URL') and database_url.startswith('postgresql://'):
-	database_url = 'sqlite:///boilerfuel.db'
-	print(f"[startup] Forced SQLite database for local development")
-
 if database_url.startswith('postgres://'):
 	database_url = database_url.replace('postgres://', 'postgresql://', 1)
 if database_url.startswith('postgresql://') and '+psycopg2' not in database_url:
