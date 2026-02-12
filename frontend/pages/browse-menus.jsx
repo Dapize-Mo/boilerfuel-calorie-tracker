@@ -26,7 +26,13 @@ export default function BrowseMenus() {
     useEffect(() => {
         async function loadFoods() {
             try {
-                const foodsData = await apiCall('/api/foods').catch(() => []);
+                setLoading(true);
+                const params = new URLSearchParams();
+                if (selectedLocation) params.append('dining_court', selectedLocation);
+                if (mealTimeFilter) params.append('meal_time', mealTimeFilter);
+                
+                const url = `/api/foods${params.toString() ? '?' + params.toString() : ''}`;
+                const foodsData = await apiCall(url).catch(() => []);
                 setAllFoods(Array.isArray(foodsData) ? foodsData : []);
                 setLoading(false);
             } catch (e) {
@@ -35,23 +41,13 @@ export default function BrowseMenus() {
             }
         }
         loadFoods();
-    }, []);
+    }, [selectedLocation, mealTimeFilter]);
 
     const getFilteredFoods = () => {
         let filtered = allFoods;
 
         // Filter out retail items (show only dining court items)
         filtered = filtered.filter(f => f.dining_court !== 'Retail');
-
-        // Filter by location if selected
-        if (selectedLocation) {
-            filtered = filtered.filter(f => f.dining_court === selectedLocation);
-        }
-
-        // Filter by meal time
-        if (mealTimeFilter) {
-            filtered = filtered.filter(f => f.meal_time === mealTimeFilter);
-        }
 
         // Filter by search query
         if (searchQuery) {
