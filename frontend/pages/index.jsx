@@ -1,6 +1,6 @@
-import Dashboard from './dashboard';
+import UnifiedDashboard from './dashboard-new';
 
 export default function Home() {
-  return <Dashboard />;
+  return <UnifiedDashboard />;
 }
 
