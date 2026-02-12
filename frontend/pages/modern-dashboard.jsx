@@ -7,14 +7,11 @@ import { readCookie, writeCookie } from '../utils/cookies';
 import ProgressRing from '../components/ProgressRing';
 import BottomSheet from '../components/BottomSheet';
 import WaterTracker from '../components/WaterTracker';
-import StreakTracker from '../components/StreakTracker';
-import VoiceInput from '../components/VoiceInput';
 import EmptyState from '../components/EmptyState';
 import { useToast } from '../components/ToastContainer';
 
 const LOG_COOKIE_KEY = 'boilerfuel_logs_v1';
 const GOALS_COOKIE_KEY = 'boilerfuel_goals_v1';
-const ACTIVITY_LOG_COOKIE_KEY = 'boilerfuel_activity_logs_v1';
 
 function parseGoalsCookie() {
     const raw = readCookie(GOALS_COOKIE_KEY);
@@ -24,12 +21,6 @@ function parseGoalsCookie() {
 
 function parseLogsCookie() {
     const raw = readCookie(LOG_COOKIE_KEY);
-    if (!raw) return [];
-    try { return JSON.parse(raw); } catch { return []; }
-}
-
-function parseActivityLogsCookie() {
-    const raw = readCookie(ACTIVITY_LOG_COOKIE_KEY);
     if (!raw) return [];
     try { return JSON.parse(raw); } catch { return []; }
 }
@@ -59,24 +50,17 @@ export default function ModernDashboard() {
     const [selectedDate, setSelectedDate] = useState(() => formatDateForInput(new Date()));
     
     const [allFoods, setAllFoods] = useState([]);
-    const [activities, setActivities] = useState([]);
     const [logs, setLogs] = useState(() => parseLogsCookie());
-    const [activityLogs, setActivityLogs] = useState(() => parseActivityLogsCookie());
     const [goals, setGoals] = useState(() => parseGoalsCookie());
     
     const [logMealSheet, setLogMealSheet] = useState(false);
-    const [voiceInputSheet, setVoiceInputSheet] = useState(false);
 
     // Load initial data
     useEffect(() => {
         async function loadData() {
             try {
-                const [foodsData, activitiesData] = await Promise.all([
-                    apiCall('/api/foods').catch(() => []),
-                    apiCall('/api/activities').catch(() => [])
-                ]);
+                const foodsData = await apiCall('/api/foods').catch(() => []);
                 setAllFoods(Array.isArray(foodsData) ? foodsData : []);
-                setActivities(Array.isArray(activitiesData) ? activitiesData : []);
                 setLoading(false);
             } catch (e) {
                 console.error('Error loading data:', e);
@@ -87,7 +71,6 @@ export default function ModernDashboard() {
     }, []);
 
     const foodsById = useMemo(() => new Map(allFoods.map(f => [f.id, f])), [allFoods]);
-    const activitiesById = useMemo(() => new Map(activities.map(a => [a.id, a])), [activities]);
 
     const selectedDateStart = useMemo(() => new Date(selectedDate + 'T00:00:00'), [selectedDate]);
 
@@ -95,12 +78,6 @@ export default function ModernDashboard() {
         logs.filter(l => isSameDay(l.timestamp, selectedDateStart))
             .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)),
         [logs, selectedDateStart]
-    );
-
-    const selectedDayActivityLogs = useMemo(() =>
-        activityLogs.filter(l => isSameDay(l.timestamp, selectedDateStart))
-            .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)),
-        [activityLogs, selectedDateStart]
     );
 
     const totals = useMemo(() => {
@@ -115,20 +92,7 @@ export default function ModernDashboard() {
         }, { calories: 0, protein: 0, carbs: 0, fats: 0 });
     }, [selectedDayLogs, foodsById]);
 
-    const totalActivityMinutes = useMemo(() => 
-        selectedDayActivityLogs.reduce((sum, log) => sum + (log.duration || 0), 0),
-        [selectedDayActivityLogs]
-    );
-
-    const totalCaloriesBurned = useMemo(() => 
-        selectedDayActivityLogs.reduce((sum, log) => {
-            const activity = activitiesById.get(log.activityId);
-            return sum + (activity?.calories_per_minute || 0) * (log.duration || 0);
-        }, 0),
-        [selectedDayActivityLogs, activitiesById]
-    );
-
-    const netCalories = totals.calories - totalCaloriesBurned;
+    const netCalories = totals.calories;
 
     // Check for goal completion and celebrate 🎉
     useEffect(() => {
@@ -146,11 +110,6 @@ export default function ModernDashboard() {
         writeCookie(LOG_COOKIE_KEY, JSON.stringify(newLogs));
     }
 
-    function persistActivityLogs(newLogs) {
-        setActivityLogs(newLogs);
-        writeCookie(ACTIVITY_LOG_COOKIE_KEY, JSON.stringify(newLogs));
-    }
-
     function handleQuickAddFood(foodId) {
         const food = foodsById.get(foodId);
         persistLogs([{ id: Date.now(), foodId, servings: 1, timestamp: new Date().toISOString() }, ...logs]);
@@ -160,24 +119,6 @@ export default function ModernDashboard() {
     function handleDeleteFoodLog(logId) {
         persistLogs(logs.filter(l => l.id !== logId));
         toast.info('Meal removed');
-    }
-
-    function handleQuickAddActivity(activityId) {
-        const activity = activitiesById.get(activityId);
-        persistActivityLogs([{ id: Date.now(), activityId, duration: 30, timestamp: new Date().toISOString() }, ...activityLogs]);
-        toast.success(`Added ${activity?.name || 'activity'}!`);
-    }
-
-    function handleDeleteActivityLog(logId) {
-        persistActivityLogs(activityLogs.filter(l => l.id !== logId));
-        toast.info('Activity removed');
-    }
-
-    function handleVoiceResult(transcript) {
-        console.log('Voice input:', transcript);
-        toast.info(`Processing: "${transcript}"`);
-        // TODO: Parse transcript and add food items
-        setVoiceInputSheet(false);
     }
 
     if (loading) {
@@ -214,11 +155,10 @@ export default function ModernDashboard() {
                             {formatDateDisplay(selectedDate)}
                         </h1>
                         <p className="text-theme-text-secondary">
-                            {selectedDayLogs.length} meals · {selectedDayActivityLogs.length} activities
+                            {selectedDayLogs.length} meals logged
                         </p>
                     </div>
                     <div className="flex items-center gap-3">
-                        <StreakTracker />
                         <input 
                             type="date" 
                             value={selectedDate} 
@@ -258,7 +198,7 @@ export default function ModernDashboard() {
                         <div className="space-y-6">
                             {/* Net Calories - Big Number */}
                             <div>
-                                <p className="text-sm text-theme-text-secondary mb-2">Net Calories</p>
+                                <p className="text-sm text-theme-text-secondary mb-2">Total Calories</p>
                                 <motion.p 
                                     key={netCalories}
                                     initial={{ scale: 1.2, opacity: 0 }}
@@ -267,10 +207,6 @@ export default function ModernDashboard() {
                                 >
                                     {Math.round(netCalories)}
                                 </motion.p>
-                                <div className="flex items-center gap-4 mt-2 text-sm">
-                                    <span className="text-green-600 dark:text-green-400">+{Math.round(totals.calories)} in</span>
-                                    <span className="text-red-600 dark:text-red-400">-{Math.round(totalCaloriesBurned)} burned</span>
-                                </div>
                                 
                                 {/* Progress bar */}
                                 <div className="mt-4 h-3 bg-theme-bg-tertiary rounded-full overflow-hidden">
@@ -356,7 +292,7 @@ export default function ModernDashboard() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.6 }}
-                    className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
+                    className="grid grid-cols-2 gap-4 mb-8"
                 >
                     <button
                         onClick={() => setLogMealSheet(true)}
@@ -364,23 +300,6 @@ export default function ModernDashboard() {
                     >
                         <div className="text-4xl mb-2 group-hover:scale-110 transition-transform">🍔</div>
                         <p className="font-semibold">Log Meal</p>
-                    </button>
-
-                    <button
-                        onClick={() => setVoiceInputSheet(true)}
-                        className="p-6 bg-gradient-to-br from-purple-500 to-pink-500 text-white rounded-2xl shadow-lg hover:shadow-xl transition-all hover:scale-105 group"
-                    >
-                        <div className="text-4xl mb-2 group-hover:scale-110 transition-transform">🎤</div>
-                        <p className="font-semibold">Voice Log</p>
-                    </button>
-
-                    <button
-                        onClick={() => handleQuickAddActivity(activities[0]?.id)}
-                        disabled={!activities[0]}
-                        className="p-6 bg-gradient-to-br from-green-500 to-emerald-500 text-white rounded-2xl shadow-lg hover:shadow-xl transition-all hover:scale-105 group disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        <div className="text-4xl mb-2 group-hover:scale-110 transition-transform">💪</div>
-                        <p className="font-semibold">Quick Workout</p>
                     </button>
 
                     <button
@@ -392,9 +311,8 @@ export default function ModernDashboard() {
                     </button>
                 </motion.div>
 
-                {/* Recent Activity - Horizontal Scroll on Mobile */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    {/* Recent Meals */}
+                {/* Recent Meals */}
+                <div>
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -448,61 +366,6 @@ export default function ModernDashboard() {
                             </div>
                         )}
                     </motion.div>
-
-                    {/* Recent Activities */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.8 }}
-                    >
-                        <h3 className="text-xl font-bold text-theme-text-primary mb-4">Recent Activities</h3>
-                        {selectedDayActivityLogs.length === 0 ? (
-                            <EmptyState 
-                                icon="💪"
-                                title="No activities logged yet"
-                                description="Add your first workout to track calories burned."
-                                action="Add Activity"
-                                onAction={() => handleQuickAddActivity(activities[0]?.id)}
-                            />
-                        ) : (
-                            <div className="space-y-3">
-                                {selectedDayActivityLogs.slice(0, 5).map(log => {
-                                    const activity = activitiesById.get(log.activityId);
-                                    if (!activity) return null;
-                                    
-                                    return (
-                                        <motion.div 
-                                            key={log.id}
-                                            initial={{ opacity: 0, x: -20 }}
-                                            animate={{ opacity: 1, x: 0 }}
-                                            className="flex items-center justify-between p-4 bg-theme-card-bg border border-theme-card-border rounded-xl hover:shadow-md transition-shadow group"
-                                        >
-                                            <div className="flex-1">
-                                                <p className="font-medium text-theme-text-primary">{activity.name}</p>
-                                                <p className="text-xs text-theme-text-tertiary">
-                                                    {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · {log.duration} minutes
-                                                </p>
-                                            </div>
-                                            <div className="flex items-center gap-3">
-                                                <span className="font-bold text-red-500 tabular-nums">
-                                                    -{Math.round(activity.calories_per_minute * log.duration)} cal
-                                                </span>
-                                                <button
-                                                    onClick={() => handleDeleteActivityLog(log.id)}
-                                                    className="opacity-0 group-hover:opacity-100 p-2 hover:bg-red-500/10 rounded-lg transition-all"
-                                                    aria-label="Delete activity"
-                                                >
-                                                    <svg className="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                        </motion.div>
-                                    );
-                                })}
-                            </div>
-                        )}
-                    </motion.div>
                 </div>
 
                 {/* Bottom Sheets */}
@@ -531,13 +394,6 @@ export default function ModernDashboard() {
                             Browse Full Menu
                         </button>
                     </div>
-                </BottomSheet>
-
-                <BottomSheet isOpen={voiceInputSheet} onClose={() => setVoiceInputSheet(false)} title="Voice Input" size="lg">
-                    <VoiceInput 
-                        onResult={handleVoiceResult}
-                        placeholder='Try saying: "2 scrambled eggs and wheat toast"'
-                    />
                 </BottomSheet>
             </div>
         </>

@@ -18,14 +18,12 @@ export default function CommandPalette() {
     { id: 'nav-home', label: 'Go to Dashboard', icon: '🏠', action: () => router.push('/'), category: 'Navigation' },
     { id: 'nav-insights', label: 'Insights & Analytics', icon: '📊', action: () => router.push('/insights'), category: 'Navigation' },
     { id: 'nav-menu', label: 'Browse Dining Menu', icon: '🍽️', action: () => router.push('/food-dashboard-glass'), category: 'Navigation' },
-    { id: 'nav-gym', label: 'Gym Tracker', icon: '💪', action: () => router.push('/gym-modern'), category: 'Navigation' },
     { id: 'nav-profile', label: 'Profile & Goals', icon: '👤', action: () => router.push('/profile'), category: 'Navigation' },
     { id: 'nav-about', label: 'About BoilerFuel', icon: 'ℹ️', action: () => router.push('/about'), category: 'Navigation' },
     { id: 'nav-onboarding', label: 'Setup Wizard', icon: '🎯', action: () => router.push('/onboarding'), category: 'Navigation' },
     
     // Actions
     { id: 'action-log-meal', label: 'Log a Meal', icon: '🍔', action: () => alert('Log meal modal - TODO'), category: 'Actions' },
-    { id: 'action-add-workout', label: 'Add Workout', icon: '🏋️', action: () => router.push('/gym'), category: 'Actions' },
     { id: 'action-set-goal', label: 'Set Daily Goal', icon: '🎯', action: () => router.push('/profile'), category: 'Actions' },
     
     // Dining Courts

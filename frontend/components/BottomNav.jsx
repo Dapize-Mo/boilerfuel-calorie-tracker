@@ -13,7 +13,6 @@ export default function BottomNav() {
     { href: '/', label: 'Home', icon: HomeIcon },
     { href: '/food-dashboard-glass', label: 'Menu', icon: MenuIcon },
     { href: '#', label: 'Log', icon: PlusIcon, isAction: true }, // Special FAB-style button
-    { href: '/gym-modern', label: 'Gym', icon: GymIcon },
     { href: '/profile', label: 'Profile', icon: ProfileIcon },
   ];
 
