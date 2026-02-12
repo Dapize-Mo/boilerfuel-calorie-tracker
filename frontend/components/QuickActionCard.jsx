@@ -3,10 +3,10 @@ import Link from 'next/link';
 
 const QuickActionCard = React.memo(function QuickActionCard({ href, icon, title, description, stat }) {
     return (
-        <Link href={href} className="group block p-8 rounded-3xl bg-theme-card-bg border border-theme-card-border shadow-lg hover:shadow-2xl hover:border-yellow-400/40 transition-all duration-300 hover:scale-[1.02] modern-card relative overflow-hidden">
+        <Link href={href} className="group block p-8 rounded-theme-xl bg-theme-card-bg border border-theme-card-border shadow-theme hover:shadow-2xl hover:border-yellow-400/40 transition-all duration-300 hover:scale-[1.02] modern-card relative overflow-hidden">
             {/* Gradient overlay on hover */}
             <div className="absolute inset-0 bg-gradient-to-br from-yellow-400/8 via-transparent to-purple-500/8 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            
+
             <div className="relative z-10 flex items-start gap-6">
                 <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-yellow-400 to-yellow-500 flex items-center justify-center text-3xl shadow-lg shadow-yellow-500/25 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
                     {icon}

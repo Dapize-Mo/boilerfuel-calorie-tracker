@@ -2,7 +2,7 @@ import '../styles/globals.css';
 import Head from 'next/head';
 import { useEffect } from 'react';
 import Layout from '../components/Layout';
-import { ThemeProvider } from '../utils/ThemeContext';
+import { ThemeProvider } from '../context/ThemeContext';
 import { SessionProvider } from "next-auth/react";
 import { DashboardProvider } from '../utils/DashboardContext';
 import { SWRConfig } from 'swr';

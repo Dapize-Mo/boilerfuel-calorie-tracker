@@ -8,7 +8,7 @@
   .light {
     color-scheme: light;
 
-    /* Light mode color palette - Premium Clean */
+    /* Default (Premium Clean) & Shared Variables */
     --color-bg-primary: 248 250 252;
     /* slate-50 */
     --color-bg-secondary: 255 255 255;
@@ -24,6 +24,8 @@
     /* slate-700 */
     --color-text-tertiary: 100 116 139;
     /* slate-500 */
+    --color-text-muted: 148 163 184;
+    /* slate-400 */
 
     --color-border-primary: 226 232 240;
     /* slate-200 */
@@ -34,9 +36,6 @@
     --color-border-focus: 15 23 42;
     /* slate-900 */
 
-    --color-text-muted: 148 163 184;
-    /* slate-400 */
-
     --color-accent-primary: 234 179 8;
     /* yellow-500 */
     --color-accent-hover: 202 138 4;
@@ -45,24 +44,100 @@
     /* yellow-400 */
 
     --color-success: 34 197 94;
-    /* green-500 */
     --color-error: 239 68 68;
-    /* red-500 */
     --color-info: 59 130 246;
-    /* blue-500 */
     --color-purple: 168 85 247;
-    /* purple-500 */
 
     --color-card-bg: 255 255 255;
-    /* white */
     --color-card-border: 226 232 240;
-    /* slate-200 */
     --color-sidebar-bg: 255 255 255 / 0.8;
-    /* white/80 */
     --color-sidebar-border: 226 232 240;
-    /* slate-200 */
+
+    /* Theme Specs - Default */
+    --radius-sm: 0.375rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 1rem;
+    --radius-xl: 1.5rem;
+    --shadow-card: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    --backdrop-blur: 16px;
+    --font-heading: 'Inter', sans-serif;
   }
 
+  /* 1. SOFT MINIMALIST (Zen) */
+  [data-theme='soft'] {
+    --color-bg-primary: 249 250 251;
+    /* Warm Grey 50 */
+    --color-bg-secondary: 255 255 255;
+    --color-bg-tertiary: 243 244 246;
+    --color-bg-hover: 229 231 235;
+
+    --color-text-primary: 55 65 81;
+    /* Soft Charcoal */
+    --color-text-secondary: 75 85 99;
+    --color-text-tertiary: 107 114 128;
+
+    --color-border-primary: 229 231 235;
+    --color-card-bg: 255 255 255;
+    --color-card-border: 243 244 246;
+
+    --radius-sm: 0.75rem;
+    --radius-md: 1rem;
+    --radius-lg: 1.5rem;
+    --radius-xl: 2rem;
+    /* Very rounded */
+    --shadow-card: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
+    /* Soft diffuse shadow */
+    --font-heading: 'Nunito', 'Quicksand', sans-serif;
+  }
+
+  /* 2. SWISS EDITORIAL (Structured) */
+  [data-theme='swiss'] {
+    --color-bg-primary: 255 255 255;
+    /* Pure White */
+    --color-bg-secondary: 255 255 255;
+    --color-bg-tertiary: 250 250 250;
+    --color-bg-hover: 245 245 245;
+
+    --color-text-primary: 0 0 0;
+    /* True Black */
+    --color-text-secondary: 80 80 80;
+    --color-text-tertiary: 120 120 120;
+
+    --color-border-primary: 0 0 0;
+    /* Black Borders */
+    --color-border-secondary: 200 200 200;
+    --color-card-bg: 255 255 255;
+    --color-card-border: 0 0 0;
+
+    --color-accent-primary: 255 50 50;
+    /* Swiss Red */
+
+    --radius-sm: 0;
+    --radius-md: 0;
+    --radius-lg: 0;
+    --radius-xl: 0;
+    /* Sharp corners */
+    --shadow-card: none;
+    /* Flat design */
+    --font-heading: 'Helvetica Neue', 'Arial', sans-serif;
+  }
+
+  /* 3. ETHEREAL GLASS (Light) */
+  [data-theme='glass'] {
+    --color-bg-primary: 248 250 252;
+    --color-bg-secondary: 255 255 255 / 0.6;
+    --color-bg-tertiary: 241 245 249 / 0.5;
+
+    --color-card-bg: 255 255 255 / 0.4;
+    --color-card-border: 255 255 255 / 0.8;
+
+    --shadow-card: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+    --backdrop-blur: 20px;
+
+    --radius-xl: 1.5rem;
+  }
+
+  /* DARK MODE OVERRIDES (Applies to all themes when dark mode is active) */
   .dark {
     color-scheme: dark;
 
@@ -128,9 +203,9 @@
 
   /* Enable smooth transitions once theme is loaded */
   html.theme-loaded * {
-    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, border-radius, box-shadow;
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    transition-duration: 200ms;
+    transition-duration: 300ms;
   }
 }
 
@@ -142,14 +217,14 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background-color: rgb(var(--color-bg-primary));
   color: rgb(var(--color-text-primary));
-  background-image: 
+  background-image:
     radial-gradient(at 0% 0%, rgba(250, 204, 21, 0.08) 0px, transparent 50%),
     radial-gradient(at 100% 100%, rgba(168, 85, 247, 0.08) 0px, transparent 50%);
   background-attachment: fixed;
 }
 
 .dark body {
-  background-image: 
+  background-image:
     radial-gradient(at 0% 0%, rgba(250, 204, 21, 0.12) 0px, transparent 50%),
     radial-gradient(at 100% 100%, rgba(168, 85, 247, 0.12) 0px, transparent 50%);
 }
@@ -281,6 +356,31 @@ body {
 
   .glow-orange:hover {
     box-shadow: 0 0 20px rgba(249, 115, 22, 0.4), 0 0 40px rgba(249, 115, 22, 0.2);
+  }
+
+  /* Theme-aware utilities */
+  .rounded-theme-sm {
+    border-radius: var(--radius-sm);
+  }
+
+  .rounded-theme-md {
+    border-radius: var(--radius-md);
+  }
+
+  .rounded-theme-lg {
+    border-radius: var(--radius-lg);
+  }
+
+  .rounded-theme-xl {
+    border-radius: var(--radius-xl);
+  }
+
+  .shadow-theme {
+    box-shadow: var(--shadow-card);
+  }
+
+  .backdrop-theme {
+    backdrop-filter: blur(var(--backdrop-blur));
   }
 
   /* Subtle glow for cards */
@@ -609,8 +709,13 @@ vercel-live-feedback {
 }
 
 @keyframes shimmer {
-  0% { left: -100%; }
-  100% { left: 100%; }
+  0% {
+    left: -100%;
+  }
+
+  100% {
+    left: 100%;
+  }
 }
 
 /* Floating animation */
@@ -619,8 +724,15 @@ vercel-live-feedback {
 }
 
 @keyframes floating {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 /* Pulse glow */
@@ -628,21 +740,56 @@ vercel-live-feedback {
   animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-@keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 20px rgba(250, 204, 21, 0.4); }
-  50% { box-shadow: 0 0 40px rgba(250, 204, 21, 0.8); }
+/* Theme-aware utilities */
+.rounded-theme-sm {
+  border-radius: var(--radius-sm);
 }
 
-/* Enhanced card styles */
-.modern-card {
-  background: rgb(var(--color-card-bg));
-  border: 1px solid rgb(var(--color-card-border));
-  border-radius: 1.5rem;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+.rounded-theme-md {
+  border-radius: var(--radius-md);
 }
 
-.modern-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 20px 60px -10px rgba(0, 0, 0, 0.3);
-  border-color: rgba(250, 204, 21, 0.4);
+.rounded-theme-lg {
+  border-radius: var(--radius-lg);
 }
+
+.rounded-theme-xl {
+  border-radius: var(--radius-xl);
+}
+
+.shadow-theme {
+  box-shadow: var(--shadow-card);
+}
+
+.backdrop-theme {
+  backdrop-filter: blur(var(--backdrop-blur));
+}
+
+.card-glow {
+  @apply transition-all duration-300;
+
+  @keyframes pulse-glow {
+
+    0%,
+    100% {
+      box-shadow: 0 0 20px rgba(250, 204, 21, 0.4);
+    }
+
+    50% {
+      box-shadow: 0 0 40px rgba(250, 204, 21, 0.8);
+    }
+  }
+
+  /* Enhanced card styles */
+  .modern-card {
+    background: rgb(var(--color-card-bg));
+    border: 1px solid rgb(var(--color-card-border));
+    border-radius: 1.5rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .modern-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 60px -10px rgba(0, 0, 0, 0.3);
+    border-color: rgba(250, 204, 21, 0.4);
+  }
