@@ -913,6 +913,7 @@ function SettingsTab() {
     { id: 'soft', name: 'Soft Minimalist', description: 'Warm greys, rounded corners, soothing vibe.', color: 'bg-stone-100' },
     { id: 'swiss', name: 'Swiss Editorial', description: 'Stark black & white, sharp corners, grid-based.', color: 'bg-white border-2 border-black' },
     { id: 'glass', name: 'Ethereal Glass', description: 'Frosted glass effects, light and airy.', color: 'bg-blue-50' },
+    { id: 'bare', name: 'Bare Bones', description: 'No design. Just the essentials. High contrast.', color: 'bg-white border border-slate-300' },
   ];
 
   return (

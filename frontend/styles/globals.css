@@ -137,6 +137,36 @@
     --radius-xl: 1.5rem;
   }
 
+  /* 4. BARE BONES (Minimal) */
+  [data-theme='bare'] {
+    --color-bg-primary: 255 255 255;
+    --color-bg-secondary: 255 255 255;
+    --color-bg-tertiary: 238 238 238;
+    --color-bg-hover: 221 221 221;
+
+    --color-text-primary: 0 0 0;
+    --color-text-secondary: 0 0 0;
+    --color-text-tertiary: 0 0 0;
+
+    --color-border-primary: 0 0 0;
+    --color-border-secondary: 0 0 0;
+
+    --color-card-bg: 255 255 255;
+    --color-card-border: 0 0 0;
+
+    --color-accent-primary: 0 0 0;
+
+    --radius-sm: 0;
+    --radius-md: 0;
+    --radius-lg: 0;
+    --radius-xl: 0;
+
+    --shadow-card: none;
+    --backdrop-blur: 0px;
+
+    --font-heading: 'Times New Roman', serif;
+  }
+
   /* DARK MODE OVERRIDES (Applies to all themes when dark mode is active) */
   .dark {
     color-scheme: dark;
