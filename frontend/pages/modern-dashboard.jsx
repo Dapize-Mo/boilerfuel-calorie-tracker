@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { apiCall } from '../utils/auth';
 import { readCookie, writeCookie } from '../utils/cookies';
-import ProgressRing from '../components/ProgressRing';
 import BottomSheet from '../components/BottomSheet';
 import CustomMealForm from '../components/CustomMealForm';
 import WaterTracker from '../components/WaterTracker';

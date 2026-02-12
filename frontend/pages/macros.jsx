@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react';
 import Head from 'next/head';
 import { motion } from 'framer-motion';
 import { readCookie } from '../utils/cookies';
-import ProgressRing from '../components/ProgressRing';
 
 const LOG_COOKIE_KEY = 'boilerfuel_logs_v1';
 const GOALS_COOKIE_KEY = 'boilerfuel_goals_v1';
@@ -155,17 +154,9 @@ export default function MacrosPage() {
                     >
                         {/* Protein */}
                         <div className="bg-theme-card-bg border border-theme-card-border rounded-2xl p-6 flex flex-col items-center">
-                            <div className="relative w-32 h-32 mb-4">
-                                <ProgressRing 
-                                    percentage={macroPercentages.protein}
-                                    size={128}
-                                    strokeWidth={6}
-                                    color="#ff6b6b"
-                                />
-                                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                    <p className="text-2xl font-bold text-red-500">{Math.round(totals.protein)}</p>
-                                    <p className="text-xs text-theme-text-secondary">g</p>
-                                </div>
+                            <div className="w-32 h-32 mb-4 rounded-full border-4 border-theme-card-border flex flex-col items-center justify-center">
+                                <p className="text-2xl font-bold text-red-500">{Math.round(totals.protein)}</p>
+                                <p className="text-xs text-theme-text-secondary">g</p>
                             </div>
                             <p className="font-semibold text-theme-text-primary text-center mb-1">Protein</p>
                             <p className="text-xs text-theme-text-secondary text-center">Goal: {goals.protein}g</p>
@@ -184,17 +175,9 @@ export default function MacrosPage() {
 
                         {/* Carbs */}
                         <div className="bg-theme-card-bg border border-theme-card-border rounded-2xl p-6 flex flex-col items-center">
-                            <div className="relative w-32 h-32 mb-4">
-                                <ProgressRing 
-                                    percentage={macroPercentages.carbs}
-                                    size={128}
-                                    strokeWidth={6}
-                                    color="#4dabf7"
-                                />
-                                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                    <p className="text-2xl font-bold text-blue-500">{Math.round(totals.carbs)}</p>
-                                    <p className="text-xs text-theme-text-secondary">g</p>
-                                </div>
+                            <div className="w-32 h-32 mb-4 rounded-full border-4 border-theme-card-border flex flex-col items-center justify-center">
+                                <p className="text-2xl font-bold text-blue-500">{Math.round(totals.carbs)}</p>
+                                <p className="text-xs text-theme-text-secondary">g</p>
                             </div>
                             <p className="font-semibold text-theme-text-primary text-center mb-1">Carbs</p>
                             <p className="text-xs text-theme-text-secondary text-center">Goal: {goals.carbs}g</p>
@@ -213,17 +196,9 @@ export default function MacrosPage() {
 
                         {/* Fats */}
                         <div className="bg-theme-card-bg border border-theme-card-border rounded-2xl p-6 flex flex-col items-center">
-                            <div className="relative w-32 h-32 mb-4">
-                                <ProgressRing 
-                                    percentage={macroPercentages.fats}
-                                    size={128}
-                                    strokeWidth={6}
-                                    color="#ffd43b"
-                                />
-                                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                    <p className="text-2xl font-bold text-yellow-500">{Math.round(totals.fats)}</p>
-                                    <p className="text-xs text-theme-text-secondary">g</p>
-                                </div>
+                            <div className="w-32 h-32 mb-4 rounded-full border-4 border-theme-card-border flex flex-col items-center justify-center">
+                                <p className="text-2xl font-bold text-yellow-500">{Math.round(totals.fats)}</p>
+                                <p className="text-xs text-theme-text-secondary">g</p>
                             </div>
                             <p className="font-semibold text-theme-text-primary text-center mb-1">Fats</p>
                             <p className="text-xs text-theme-text-secondary text-center">Goal: {goals.fats}g</p>

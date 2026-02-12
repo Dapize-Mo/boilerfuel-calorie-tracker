@@ -3,7 +3,6 @@ import Head from 'next/head';
 import { motion } from 'framer-motion';
 import { apiCall } from '../utils/auth';
 import { readCookie, writeCookie } from '../utils/cookies';
-import ProgressRing from '../components/ProgressRing';
 import Toast from '../components/Toast';
 import { useToast } from '../components/ToastContainer';
 import MealAdditionModal from '../components/MealAdditionModal';
@@ -206,13 +205,8 @@ export default function HomeSimple() {
                         className="mb-8 cursor-pointer"
                     >
                         <div className="flex flex-col items-center justify-center">
-                            <div className="relative w-48 h-48 md:w-56 md:h-56">
-                                <ProgressRing 
-                                    percentage={caloriePercentage}
-                                    size={224}
-                                    strokeWidth={8}
-                                />
-                                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                            <div className="w-full max-w-md bg-theme-card-bg border border-theme-card-border rounded-2xl p-6">
+                                <div className="text-center">
                                     <p className="text-sm text-theme-text-secondary">Calories</p>
                                     <motion.p 
                                         key={netCalories}
@@ -225,6 +219,14 @@ export default function HomeSimple() {
                                     <p className="text-xs text-theme-text-tertiary mt-1">
                                         Goal: {goals.calories}
                                     </p>
+                                </div>
+                                <div className="w-full bg-theme-bg-secondary rounded-full h-2 mt-4">
+                                    <motion.div
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${caloriePercentage}%` }}
+                                        transition={{ duration: 0.6 }}
+                                        className="h-full bg-theme-accent rounded-full"
+                                    />
                                 </div>
                             </div>
                             <p className="mt-4 text-xs text-theme-text-tertiary">Click to modify goal</p>
