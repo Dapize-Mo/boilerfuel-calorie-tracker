@@ -227,14 +227,14 @@ export default function OnboardingPage() {
                     🎯 Set Your Goals
                   </h1>
                   <p className="text-theme-text-tertiary">
-                    Let's calculate your personalized nutrition targets
+                    Let&apos;s calculate your personalized nutrition targets
                   </p>
                 </div>
 
                 {/* Goal Type Selection */}
                 <div>
                   <label className="block text-sm font-medium text-theme-text-secondary mb-3">
-                    What's your goal?
+                    What&apos;s your goal?
                   </label>
                   <div className="grid grid-cols-3 gap-3">
                     {Object.entries(GOAL_PRESETS).map(([key, preset]) => (
@@ -493,7 +493,7 @@ export default function OnboardingPage() {
                 <div className="text-center mb-8">
                   <div className="text-6xl mb-4">🎉</div>
                   <h1 className="text-3xl font-bold text-theme-text-primary mb-2">
-                    You're All Set!
+                    You&apos;re All Set!
                   </h1>
                   <p className="text-theme-text-tertiary">
                     Ready to start your health journey

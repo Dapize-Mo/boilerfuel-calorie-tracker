@@ -382,7 +382,7 @@ export default function GymModernPage() {
           className="modern-card p-6"
         >
           <h2 className="text-xl font-semibold text-theme-text-primary mb-4">
-            Today's Workouts
+            Today&apos;s Workouts
           </h2>
 
           {todayLogs.length === 0 ? (

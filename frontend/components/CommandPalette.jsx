@@ -148,7 +148,7 @@ export default function CommandPalette() {
                 {Object.keys(groupedCommands).length === 0 ? (
                   <div className="p-8 text-center text-theme-text-tertiary">
                     <p>No commands found</p>
-                    <p className="text-sm mt-2">Try searching for "menu", "gym", or "profile"</p>
+                    <p className="text-sm mt-2">Try searching for &quot;menu&quot;, &quot;gym&quot;, or &quot;profile&quot;</p>
                   </div>
                 ) : (
                   <div className="p-2">

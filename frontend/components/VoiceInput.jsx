@@ -78,7 +78,7 @@ export default function VoiceInput({ onResult, placeholder = 'Try saying: "2 scr
     return (
       <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl text-yellow-600 dark:text-yellow-400 text-sm">
         <p className="font-semibold mb-1">🎤 Voice input not supported</p>
-        <p>Your browser doesn't support voice recognition. Try Chrome or Edge.</p>
+        <p>Your browser doesn&apos;t support voice recognition. Try Chrome or Edge.</p>
       </div>
     );
   }
@@ -177,7 +177,7 @@ export default function VoiceInput({ onResult, placeholder = 'Try saying: "2 scr
         <p className="font-semibold mb-1">💡 Tips for better recognition:</p>
         <ul className="space-y-1 ml-4 list-disc">
           <li>Speak clearly and at a normal pace</li>
-          <li>Mention quantity and food name (e.g., "3 chicken tenders")</li>
+          <li>Mention quantity and food name (e.g., &quot;3 chicken tenders&quot;)</li>
           <li>You can say multiple items in one go</li>
         </ul>
       </div>
