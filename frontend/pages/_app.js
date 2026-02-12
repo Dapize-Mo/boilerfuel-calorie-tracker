@@ -6,6 +6,8 @@ import { ThemeProvider } from '../utils/ThemeContext';
 import { SessionProvider } from "next-auth/react";
 import { DashboardProvider } from '../utils/DashboardContext';
 import { SWRConfig } from 'swr';
+import { ToastProvider } from '../components/ToastContainer';
+import CommandPalette from '../components/CommandPalette';
 
 // SWR configuration for optimized data fetching
 const swrConfig = {
@@ -60,9 +62,12 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
       </Head>
       <SWRConfig value={swrConfig}>
         <ThemeProvider>
-          <DashboardProvider>
-            {getLayout(<Component {...pageProps} />)}
-          </DashboardProvider>
+          <ToastProvider>
+            <DashboardProvider>
+              {getLayout(<Component {...pageProps} />)}
+              <CommandPalette />
+            </DashboardProvider>
+          </ToastProvider>
         </ThemeProvider>
       </SWRConfig>
     </SessionProvider>

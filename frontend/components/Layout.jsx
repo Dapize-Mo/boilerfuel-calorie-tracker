@@ -2,6 +2,8 @@ import { useState, useEffect, memo } from 'react';
 import Link from 'next/link';
 import Sidebar from './Sidebar';
 import ThemeToggleButton from './ThemeToggleButton';
+import BottomNav from './BottomNav';
+import SkipToContent from './SkipToContent';
 
 export default function Layout({ children }) {
   const [open, setOpen] = useState(false);
@@ -16,23 +18,27 @@ export default function Layout({ children }) {
   }, []);
 
   return (
-    <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary antialiased flex">
+    <>
+      <SkipToContent />
+      <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary antialiased flex">
       <Sidebar open={open} setOpen={setOpen} />
 
       <div className="flex-1 flex flex-col min-h-screen lg:ml-72 transition-all duration-300">
         <MobileHeader open={open} setOpen={setOpen} />
 
-        <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-10">
+        <main id="main-content" className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-10 pb-20 md:pb-6">
           {children}
         </main>
 
         <Footer />
+        <BottomNav />
       </div>
 
       <div className="fixed bottom-6 right-6 z-50">
         <ThemeToggleButton />
       </div>
-    </div>
+      </div>
+    </>
   );
 }
 
