@@ -6,6 +6,7 @@ import { apiCall } from '../utils/auth';
 import { readCookie, writeCookie } from '../utils/cookies';
 import ProgressRing from '../components/ProgressRing';
 import BottomSheet from '../components/BottomSheet';
+import CustomMealForm from '../components/CustomMealForm';
 import WaterTracker from '../components/WaterTracker';
 import EmptyState from '../components/EmptyState';
 import { useToast } from '../components/ToastContainer';
@@ -54,6 +55,15 @@ export default function ModernDashboard() {
     const [goals, setGoals] = useState(() => parseGoalsCookie());
     
     const [logMealSheet, setLogMealSheet] = useState(false);
+    const [showLogMealChoice, setShowLogMealChoice] = useState(false);
+    const [logMealMode, setLogMealMode] = useState(null); // 'purdue' or 'custom'
+
+    const diningCourts = [
+        { id: 'earhart', name: 'Earhart', icon: '🏛️' },
+        { id: 'windsor', name: 'Windsor', icon: '🏰' },
+        { id: 'wiley', name: 'Wiley', icon: '🏫' },
+        { id: 'ford', name: 'Ford', icon: '🏢' },
+    ];
 
     // Load initial data
     useEffect(() => {
@@ -82,12 +92,21 @@ export default function ModernDashboard() {
 
     const totals = useMemo(() => {
         return selectedDayLogs.reduce((acc, log) => {
-            const f = foodsById.get(log.foodId);
-            if (!f) return acc;
-            acc.calories += (f.calories || 0) * log.servings;
-            acc.protein += (f.macros?.protein || 0) * log.servings;
-            acc.carbs += (f.macros?.carbs || 0) * log.servings;
-            acc.fats += (f.macros?.fats || 0) * log.servings;
+            if (log.customMeal) {
+                // Handle custom meals
+                acc.calories += (log.customMeal.calories || 0) * log.servings;
+                acc.protein += (log.customMeal.macros?.protein || 0) * log.servings;
+                acc.carbs += (log.customMeal.macros?.carbs || 0) * log.servings;
+                acc.fats += (log.customMeal.macros?.fats || 0) * log.servings;
+            } else {
+                // Handle regular foods
+                const f = foodsById.get(log.foodId);
+                if (!f) return acc;
+                acc.calories += (f.calories || 0) * log.servings;
+                acc.protein += (f.macros?.protein || 0) * log.servings;
+                acc.carbs += (f.macros?.carbs || 0) * log.servings;
+                acc.fats += (f.macros?.fats || 0) * log.servings;
+            }
             return acc;
         }, { calories: 0, protein: 0, carbs: 0, fats: 0 });
     }, [selectedDayLogs, foodsById]);
@@ -168,14 +187,14 @@ export default function ModernDashboard() {
                     </div>
                 </motion.div>
 
-                {/* Bento Grid Layout */}
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+                {/* Bento Grid Layout - Simplified */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
                     {/* Large Card: Daily Summary */}
                     <motion.div 
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: 0.1 }}
-                        className="lg:col-span-2 lg:row-span-2 bg-theme-card-bg border border-theme-card-border rounded-3xl p-8 shadow-soft hover:shadow-soft-lg transition-shadow"
+                        className="lg:col-span-2 bg-theme-card-bg border border-theme-card-border rounded-3xl p-8 shadow-soft hover:shadow-soft-lg transition-shadow"
                     >
                         <div className="flex items-center justify-between mb-6">
                             <h2 className="text-2xl font-bold text-theme-text-primary">Daily Summary</h2>
@@ -221,66 +240,33 @@ export default function ModernDashboard() {
                                     Goal: {goals.calories} cal
                                 </p>
                             </div>
+
+                            {/* Macros Summary Row */}
+                            <div className="grid grid-cols-3 gap-3 pt-2 border-t border-theme-border-secondary">
+                                <div>
+                                    <p className="text-xs text-red-500 font-semibold mb-1">PROTEIN</p>
+                                    <p className="text-xl font-bold text-theme-text-primary">{Math.round(totals.protein)}g</p>
+                                    <p className="text-xs text-theme-text-tertiary">{goals.protein}g goal</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-blue-500 font-semibold mb-1">CARBS</p>
+                                    <p className="text-xl font-bold text-theme-text-primary">{Math.round(totals.carbs)}g</p>
+                                    <p className="text-xs text-theme-text-tertiary">{goals.carbs}g goal</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-yellow-500 font-semibold mb-1">FATS</p>
+                                    <p className="text-xl font-bold text-theme-text-primary">{Math.round(totals.fats)}g</p>
+                                    <p className="text-xs text-theme-text-tertiary">{goals.fats}g goal</p>
+                                </div>
+                            </div>
                         </div>
                     </motion.div>
 
-                    {/* Macro Rings */}
+                    {/* Right Column - Water Tracker */}
                     <motion.div 
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: 0.2 }}
-                        className="bg-theme-card-bg border border-theme-card-border rounded-3xl p-6 shadow-soft hover:shadow-soft-lg transition-shadow"
-                    >
-                        <ProgressRing 
-                            value={totals.protein}
-                            max={goals.protein}
-                            size={140}
-                            strokeWidth={10}
-                            color="stroke-red-500"
-                            label="Protein"
-                            unit="g"
-                        />
-                    </motion.div>
-
-                    <motion.div 
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.3 }}
-                        className="bg-theme-card-bg border border-theme-card-border rounded-3xl p-6 shadow-soft hover:shadow-soft-lg transition-shadow"
-                    >
-                        <ProgressRing 
-                            value={totals.carbs}
-                            max={goals.carbs}
-                            size={140}
-                            strokeWidth={10}
-                            color="stroke-blue-500"
-                            label="Carbs"
-                            unit="g"
-                        />
-                    </motion.div>
-
-                    <motion.div 
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.4 }}
-                        className="bg-theme-card-bg border border-theme-card-border rounded-3xl p-6 shadow-soft hover:shadow-soft-lg transition-shadow"
-                    >
-                        <ProgressRing 
-                            value={totals.fats}
-                            max={goals.fats}
-                            size={140}
-                            strokeWidth={10}
-                            color="stroke-yellow-500"
-                            label="Fats"
-                            unit="g"
-                        />
-                    </motion.div>
-
-                    {/* Water Tracker */}
-                    <motion.div 
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.5 }}
                         className="bg-theme-card-bg border border-theme-card-border rounded-3xl p-6 shadow-soft hover:shadow-soft-lg transition-shadow"
                     >
                         <WaterTracker />
@@ -295,7 +281,7 @@ export default function ModernDashboard() {
                     className="grid grid-cols-2 gap-4 mb-8"
                 >
                     <button
-                        onClick={() => setLogMealSheet(true)}
+                        onClick={() => setShowLogMealChoice(true)}
                         className="p-6 bg-gradient-to-br from-primary-500 to-secondary-500 text-white rounded-2xl shadow-lg hover:shadow-xl transition-all hover:scale-105 group"
                     >
                         <div className="text-4xl mb-2 group-hover:scale-110 transition-transform">🍔</div>
@@ -325,13 +311,18 @@ export default function ModernDashboard() {
                                 title="No meals logged yet"
                                 description="Start by logging your first meal to track your daily nutrition."
                                 action="Log Meal"
-                                onAction={() => setLogMealSheet(true)}
+                                onAction={() => setShowLogMealChoice(true)}
                             />
                         ) : (
                             <div className="space-y-3">
                                 {selectedDayLogs.slice(0, 5).map(log => {
-                                    const food = foodsById.get(log.foodId);
+                                    const food = log.customMeal || foodsById.get(log.foodId);
                                     if (!food) return null;
+                                    
+                                    const calories = log.customMeal 
+                                        ? log.customMeal.calories * log.servings 
+                                        : food.calories * log.servings;
+                                    const name = log.customMeal ? log.customMeal.name : food.name;
                                     
                                     return (
                                         <motion.div 
@@ -341,14 +332,14 @@ export default function ModernDashboard() {
                                             className="flex items-center justify-between p-4 bg-theme-card-bg border border-theme-card-border rounded-xl hover:shadow-md transition-shadow group"
                                         >
                                             <div className="flex-1">
-                                                <p className="font-medium text-theme-text-primary">{food.name}</p>
+                                                <p className="font-medium text-theme-text-primary">{name}</p>
                                                 <p className="text-xs text-theme-text-tertiary">
                                                     {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · {log.servings}x serving
                                                 </p>
                                             </div>
                                             <div className="flex items-center gap-3">
                                                 <span className="font-bold text-theme-text-primary tabular-nums">
-                                                    {Math.round(food.calories * log.servings)} cal
+                                                    {Math.round(calories)} cal
                                                 </span>
                                                 <button
                                                     onClick={() => handleDeleteFoodLog(log.id)}
@@ -368,7 +359,126 @@ export default function ModernDashboard() {
                     </motion.div>
                 </div>
 
-                {/* Bottom Sheets */}
+                {/* Log Meal Choice Modal */}
+                {showLogMealChoice && (
+                    <div className="fixed inset-0 z-50 flex items-end bg-black/50 backdrop-blur-sm">
+                        <div className="w-full bg-theme-card-bg border-t border-theme-card-border rounded-3xl rounded-b-none p-6 sm:p-8 max-h-[90vh] overflow-y-auto animate-fade-in-up">
+                            <div className="max-w-md mx-auto">
+                                <div className="flex items-center justify-between mb-8">
+                                    <h2 className="text-2xl font-bold text-theme-text-primary">Log a Meal</h2>
+                                    <button
+                                        onClick={() => {
+                                            setShowLogMealChoice(false);
+                                            setLogMealMode(null);
+                                        }}
+                                        className="p-2 hover:bg-theme-bg-hover rounded-lg transition-colors"
+                                    >
+                                        <svg className="w-6 h-6 text-theme-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                <div className="space-y-4">
+                                    {/* Purdue Dining Option */}
+                                    <button
+                                        onClick={() => setLogMealMode('purdue')}
+                                        className="w-full p-6 bg-gradient-to-br from-primary-500/10 to-secondary-500/10 border-2 border-primary-500/30 rounded-2xl hover:border-primary-500 hover:shadow-md transition-all group"
+                                    >
+                                        <div className="flex items-start gap-4">
+                                            <div className="text-4xl">🏛️</div>
+                                            <div className="text-left flex-1">
+                                                <h3 className="font-bold text-theme-text-primary mb-1">Purdue Dining</h3>
+                                                <p className="text-sm text-theme-text-secondary">Select from dining courts and menus</p>
+                                            </div>
+                                            <div className="text-2xl group-hover:translate-x-1 transition-transform">→</div>
+                                        </div>
+                                    </button>
+
+                                    {/* Custom Meal Option */}
+                                    <button
+                                        onClick={() => setLogMealMode('custom')}
+                                        className="w-full p-6 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-2 border-blue-500/30 rounded-2xl hover:border-blue-500 hover:shadow-md transition-all group"
+                                    >
+                                        <div className="flex items-start gap-4">
+                                            <div className="text-4xl">📝</div>
+                                            <div className="text-left flex-1">
+                                                <h3 className="font-bold text-theme-text-primary mb-1">Custom Meal</h3>
+                                                <p className="text-sm text-theme-text-secondary">Log any meal with custom calories</p>
+                                            </div>
+                                            <div className="text-2xl group-hover:translate-x-1 transition-transform">→</div>
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Dining Court Selection */}
+                {logMealMode === 'purdue' && (
+                    <div className="fixed inset-0 z-50 flex items-end bg-black/50 backdrop-blur-sm">
+                        <div className="w-full bg-theme-card-bg border-t border-theme-card-border rounded-3xl rounded-b-none p-6 sm:p-8 max-h-[90vh] overflow-y-auto animate-fade-in-up">
+                            <div className="max-w-md mx-auto">
+                                <div className="flex items-center justify-between mb-8">
+                                    <h2 className="text-2xl font-bold text-theme-text-primary">Select Dining Court</h2>
+                                    <button
+                                        onClick={() => setLogMealMode(null)}
+                                        className="p-2 hover:bg-theme-bg-hover rounded-lg transition-colors"
+                                    >
+                                        <svg className="w-6 h-6 text-theme-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    {diningCourts.map(court => (
+                                        <button
+                                            key={court.id}
+                                            onClick={() => window.location.href = `/food-dashboard-glass?court=${court.id}`}
+                                            className="p-4 bg-theme-bg-tertiary border border-theme-border-primary rounded-xl hover:bg-theme-accent/10 hover:border-theme-accent transition-all group"
+                                        >
+                                            <div className="text-3xl mb-2">{court.icon}</div>
+                                            <p className="font-semibold text-theme-text-primary group-hover:text-theme-accent transition-colors text-sm">{court.name}</p>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Custom Meal Entry */}
+                {logMealMode === 'custom' && (
+                    <div className="fixed inset-0 z-50 flex items-end bg-black/50 backdrop-blur-sm">
+                        <div className="w-full bg-theme-card-bg border-t border-theme-card-border rounded-3xl rounded-b-none p-6 sm:p-8 max-h-[90vh] overflow-y-auto animate-fade-in-up">
+                            <div className="max-w-md mx-auto">
+                                <div className="flex items-center justify-between mb-8">
+                                    <h2 className="text-2xl font-bold text-theme-text-primary">Quick Log Custom Meal</h2>
+                                    <button
+                                        onClick={() => setLogMealMode(null)}
+                                        className="p-2 hover:bg-theme-bg-hover rounded-lg transition-colors"
+                                    >
+                                        <svg className="w-6 h-6 text-theme-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                <CustomMealForm
+                                    onSuccess={() => {
+                                        setLogMealMode(null);
+                                        setShowLogMealChoice(false);
+                                    }}
+                                    onCancel={() => setLogMealMode(null)}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Quick Meal Log (Fallback) */}
                 <BottomSheet isOpen={logMealSheet} onClose={() => setLogMealSheet(false)} title="Quick Log Meal">
                     <div className="space-y-4">
                         <p className="text-theme-text-secondary">Select from recent favorites or browse the full menu.</p>
