@@ -1,22 +1,13 @@
 import { useMemo, useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
-import dynamic from 'next/dynamic';
 import useSWR from 'swr';
 
 import { apiCall } from '../utils/auth';
 import { deleteCookie, readCookie } from '../utils/cookies';
 import StatCard from '../components/StatCard';
 import QuickActionCard from '../components/QuickActionCard';
-import WaterTracker from '../components/WaterTracker';
 import StreakTracker from '../components/StreakTracker';
-import BMICalculator from '../components/BMICalculator';
-
-// Lazy load heavy chart component
-const WeightChart = dynamic(() => import('../components/WeightChart'), {
-  loading: () => <div className="h-full w-full min-h-[300px] bg-theme-card-bg animate-pulse rounded-3xl border border-theme-card-border" />,
-  ssr: false
-});
 
 const LOG_COOKIE_KEY = 'boilerfuel_logs_v1';
 const ACTIVITY_LOG_COOKIE_KEY = 'boilerfuel_activity_logs_v1';
@@ -255,16 +246,8 @@ export default function Dashboard() {
             />
           </div>
 
-          {/* New Features Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <WaterTracker />
-            <WeightChart />
-          </div>
-
-          {/* BMI Calculator */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <BMICalculator />
-            {/* Placeholder for future feature or ad */}
+          {/* Feature Placeholder */}
+          <div className="grid grid-cols-1 gap-6">
             <div className="p-8 rounded-3xl bg-theme-card-bg border border-theme-card-border shadow-sm flex items-center justify-center text-theme-text-tertiary">
               <div className="text-center">
                 <span className="text-4xl block mb-2">🚀</span>

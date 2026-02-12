@@ -6,7 +6,6 @@ import { apiCall } from '../utils/auth';
 import { readCookie, writeCookie } from '../utils/cookies';
 import BottomSheet from '../components/BottomSheet';
 import CustomMealForm from '../components/CustomMealForm';
-import WaterTracker from '../components/WaterTracker';
 import EmptyState from '../components/EmptyState';
 import { useToast } from '../components/ToastContainer';
 
@@ -261,14 +260,24 @@ export default function ModernDashboard() {
                         </div>
                     </motion.div>
 
-                    {/* Right Column - Water Tracker */}
+                    {/* Right Column - Daily Target */}
                     <motion.div 
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: 0.2 }}
                         className="bg-theme-card-bg border border-theme-card-border rounded-3xl p-6 shadow-soft hover:shadow-soft-lg transition-shadow"
                     >
-                        <WaterTracker />
+                        <h3 className="text-lg font-semibold text-theme-text-primary mb-3">Daily Target</h3>
+                        <p className="text-3xl font-bold text-theme-text-primary mb-2">{Math.round(goals.calories)}</p>
+                        <p className="text-sm text-theme-text-secondary mb-4">calorie goal</p>
+                        <div className="h-2 bg-theme-bg-tertiary rounded-full overflow-hidden">
+                            <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${Math.min(100, (netCalories / goals.calories) * 100)}%` }}
+                                transition={{ duration: 0.8, ease: 'easeOut' }}
+                                className="h-full bg-theme-accent rounded-full"
+                            />
+                        </div>
                     </motion.div>
                 </div>
 

@@ -6,7 +6,6 @@ import { readCookie, writeCookie } from '../utils/cookies';
 import Toast from '../components/Toast';
 import { useToast } from '../components/ToastContainer';
 import MealAdditionModal from '../components/MealAdditionModal';
-import GoalsModal from '../components/GoalsModal';
 
 const LOG_COOKIE_KEY = 'boilerfuel_logs_v1';
 const GOALS_COOKIE_KEY = 'boilerfuel_goals_v1';
@@ -52,7 +51,6 @@ export default function HomeSimple() {
     const [goals, setGoals] = useState(() => parseGoalsCookie());
     
     const [showAddMealModal, setShowAddMealModal] = useState(false);
-    const [showGoalsModal, setShowGoalsModal] = useState(false);
 
     // Load initial data
     useEffect(() => {
@@ -106,11 +104,6 @@ export default function HomeSimple() {
         writeCookie(LOG_COOKIE_KEY, JSON.stringify(newLogs));
     }
 
-    function persistGoals(newGoals) {
-        setGoals(newGoals);
-        writeCookie(GOALS_COOKIE_KEY, JSON.stringify(newGoals));
-    }
-
     function handleAddMeal(mealData) {
         const newLog = {
             id: Date.now(),
@@ -124,11 +117,6 @@ export default function HomeSimple() {
     function handleDeleteFoodLog(logId) {
         persistLogs(logs.filter(l => l.id !== logId));
         toast.info('Meal removed');
-    }
-
-    function handleSaveGoals(newGoals) {
-        persistGoals(newGoals);
-        toast.success('Goals updated!');
     }
 
     if (loading) {
@@ -196,13 +184,12 @@ export default function HomeSimple() {
                         </button>
                     </motion.div>
 
-                    {/* Main Calorie Circle - Clickable for goals */}
+                    {/* Main Calorie Card */}
                     <motion.div
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: 0.1 }}
-                        onClick={() => setShowGoalsModal(true)}
-                        className="mb-8 cursor-pointer"
+                        className="mb-8"
                     >
                         <div className="flex flex-col items-center justify-center">
                             <div className="w-full max-w-md bg-theme-card-bg border border-theme-card-border rounded-2xl p-6">
@@ -229,7 +216,7 @@ export default function HomeSimple() {
                                     />
                                 </div>
                             </div>
-                            <p className="mt-4 text-xs text-theme-text-tertiary">Click to modify goal</p>
+                            <p className="mt-4 text-xs text-theme-text-tertiary">Daily calorie progress</p>
                         </div>
                     </motion.div>
 
@@ -307,13 +294,6 @@ export default function HomeSimple() {
                 onClose={() => setShowAddMealModal(false)}
                 onAddMeal={handleAddMeal}
                 allFoods={allFoods}
-            />
-            
-            <GoalsModal 
-                isOpen={showGoalsModal}
-                onClose={() => setShowGoalsModal(false)}
-                currentGoals={goals}
-                onSave={handleSaveGoals}
             />
         </>
     );
