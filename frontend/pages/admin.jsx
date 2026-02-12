@@ -917,7 +917,7 @@ function SettingsTab() {
 
       <div className="p-8 border border-black text-center space-y-4">
         <h3 className="text-xl font-bold">Simple Mode Active</h3>
-        <p>The "Bare Bones" theme is currently enforced for all users to maximize performance and simplicity.</p>
+        <p>The &quot;Bare Bones&quot; theme is currently enforced for all users to maximize performance and simplicity.</p>
         <div className="inline-block px-4 py-2 bg-black text-white font-mono text-sm">
           CURRENT THEME: BARE BONES
         </div>
