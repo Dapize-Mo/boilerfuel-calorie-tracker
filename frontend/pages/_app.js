@@ -64,7 +64,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
         <ThemeProvider>
           <ToastProvider>
             <DashboardProvider>
-              {getLayout(<Component {...pageProps} />)}
+              <Component {...pageProps} />
               <CommandPalette />
             </DashboardProvider>
           </ToastProvider>

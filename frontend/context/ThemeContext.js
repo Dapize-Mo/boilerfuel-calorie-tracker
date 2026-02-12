@@ -6,31 +6,26 @@ const ThemeContext = createContext({
 });
 
 export function ThemeProvider({ children }) {
-    const [theme, setTheme] = useState('bare');
+    const [theme, setTheme] = useState('light');
 
     // Load theme from saved preference on mount
     useEffect(() => {
-        // Enforce bare theme
-        setTheme('bare');
-        localStorage.setItem('boilerfuel_theme', 'bare');
+        const savedTheme = localStorage.getItem('boilerfuel_theme') || 'light';
+        setTheme(savedTheme);
     }, []);
 
     // Apply theme to document
     useEffect(() => {
         const root = document.documentElement;
-        // Always apply 'bare' data-theme
-        root.setAttribute('data-theme', 'bare');
-
-        // Ensure no other classes interfere
-        root.classList.remove('dark', 'light');
-
-        // Save to local storage
-        localStorage.setItem('boilerfuel_theme', 'bare');
-    }, [theme]);
-
-    // Handle font loading if themes use different fonts
-    useEffect(() => {
-        // No special fonts needed for bare theme (Times New Roman)
+        if (theme === 'dark') {
+            root.classList.add('dark');
+            root.classList.remove('light');
+        } else {
+            root.classList.add('light');
+            root.classList.remove('dark');
+        }
+        root.removeAttribute('data-theme'); // Clear bare theme if present
+        localStorage.setItem('boilerfuel_theme', theme);
     }, [theme]);
 
     return (

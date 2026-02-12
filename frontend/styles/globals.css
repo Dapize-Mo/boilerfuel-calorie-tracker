@@ -4,49 +4,62 @@
 
 @layer base {
 
-  :root,
-  .light,
-  .dark {
-    color-scheme: light;
+  :root {
+    color-scheme: light dark;
+  }
 
-    /* BARE BONES (Minimal) - The only theme */
+  /* LIGHT MODE (Simple) */
+  .light {
     --color-bg-primary: 255 255 255;
-    --color-bg-secondary: 255 255 255;
-    --color-bg-tertiary: 238 238 238;
-    --color-bg-hover: 221 221 221;
+    --color-bg-secondary: 245 245 245;
+    --color-bg-tertiary: 235 235 235;
+    --color-bg-hover: 225 225 225;
 
     --color-text-primary: 0 0 0;
-    --color-text-secondary: 0 0 0;
-    --color-text-tertiary: 0 0 0;
-    --color-text-muted: 80 80 80;
+    --color-text-secondary: 50 50 50;
+    --color-text-tertiary: 100 100 100;
+    --color-text-muted: 150 150 150;
 
     --color-border-primary: 0 0 0;
-    --color-border-secondary: 0 0 0;
-    --color-border-light: 0 0 0;
-    --color-border-focus: 0 0 0;
+    --color-border-secondary: 200 200 200;
 
     --color-card-bg: 255 255 255;
     --color-card-border: 0 0 0;
-    --color-sidebar-bg: 255 255 255;
-    --color-sidebar-border: 0 0 0;
 
     --color-accent-primary: 0 0 0;
-    --color-accent-hover: 50 50 50;
-    --color-accent-light: 200 200 200;
+  }
 
-    --color-success: 0 0 0;
-    --color-error: 0 0 0;
-    --color-info: 0 0 0;
-    --color-purple: 0 0 0;
+  /* DARK MODE (Simple) */
+  .dark {
+    --color-bg-primary: 0 0 0;
+    --color-bg-secondary: 20 20 20;
+    --color-bg-tertiary: 40 40 40;
+    --color-bg-hover: 60 60 60;
 
+    --color-text-primary: 255 255 255;
+    --color-text-secondary: 200 200 200;
+    --color-text-tertiary: 150 150 150;
+    --color-text-muted: 100 100 100;
+
+    --color-border-primary: 255 255 255;
+    --color-border-secondary: 100 100 100;
+
+    --color-card-bg: 0 0 0;
+    --color-card-border: 255 255 255;
+
+    --color-accent-primary: 255 255 255;
+  }
+
+  /* SHARED SPECS (Minimal) */
+  :root,
+  .light,
+  .dark {
     --radius-sm: 0;
     --radius-md: 0;
     --radius-lg: 0;
     --radius-xl: 0;
-
     --shadow-card: none;
     --backdrop-blur: 0px;
-
     --font-heading: 'Times New Roman', serif;
   }
 
