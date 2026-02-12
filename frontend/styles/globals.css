@@ -767,29 +767,30 @@ vercel-live-feedback {
 
 .card-glow {
   @apply transition-all duration-300;
+}
 
-  @keyframes pulse-glow {
+@keyframes pulse-glow {
 
-    0%,
-    100% {
-      box-shadow: 0 0 20px rgba(250, 204, 21, 0.4);
-    }
-
-    50% {
-      box-shadow: 0 0 40px rgba(250, 204, 21, 0.8);
-    }
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(250, 204, 21, 0.4);
   }
 
-  /* Enhanced card styles */
-  .modern-card {
-    background: rgb(var(--color-card-bg));
-    border: 1px solid rgb(var(--color-card-border));
-    border-radius: 1.5rem;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  50% {
+    box-shadow: 0 0 40px rgba(250, 204, 21, 0.8);
   }
+}
 
-  .modern-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 20px 60px -10px rgba(0, 0, 0, 0.3);
-    border-color: rgba(250, 204, 21, 0.4);
-  }
+/* Enhanced card styles */
+.modern-card {
+  background: rgb(var(--color-card-bg));
+  border: 1px solid rgb(var(--color-card-border));
+  border-radius: 1.5rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modern-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 60px -10px rgba(0, 0, 0, 0.3);
+  border-color: rgba(250, 204, 21, 0.4);
+}
