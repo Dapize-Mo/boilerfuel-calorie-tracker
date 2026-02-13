@@ -1,40 +1,65 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Head from 'next/head';
 
 export default function Home() {
   const [location, setLocation] = useState('All');
   const [mealTime, setMealTime] = useState('All');
+  const [foods, setFoods] = useState([]);
+  const [locations, setLocations] = useState(['All']);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const locations = ['All', 'Ford', 'Wiley', 'Hillenbrand', 'Earhart', 'Windsor'];
   const mealTimes = ['All', 'Breakfast', 'Lunch', 'Dinner'];
 
-  // Mock data for display purposes
-  const foods = [
-    { id: 1, name: 'Scrambled Eggs', location: 'Earhart', meal: 'Breakfast', calories: 150 },
-    { id: 2, name: 'Grilled Chicken Breast', location: 'Ford', meal: 'Lunch', calories: 180 },
-    { id: 3, name: 'Cheeseburger', location: 'Wiley', meal: 'Dinner', calories: 450 },
-    { id: 4, name: 'Oatmeal', location: 'Windsor', meal: 'Breakfast', calories: 120 },
-    { id: 5, name: 'Pasta with Marinara', location: 'Hillenbrand', meal: 'Lunch', calories: 300 },
-    { id: 6, name: 'Pizza Slice', location: 'Ford', meal: 'Dinner', calories: 280 },
-  ];
+  // Fetch dining court locations from Neon DB
+  useEffect(() => {
+    fetch('/api/dining-courts')
+      .then(res => res.json())
+      .then(courts => {
+        if (Array.isArray(courts)) {
+          setLocations(['All', ...courts]);
+        }
+      })
+      .catch(err => console.error('Failed to load locations:', err));
+  }, []);
 
-  const filteredFoods = foods.filter(food => {
-    const locMatch = location === 'All' || food.location === location;
-    const timeMatch = mealTime === 'All' || food.meal === mealTime;
-    return locMatch && timeMatch;
-  });
+  // Fetch foods from Neon DB whenever filters change
+  const fetchFoods = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const params = new URLSearchParams();
+      if (location !== 'All') params.set('dining_court', location);
+      if (mealTime !== 'All') params.set('meal_time', mealTime);
+
+      const res = await fetch(`/api/foods?${params.toString()}`);
+      if (!res.ok) throw new Error(`Server error ${res.status}`);
+      const data = await res.json();
+      setFoods(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Failed to fetch foods:', err);
+      setError('Could not load foods. Check your database connection.');
+      setFoods([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [location, mealTime]);
+
+  useEffect(() => {
+    fetchFoods();
+  }, [fetchFoods]);
 
   return (
     <div className="min-h-screen p-8 bg-theme-bg-primary text-theme-text-primary font-mono max-w-4xl mx-auto">
       <Head>
-        <title>BoilerFuel - Simply Food</title>
+        <title>BoilerFuel - Dining Menu</title>
       </Head>
 
       <header className="mb-12 border-b-2 border-theme-text-primary pb-8">
-        <h1 className="text-3xl font-bold mb-4 uppercase tracking-widest">Statua: Restarting Project</h1>
+        <h1 className="text-3xl font-bold mb-4 uppercase tracking-widest">BoilerFuel</h1>
         <p className="mb-4 text-theme-text-secondary">
-          Rest Notice: I am restarting the project. Just listing available foods for now.
+          Browse dining court menus. Data powered by Neon PostgreSQL.
         </p>
         <Link href="/admin" className="text-sm underline hover:no-underline opacity-50 hover:opacity-100">
           Admin / Settings
@@ -66,6 +91,12 @@ export default function Home() {
           </div>
         </div>
 
+        {error && (
+          <div className="mb-6 p-4 border border-red-500 text-red-400 text-sm">
+            {error}
+          </div>
+        )}
+
         <div className="border-t border-theme-text-primary">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -77,15 +108,22 @@ export default function Home() {
               </tr>
             </thead>
             <tbody>
-              {filteredFoods.map(food => (
-                <tr key={food.id} className="border-b border-theme-text-primary/10 hover:bg-theme-bg-secondary">
-                  <td className="py-3 pr-4">{food.name}</td>
-                  <td className="py-3 px-4 text-theme-text-secondary">{food.location}</td>
-                  <td className="py-3 px-4 text-theme-text-secondary">{food.meal}</td>
-                  <td className="py-3 pl-4 text-right font-mono">{food.calories}</td>
+              {loading ? (
+                <tr>
+                  <td colSpan={4} className="py-8 text-center text-theme-text-secondary">
+                    Loading foods...
+                  </td>
                 </tr>
-              ))}
-              {filteredFoods.length === 0 && (
+              ) : foods.length > 0 ? (
+                foods.map(food => (
+                  <tr key={food.id} className="border-b border-theme-text-primary/10 hover:bg-theme-bg-secondary">
+                    <td className="py-3 pr-4">{food.name}</td>
+                    <td className="py-3 px-4 text-theme-text-secondary">{food.dining_court}</td>
+                    <td className="py-3 px-4 text-theme-text-secondary">{food.meal_time}</td>
+                    <td className="py-3 pl-4 text-right font-mono">{food.calories}</td>
+                  </tr>
+                ))
+              ) : (
                 <tr>
                   <td colSpan={4} className="py-8 text-center text-theme-text-secondary italic">
                     No foods found for this selection.
@@ -94,6 +132,11 @@ export default function Home() {
               )}
             </tbody>
           </table>
+          {!loading && foods.length > 0 && (
+            <p className="mt-4 text-xs text-theme-text-secondary opacity-50">
+              Showing {foods.length} item{foods.length !== 1 ? 's' : ''} from database
+            </p>
+          )}
         </div>
       </main>
     </div>
