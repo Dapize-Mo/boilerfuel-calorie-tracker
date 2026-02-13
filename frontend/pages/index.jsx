@@ -546,7 +546,7 @@ export default function Home() {
 
       {/* ── Filters — slide from center to top-right ── */}
       <div style={{
-        position: 'fixed', zIndex: 20,
+        position: 'fixed', zIndex: 40,
         display: 'flex', alignItems: 'flex-end',
         transition: `top 0.85s ${EASE}, right 0.85s ${EASE}, transform 0.85s ${EASE}, gap 0.6s ${EASE}`,
         top: isLanding ? '50vh' : 13,
