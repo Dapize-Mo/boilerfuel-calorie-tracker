@@ -1,4 +1,127 @@
+import Link from 'next/link';
 import Head from 'next/head';
+
+const VERSIONS = [
+  {
+    version: '2.0.0',
+    date: 'February 12, 2026',
+    latest: true,
+    changes: [
+      { cat: 'Feature', items: [
+        'Redesigned home page with animated landing to results transition',
+        'Advanced macro tracker with visual progress rings',
+        'Enhanced dining menu browser with macro filtering and sorting',
+        'Retail food database: 60+ items from popular chains',
+        'Profile page with theme toggle',
+      ]},
+      { cat: 'UI', items: [
+        'Minimal brutalist design language across all pages',
+        'Modal-based meal logging with location filtering',
+        'Goals editor for daily calorie and macro targets',
+        'Date navigation for viewing past/future days',
+      ]},
+      { cat: 'Technical', items: [
+        'Progressive rendering for large food lists',
+        'Cookie-based local storage for goals and meal logs',
+        'Retail foods database seeding',
+        'Scroll-driven view transitions with GPU compositing',
+      ]},
+    ],
+  },
+  {
+    version: '1.5.0',
+    date: 'October 24, 2025',
+    changes: [
+      { cat: 'Feature', items: [
+        'Light/dark mode theme toggle with system preference detection',
+        'Food details modal with full nutritional info',
+        '7-day forecast tooltips for menu item availability',
+      ]},
+      { cat: 'Technical', items: [
+        'ThemeContext for global theme state',
+        'localStorage persistence for theme preference',
+        'Tailwind dark mode with class-based strategy',
+      ]},
+    ],
+  },
+  {
+    version: '1.4.0',
+    date: 'October 23, 2025',
+    changes: [
+      { cat: 'Feature', items: [
+        '7-day menu forecasting with multi-day scheduling',
+        'Admin GitHub Actions trigger for on-demand scraping',
+        'Enhanced scraper with multi-day caching',
+      ]},
+      { cat: 'Technical', items: [
+        'next_available JSONB column with GIN index',
+        'Database migration to Neon PostgreSQL',
+        'GitHub Actions workflow with verification queries',
+      ]},
+      { cat: 'Fix', items: [
+        'Fixed Neon database not updating in production',
+        'Added post-scrape verification',
+      ]},
+    ],
+  },
+  {
+    version: '1.3.0',
+    date: 'October 2, 2025',
+    changes: [
+      { cat: 'Feature', items: [
+        'Meal time filter (breakfast, lunch, dinner)',
+        'Active filter pills with clear button',
+        'About page and changelog page',
+      ]},
+      { cat: 'Accessibility', items: [
+        'Proper page titles on all pages',
+        'HTML lang attribute for screen readers',
+        'ARIA labels and focus indicators',
+      ]},
+      { cat: 'Technical', items: [
+        'meal_time database column and API parameter',
+        'Database indexes for query performance',
+      ]},
+    ],
+  },
+  {
+    version: '1.2.0',
+    date: 'September 2025',
+    changes: [
+      { cat: 'Feature', items: [
+        'Dining court filter for menu items',
+        'Station grouping (Grill, Salad Bar, etc.)',
+        'Quick add button for one-click meal logging',
+      ]},
+    ],
+  },
+  {
+    version: '1.1.0',
+    date: 'August 2025',
+    changes: [
+      { cat: 'Feature', items: [
+        'Activity tracking with workout logging',
+        'Calories burned calculation (net calories)',
+        'Pre-populated exercise database',
+      ]},
+    ],
+  },
+  {
+    version: '1.0.0',
+    date: 'July 2025',
+    initial: true,
+    changes: [
+      { cat: 'Feature', items: [
+        'Food logging with calories and macros',
+        'Daily nutrition totals',
+        'Privacy-first local storage',
+        'Admin panel for food database management',
+        'Automated dining hall menu scraper',
+        'Responsive design for desktop and mobile',
+      ]},
+    ],
+  },
+];
 
 export default function Changelog() {
   return (
@@ -7,461 +130,82 @@ export default function Changelog() {
         <title>Changelog - BoilerFuel</title>
         <meta name="description" content="BoilerFuel version history and updates" />
       </Head>
-      <div className="mx-auto max-w-4xl space-y-10">
+
+      <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary font-mono">
+        <div className="max-w-3xl mx-auto px-6 sm:px-10 py-16 sm:py-24 space-y-16">
+
           {/* Header */}
-          <header className="border-b border-theme-border-primary pb-8">
-            <h1 className="text-5xl font-bold mb-4">Changelog</h1>
-            <p className="text-xl text-theme-text-secondary">Version history and updates</p>
+          <header className="space-y-4">
+            <Link href="/" className="text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
+              &larr; Back
+            </Link>
+            <h1 className="text-3xl sm:text-5xl font-bold uppercase tracking-[0.2em]">Changelog</h1>
+            <div className="w-12 h-px bg-theme-text-primary/30" />
+            <p className="text-sm uppercase tracking-widest text-theme-text-tertiary">
+              Version history &amp; updates
+            </p>
           </header>
 
-          {/* Version 2.0.0 */}
-          <section className="rounded-lg bg-theme-card-bg p-8 border border-theme-card-border space-y-6">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h2 className="text-2xl font-bold text-theme-accent">Version 2.0.0</h2>
-                <p className="text-sm text-theme-text-secondary">February 12, 2026</p>
+          {/* Versions */}
+          {VERSIONS.map((v) => (
+            <section key={v.version} className="space-y-4">
+              {/* Version header */}
+              <div className="flex items-baseline justify-between border-b border-theme-text-primary/10 pb-2">
+                <div className="flex items-baseline gap-3">
+                  <h2 className="text-lg font-bold uppercase tracking-wider">{v.version}</h2>
+                  {v.latest && (
+                    <span className="text-[10px] uppercase tracking-widest border border-theme-text-primary/30 px-2 py-0.5 text-theme-text-tertiary">
+                      Latest
+                    </span>
+                  )}
+                  {v.initial && (
+                    <span className="text-[10px] uppercase tracking-widest border border-theme-text-primary/30 px-2 py-0.5 text-theme-text-tertiary">
+                      Initial
+                    </span>
+                  )}
+                </div>
+                <span className="text-xs text-theme-text-tertiary">{v.date}</span>
               </div>
-              <span className="rounded-full bg-theme-success/20 text-theme-success px-3 py-1 text-xs font-semibold">
-                Latest
-              </span>
-            </div>
-            <div className="space-y-3 text-theme-text-secondary">
-              <h3 className="font-bold text-theme-text-primary">✨ Major Features</h3>
-              <ul className="space-y-2 ml-4">
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-accent">•</span>
-                  <span><strong>Redesigned Home Page:</strong> Clean, minimal interface showing only daily calories with one-click goal modification and meal tracking</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-accent">•</span>
-                  <span><strong>Advanced Macro Tracker:</strong> New dedicated Macros tab displaying real-time protein, carbs, and fats progress with visual rings and meal breakdown</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-accent">•</span>
-                  <span><strong>Enhanced Dining Menu Browser:</strong> Filter by individual macros (protein/carbs/fats), sort by any nutrient, and search across all dining courts</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-accent">•</span>
-                  <span><strong>Retail Food Database:</strong> 60+ items from popular chains (Chick-fil-A, McDonald&apos;s, Subway, Chipotle, etc.) with complete nutritional data</span>
-                </li>
-              </ul>
 
-              <h3 className="font-bold text-theme-text-primary mt-4">🎨 UI/UX Improvements</h3>
-              <ul className="space-y-2 ml-4">
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-info">•</span>
-                  <span>Streamlined meal addition flow: Dining Courts → Retail → Custom meal options</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-info">•</span>
-                  <span>Modal-based meal logging with location and macro filtering integrated</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-info">•</span>
-                  <span>Goals modal for editing daily calorie and macro targets</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-info">•</span>
-                  <span>Bottom navigation now includes Macros tab for mobile accessibility</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-info">•</span>
-                  <span>Date navigation on home page and macros page for viewing past/future days</span>
-                </li>
-              </ul>
-
-              <h3 className="font-bold text-theme-text-primary mt-4">🔧 Technical Enhancements</h3>
-              <ul className="space-y-2 ml-4">
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-purple">•</span>
-                  <span>New components: MealAdditionModal, GoalsModal for better code organization</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-purple">•</span>
-                  <span>Retail foods database seeding in init_db.py</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-purple">•</span>
-                  <span>Enhanced home page with simplified logic focused on core functionality</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-purple">•</span>
-                  <span>Cookie-based local storage for goals and meal logs (no backend sync required)</span>
-                </li>
-              </ul>
-
-              <h3 className="font-bold text-theme-text-primary mt-4">📱 New Pages</h3>
-              <ul className="space-y-2 ml-4">
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-accent">•</span>
-                  <span><code>/</code> - Redesigned home page (home-simple.jsx)</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-accent">•</span>
-                  <span><code>/macros</code> - New macro tracking dashboard</span>
-                </li>
-              </ul>
-            </div>
-          </section>
-
-          {/* Version 1.5.0 */}
-          <section className="rounded-lg bg-theme-card-bg p-8 border border-theme-card-border space-y-6">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h2 className="text-2xl font-bold text-theme-text-secondary">Version 1.5.0</h2>
-                <p className="text-sm text-theme-text-secondary">October 24, 2025</p>
+              {/* Change categories */}
+              <div className="border border-theme-text-primary/10">
+                {v.changes.map((group, gi) => (
+                  <div key={group.cat}>
+                    {gi > 0 && <div className="h-px bg-theme-text-primary/10" />}
+                    <div className="px-4 py-3">
+                      <div className="text-[10px] font-bold uppercase tracking-[0.15em] text-theme-text-tertiary mb-2">
+                        {group.cat}
+                      </div>
+                      <ul className="space-y-1">
+                        {group.items.map((item, ii) => (
+                          <li key={ii} className="text-xs text-theme-text-secondary leading-relaxed flex gap-2">
+                            <span className="text-theme-text-primary/20 shrink-0">&mdash;</span>
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                ))}
               </div>
-            </div>
-            <div className="space-y-3 text-theme-text-secondary">
-              <h3 className="font-bold text-theme-text-primary">✨ New Features</h3>
-              <ul className="space-y-2 ml-4">
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-accent">•</span>
-                  <span><strong>Light/Dark Mode Theme:</strong> Toggle between light mode, dark mode, or automatic system preference detection</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-accent">•</span>
-                  <span><strong>Food Details Modal:</strong> Click any food item to view detailed nutritional info, dining court, station, and 7-day forecast</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-accent">•</span>
-                  <span><strong>7-Day Forecast Tooltips:</strong> Hover over meal time badges to see when items will be available over the next week</span>
-                </li>
-              </ul>
-              
-              <h3 className="font-bold text-theme-text-primary mt-4">🎨 UI Improvements</h3>
-              <ul className="space-y-2 ml-4">
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-info">•</span>
-                  <span>Theme toggle in navigation with ☀️ Light, 💻 System, 🌙 Dark modes</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-info">•</span>
-                  <span>Light mode styling throughout app with adaptive colors</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-info">•</span>
-                  <span>Interactive food cards with hover states and click-to-expand</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-info">•</span>
-                  <span>Improved tooltip visibility with proper z-index layering</span>
-                </li>
-              </ul>
+            </section>
+          ))}
 
-              <h3 className="font-bold text-theme-text-primary mt-4">🔧 Technical Updates</h3>
-              <ul className="space-y-2 ml-4">
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-purple">•</span>
-                  <span>ThemeContext for global theme state management</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-purple">•</span>
-                  <span>localStorage persistence for theme preference</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-purple">•</span>
-                  <span>Real-time system theme change detection</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-purple">•</span>
-                  <span>Tailwind dark mode with class-based strategy</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-purple">•</span>
-                  <span>Fixed React Hook ESLint warnings for cleaner builds</span>
-                </li>
-              </ul>
+          {/* Footer */}
+          <footer className="border-t border-theme-text-primary/10 pt-8 flex flex-wrap items-center justify-between gap-4">
+            <div className="flex gap-6 text-xs uppercase tracking-widest">
+              <Link href="/" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Home</Link>
+              <Link href="/about" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">About</Link>
+              <Link href="/admin" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Admin</Link>
+              <Link href="/profile" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Profile</Link>
             </div>
-          </section>
-
-          {/* Version 1.4.0 */}
-          <section className="rounded-lg bg-white dark:bg-theme-card-bg p-8 border border-slate-200 dark:border-theme-card-border space-y-6">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h2 className="text-2xl font-bold text-theme-text-secondary">Version 1.4.0</h2>
-                <p className="text-sm text-theme-text-secondary">October 23, 2025</p>
-              </div>
-            </div>
-            <div className="space-y-3 text-theme-text-secondary">
-              <h3 className="font-bold text-theme-text-primary">✨ New Features</h3>
-              <ul className="space-y-2 ml-4">
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-accent">•</span>
-                  <span><strong>7-Day Menu Forecasting:</strong> See when foods will be available over the next week with multi-day scheduling</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-accent">•</span>
-                  <span><strong>Admin GitHub Actions Trigger:</strong> Manually trigger menu scraper from admin panel to update database on-demand</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-accent">•</span>
-                  <span><strong>Enhanced Scraper:</strong> Multi-day scraping with caching and configurable day range (default 7 days)</span>
-                </li>
-              </ul>
-              
-              <h3 className="font-bold text-theme-text-primary mt-4">🔧 Technical Updates</h3>
-              <ul className="space-y-2 ml-4">
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-purple">•</span>
-                  <span>Added next_available JSONB column with GIN index for forecast data storage</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-purple">•</span>
-                  <span>Database migration to Neon PostgreSQL with proper connection handling</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-purple">•</span>
-                  <span>GitHub Actions workflow improvements with verification queries and SCRAPE_DAYS env var</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-purple">•</span>
-                  <span>Backend endpoint for CI workflow dispatch via GitHub API</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-purple">•</span>
-                  <span>Selenium fallback gracefully skips in CI if unavailable</span>
-                </li>
-              </ul>
-
-              <h3 className="font-bold text-theme-text-primary mt-4">🐛 Bug Fixes</h3>
-              <ul className="space-y-2 ml-4">
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-error">•</span>
-                  <span>Fixed Neon database not updating in production environment</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-error">•</span>
-                  <span>Added post-scrape verification to ensure data populated correctly</span>
-                </li>
-              </ul>
-            </div>
-          </section>
-
-          {/* Version 1.3.0 */}
-          <section className="rounded-lg bg-white dark:bg-theme-card-bg p-8 border border-slate-200 dark:border-theme-card-border space-y-6">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h2 className="text-2xl font-bold text-theme-text-secondary">Version 1.3.0</h2>
-                <p className="text-sm text-theme-text-secondary">October 2, 2025</p>
-              </div>
-            </div>
-            <div className="space-y-3 text-theme-text-secondary">
-              <h3 className="font-bold text-theme-text-primary">✨ New Features</h3>
-              <ul className="space-y-2 ml-4">
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-accent">•</span>
-                  <span><strong>Meal Time Filter:</strong> Filter foods by breakfast 🌅, lunch ☀️, or dinner 🌙</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-accent">•</span>
-                  <span><strong>Enhanced Filter UI:</strong> Side-by-side dining court and meal time selectors with improved styling</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-accent">•</span>
-                  <span><strong>Active Filter Pills:</strong> Visual indicators showing active filters with clear button</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-accent">•</span>
-                  <span><strong>About Page:</strong> Learn more about BoilerFuel and how it works</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-accent">•</span>
-                  <span><strong>Changelog Page:</strong> Track all updates and improvements</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-accent">•</span>
-                  <span><strong>Home Button:</strong> Easy navigation back to the home page from anywhere</span>
-                </li>
-              </ul>
-              
-              <h3 className="font-bold text-theme-text-primary mt-4">♿ Accessibility</h3>
-              <ul className="space-y-2 ml-4">
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-success">•</span>
-                  <span>Added proper page titles to all pages</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-success">•</span>
-                  <span>Set HTML lang attribute for screen readers</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-success">•</span>
-                  <span>Improved ARIA labels for decorative elements</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-success">•</span>
-                  <span>Enhanced focus indicators for better keyboard navigation</span>
-                </li>
-              </ul>
-
-              <h3 className="font-bold text-theme-text-primary mt-4">🎨 UI Improvements</h3>
-              <ul className="space-y-2 ml-4">
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-info">•</span>
-                  <span>Responsive grid layout for filters (stacks on mobile)</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-info">•</span>
-                  <span>Color-coded filter pills (yellow for dining court, blue for meal time)</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-info">•</span>
-                  <span>Improved empty state messages based on active filters</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-info">•</span>
-                  <span>Better visual hierarchy with emojis and icons</span>
-                </li>
-              </ul>
-
-              <h3 className="font-bold text-theme-text-primary mt-4">🔧 Technical Updates</h3>
-              <ul className="space-y-2 ml-4">
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-purple">•</span>
-                  <span>Added meal_time column to database schema</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-purple">•</span>
-                  <span>Database indexes for improved query performance</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-purple">•</span>
-                  <span>API now supports meal_time filtering parameter</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-purple">•</span>
-                  <span>Migration scripts for database updates</span>
-                </li>
-              </ul>
-            </div>
-          </section>
-
-          {/* Version 1.2.0 */}
-          <section className="rounded-lg bg-theme-card-bg p-8 border border-theme-card-border space-y-6">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h2 className="text-2xl font-bold text-slate-300">Version 1.2.0</h2>
-                <p className="text-sm text-slate-400">September 2025</p>
-              </div>
-            </div>
-            <div className="space-y-3 text-slate-300">
-              <h3 className="font-bold text-theme-text-primary">✨ New Features</h3>
-              <ul className="space-y-2 ml-4">
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-accent">•</span>
-                  <span><strong>Dining Court Filter:</strong> Filter menu items by specific dining locations</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-accent">•</span>
-                  <span><strong>Station Grouping:</strong> Foods organized by dining hall stations (Grill, Salad Bar, etc.)</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-accent">•</span>
-                  <span><strong>Quick Add Button:</strong> One-click meal logging with + button</span>
-                </li>
-              </ul>
-              
-              <h3 className="font-bold text-theme-text-primary mt-4">🎨 UI Improvements</h3>
-              <ul className="space-y-2 ml-4">
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-info">•</span>
-                  <span>Card-based layout for station grouping</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-info">•</span>
-                  <span>Improved visual hierarchy with colors</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-info">•</span>
-                  <span>Better mobile responsiveness</span>
-                </li>
-              </ul>
-            </div>
-          </section>
-
-          {/* Version 1.1.0 */}
-          <section className="rounded-lg bg-theme-card-bg p-8 border border-theme-card-border space-y-6">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h2 className="text-2xl font-bold text-slate-300">Version 1.1.0</h2>
-                <p className="text-sm text-slate-400">August 2025</p>
-              </div>
-            </div>
-            <div className="space-y-3 text-slate-300">
-              <h3 className="font-bold text-theme-text-primary">✨ New Features</h3>
-              <ul className="space-y-2 ml-4">
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-accent">•</span>
-                  <span><strong>Activity Tracking:</strong> Log workouts and exercises</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-accent">•</span>
-                  <span><strong>Calories Burned:</strong> Calculate net calories (consumed - burned)</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-accent">•</span>
-                  <span><strong>Activity Database:</strong> Pre-populated with common exercises and calorie rates</span>
-                </li>
-              </ul>
-              
-              <h3 className="font-bold text-theme-text-primary mt-4">🔧 Improvements</h3>
-              <ul className="space-y-2 ml-4">
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-success">•</span>
-                  <span>Separate activity log storage using cookies</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-success">•</span>
-                  <span>Admin panel support for managing activities</span>
-                </li>
-              </ul>
-            </div>
-          </section>
-
-          {/* Version 1.0.0 */}
-          <section className="rounded-lg bg-theme-card-bg p-8 border border-theme-card-border space-y-6">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h2 className="text-2xl font-bold text-slate-300">Version 1.0.0</h2>
-                <p className="text-sm text-slate-400">July 2025</p>
-              </div>
-              <span className="rounded-full bg-blue-500/20 text-blue-400 px-3 py-1 text-xs font-semibold">
-                Initial Release
-              </span>
-            </div>
-            <div className="space-y-3 text-slate-300">
-              <h3 className="font-bold text-theme-text-primary">🚀 Initial Features</h3>
-              <ul className="space-y-2 ml-4">
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-accent">•</span>
-                  <span><strong>Food Logging:</strong> Track meals with calories and macros</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-accent">•</span>
-                  <span><strong>Daily Totals:</strong> View calories, protein, carbs, and fats</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-accent">•</span>
-                  <span><strong>Local Storage:</strong> Privacy-first approach with cookie-based storage</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-accent">•</span>
-                  <span><strong>Admin Panel:</strong> Manage food database</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-accent">•</span>
-                  <span><strong>Menu Scraper:</strong> Automated dining hall menu updates</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-theme-accent">•</span>
-                  <span><strong>Responsive Design:</strong> Works on desktop and mobile</span>
-                </li>
-              </ul>
-            </div>
-          </section>
+            <span className="text-xs text-theme-text-tertiary/40">{new Date().getFullYear()}</span>
+          </footer>
 
         </div>
+      </div>
     </>
   );
 }
+
+Changelog.getLayout = (page) => page;
