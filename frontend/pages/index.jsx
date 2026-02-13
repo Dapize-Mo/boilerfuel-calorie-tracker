@@ -548,8 +548,8 @@ export default function Home() {
           transition: `transform 0.85s ${EASE}, font-size 0.7s ${EASE}, letter-spacing 0.7s ${EASE}`,
           transform: isLanding
             ? `translate(calc(50vw - 50%), ${isMobile ? '18vh' : '35vh'})`
-            : isMobile ? 'translate(16px, 14px)' : 'translate(64px, 18px)',
-          fontSize: isLanding ? 'clamp(1.75rem, 5vw, 3.5rem)' : isMobile ? '1rem' : '1.25rem',
+            : isMobile ? 'translate(12px, 8px)' : 'translate(64px, 18px)',
+          fontSize: isLanding ? 'clamp(1.75rem, 5vw, 3.5rem)' : isMobile ? '0.85rem' : '1.25rem',
           letterSpacing: isLanding ? '0.25em' : '0.15em',
         }}>
         BoilerFuel
@@ -577,26 +577,28 @@ export default function Home() {
         alignItems: isLanding && isMobile ? 'stretch' : 'flex-end',
         flexDirection: isLanding && isMobile ? 'column' : 'row',
         willChange: 'transform',
-        top: 0, right: 0,
+        top: 0,
+        ...(isLanding ? { right: 0 } : isMobile ? { left: 0, right: 0, paddingLeft: 12, paddingRight: 12 } : { right: 0 }),
         transition: `transform 0.85s ${EASE}, gap 0.6s ${EASE}`,
         transform: isLanding
           ? isMobile
             ? 'translate(calc(-50vw + 50%), 34vh)'
             : 'translate(calc(-50vw + 50%), 50vh)'
           : isMobile
-            ? 'translate(-8px, 10px)'
+            ? 'translate(0, 32px)'
             : 'translate(-24px, 13px)',
         gap: isLanding ? (isMobile ? 10 : 16) : (isMobile ? 6 : 10),
+        justifyContent: !isLanding && isMobile ? 'space-between' : undefined,
       }}>
-        <div style={{ width: isLanding ? (isMobile ? 220 : 180) : (isMobile ? 100 : 150), transition: `width 0.7s ${EASE}` }}>
+        <div style={{ flex: !isLanding && isMobile ? '1 1 0' : undefined, width: isLanding ? (isMobile ? 220 : 180) : (isMobile ? undefined : 150), transition: `width 0.7s ${EASE}` }}>
           <label style={labelStyle} className="text-theme-text-secondary">Date</label>
           <CalendarPicker value={selectedDate} onChange={setSelectedDate} compact={!isLanding} />
         </div>
-        <div style={{ width: isLanding ? (isMobile ? 220 : 180) : (isMobile ? 100 : 150), transition: `width 0.7s ${EASE}` }}>
+        <div style={{ flex: !isLanding && isMobile ? '1 1 0' : undefined, width: isLanding ? (isMobile ? 220 : 180) : (isMobile ? undefined : 150), transition: `width 0.7s ${EASE}` }}>
           <label style={labelStyle} className="text-theme-text-secondary">Location</label>
           <LocationDropdown value={location} onChange={setLocation} availableLocations={availableLocations} compact={!isLanding} />
         </div>
-        <div style={{ width: isLanding ? (isMobile ? 220 : 180) : (isMobile ? 80 : 130), transition: `width 0.7s ${EASE}` }}>
+        <div style={{ flex: !isLanding && isMobile ? '1 1 0' : undefined, width: isLanding ? (isMobile ? 220 : 180) : (isMobile ? undefined : 130), transition: `width 0.7s ${EASE}` }}>
           <label style={labelStyle} className="text-theme-text-secondary">Meal Time</label>
           <select value={mealTime} onChange={(e) => setMealTime(e.target.value)}
             className="border border-theme-text-primary/30 bg-theme-bg-secondary text-theme-text-primary focus:border-theme-text-primary"
@@ -657,7 +659,7 @@ export default function Home() {
 
       {/* ── Header divider line ── */}
       <div style={{
-        position: 'fixed', top: isMobile ? 49 : 60, left: 0, right: 0, height: 1, zIndex: 15,
+        position: 'fixed', top: isMobile ? 68 : 60, left: 0, right: 0, height: 1, zIndex: 15,
         transition: `opacity 0.5s ${EASE}`,
         opacity: isLanding ? 0 : 0.1,
         background: 'currentColor',
@@ -666,7 +668,7 @@ export default function Home() {
       {/* ── Results table area ── */}
       <div ref={resultsRef}
         style={{
-          position: 'fixed', top: isMobile ? 50 : 61, left: 0, right: 0, bottom: 0, zIndex: 10,
+          position: 'fixed', top: isMobile ? 69 : 61, left: 0, right: 0, bottom: 0, zIndex: 10,
           overflowY: 'auto',
           willChange: 'opacity',
           transition: `opacity 0.5s ${EASE} ${isLanding ? '0s' : '0.2s'}, visibility 0s ${isLanding ? '0.5s' : '0s'}`,
@@ -768,14 +770,18 @@ export default function Home() {
           </table>
         </main>
 
-        <footer className="border-t border-theme-text-primary/5 px-4 sm:px-6 md:px-12 lg:px-20 py-4 sm:py-6 flex items-center justify-between">
-          <p className="text-xs text-theme-text-tertiary tracking-wide">
-            BoilerFuel &middot; Purdue Dining Data &middot; {new Date().getFullYear()}
-          </p>
-          <div className="flex gap-3 text-xs font-mono">
-            <Link href="/about" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">About</Link>
-            <Link href="/changelog" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Changelog</Link>
-            <Link href="/admin" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Admin</Link>
+        <footer className="border-t border-theme-text-primary/5 px-4 sm:px-6 md:px-12 lg:px-20 py-5 sm:py-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+            <p className="text-xs text-theme-text-tertiary tracking-wide text-center sm:text-left">
+              BoilerFuel &middot; Purdue Dining Data &middot; {new Date().getFullYear()}
+            </p>
+            <div className="flex gap-4 text-xs font-mono">
+              <Link href="/about" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">About</Link>
+              <span className="text-theme-text-tertiary/20">&middot;</span>
+              <Link href="/changelog" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Changelog</Link>
+              <span className="text-theme-text-tertiary/20">&middot;</span>
+              <Link href="/admin" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Admin</Link>
+            </div>
           </div>
         </footer>
       </div>
