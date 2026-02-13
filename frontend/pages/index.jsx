@@ -696,7 +696,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ── Header divider line ── */
+      {/* ── Header divider line ── */}
       <div style={{
         position: 'fixed', top: isMobile ? 82 : 52, left: 0, right: 0, height: 1, zIndex: 15,
         transition: `opacity 0.5s ${EASE}`,

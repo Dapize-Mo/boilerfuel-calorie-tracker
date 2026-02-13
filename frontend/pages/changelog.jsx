@@ -3,9 +3,47 @@ import Head from 'next/head';
 
 const VERSIONS = [
   {
+    version: '3.0.0',
+    date: 'February 13, 2026',
+    latest: true,
+    changes: [
+      { cat: 'Feature', items: [
+        'Animated landing-to-results transition with scroll and swipe navigation',
+        'Grouped location dropdown with dining courts, retail, and convenience categories',
+        'Custom black-and-white calendar date picker with inline month navigation',
+        'Hover-to-preview macro tooltips showing calories, protein, carbs, and fat',
+        'Sortable calorie column with ascending/descending toggle',
+        'Progressive rendering with chunked loading and "Show more" pagination',
+        'Station-grouped food tables with court headers for multi-location views',
+      ]},
+      { cat: 'UI', items: [
+        'Minimal brutalist monospace design language with theme support',
+        'GPU-composited title animation sliding from center to top-left',
+        'Responsive layout adapting filters, fonts, and positions for mobile',
+        'Profile icon and back arrow that appear contextually in results view',
+        'Consistent page styling across About, Profile, Changelog, and Admin pages',
+        'Light and dark mode toggle on Profile page',
+      ]},
+      { cat: 'Technical', items: [
+        'Enterprise security with Argon2 hashing, rate limiting, and input sanitization',
+        '40 backend tests with pytest (error classes + API endpoints)',
+        'Database optimization with 7 indexes, materialized views, and pg_trgm fuzzy search',
+        '10 custom React hooks (debounce, lazy load, intersection observer, and more)',
+        'PWA manifest with installable app support and home screen shortcuts',
+        'Vercel + Neon PostgreSQL deployment pipeline with auto-deploy on push',
+        'RAF-throttled tooltip tracking to prevent render storms',
+      ]},
+      { cat: 'Infrastructure', items: [
+        'Repository cleaned from 45+ root files down to 10 essential files',
+        'Organized tooling into tools/maintenance, migrations, scripts, and analysis',
+        'Comprehensive documentation: Architecture, Deployment, Contributing, and Quick Start',
+        'GitHub Actions workflow for scheduled menu scraping',
+      ]},
+    ],
+  },
+  {
     version: '2.0.0',
     date: 'February 12, 2026',
-    latest: true,
     changes: [
       { cat: 'Feature', items: [
         'Redesigned home page with animated landing to results transition',
