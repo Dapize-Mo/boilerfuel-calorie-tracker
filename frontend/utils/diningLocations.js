@@ -12,3 +12,19 @@ export const DINING_LOCATIONS = [
   { code: 'LWSN', api_name: 'Lawson On-the-GO!', display_name: 'Lawson On-the-GO!' },
   { code: 'WOTG', api_name: 'Windsor On-the-GO!', display_name: 'Windsor On-the-GO!' }
 ];
+
+// Location categories for grouped dropdown
+export const LOCATION_CATEGORIES = [
+  {
+    label: 'Dining Courts',
+    locations: ['Earhart', 'Ford', 'Hillenbrand', 'Wiley', 'Windsor'],
+  },
+  {
+    label: 'Quick Bites',
+    locations: ['1bowl at Meredith Hall', "Pete's Za at Tarkington Hall", 'Sushi Boss at Meredith Hall'],
+  },
+  {
+    label: 'On-the-GO!',
+    locations: ['Earhart On-the-GO!', 'Ford On-the-GO!', 'Lawson On-the-GO!', 'Windsor On-the-GO!'],
+  },
+];

@@ -17,8 +17,18 @@ export default async function handler(req, res) {
         conditions.push(`name ILIKE $${params.length}`);
       }
       if (dining_court) {
-        params.push(dining_court.toLowerCase());
-        conditions.push(`LOWER(dining_court) = $${params.length}`);
+        // Support comma-separated list for category selection
+        const courts = dining_court.split(',').map(c => c.trim().toLowerCase()).filter(Boolean);
+        if (courts.length === 1) {
+          params.push(courts[0]);
+          conditions.push(`LOWER(dining_court) = $${params.length}`);
+        } else if (courts.length > 1) {
+          const placeholders = courts.map((c, i) => {
+            params.push(c);
+            return `$${params.length}`;
+          });
+          conditions.push(`LOWER(dining_court) IN (${placeholders.join(', ')})`);
+        }
       }
       if (meal_time) {
         params.push(meal_time.toLowerCase());
