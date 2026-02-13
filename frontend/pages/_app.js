@@ -3,6 +3,7 @@ import Head from 'next/head';
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { ThemeProvider } from '../context/ThemeContext';
+import { MealProvider } from '../context/MealContext';
 import { SessionProvider } from "next-auth/react";
 
 const EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
@@ -69,6 +70,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
         />
       </Head>
       <ThemeProvider>
+        <MealProvider>
         {/* Page content with fade */}
         <div style={{
           opacity: displayChildren && !transitioning ? 1 : 0,
@@ -87,6 +89,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
             transition: `opacity 0.35s ${EASE}`,
           }}
         />
+        </MealProvider>
       </ThemeProvider>
     </SessionProvider>
   );

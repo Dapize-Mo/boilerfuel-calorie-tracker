@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { LOCATION_CATEGORIES } from '../utils/diningLocations';
+import { useMeals } from '../context/MealContext';
 
 const CHUNK_SIZE = 60; // items per render batch
 
@@ -230,6 +231,7 @@ function MacroTooltip({ food, pos }) {
 // ══════════════════════════════════════
 export default function Home() {
   const router = useRouter();
+  const { addMeal, removeMeal, getCount } = useMeals();
   // ── State ──
   const [location, setLocation] = useState({ type: 'all', value: 'All' });
   const [mealTime, setMealTime] = useState('All');
@@ -242,6 +244,7 @@ export default function Home() {
   const [calorieSort, setCalorieSort] = useState(null); // null | 'asc' | 'desc'
   const [hoveredFood, setHoveredFood] = useState(null);
   const [tooltipPos, setTooltipPos] = useState(null);
+  const [expandedId, setExpandedId] = useState(null);
 
   const mealTimes = ['All', 'Breakfast', 'Lunch', 'Dinner'];
   const isLanding = view === 'landing';
@@ -782,20 +785,97 @@ export default function Home() {
                   // Food row
                   const food = item.food;
                   const ri = rowIndex++;
+                  const isExpanded = expandedId === food.id;
+                  const count = getCount(food.id);
+                  const macros = food.macros || {};
                   return (
                     <tr key={food.id}
-                      className="border-b border-theme-text-primary/5 hover:bg-theme-bg-secondary/50 transition-colors group cursor-default"
-                      style={ri < 20 ? { animation: `fadeInRow 0.3s ${EASE} ${Math.min(ri * 0.02, 0.3)}s both` } : undefined}
-                      onMouseEnter={(e) => onFoodMouseEnter(food, e)}
-                      onMouseMove={onFoodMouseMove}
-                      onMouseLeave={onFoodMouseLeave}>
-                      <td className="py-3 pr-4">
-                        <span className="group-hover:text-theme-text-primary transition-colors">{food.name}</span>
-                        <span className="block sm:hidden text-xs text-theme-text-tertiary capitalize mt-0.5">{food.dining_court} &middot; {food.meal_time}</span>
+                      className="border-b border-theme-text-primary/5 transition-colors group"
+                      style={ri < 20 ? { animation: `fadeInRow 0.3s ${EASE} ${Math.min(ri * 0.02, 0.3)}s both` } : undefined}>
+                      <td colSpan={4} className="p-0">
+                        {/* Clickable summary row */}
+                        <div className="flex items-center cursor-pointer hover:bg-theme-bg-secondary/50 transition-colors"
+                          onClick={() => setExpandedId(isExpanded ? null : food.id)}>
+                          <div className="py-3 pr-4 flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"
+                                className="shrink-0 text-theme-text-tertiary transition-transform duration-200"
+                                style={{ transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}>
+                                <polyline points="9 6 15 12 9 18" />
+                              </svg>
+                              <span className="group-hover:text-theme-text-primary transition-colors truncate">{food.name}</span>
+                              {count > 0 && (
+                                <span className="shrink-0 text-[10px] font-bold bg-theme-text-primary text-theme-bg-primary px-1.5 py-0.5 tabular-nums">
+                                  {count}
+                                </span>
+                              )}
+                            </div>
+                            <span className="block sm:hidden text-xs text-theme-text-tertiary capitalize mt-0.5 pl-[18px]">{food.dining_court} &middot; {food.meal_time}</span>
+                          </div>
+                          <div className="py-3 px-4 text-theme-text-secondary capitalize hidden sm:block w-36 shrink-0">{food.dining_court}</div>
+                          <div className="py-3 px-4 text-theme-text-tertiary capitalize hidden md:block w-28 shrink-0">{food.meal_time}</div>
+                          <div className="py-3 pl-4 text-right font-mono tabular-nums text-theme-text-secondary w-16 shrink-0">{food.calories}</div>
+                        </div>
+
+                        {/* Expanded detail panel */}
+                        {isExpanded && (
+                          <div className="border-t border-theme-text-primary/10 bg-theme-bg-secondary/30"
+                            style={{ animation: `fadeInRow 0.2s ${EASE} both` }}>
+                            <div className="px-4 sm:px-6 py-4 flex flex-col sm:flex-row gap-4 sm:items-start">
+                              {/* Nutrition grid */}
+                              <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                <div className="border border-theme-text-primary/10 px-3 py-2">
+                                  <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary">Calories</div>
+                                  <div className="text-lg font-bold tabular-nums">{food.calories}</div>
+                                </div>
+                                <div className="border border-theme-text-primary/10 px-3 py-2">
+                                  <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary">Protein</div>
+                                  <div className="text-lg font-bold tabular-nums">{macros.protein ?? '—'}<span className="text-xs text-theme-text-tertiary">g</span></div>
+                                </div>
+                                <div className="border border-theme-text-primary/10 px-3 py-2">
+                                  <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary">Carbs</div>
+                                  <div className="text-lg font-bold tabular-nums">{macros.carbs ?? '—'}<span className="text-xs text-theme-text-tertiary">g</span></div>
+                                </div>
+                                <div className="border border-theme-text-primary/10 px-3 py-2">
+                                  <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary">Fat</div>
+                                  <div className="text-lg font-bold tabular-nums">{macros.fats ?? macros.fat ?? '—'}<span className="text-xs text-theme-text-tertiary">g</span></div>
+                                </div>
+                              </div>
+
+                              {/* Add / Remove buttons */}
+                              <div className="flex items-center gap-2 sm:flex-col sm:gap-1 shrink-0">
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); addMeal(food); }}
+                                  className="flex items-center gap-1.5 px-3 py-1.5 border border-theme-text-primary text-theme-text-primary text-xs uppercase tracking-wider font-bold hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors"
+                                  title="Add to today's log">
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                                  Add
+                                </button>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); removeMeal(food); }}
+                                  disabled={count === 0}
+                                  className={`flex items-center gap-1.5 px-3 py-1.5 border text-xs uppercase tracking-wider font-bold transition-colors ${
+                                    count > 0
+                                      ? 'border-theme-text-primary/50 text-theme-text-secondary hover:bg-theme-text-primary hover:text-theme-bg-primary'
+                                      : 'border-theme-text-primary/10 text-theme-text-tertiary/40 cursor-not-allowed'
+                                  }`}
+                                  title="Remove from today's log">
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                                  Remove
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Extra info row */}
+                            <div className="px-4 sm:px-6 pb-3 flex flex-wrap gap-x-6 gap-y-1 text-xs text-theme-text-tertiary">
+                              {food.station && <span>Station: <span className="text-theme-text-secondary">{food.station}</span></span>}
+                              {food.dining_court && <span>Location: <span className="text-theme-text-secondary capitalize">{food.dining_court}</span></span>}
+                              {food.meal_time && <span>Meal: <span className="text-theme-text-secondary capitalize">{food.meal_time}</span></span>}
+                              {food.serving_size && <span>Serving: <span className="text-theme-text-secondary">{food.serving_size}</span></span>}
+                            </div>
+                          </div>
+                        )}
                       </td>
-                      <td className="py-3 px-4 text-theme-text-secondary capitalize hidden sm:table-cell">{food.dining_court}</td>
-                      <td className="py-3 px-4 text-theme-text-tertiary capitalize hidden md:table-cell">{food.meal_time}</td>
-                      <td className="py-3 pl-4 text-right font-mono tabular-nums text-theme-text-secondary">{food.calories}</td>
                     </tr>
                   );
                 })}
