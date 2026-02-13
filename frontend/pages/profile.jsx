@@ -1,12 +1,9 @@
-import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useTheme } from '../context/ThemeContext';
 
 export default function ProfilePage() {
   const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
 
   return (
     <>
@@ -15,13 +12,7 @@ export default function ProfilePage() {
         <meta name="description" content="BoilerFuel preferences" />
       </Head>
 
-      <div
-        className="min-h-screen bg-theme-bg-primary text-theme-text-primary font-mono"
-        style={{
-          opacity: mounted ? 1 : 0,
-          transition: 'opacity 0.4s cubic-bezier(0.22, 1, 0.36, 1)',
-        }}
-      >
+      <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary font-mono">
         <div className="max-w-3xl mx-auto px-6 sm:px-10 py-16 sm:py-24 space-y-16">
 
           {/* Header */}

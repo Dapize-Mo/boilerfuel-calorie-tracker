@@ -233,7 +233,6 @@ export default function Home() {
   // ── State ──
   const [location, setLocation] = useState({ type: 'all', value: 'All' });
   const [mealTime, setMealTime] = useState('All');
-  const [profileTransition, setProfileTransition] = useState(false);
   const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [foods, setFoods] = useState([]);
   const [availableLocations, setAvailableLocations] = useState([]);
@@ -674,9 +673,8 @@ export default function Home() {
       {/* ── Profile icon — in the title bar, right-aligned ── */}
       <div
         onClick={() => {
-          if (profileTransition || isLanding) return;
-          setProfileTransition(true);
-          setTimeout(() => router.push('/profile'), 450);
+          if (isLanding) return;
+          router.push('/profile');
         }}
         title="Profile"
         className="group cursor-pointer"
@@ -698,18 +696,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ── Profile transition overlay ── */}
-      <div
-        style={{
-          position: 'fixed', inset: 0, zIndex: 9999,
-          pointerEvents: profileTransition ? 'auto' : 'none',
-          background: 'rgb(var(--color-bg-primary))',
-          opacity: profileTransition ? 1 : 0,
-          transition: `opacity 0.4s ${EASE}`,
-        }}
-      />
-
-      {/* ── Header divider line ── */}
+      {/* ── Header divider line ── */
       <div style={{
         position: 'fixed', top: isMobile ? 82 : 52, left: 0, right: 0, height: 1, zIndex: 15,
         transition: `opacity 0.5s ${EASE}`,
