@@ -126,9 +126,10 @@ export default function Home() {
   const [locations, setLocations] = useState(['All']);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [view, setView] = useState('landing'); // 'landing' | 'results'
+  const [view, setView] = useState('landing');
 
   const mealTimes = ['All', 'Breakfast', 'Lunch', 'Dinner'];
+  const isLanding = view === 'landing';
 
   useEffect(() => {
     fetch('/api/dining-courts')
@@ -167,7 +168,6 @@ export default function Home() {
     setView('landing');
   }
 
-  // Re-fetch when filters change while viewing results
   useEffect(() => {
     if (view === 'results') fetchFoods();
   }, [view, fetchFoods]);
@@ -176,109 +176,173 @@ export default function Home() {
   const dateObj = selectedDate ? new Date(selectedDate + 'T00:00:00') : new Date();
   const dateLabel = `${monthNames[dateObj.getMonth()]} ${dateObj.getDate()}, ${dateObj.getFullYear()}`;
 
+  // Shared animation curve
+  const ease = 'cubic-bezier(0.4, 0, 0.2, 1)';
+
+  // Label style — collapses height + fades when leaving landing
+  const labelStyle = {
+    display: 'block', fontWeight: 'bold', textTransform: 'uppercase',
+    fontSize: '0.7rem', letterSpacing: '0.05em', textAlign: 'center',
+    transition: `opacity 0.3s ease, max-height 0.4s ease, margin-bottom 0.4s ease`,
+    opacity: isLanding ? 0.6 : 0,
+    maxHeight: isLanding ? 20 : 0,
+    marginBottom: isLanding ? 6 : 0,
+    overflow: 'hidden',
+  };
+
+  // Select style — padding/font shrink for header mode
+  const selectStyle = {
+    width: '100%', fontFamily: 'inherit', outline: 'none',
+    transition: `padding 0.5s ${ease}, font-size 0.5s ${ease}`,
+    padding: isLanding ? 8 : 6,
+    fontSize: isLanding ? '1rem' : '0.875rem',
+  };
+
   return (
-    <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary font-mono relative">
+    <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary font-mono"
+         style={{ position: 'relative', overflow: 'hidden' }}>
       <Head>
         <title>BoilerFuel - Dining Menu</title>
       </Head>
 
-      {/* ═══ LANDING PAGE ═══ */}
-      <div
-        className="absolute inset-0 flex flex-col items-center justify-center px-6"
+      {/* ── Back arrow ── */}
+      <button
+        onClick={handleBack}
+        className="text-theme-text-tertiary hover:text-theme-text-primary"
         style={{
-          transition: 'opacity 0.6s ease, transform 0.6s ease',
-          opacity: view === 'landing' ? 1 : 0,
-          transform: view === 'landing' ? 'translateY(0) scale(1)' : 'translateY(-30px) scale(1.04)',
-          zIndex: view === 'landing' ? 10 : 0,
-          pointerEvents: view === 'landing' ? 'auto' : 'none',
+          position: 'fixed', top: 18, left: 24, zIndex: 30,
+          transition: 'opacity 0.3s ease',
+          opacity: isLanding ? 0 : 1,
+          pointerEvents: isLanding ? 'none' : 'auto',
+          background: 'none', border: 'none', cursor: 'pointer', padding: 4,
+        }}
+        title="Back"
+      >
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" />
+        </svg>
+      </button>
+
+      {/* ── Title — slides from center to top-left ── */}
+      <h1
+        className="font-bold uppercase"
+        style={{
+          position: 'fixed', zIndex: 20, whiteSpace: 'nowrap', lineHeight: 1.1,
+          transition: `top 0.7s ${ease}, left 0.7s ${ease}, transform 0.7s ${ease}, font-size 0.7s ${ease}, letter-spacing 0.7s ${ease}`,
+          top: isLanding ? '35vh' : 18,
+          left: isLanding ? '50%' : 64,
+          transform: isLanding ? 'translateX(-50%)' : 'translateX(0)',
+          fontSize: isLanding ? 'clamp(2rem, 5vw, 3.5rem)' : '1.25rem',
+          letterSpacing: isLanding ? '0.25em' : '0.15em',
         }}
       >
-        <div className="text-center mb-12">
-          <h1 className="text-5xl md:text-7xl font-bold uppercase tracking-[0.25em] mb-3">
-            BoilerFuel
-          </h1>
-          <p className="text-theme-text-tertiary text-sm tracking-[0.15em] uppercase">
-            Purdue Dining Court Menus
-          </p>
+        BoilerFuel
+      </h1>
+
+      {/* ── Subtitle — fades out ── */}
+      <p
+        className="text-theme-text-tertiary"
+        style={{
+          position: 'fixed', zIndex: 20,
+          top: 'calc(35vh + clamp(2.5rem, 5.5vw, 4rem))',
+          left: '50%', transform: 'translateX(-50%)',
+          transition: 'opacity 0.3s ease',
+          opacity: isLanding ? 1 : 0,
+          pointerEvents: 'none',
+          fontSize: '0.875rem', letterSpacing: '0.15em', textTransform: 'uppercase',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        Purdue Dining Court Menus
+      </p>
+
+      {/* ── Filters — slide from center to top-right ── */}
+      <div style={{
+        position: 'fixed', zIndex: 20,
+        display: 'flex', alignItems: 'flex-end',
+        transition: `top 0.7s ${ease}, right 0.7s ${ease}, transform 0.7s ${ease}, gap 0.5s ${ease}`,
+        top: isLanding ? '50vh' : 13,
+        right: isLanding ? '50%' : 24,
+        transform: isLanding ? 'translateX(50%)' : 'translateX(0)',
+        gap: isLanding ? 16 : 10,
+      }}>
+        <div style={{ width: isLanding ? 180 : 140, transition: `width 0.6s ${ease}` }}>
+          <label style={labelStyle} className="text-theme-text-secondary">Date</label>
+          <CalendarPicker value={selectedDate} onChange={setSelectedDate} />
         </div>
-
-        <div className="w-full max-w-3xl grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-          <div>
-            <label className="block mb-1.5 font-bold uppercase text-xs tracking-wider text-theme-text-secondary text-center">Date</label>
-            <CalendarPicker value={selectedDate} onChange={setSelectedDate} />
-          </div>
-          <div>
-            <label className="block mb-1.5 font-bold uppercase text-xs tracking-wider text-theme-text-secondary text-center">Location</label>
-            <select value={location} onChange={(e) => setLocation(e.target.value)}
-              className="w-full p-2 border border-theme-text-primary/30 bg-theme-bg-secondary text-theme-text-primary focus:border-theme-text-primary outline-none transition-colors">
-              {locations.map(l => <option key={l} value={l}>{l}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="block mb-1.5 font-bold uppercase text-xs tracking-wider text-theme-text-secondary text-center">Meal Time</label>
-            <select value={mealTime} onChange={(e) => setMealTime(e.target.value)}
-              className="w-full p-2 border border-theme-text-primary/30 bg-theme-bg-secondary text-theme-text-primary focus:border-theme-text-primary outline-none transition-colors">
-              {mealTimes.map(m => <option key={m} value={m}>{m}</option>)}
-            </select>
-          </div>
+        <div style={{ width: isLanding ? 180 : 130, transition: `width 0.6s ${ease}` }}>
+          <label style={labelStyle} className="text-theme-text-secondary">Location</label>
+          <select value={location} onChange={(e) => setLocation(e.target.value)}
+            className="border border-theme-text-primary/30 bg-theme-bg-secondary text-theme-text-primary focus:border-theme-text-primary"
+            style={selectStyle}>
+            {locations.map(l => <option key={l} value={l}>{l}</option>)}
+          </select>
         </div>
+        <div style={{ width: isLanding ? 180 : 130, transition: `width 0.6s ${ease}` }}>
+          <label style={labelStyle} className="text-theme-text-secondary">Meal Time</label>
+          <select value={mealTime} onChange={(e) => setMealTime(e.target.value)}
+            className="border border-theme-text-primary/30 bg-theme-bg-secondary text-theme-text-primary focus:border-theme-text-primary"
+            style={selectStyle}>
+            {mealTimes.map(m => <option key={m} value={m}>{m}</option>)}
+          </select>
+        </div>
+      </div>
 
-        <button onClick={handleViewMenu}
-          className="px-10 py-3 border-2 border-theme-text-primary text-theme-text-primary font-bold uppercase tracking-[0.2em] text-sm hover:bg-theme-text-primary hover:text-theme-bg-primary transition-all duration-200">
-          View Menu
-        </button>
+      {/* ── View Menu button — fades out ── */}
+      <button
+        onClick={handleViewMenu}
+        className="border-2 border-theme-text-primary text-theme-text-primary font-bold uppercase hover:bg-theme-text-primary hover:text-theme-bg-primary"
+        style={{
+          position: 'fixed', zIndex: 20,
+          top: '64vh', left: '50%', transform: 'translateX(-50%)',
+          transition: 'opacity 0.35s ease',
+          opacity: isLanding ? 1 : 0,
+          pointerEvents: isLanding ? 'auto' : 'none',
+          padding: '12px 40px',
+          letterSpacing: '0.2em', fontSize: '0.875rem',
+          background: 'transparent', cursor: 'pointer',
+        }}
+      >
+        View Menu
+      </button>
 
-        <Link href="/admin" className="mt-24 text-xs uppercase tracking-widest text-theme-text-tertiary/30 hover:text-theme-text-tertiary transition-colors">
+      {/* ── Admin link — fades out ── */}
+      <div style={{
+        position: 'fixed', zIndex: 20,
+        top: '78vh', left: '50%', transform: 'translateX(-50%)',
+        transition: 'opacity 0.3s ease',
+        opacity: isLanding ? 0.25 : 0,
+        pointerEvents: isLanding ? 'auto' : 'none',
+      }}>
+        <Link href="/admin" className="text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary"
+          style={{ transition: 'color 0.2s' }}>
           Admin
         </Link>
       </div>
 
-      {/* ═══ RESULTS PAGE ═══ */}
-      <div
-        className="absolute inset-0 flex flex-col overflow-y-auto"
-        style={{
-          transition: 'opacity 0.6s ease, transform 0.6s ease',
-          opacity: view === 'results' ? 1 : 0,
-          transform: view === 'results' ? 'translateY(0)' : 'translateY(40px)',
-          zIndex: view === 'results' ? 10 : 0,
-          pointerEvents: view === 'results' ? 'auto' : 'none',
-        }}
-      >
-        {/* ── Top bar: back + title on left, filters on right ── */}
-        <header className="border-b border-theme-text-primary/10 px-6 md:px-12 lg:px-20 py-4">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-4 shrink-0">
-              <button onClick={handleBack} className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors" title="Back">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" />
-                </svg>
-              </button>
-              <h1 className="text-xl font-bold uppercase tracking-[0.15em]">BoilerFuel</h1>
-            </div>
+      {/* ── Header divider line ── */}
+      <div style={{
+        position: 'fixed', top: 60, left: 0, right: 0, height: 1, zIndex: 15,
+        transition: 'opacity 0.4s ease',
+        opacity: isLanding ? 0 : 0.1,
+        background: 'currentColor',
+      }} />
 
-            <div className="flex items-center gap-3 flex-wrap justify-end">
-              <div className="w-40">
-                <CalendarPicker value={selectedDate} onChange={setSelectedDate} />
-              </div>
-              <select value={location} onChange={(e) => setLocation(e.target.value)}
-                className="p-1.5 border border-theme-text-primary/20 bg-theme-bg-secondary text-theme-text-primary text-sm focus:border-theme-text-primary outline-none">
-                {locations.map(l => <option key={l} value={l}>{l}</option>)}
-              </select>
-              <select value={mealTime} onChange={(e) => setMealTime(e.target.value)}
-                className="p-1.5 border border-theme-text-primary/20 bg-theme-bg-secondary text-theme-text-primary text-sm focus:border-theme-text-primary outline-none">
-                {mealTimes.map(m => <option key={m} value={m}>{m}</option>)}
-              </select>
-            </div>
-          </div>
-        </header>
-
-        {/* ── Table ── */}
-        <main className="flex-1 px-6 md:px-12 lg:px-20 py-8">
+      {/* ── Results table area — slides up + fades in ── */}
+      <div style={{
+        position: 'fixed', top: 61, left: 0, right: 0, bottom: 0, zIndex: 10,
+        overflowY: 'auto',
+        transition: `opacity 0.5s ease ${isLanding ? '0s' : '0.15s'}, transform 0.5s ease ${isLanding ? '0s' : '0.15s'}`,
+        opacity: isLanding ? 0 : 1,
+        transform: isLanding ? 'translateY(30px)' : 'translateY(0)',
+        pointerEvents: isLanding ? 'none' : 'auto',
+      }}>
+        <main className="px-6 md:px-12 lg:px-20 py-8">
           {error && (
             <div className="mb-6 p-4 border border-red-500/50 text-red-400 text-sm">{error}</div>
           )}
 
-          {!loading && view === 'results' && (
+          {!loading && !isLanding && (
             <div className="flex items-center justify-between mb-4 pb-3 border-b border-theme-text-primary/10">
               <span className="text-xs uppercase tracking-widest text-theme-text-tertiary">
                 {foods.length} item{foods.length !== 1 ? 's' : ''}
@@ -330,7 +394,7 @@ export default function Home() {
           </table>
         </main>
 
-        <footer className="border-t border-theme-text-primary/5 px-6 md:px-12 lg:px-20 py-6 mt-auto">
+        <footer className="border-t border-theme-text-primary/5 px-6 md:px-12 lg:px-20 py-6">
           <p className="text-xs text-theme-text-tertiary tracking-wide">
             BoilerFuel &middot; Purdue Dining Data &middot; {new Date().getFullYear()}
           </p>
