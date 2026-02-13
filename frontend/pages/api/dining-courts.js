@@ -9,12 +9,20 @@ export default async function handler(req, res) {
   try {
     await ensureSchema();
     const mealTime = (req.query.meal_time || '').trim();
+    const date = (req.query.date || '').trim();
 
-    let sql = 'SELECT DISTINCT dining_court FROM foods WHERE dining_court IS NOT NULL';
+    // When a date is provided, pull courts from menu_snapshots (date-specific)
+    const table = date ? 'menu_snapshots' : 'foods';
+    let sql = `SELECT DISTINCT dining_court FROM ${table} WHERE dining_court IS NOT NULL`;
     const params = [];
+
+    if (date) {
+      params.push(date);
+      sql += ` AND menu_date = $${params.length}`;
+    }
     if (mealTime) {
-      sql += ' AND LOWER(meal_time) = $1';
       params.push(mealTime.toLowerCase());
+      sql += ` AND LOWER(meal_time) = $${params.length}`;
     }
     sql += ' ORDER BY dining_court';
 

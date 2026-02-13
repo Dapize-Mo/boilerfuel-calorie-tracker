@@ -271,6 +271,7 @@ export default function Home() {
         params.set('dining_court', location.locations.join(','));
       }
       if (mealTime !== 'All') params.set('meal_time', mealTime);
+      if (selectedDate) params.set('date', selectedDate);
       const res = await fetch(`/api/foods?${params.toString()}`);
       if (!res.ok) throw new Error(`Server error ${res.status}`);
       const data = await res.json();
@@ -281,7 +282,7 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  }, [location, mealTime]);
+  }, [location, mealTime, selectedDate]);
 
   // ── Transition helpers ──
   function startTransition(nextView) {
