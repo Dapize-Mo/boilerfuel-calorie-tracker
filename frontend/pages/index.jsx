@@ -3,7 +3,7 @@ import Link from 'next/link';
 import Head from 'next/head';
 
 // ── Custom black & white calendar picker ──
-function CalendarPicker({ value, onChange }) {
+function CalendarPicker({ value, onChange, compact = false }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   const current = value ? new Date(value + 'T00:00:00') : new Date();
@@ -53,10 +53,14 @@ function CalendarPicker({ value, onChange }) {
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
-        className="w-full p-2 border border-theme-text-primary bg-theme-bg-secondary text-theme-text-primary text-left font-mono flex items-center justify-between hover:bg-theme-bg-hover transition-colors"
+        className={`w-full border bg-theme-bg-secondary text-theme-text-primary text-left font-mono flex items-center justify-between hover:bg-theme-bg-hover transition-all ${
+          compact
+            ? 'px-2 py-1.5 border-theme-text-primary/30 text-sm gap-2'
+            : 'p-2 border-theme-text-primary gap-3'
+        }`}
       >
-        <span>{displayDate}</span>
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="opacity-60">
+        <span className="whitespace-nowrap">{displayDate}</span>
+        <svg width={compact ? 14 : 18} height={compact ? 14 : 18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="opacity-60 shrink-0">
           <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
           <line x1="16" y1="2" x2="16" y2="6" />
           <line x1="8" y1="2" x2="8" y2="6" />
@@ -266,9 +270,9 @@ export default function Home() {
         transform: isLanding ? 'translateX(50%)' : 'translateX(0)',
         gap: isLanding ? 16 : 10,
       }}>
-        <div style={{ width: isLanding ? 180 : 140, transition: `width 0.6s ${ease}` }}>
+        <div style={{ width: isLanding ? 180 : 150, transition: `width 0.6s ${ease}` }}>
           <label style={labelStyle} className="text-theme-text-secondary">Date</label>
-          <CalendarPicker value={selectedDate} onChange={setSelectedDate} />
+          <CalendarPicker value={selectedDate} onChange={setSelectedDate} compact={!isLanding} />
         </div>
         <div style={{ width: isLanding ? 180 : 130, transition: `width 0.6s ${ease}` }}>
           <label style={labelStyle} className="text-theme-text-secondary">Location</label>
