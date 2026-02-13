@@ -300,6 +300,8 @@ export default function Home() {
 
   function handleBack() {
     if (resultsRef.current) resultsRef.current.scrollTop = 0;
+    setHoveredFood(null);
+    setTooltipPos(null);
     startTransition('landing');
   }
 
@@ -738,8 +740,8 @@ export default function Home() {
         </footer>
       </div>
 
-      {/* ── Macro tooltip ── */}
-      <MacroTooltip food={hoveredFood} pos={tooltipPos} />
+      {/* ── Macro tooltip (results view only) ── */}
+      {!isLanding && <MacroTooltip food={hoveredFood} pos={tooltipPos} />}
     </div>
   );
 }
