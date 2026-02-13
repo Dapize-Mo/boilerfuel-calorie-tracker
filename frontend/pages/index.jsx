@@ -247,6 +247,7 @@ export default function Home() {
   const [expandedId, setExpandedId] = useState(null);
   const [mealPickerFood, setMealPickerFood] = useState(null); // food waiting for meal selection
   const [mealPickerOptions, setMealPickerOptions] = useState(null); // restricted options for compound meal times
+  const [infoFood, setInfoFood] = useState(null); // food for the ingredients/info modal
 
   const mealTimes = ['All', 'Breakfast', 'Lunch', 'Dinner'];
   const isLanding = view === 'landing';
@@ -830,6 +831,18 @@ export default function Home() {
                                 <polyline points="9 6 15 12 9 18" />
                               </svg>
                               <span className="group-hover:text-theme-text-primary transition-colors truncate">{food.name}</span>
+                              {/* Dietary tag icons */}
+                              {macros.is_vegetarian && (
+                                <span className="shrink-0 text-[9px] font-bold border border-green-500/60 text-green-500 px-1 py-0 rounded-sm leading-tight" title="Vegetarian">VG</span>
+                              )}
+                              {macros.is_vegan && (
+                                <span className="shrink-0 text-[9px] font-bold border border-emerald-400/60 text-emerald-400 px-1 py-0 rounded-sm leading-tight" title="Vegan">V</span>
+                              )}
+                              {macros.allergens && macros.allergens.length > 0 && (
+                                <span className="shrink-0 text-[9px] text-theme-text-tertiary/60 hidden sm:inline" title={macros.allergens.join(', ')}>
+                                  {macros.allergens.slice(0, 3).map(a => a.replace('Tree Nuts', 'Nuts').replace('Shellfish', 'Shell')).join(' · ')}{macros.allergens.length > 3 ? ' …' : ''}
+                                </span>
+                              )}
                               {count > 0 && (
                                 <span className="shrink-0 text-[10px] font-bold bg-theme-text-primary text-theme-bg-primary px-1.5 py-0.5 tabular-nums">
                                   {count}
@@ -869,14 +882,14 @@ export default function Home() {
                                   </div>
                                 </div>
                                 {/* Additional nutrition details */}
-                                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 text-center">
+                                <div className="grid grid-cols-3 sm:grid-cols-7 gap-2 text-center">
                                   {[
                                     { label: 'Saturated Fat', val: macros.saturated_fat },
-                                    { label: 'Trans Fat', val: macros.trans_fat },
                                     { label: 'Cholesterol', val: macros.cholesterol, unit: 'mg' },
                                     { label: 'Sodium', val: macros.sodium, unit: 'mg' },
                                     { label: 'Fiber', val: macros.fiber },
                                     { label: 'Sugar', val: macros.sugar },
+                                    { label: 'Added Sugar', val: macros.added_sugar },
                                   ].map(n => (
                                     <div key={n.label} className="border border-theme-text-primary/5 px-2 py-1.5">
                                       <div className="text-[9px] uppercase tracking-wider text-theme-text-tertiary/70 leading-tight">{n.label}</div>
@@ -886,7 +899,32 @@ export default function Home() {
                                       </div>
                                     </div>
                                   ))}
+                                  {/* Info button inline */}
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); setInfoFood(food); }}
+                                    className="border border-theme-text-primary/5 px-2 py-1.5 hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors cursor-pointer flex flex-col items-center justify-center"
+                                    title="View ingredients & details">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mb-0.5">
+                                      <circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" />
+                                    </svg>
+                                    <div className="text-[9px] uppercase tracking-wider leading-tight">Info</div>
+                                  </button>
                                 </div>
+
+                                {/* Dietary tags */}
+                                {(macros.is_vegetarian || macros.is_vegan || (macros.allergens && macros.allergens.length > 0)) && (
+                                  <div className="flex flex-wrap gap-1.5 mt-3">
+                                    {macros.is_vegan && (
+                                      <span className="text-[10px] font-bold border border-emerald-400/50 text-emerald-400 px-2 py-0.5 rounded-sm">Vegan</span>
+                                    )}
+                                    {macros.is_vegetarian && !macros.is_vegan && (
+                                      <span className="text-[10px] font-bold border border-green-500/50 text-green-500 px-2 py-0.5 rounded-sm">Vegetarian</span>
+                                    )}
+                                    {macros.allergens && macros.allergens.map(a => (
+                                      <span key={a} className="text-[10px] border border-theme-text-tertiary/20 text-theme-text-tertiary px-2 py-0.5 rounded-sm">{a}</span>
+                                    ))}
+                                  </div>
+                                )}
                               </div>
 
                               {/* Add / Remove buttons — equal width */}
@@ -1004,6 +1042,101 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      {/* ── Food info / ingredients modal ── */}
+      {infoFood && (() => {
+        const im = infoFood.macros || {};
+        return (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center"
+            onClick={() => setInfoFood(null)}>
+            <div className="absolute inset-0 bg-black/50" />
+            <div className="relative bg-theme-bg-primary border border-theme-text-primary shadow-2xl max-w-lg w-full mx-4 max-h-[80vh] flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+              style={{ animation: `fadeInTooltip 0.15s ${EASE} both` }}>
+              {/* Header */}
+              <div className="px-5 py-4 border-b border-theme-text-primary/20 shrink-0">
+                <div className="text-xs uppercase tracking-widest text-theme-text-tertiary mb-1">Nutrition Facts</div>
+                <div className="font-bold text-base">{infoFood.name}</div>
+                {im.serving_size && (
+                  <div className="text-xs text-theme-text-tertiary mt-0.5">Serving Size: {im.serving_size}</div>
+                )}
+              </div>
+
+              {/* Scrollable body */}
+              <div className="overflow-y-auto flex-1 px-5 py-4">
+                {/* Nutrition table */}
+                <div className="border-t-[8px] border-theme-text-primary mb-1">
+                  <div className="flex justify-between py-1 border-b border-theme-text-primary/10 font-bold text-sm">
+                    <span>Calories</span>
+                    <span className="tabular-nums">{infoFood.calories}</span>
+                  </div>
+                  <div className="text-[10px] text-right text-theme-text-tertiary py-0.5 border-b border-theme-text-primary/5">% Daily Value*</div>
+                  {[
+                    { label: 'Total Fat', val: im.fats ?? im.fat, unit: 'g' },
+                    { label: '  Saturated Fat', val: im.saturated_fat, unit: 'g', indent: true },
+                    { label: 'Cholesterol', val: im.cholesterol, unit: 'mg' },
+                    { label: 'Sodium', val: im.sodium, unit: 'mg' },
+                    { label: 'Total Carbohydrate', val: im.carbs, unit: 'g' },
+                    { label: '  Dietary Fiber', val: im.fiber, unit: 'g', indent: true },
+                    { label: '  Sugar', val: im.sugar, unit: 'g', indent: true },
+                    { label: '  Added Sugar', val: im.added_sugar, unit: 'g', indent: true },
+                    { label: 'Protein', val: im.protein, unit: 'g' },
+                  ].map(n => (
+                    <div key={n.label} className={`flex justify-between py-0.5 border-b border-theme-text-primary/5 text-sm ${n.indent ? 'pl-4 text-theme-text-secondary' : 'font-bold'}`}>
+                      <span>{n.label.trim()}</span>
+                      <span className="tabular-nums">{n.val != null ? `${Number(n.val).toFixed(1)}${n.unit}` : '—'}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="text-[10px] text-theme-text-tertiary mt-1 mb-4">
+                  * Percent Daily Values are based on a 2,000 calorie diet.
+                </div>
+
+                {/* Dietary tags */}
+                {(im.is_vegetarian || im.is_vegan || (im.allergens && im.allergens.length > 0)) && (
+                  <div className="mb-4">
+                    <div className="text-xs uppercase tracking-widest text-theme-text-tertiary mb-2">Dietary Tags</div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {im.is_vegan && (
+                        <span className="text-[11px] font-bold border border-emerald-400/50 text-emerald-400 px-2 py-0.5 rounded-sm">Vegan</span>
+                      )}
+                      {im.is_vegetarian && (
+                        <span className="text-[11px] font-bold border border-green-500/50 text-green-500 px-2 py-0.5 rounded-sm">Vegetarian</span>
+                      )}
+                      {im.allergens && im.allergens.map(a => (
+                        <span key={a} className="text-[11px] border border-amber-500/30 text-amber-500/80 px-2 py-0.5 rounded-sm">{a}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Ingredients */}
+                {im.ingredients && (
+                  <div>
+                    <div className="text-xs uppercase tracking-widest text-theme-text-tertiary mb-2">Ingredients</div>
+                    <p className="text-sm text-theme-text-secondary leading-relaxed">{im.ingredients}</p>
+                  </div>
+                )}
+
+                {/* Location info */}
+                <div className="mt-4 pt-3 border-t border-theme-text-primary/10 flex flex-wrap gap-x-4 gap-y-1 text-xs text-theme-text-tertiary">
+                  {infoFood.dining_court && <span>Location: <span className="text-theme-text-secondary capitalize">{infoFood.dining_court}</span></span>}
+                  {infoFood.station && <span>Station: <span className="text-theme-text-secondary">{infoFood.station}</span></span>}
+                  {infoFood.meal_time && <span>Meal: <span className="text-theme-text-secondary capitalize">{infoFood.meal_time}</span></span>}
+                </div>
+              </div>
+
+              {/* Close button */}
+              <div className="px-5 py-3 border-t border-theme-text-primary/10 shrink-0">
+                <button onClick={() => setInfoFood(null)}
+                  className="w-full text-center text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors py-1">
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
     </div>
   );

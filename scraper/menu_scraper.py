@@ -57,7 +57,17 @@ def get_nutrition_cache(database_url=None):
                 'protein': macros_dict.get('protein', 0.0),
                 'carbs': macros_dict.get('carbs', 0.0),
                 'fats': macros_dict.get('fats', 0.0),
-                'serving_size': macros_dict.get('serving_size', '1 serving')
+                'serving_size': macros_dict.get('serving_size', '1 serving'),
+                'saturated_fat': macros_dict.get('saturated_fat', 0.0),
+                'cholesterol': macros_dict.get('cholesterol', 0.0),
+                'sodium': macros_dict.get('sodium', 0.0),
+                'fiber': macros_dict.get('fiber', 0.0),
+                'sugar': macros_dict.get('sugar', 0.0),
+                'added_sugar': macros_dict.get('added_sugar', 0.0),
+                'is_vegetarian': macros_dict.get('is_vegetarian', False),
+                'is_vegan': macros_dict.get('is_vegan', False),
+                'allergens': macros_dict.get('allergens', []),
+                'ingredients': macros_dict.get('ingredients', ''),
             }
         
         cursor.close()
@@ -80,7 +90,7 @@ def fetch_item_nutrition(item_id, headers):
         headers: Request headers
 
     Returns:
-        Dictionary with calories, protein, carbs, fats, serving_size or None if failed
+        Dictionary with full nutrition, allergens, and ingredients or None if failed
     """
     try:
         item_url = f"https://api.hfs.purdue.edu/menus/v2/items/{item_id}"
@@ -98,7 +108,7 @@ def fetch_item_nutrition(item_id, headers):
         for nutrient in nutrition_list:
             name = nutrient.get('Name', '').lower()
             value = nutrient.get('Value', 0)
-            label_value = nutrient.get('LabelValue', '')  # Sometimes serving size is here
+            label_value = nutrient.get('LabelValue', '')
 
             if 'calories' in name and 'from' not in name:
                 nutrition['calories'] = int(float(value)) if value else 0
@@ -106,13 +116,44 @@ def fetch_item_nutrition(item_id, headers):
                 nutrition['protein'] = float(value) if value else 0.0
             elif 'total carbohydrate' in name:
                 nutrition['carbs'] = float(value) if value else 0.0
-            elif 'total fat' in name:
+            elif 'total fat' in name and 'saturated' not in name:
                 nutrition['fats'] = float(value) if value else 0.0
+            elif 'saturated fat' in name:
+                nutrition['saturated_fat'] = float(value) if value else 0.0
+            elif 'cholesterol' in name:
+                nutrition['cholesterol'] = float(value) if value else 0.0
+            elif 'sodium' in name:
+                nutrition['sodium'] = float(value) if value else 0.0
+            elif 'dietary fiber' in name:
+                nutrition['fiber'] = float(value) if value else 0.0
+            elif name == 'sugar' or name == 'sugars':
+                nutrition['sugar'] = float(value) if value else 0.0
+            elif 'added sugar' in name:
+                nutrition['added_sugar'] = float(value) if value else 0.0
             elif 'serving size' in name and label_value:
                 serving_size = label_value
 
         # Add serving size to nutrition dict
         nutrition['serving_size'] = serving_size.strip() if serving_size else '1 serving'
+
+        # Extract allergen/dietary tags
+        allergens = item_data.get('Allergens', [])
+        tags = {}
+        for a in allergens:
+            tag_name = a.get('Name', '')
+            tag_val = a.get('Value', False)
+            if tag_name and tag_val:
+                tags[tag_name.lower()] = True
+        nutrition['is_vegetarian'] = tags.get('vegetarian', False)
+        nutrition['is_vegan'] = tags.get('vegan', False)
+        # Collect active allergens (exclude vegetarian/vegan which are positive tags)
+        active_allergens = [a.get('Name') for a in allergens
+                           if a.get('Value') and a.get('Name', '').lower() not in ('vegetarian', 'vegan')]
+        nutrition['allergens'] = active_allergens
+
+        # Extract ingredients
+        ingredients = item_data.get('Ingredients', '')
+        nutrition['ingredients'] = ingredients.strip() if ingredients else ''
 
         return nutrition
 
@@ -190,6 +231,8 @@ def scrape_purdue_menu_api(api_location='Wiley', date_str=None, nutrition_cache=
                             'name': name,
                             'item_id': item_id,
                             'nutrition_ready': nutrition_ready,
+                            'is_vegetarian': item.get('IsVegetarian', False),
+                            'allergens_raw': item.get('Allergens', []),
                             'dining_court': display_name or api_location,
                             'dining_court_code': court_code or api_location,
                             'station': station_name,
@@ -209,6 +252,29 @@ def scrape_purdue_menu_api(api_location='Wiley', date_str=None, nutrition_cache=
             carbs = 0.0
             fats = 0.0
             serving_size = '1 serving'
+            saturated_fat = 0.0
+            cholesterol = 0.0
+            sodium = 0.0
+            fiber = 0.0
+            sugar = 0.0
+            added_sugar = 0.0
+            is_vegetarian = item_info.get('is_vegetarian', False)
+            is_vegan = False
+            allergens = []
+            ingredients = ''
+
+            # Extract allergens from menu-level data
+            allergens_raw = item_info.get('allergens_raw', [])
+            for a in allergens_raw:
+                tag_name = a.get('Name', '')
+                tag_val = a.get('Value', False)
+                if tag_val:
+                    if tag_name.lower() == 'vegetarian':
+                        is_vegetarian = True
+                    elif tag_name.lower() == 'vegan':
+                        is_vegan = True
+                    elif tag_name:
+                        allergens.append(tag_name)
 
             # Check cache first
             cache_key = (item_info['name'].lower().strip(), item_info['dining_court'].lower().strip())
@@ -221,6 +287,16 @@ def scrape_purdue_menu_api(api_location='Wiley', date_str=None, nutrition_cache=
                 carbs = cached_nutrition['carbs']
                 fats = cached_nutrition['fats']
                 serving_size = cached_nutrition.get('serving_size', '1 serving')
+                saturated_fat = cached_nutrition.get('saturated_fat', 0.0)
+                cholesterol = cached_nutrition.get('cholesterol', 0.0)
+                sodium = cached_nutrition.get('sodium', 0.0)
+                fiber = cached_nutrition.get('fiber', 0.0)
+                sugar = cached_nutrition.get('sugar', 0.0)
+                added_sugar = cached_nutrition.get('added_sugar', 0.0)
+                is_vegetarian = cached_nutrition.get('is_vegetarian', is_vegetarian)
+                is_vegan = cached_nutrition.get('is_vegan', is_vegan)
+                allergens = cached_nutrition.get('allergens', allergens) or allergens
+                ingredients = cached_nutrition.get('ingredients', '')
                 cached_count += 1
             elif item_info['nutrition_ready'] and item_info['item_id']:
                 # Fetch from API
@@ -231,6 +307,16 @@ def scrape_purdue_menu_api(api_location='Wiley', date_str=None, nutrition_cache=
                     carbs = nutrition.get('carbs', 0.0)
                     fats = nutrition.get('fats', 0.0)
                     serving_size = nutrition.get('serving_size', '1 serving')
+                    saturated_fat = nutrition.get('saturated_fat', 0.0)
+                    cholesterol = nutrition.get('cholesterol', 0.0)
+                    sodium = nutrition.get('sodium', 0.0)
+                    fiber = nutrition.get('fiber', 0.0)
+                    sugar = nutrition.get('sugar', 0.0)
+                    added_sugar = nutrition.get('added_sugar', 0.0)
+                    is_vegetarian = nutrition.get('is_vegetarian', is_vegetarian)
+                    is_vegan = nutrition.get('is_vegan', is_vegan)
+                    allergens = nutrition.get('allergens', allergens) or allergens
+                    ingredients = nutrition.get('ingredients', '')
                     fetched_count += 1
 
                     # Add to cache for this session
@@ -239,7 +325,17 @@ def scrape_purdue_menu_api(api_location='Wiley', date_str=None, nutrition_cache=
                         'protein': protein,
                         'carbs': carbs,
                         'fats': fats,
-                        'serving_size': serving_size
+                        'serving_size': serving_size,
+                        'saturated_fat': saturated_fat,
+                        'cholesterol': cholesterol,
+                        'sodium': sodium,
+                        'fiber': fiber,
+                        'sugar': sugar,
+                        'added_sugar': added_sugar,
+                        'is_vegetarian': is_vegetarian,
+                        'is_vegan': is_vegan,
+                        'allergens': allergens,
+                        'ingredients': ingredients,
                     }
 
             menu_items.append({
@@ -249,6 +345,16 @@ def scrape_purdue_menu_api(api_location='Wiley', date_str=None, nutrition_cache=
                 'carbs': carbs,
                 'fats': fats,
                 'serving_size': serving_size,
+                'saturated_fat': saturated_fat,
+                'cholesterol': cholesterol,
+                'sodium': sodium,
+                'fiber': fiber,
+                'sugar': sugar,
+                'added_sugar': added_sugar,
+                'is_vegetarian': is_vegetarian,
+                'is_vegan': is_vegan,
+                'allergens': allergens,
+                'ingredients': ingredients,
                 'dining_court': item_info['dining_court'],
                 'dining_court_code': item_info.get('dining_court_code'),
                 'station': item_info['station'],
@@ -758,6 +864,24 @@ def save_to_database(menu_items, database_url=None):
             if existing:
                 existing_id, existing_calories, existing_court_value = existing
                 
+                # Build extended macros JSON
+                macros_json = json.dumps({
+                    'protein': item['protein'],
+                    'carbs': item['carbs'],
+                    'fats': item['fats'],
+                    'serving_size': item.get('serving_size', '1 serving'),
+                    'saturated_fat': item.get('saturated_fat', 0.0),
+                    'cholesterol': item.get('cholesterol', 0.0),
+                    'sodium': item.get('sodium', 0.0),
+                    'fiber': item.get('fiber', 0.0),
+                    'sugar': item.get('sugar', 0.0),
+                    'added_sugar': item.get('added_sugar', 0.0),
+                    'is_vegetarian': item.get('is_vegetarian', False),
+                    'is_vegan': item.get('is_vegan', False),
+                    'allergens': item.get('allergens', []),
+                    'ingredients': item.get('ingredients', ''),
+                })
+
                 # Always update with new schedule information
                 cursor.execute(
                     """
@@ -769,12 +893,7 @@ def save_to_database(menu_items, database_url=None):
                     """,
                     (
                         item['calories'],
-                        json.dumps({
-                            'protein': item['protein'],
-                            'carbs': item['carbs'],
-                            'fats': item['fats'],
-                            'serving_size': item.get('serving_size', '1 serving')
-                        }),
+                        macros_json,
                         item.get('station'),
                         primary_meal_time,
                         display_court or existing_court_value,
@@ -784,6 +903,24 @@ def save_to_database(menu_items, database_url=None):
                 )
                 updated_count += 1
             else:
+                # Build extended macros JSON
+                macros_json = json.dumps({
+                    'protein': item['protein'],
+                    'carbs': item['carbs'],
+                    'fats': item['fats'],
+                    'serving_size': item.get('serving_size', '1 serving'),
+                    'saturated_fat': item.get('saturated_fat', 0.0),
+                    'cholesterol': item.get('cholesterol', 0.0),
+                    'sodium': item.get('sodium', 0.0),
+                    'fiber': item.get('fiber', 0.0),
+                    'sugar': item.get('sugar', 0.0),
+                    'added_sugar': item.get('added_sugar', 0.0),
+                    'is_vegetarian': item.get('is_vegetarian', False),
+                    'is_vegan': item.get('is_vegan', False),
+                    'allergens': item.get('allergens', []),
+                    'ingredients': item.get('ingredients', ''),
+                })
+
                 # Insert new food item
                 cursor.execute(
                     """
@@ -793,12 +930,7 @@ def save_to_database(menu_items, database_url=None):
                     (
                         item['name'],
                         item['calories'],
-                        json.dumps({
-                            'protein': item['protein'],
-                            'carbs': item['carbs'],
-                            'fats': item['fats'],
-                            'serving_size': item.get('serving_size', '1 serving')
-                        }),
+                        macros_json,
                         court_for_storage,
                         item.get('station'),
                         primary_meal_time,
@@ -893,6 +1025,23 @@ def save_menu_snapshots(menu_items, database_url=None, source='api'):
             dining_court = item.get('dining_court') or item.get('dining_court_code') or 'Unknown'
             dining_court_code = item.get('dining_court_code')
 
+            macros_json = json.dumps({
+                'protein': item['protein'],
+                'carbs': item['carbs'],
+                'fats': item['fats'],
+                'serving_size': item.get('serving_size', '1 serving'),
+                'saturated_fat': item.get('saturated_fat', 0.0),
+                'cholesterol': item.get('cholesterol', 0.0),
+                'sodium': item.get('sodium', 0.0),
+                'fiber': item.get('fiber', 0.0),
+                'sugar': item.get('sugar', 0.0),
+                'added_sugar': item.get('added_sugar', 0.0),
+                'is_vegetarian': item.get('is_vegetarian', False),
+                'is_vegan': item.get('is_vegan', False),
+                'allergens': item.get('allergens', []),
+                'ingredients': item.get('ingredients', ''),
+            })
+
             cursor.execute(
                 """
                 INSERT INTO menu_snapshots
@@ -910,12 +1059,7 @@ def save_menu_snapshots(menu_items, database_url=None, source='api'):
                     menu_date,
                     item['name'],
                     item['calories'],
-                    json.dumps({
-                        'protein': item['protein'],
-                        'carbs': item['carbs'],
-                        'fats': item['fats'],
-                        'serving_size': item.get('serving_size', '1 serving')
-                    }),
+                    macros_json,
                     dining_court,
                     dining_court_code,
                     item.get('station'),
