@@ -256,7 +256,10 @@ export default function Home() {
     if (mealTime !== 'All') {
       addMeal(food, mealTime.toLowerCase());
     } else if (food.meal_time && food.meal_time.toLowerCase() !== 'all') {
-      addMeal(food, food.meal_time.toLowerCase());
+      // For compound meal times like "Breakfast/Lunch", use the first part
+      const mt = food.meal_time.toLowerCase();
+      const resolved = mt.includes('/') ? mt.split('/')[0].trim() : mt;
+      addMeal(food, resolved);
     } else {
       setMealPickerFood(food);
     }

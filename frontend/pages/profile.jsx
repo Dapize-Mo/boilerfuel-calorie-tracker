@@ -32,19 +32,23 @@ export default function ProfilePage() {
   const [editingGoals, setEditingGoals] = useState(false);
   const [draft, setDraft] = useState(goals);
 
-  // Group meals by meal_time (normalize variants like "late lunch" → "lunch")
+  // Group meals by meal_time (normalize variants like "late lunch" → "lunch", "breakfast/lunch" → both)
   const mealGroups = useMemo(() => {
     const order = ['breakfast', 'lunch', 'dinner'];
     const normalize = (mt) => {
       const key = (mt || 'other').toLowerCase().trim();
-      if (key === 'late lunch' || key === 'latelunch' || key === 'late-lunch') return 'lunch';
-      return key;
+      if (key === 'late lunch' || key === 'latelunch' || key === 'late-lunch') return ['lunch'];
+      // Compound meal times like "breakfast/lunch" → add to each group
+      if (key.includes('/')) return key.split('/').map(k => k.trim());
+      return [key];
     };
     const groups = {};
     for (const m of meals) {
-      const key = normalize(m.meal_time);
-      if (!groups[key]) groups[key] = [];
-      groups[key].push(m);
+      const keys = normalize(m.meal_time);
+      for (const key of keys) {
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(m);
+      }
     }
     // Sort by meal order
     const sorted = [];

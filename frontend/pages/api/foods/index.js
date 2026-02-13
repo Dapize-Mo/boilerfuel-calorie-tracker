@@ -41,8 +41,10 @@ export default async function handler(req, res) {
         }
       }
       if (meal_time) {
-        params.push(meal_time.toLowerCase());
-        conditions.push(`LOWER(meal_time) = $${params.length}`);
+        const mt = meal_time.toLowerCase();
+        params.push(mt);
+        const p = params.length;
+        conditions.push(`(LOWER(meal_time) = $${p} OR LOWER(meal_time) LIKE $${p} || '/%' OR LOWER(meal_time) LIKE '%/' || $${p})`);
       }
       if (station) {
         params.push(station.toLowerCase());
