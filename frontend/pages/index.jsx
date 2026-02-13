@@ -246,6 +246,7 @@ export default function Home() {
   const [tooltipPos, setTooltipPos] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
   const [mealPickerFood, setMealPickerFood] = useState(null); // food waiting for meal selection
+  const [mealPickerOptions, setMealPickerOptions] = useState(null); // restricted options for compound meal times
 
   const mealTimes = ['All', 'Breakfast', 'Lunch', 'Dinner'];
   const isLanding = view === 'landing';
@@ -256,11 +257,17 @@ export default function Home() {
     if (mealTime !== 'All') {
       addMeal(food, mealTime.toLowerCase());
     } else if (food.meal_time && food.meal_time.toLowerCase() !== 'all') {
-      // For compound meal times like "Breakfast/Lunch", use the first part
       const mt = food.meal_time.toLowerCase();
-      const resolved = mt.includes('/') ? mt.split('/')[0].trim() : mt;
-      addMeal(food, resolved);
+      // Compound meal times like "Breakfast/Lunch" → show picker with those options
+      if (mt.includes('/')) {
+        const parts = mt.split('/').map(p => p.trim().charAt(0).toUpperCase() + p.trim().slice(1));
+        setMealPickerOptions(parts);
+        setMealPickerFood(food);
+      } else {
+        addMeal(food, mt);
+      }
     } else {
+      setMealPickerOptions(null);
       setMealPickerFood(food);
     }
   }
@@ -976,7 +983,7 @@ export default function Home() {
             <div className="px-5 py-3">
               <div className="text-xs uppercase tracking-widest text-theme-text-tertiary mb-3">Select meal</div>
               <div className="flex flex-col gap-2">
-                {['Breakfast', 'Lunch', 'Dinner'].map(mt => (
+                {(mealPickerOptions || ['Breakfast', 'Lunch', 'Dinner']).map(mt => (
                   <button key={mt}
                     onClick={() => {
                       addMeal(mealPickerFood, mt.toLowerCase());
