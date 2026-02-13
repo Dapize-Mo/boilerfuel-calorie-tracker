@@ -172,8 +172,6 @@ body {
   filter: none;
 }
 input[type="date"].date-input {
-  appearance: none;
-  -webkit-appearance: none;
   color-scheme: dark;
 }
 .light input[type="date"].date-input {
