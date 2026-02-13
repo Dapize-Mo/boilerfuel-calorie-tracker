@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useTheme } from '../context/ThemeContext';
@@ -31,6 +31,29 @@ export default function ProfilePage() {
   const { meals, goals, setGoals, totals, clearMeals } = useMeals();
   const [editingGoals, setEditingGoals] = useState(false);
   const [draft, setDraft] = useState(goals);
+
+  // Group meals by meal_time
+  const mealGroups = useMemo(() => {
+    const order = ['breakfast', 'lunch', 'dinner'];
+    const groups = {};
+    for (const m of meals) {
+      const key = (m.meal_time || 'other').toLowerCase();
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(m);
+    }
+    // Sort by meal order
+    const sorted = [];
+    for (const key of order) {
+      if (groups[key]) sorted.push({ label: key.charAt(0).toUpperCase() + key.slice(1), meals: groups[key] });
+    }
+    // Any remaining (other)
+    for (const key of Object.keys(groups)) {
+      if (!order.includes(key)) {
+        sorted.push({ label: key.charAt(0).toUpperCase() + key.slice(1), meals: groups[key] });
+      }
+    }
+    return sorted;
+  }, [meals]);
 
   function startEditing() {
     setDraft(goals);
@@ -107,7 +130,7 @@ export default function ProfilePage() {
               ))}
             </div>
 
-            {/* Logged meals list */}
+            {/* Logged meals grouped by meal time */}
             {meals.length > 0 && (
               <div className="border border-theme-text-primary/10">
                 <div className="flex items-center justify-between px-4 py-2 bg-theme-bg-secondary/50 border-b border-theme-text-primary/10">
@@ -118,13 +141,24 @@ export default function ProfilePage() {
                     Clear All
                   </button>
                 </div>
-                <div className="max-h-48 overflow-y-auto divide-y divide-theme-text-primary/5">
-                  {meals.map((m, i) => (
-                    <div key={`${m.id}-${m.addedAt}-${i}`} className="flex items-center justify-between px-4 py-2 text-sm">
-                      <span className="truncate flex-1 mr-4">{m.name}</span>
-                      <span className="text-xs font-mono tabular-nums text-theme-text-secondary shrink-0">{m.calories} cal</span>
-                    </div>
-                  ))}
+                <div className="max-h-72 overflow-y-auto">
+                  {mealGroups.map(group => {
+                    const groupCals = group.meals.reduce((s, m) => s + (m.calories || 0), 0);
+                    return (
+                      <div key={group.label}>
+                        <div className="flex items-center justify-between px-4 py-1.5 bg-theme-bg-tertiary/50 border-b border-theme-text-primary/5">
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-theme-text-secondary">{group.label}</span>
+                          <span className="text-[10px] font-mono tabular-nums text-theme-text-tertiary">{Math.round(groupCals)} cal</span>
+                        </div>
+                        {group.meals.map((m, i) => (
+                          <div key={`${m.id}-${m.addedAt}-${i}`} className="flex items-center justify-between px-4 py-2 text-sm border-b border-theme-text-primary/5 last:border-b-0">
+                            <span className="truncate flex-1 mr-4">{m.name}</span>
+                            <span className="text-xs font-mono tabular-nums text-theme-text-secondary shrink-0">{m.calories} cal</span>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}

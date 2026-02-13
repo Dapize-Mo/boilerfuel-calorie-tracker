@@ -51,7 +51,7 @@ export function MealProvider({ children }) {
   const todayKey = getTodayKey();
   const meals = mealsByDate[todayKey] || [];
 
-  const addMeal = useCallback((food) => {
+  const addMeal = useCallback((food, mealTimeOverride) => {
     const entry = {
       id: food.id,
       name: food.name,
@@ -59,7 +59,7 @@ export function MealProvider({ children }) {
       macros: food.macros || {},
       dining_court: food.dining_court || '',
       station: food.station || '',
-      meal_time: food.meal_time || '',
+      meal_time: mealTimeOverride || food.meal_time || '',
       addedAt: Date.now(),
     };
     setMealsByDate(prev => {
