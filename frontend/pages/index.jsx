@@ -126,7 +126,8 @@ export default function Home() {
   const [locations, setLocations] = useState(['All']);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [showResults, setShowResults] = useState(false);
+  // Phase: 'landing' | 'transitioning' | 'results'
+  const [phase, setPhase] = useState('landing');
 
   const mealTimes = ['All', 'Breakfast', 'Lunch', 'Dinner'];
 
@@ -165,140 +166,187 @@ export default function Home() {
   }, [location, mealTime]);
 
   function handleSearch() {
-    setShowResults(true);
+    // Start fetching immediately, then animate
     fetchFoods();
+    setPhase('transitioning');
+    // After animation completes, show results
+    setTimeout(() => setPhase('results'), 600);
   }
 
   function handleBack() {
-    setShowResults(false);
-    setFoods([]);
+    setPhase('transitioning');
+    setTimeout(() => {
+      setPhase('landing');
+      setFoods([]);
+    }, 600);
   }
 
   // Re-fetch when filters change in results mode
   useEffect(() => {
-    if (showResults) fetchFoods();
-  }, [showResults, fetchFoods]);
+    if (phase === 'results') fetchFoods();
+  }, [phase, fetchFoods]);
 
   const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const dateObj = selectedDate ? new Date(selectedDate + 'T00:00:00') : new Date();
   const dateLabel = `${monthNames[dateObj.getMonth()]} ${dateObj.getDate()}, ${dateObj.getFullYear()}`;
 
+  const isLanding = phase === 'landing';
+  const isResults = phase === 'results';
+  const isTransitioning = phase === 'transitioning';
+
   return (
-    <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary font-mono">
+    <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary font-mono overflow-hidden">
       <Head>
         <title>BoilerFuel - Dining Menu</title>
       </Head>
 
-      {/* ═══ LANDING / HERO VIEW ═══ */}
-      {!showResults && (
-        <div className="min-h-screen flex flex-col items-center justify-center px-6 transition-all duration-500">
-          {/* Title */}
-          <div className="text-center mb-12">
-            <h1 className="text-5xl md:text-7xl font-bold uppercase tracking-[0.25em] mb-3">
+      {/* ═══ ANIMATED HEADER SECTION ═══ */}
+      <div
+        className="transition-all duration-[600ms] ease-in-out"
+        style={{
+          minHeight: isLanding ? '100vh' : '0vh',
+          paddingTop: isLanding ? '0' : '0',
+        }}
+      >
+        <div
+          className={`
+            flex flex-col items-center transition-all duration-[600ms] ease-in-out
+            ${isLanding ? 'justify-center min-h-screen px-6' : 'px-6 md:px-12 lg:px-20 py-5 border-b border-theme-text-primary/10'}
+          `}
+        >
+          {/* Title - shrinks when transitioning to results */}
+          <div
+            className={`
+              transition-all duration-[600ms] ease-in-out
+              ${isLanding ? 'text-center mb-12' : 'w-full flex items-center gap-4 mb-0'}
+            `}
+          >
+            {/* Back arrow - only in results */}
+            {!isLanding && (
+              <button
+                onClick={handleBack}
+                className={`
+                  text-theme-text-tertiary hover:text-theme-text-primary transition-all duration-300 shrink-0
+                  ${isResults ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}
+                `}
+                title="Back to search"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="19" y1="12" x2="5" y2="12" />
+                  <polyline points="12 19 5 12 12 5" />
+                </svg>
+              </button>
+            )}
+
+            <h1
+              className={`
+                font-bold uppercase transition-all duration-[600ms] ease-in-out
+                ${isLanding ? 'text-5xl md:text-7xl tracking-[0.25em] mb-3' : 'text-xl tracking-[0.15em] mb-0'}
+              `}
+            >
               BoilerFuel
             </h1>
-            <p className="text-theme-text-tertiary text-sm tracking-[0.15em] uppercase">
-              Purdue Dining Court Menus
-            </p>
+
+            {isLanding && (
+              <p className="text-theme-text-tertiary text-sm tracking-[0.15em] uppercase">
+                Purdue Dining Court Menus
+              </p>
+            )}
           </div>
 
-          {/* Three filter boxes */}
-          <div className="w-full max-w-3xl grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-            <div>
-              <label className="block mb-1.5 font-bold uppercase text-xs tracking-wider text-theme-text-secondary text-center">
-                Date
-              </label>
+          {/* Filter boxes - reflow from grid to inline */}
+          <div
+            className={`
+              transition-all duration-[600ms] ease-in-out
+              ${isLanding
+                ? 'w-full max-w-3xl grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 mt-0'
+                : 'w-full flex flex-wrap items-end gap-3 mt-4 sm:mt-0'}
+            `}
+          >
+            <div className={isLanding ? '' : 'w-auto'}>
+              {isLanding && (
+                <label className="block mb-1.5 font-bold uppercase text-xs tracking-wider text-theme-text-secondary text-center">
+                  Date
+                </label>
+              )}
               <CalendarPicker value={selectedDate} onChange={setSelectedDate} />
             </div>
 
-            <div>
-              <label className="block mb-1.5 font-bold uppercase text-xs tracking-wider text-theme-text-secondary text-center">
-                Location
-              </label>
+            <div className={isLanding ? '' : 'w-auto'}>
+              {isLanding && (
+                <label className="block mb-1.5 font-bold uppercase text-xs tracking-wider text-theme-text-secondary text-center">
+                  Location
+                </label>
+              )}
               <select
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                className="w-full p-2 border border-theme-text-primary/30 bg-theme-bg-secondary text-theme-text-primary focus:border-theme-text-primary outline-none transition-colors"
+                className={`
+                  border bg-theme-bg-secondary text-theme-text-primary focus:border-theme-text-primary outline-none transition-colors
+                  ${isLanding ? 'w-full p-2 border-theme-text-primary/30' : 'p-1.5 border-theme-text-primary/20 text-sm'}
+                `}
               >
                 {locations.map(l => <option key={l} value={l}>{l}</option>)}
               </select>
             </div>
 
-            <div>
-              <label className="block mb-1.5 font-bold uppercase text-xs tracking-wider text-theme-text-secondary text-center">
-                Meal Time
-              </label>
+            <div className={isLanding ? '' : 'w-auto'}>
+              {isLanding && (
+                <label className="block mb-1.5 font-bold uppercase text-xs tracking-wider text-theme-text-secondary text-center">
+                  Meal Time
+                </label>
+              )}
               <select
                 value={mealTime}
                 onChange={(e) => setMealTime(e.target.value)}
-                className="w-full p-2 border border-theme-text-primary/30 bg-theme-bg-secondary text-theme-text-primary focus:border-theme-text-primary outline-none transition-colors"
+                className={`
+                  border bg-theme-bg-secondary text-theme-text-primary focus:border-theme-text-primary outline-none transition-colors
+                  ${isLanding ? 'w-full p-2 border-theme-text-primary/30' : 'p-1.5 border-theme-text-primary/20 text-sm'}
+                `}
               >
                 {mealTimes.map(m => <option key={m} value={m}>{m}</option>)}
               </select>
             </div>
           </div>
 
-          {/* Search button */}
-          <button
-            onClick={handleSearch}
-            className="px-10 py-3 border-2 border-theme-text-primary text-theme-text-primary font-bold uppercase tracking-[0.2em] text-sm hover:bg-theme-text-primary hover:text-theme-bg-primary transition-all duration-200"
+          {/* View Menu button - only on landing */}
+          <div
+            className={`
+              transition-all duration-[400ms] ease-in-out overflow-hidden
+              ${isLanding ? 'max-h-20 opacity-100 mt-0' : 'max-h-0 opacity-0 mt-0'}
+            `}
           >
-            View Menu
-          </button>
+            <button
+              onClick={handleSearch}
+              className="px-10 py-3 border-2 border-theme-text-primary text-theme-text-primary font-bold uppercase tracking-[0.2em] text-sm hover:bg-theme-text-primary hover:text-theme-bg-primary transition-all duration-200"
+            >
+              View Menu
+            </button>
+          </div>
 
-          {/* Subtle admin link */}
-          <Link href="/admin" className="mt-12 text-xs uppercase tracking-widest text-theme-text-tertiary/40 hover:text-theme-text-tertiary transition-colors">
-            Admin
-          </Link>
+          {/* Admin link - landing only, well below */}
+          <div
+            className={`
+              transition-all duration-[400ms] ease-in-out overflow-hidden
+              ${isLanding ? 'max-h-20 opacity-100' : 'max-h-0 opacity-0'}
+            `}
+          >
+            <Link href="/admin" className="block mt-20 text-xs uppercase tracking-widest text-theme-text-tertiary/30 hover:text-theme-text-tertiary transition-colors">
+              Admin
+            </Link>
+          </div>
         </div>
-      )}
+      </div>
 
-      {/* ═══ RESULTS VIEW ═══ */}
-      {showResults && (
-        <div className="min-h-screen flex flex-col transition-all duration-500">
-          {/* Compact header with filters */}
-          <header className="border-b border-theme-text-primary/10 px-6 md:px-12 lg:px-20 py-5">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-              {/* Back + Title */}
-              <div className="flex items-center gap-4 mr-auto">
-                <button
-                  onClick={handleBack}
-                  className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors"
-                  title="Back to search"
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <line x1="19" y1="12" x2="5" y2="12" />
-                    <polyline points="12 19 5 12 12 5" />
-                  </svg>
-                </button>
-                <h1 className="text-xl font-bold uppercase tracking-[0.15em]">BoilerFuel</h1>
-              </div>
-
-              {/* Inline filters */}
-              <div className="flex flex-wrap items-center gap-3 text-sm">
-                <CalendarPicker value={selectedDate} onChange={setSelectedDate} />
-
-                <select
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  className="p-1.5 border border-theme-text-primary/20 bg-theme-bg-secondary text-theme-text-primary text-sm focus:border-theme-text-primary outline-none"
-                >
-                  {locations.map(l => <option key={l} value={l}>{l}</option>)}
-                </select>
-
-                <select
-                  value={mealTime}
-                  onChange={(e) => setMealTime(e.target.value)}
-                  className="p-1.5 border border-theme-text-primary/20 bg-theme-bg-secondary text-theme-text-primary text-sm focus:border-theme-text-primary outline-none"
-                >
-                  {mealTimes.map(m => <option key={m} value={m}>{m}</option>)}
-                </select>
-              </div>
-            </div>
-          </header>
-
-          {/* Results body */}
-          <main className="flex-1 px-6 md:px-12 lg:px-20 py-8">
+      {/* ═══ RESULTS SECTION - fades in ═══ */}
+      <div
+        className={`
+          transition-all duration-[600ms] ease-in-out
+          ${isResults ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8 pointer-events-none'}
+        `}
+      >
+        {(isResults || isTransitioning) && (
+          <main className="px-6 md:px-12 lg:px-20 py-8">
             {error && (
               <div className="mb-6 p-4 border border-red-500/50 text-red-400 text-sm">
                 {error}
@@ -306,7 +354,7 @@ export default function Home() {
             )}
 
             {/* Summary bar */}
-            {!loading && (
+            {!loading && isResults && (
               <div className="flex items-center justify-between mb-4 pb-3 border-b border-theme-text-primary/10">
                 <span className="text-xs uppercase tracking-widest text-theme-text-tertiary">
                   {foods.length} item{foods.length !== 1 ? 's' : ''}
@@ -334,8 +382,12 @@ export default function Home() {
                     </td>
                   </tr>
                 ) : foods.length > 0 ? (
-                  foods.map(food => (
-                    <tr key={food.id} className="border-b border-theme-text-primary/5 hover:bg-theme-bg-secondary/50 transition-colors group">
+                  foods.map((food, i) => (
+                    <tr
+                      key={food.id}
+                      className="border-b border-theme-text-primary/5 hover:bg-theme-bg-secondary/50 transition-colors group"
+                      style={{ animation: `fadeInRow 0.3s ease-out ${i * 0.02}s both` }}
+                    >
                       <td className="py-3 pr-4">
                         <span className="group-hover:text-theme-text-primary transition-colors">{food.name}</span>
                         <span className="block sm:hidden text-xs text-theme-text-tertiary capitalize mt-0.5">{food.dining_court} &middot; {food.meal_time}</span>
@@ -355,15 +407,16 @@ export default function Home() {
               </tbody>
             </table>
           </main>
+        )}
 
-          {/* Footer */}
-          <footer className="border-t border-theme-text-primary/5 px-6 md:px-12 lg:px-20 py-6 mt-auto">
+        {isResults && (
+          <footer className="border-t border-theme-text-primary/5 px-6 md:px-12 lg:px-20 py-6">
             <p className="text-xs text-theme-text-tertiary tracking-wide">
               BoilerFuel &middot; Purdue Dining Data &middot; {new Date().getFullYear()}
             </p>
           </footer>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
