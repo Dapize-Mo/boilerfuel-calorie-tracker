@@ -613,7 +613,9 @@ export default function Home() {
         <div style={{ flex: !isLanding && isMobile ? '1 1 0' : undefined, width: isLanding ? (isMobile ? 220 : 180) : (isMobile ? undefined : 130), transition: `width 0.7s ${EASE}` }}>
           <label style={labelStyle} className="text-theme-text-secondary">Meal Time</label>
           <select value={mealTime} onChange={(e) => setMealTime(e.target.value)}
-            className="border border-theme-text-primary/30 bg-theme-bg-secondary text-theme-text-primary focus:border-theme-text-primary"
+            className={`border bg-theme-bg-secondary text-theme-text-primary focus:border-theme-text-primary ${
+              isLanding ? 'border-theme-text-primary' : 'border-theme-text-primary/30'
+            }`}
             style={selectStyle}>
             {mealTimes.map(m => <option key={m} value={m}>{m}</option>)}
           </select>
