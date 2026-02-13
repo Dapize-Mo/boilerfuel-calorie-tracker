@@ -249,6 +249,15 @@ export default function Home() {
   const scrollTimeoutRef = useRef(null);
   const touchStartY = useRef(null);
 
+  // ── Responsive: track mobile ──
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
   // ── Fetch available locations ──
   useEffect(() => {
     fetch('/api/dining-courts')
@@ -518,7 +527,7 @@ export default function Home() {
       <button onClick={handleBack}
         className="text-theme-text-tertiary hover:text-theme-text-primary"
         style={{
-          position: 'fixed', top: 18, left: 24, zIndex: 30,
+          position: 'fixed', top: isMobile ? 14 : 18, left: isMobile ? 12 : 24, zIndex: 30,
           transition: `opacity 0.4s ${EASE}`,
           opacity: isLanding ? 0 : 1,
           pointerEvents: isLanding ? 'none' : 'auto',
@@ -535,13 +544,12 @@ export default function Home() {
         style={{
           position: 'fixed', zIndex: 20, whiteSpace: 'nowrap', lineHeight: 1.1,
           willChange: 'transform, opacity',
-          /* Anchor at top-left, use transform for all movement */
           top: 0, left: 0,
           transition: `transform 0.85s ${EASE}, font-size 0.7s ${EASE}, letter-spacing 0.7s ${EASE}`,
           transform: isLanding
-            ? 'translate(calc(50vw - 50%), 35vh)'
-            : 'translate(64px, 18px)',
-          fontSize: isLanding ? 'clamp(2rem, 5vw, 3.5rem)' : '1.25rem',
+            ? `translate(calc(50vw - 50%), ${isMobile ? '18vh' : '35vh'})`
+            : isMobile ? 'translate(16px, 14px)' : 'translate(64px, 18px)',
+          fontSize: isLanding ? 'clamp(1.75rem, 5vw, 3.5rem)' : isMobile ? '1rem' : '1.25rem',
           letterSpacing: isLanding ? '0.25em' : '0.15em',
         }}>
         BoilerFuel
@@ -551,12 +559,12 @@ export default function Home() {
       <p className="text-theme-text-tertiary"
         style={{
           position: 'fixed', zIndex: 20,
-          top: 'calc(35vh + clamp(2.5rem, 5.5vw, 4rem))',
+          top: isMobile ? 'calc(18vh + clamp(2rem, 5vw, 3.5rem))' : 'calc(35vh + clamp(2.5rem, 5.5vw, 4rem))',
           left: '50%', transform: 'translateX(-50%)',
           transition: `opacity 0.4s ${EASE}`,
           opacity: isLanding ? 1 : 0,
           pointerEvents: 'none',
-          fontSize: '0.875rem', letterSpacing: '0.15em', textTransform: 'uppercase',
+          fontSize: isMobile ? '0.65rem' : '0.875rem', letterSpacing: '0.15em', textTransform: 'uppercase',
           whiteSpace: 'nowrap',
         }}>
         Purdue Dining Court Menus
@@ -565,25 +573,30 @@ export default function Home() {
       {/* ── Filters — slide from center to top-right (GPU-composited) ── */}
       <div style={{
         position: 'fixed', zIndex: 40,
-        display: 'flex', alignItems: 'flex-end',
+        display: 'flex',
+        alignItems: isLanding && isMobile ? 'stretch' : 'flex-end',
+        flexDirection: isLanding && isMobile ? 'column' : 'row',
         willChange: 'transform',
-        /* Anchor top-right, transform for movement */
         top: 0, right: 0,
         transition: `transform 0.85s ${EASE}, gap 0.6s ${EASE}`,
         transform: isLanding
-          ? 'translate(calc(-50vw + 50%), 50vh)'
-          : 'translate(-24px, 13px)',
-        gap: isLanding ? 16 : 10,
+          ? isMobile
+            ? 'translate(calc(-50vw + 50%), 34vh)'
+            : 'translate(calc(-50vw + 50%), 50vh)'
+          : isMobile
+            ? 'translate(-8px, 10px)'
+            : 'translate(-24px, 13px)',
+        gap: isLanding ? (isMobile ? 10 : 16) : (isMobile ? 6 : 10),
       }}>
-        <div style={{ width: isLanding ? 180 : 150, transition: `width 0.7s ${EASE}` }}>
+        <div style={{ width: isLanding ? (isMobile ? 220 : 180) : (isMobile ? 100 : 150), transition: `width 0.7s ${EASE}` }}>
           <label style={labelStyle} className="text-theme-text-secondary">Date</label>
           <CalendarPicker value={selectedDate} onChange={setSelectedDate} compact={!isLanding} />
         </div>
-        <div style={{ width: isLanding ? 180 : 150, transition: `width 0.7s ${EASE}` }}>
+        <div style={{ width: isLanding ? (isMobile ? 220 : 180) : (isMobile ? 100 : 150), transition: `width 0.7s ${EASE}` }}>
           <label style={labelStyle} className="text-theme-text-secondary">Location</label>
           <LocationDropdown value={location} onChange={setLocation} availableLocations={availableLocations} compact={!isLanding} />
         </div>
-        <div style={{ width: isLanding ? 180 : 130, transition: `width 0.7s ${EASE}` }}>
+        <div style={{ width: isLanding ? (isMobile ? 220 : 180) : (isMobile ? 80 : 130), transition: `width 0.7s ${EASE}` }}>
           <label style={labelStyle} className="text-theme-text-secondary">Meal Time</label>
           <select value={mealTime} onChange={(e) => setMealTime(e.target.value)}
             className="border border-theme-text-primary/30 bg-theme-bg-secondary text-theme-text-primary focus:border-theme-text-primary"
@@ -598,12 +611,12 @@ export default function Home() {
         className="border-2 border-theme-text-primary text-theme-text-primary font-bold uppercase hover:bg-theme-text-primary hover:text-theme-bg-primary"
         style={{
           position: 'fixed', zIndex: 20,
-          top: '64vh', left: '50%', transform: 'translateX(-50%)',
+          top: isMobile ? '72vh' : '64vh', left: '50%', transform: 'translateX(-50%)',
           transition: `opacity 0.4s ${EASE}`,
           opacity: isLanding ? 1 : 0,
           pointerEvents: isLanding ? 'auto' : 'none',
-          padding: '12px 40px',
-          letterSpacing: '0.2em', fontSize: '0.875rem',
+          padding: isMobile ? '10px 32px' : '12px 40px',
+          letterSpacing: '0.2em', fontSize: isMobile ? '0.8rem' : '0.875rem',
           background: 'transparent', cursor: 'pointer',
         }}>
         View Menu
@@ -612,7 +625,7 @@ export default function Home() {
       {/* ── Scroll hint ── */}
       <div style={{
         position: 'fixed', zIndex: 20,
-        top: '73vh', left: '50%',
+        top: isMobile ? '80vh' : '73vh', left: '50%',
         transition: `opacity 0.4s ${EASE}`,
         opacity: isLanding ? 0.25 : 0,
         pointerEvents: 'none',
@@ -631,7 +644,7 @@ export default function Home() {
       {/* ── Admin link — fades out ── */}
       <div style={{
         position: 'fixed', zIndex: 20,
-        top: '82vh', left: '50%', transform: 'translateX(-50%)',
+        top: isMobile ? '88vh' : '82vh', left: '50%', transform: 'translateX(-50%)',
         transition: `opacity 0.4s ${EASE}`,
         opacity: isLanding ? 0.25 : 0,
         pointerEvents: isLanding ? 'auto' : 'none',
@@ -644,7 +657,7 @@ export default function Home() {
 
       {/* ── Header divider line ── */}
       <div style={{
-        position: 'fixed', top: 60, left: 0, right: 0, height: 1, zIndex: 15,
+        position: 'fixed', top: isMobile ? 49 : 60, left: 0, right: 0, height: 1, zIndex: 15,
         transition: `opacity 0.5s ${EASE}`,
         opacity: isLanding ? 0 : 0.1,
         background: 'currentColor',
@@ -653,7 +666,7 @@ export default function Home() {
       {/* ── Results table area ── */}
       <div ref={resultsRef}
         style={{
-          position: 'fixed', top: 61, left: 0, right: 0, bottom: 0, zIndex: 10,
+          position: 'fixed', top: isMobile ? 50 : 61, left: 0, right: 0, bottom: 0, zIndex: 10,
           overflowY: 'auto',
           willChange: 'opacity',
           transition: `opacity 0.5s ${EASE} ${isLanding ? '0s' : '0.2s'}, visibility 0s ${isLanding ? '0.5s' : '0s'}`,
@@ -661,7 +674,7 @@ export default function Home() {
           visibility: isLanding ? 'hidden' : 'visible',
           pointerEvents: isLanding ? 'none' : 'auto',
         }}>
-        <main className="px-6 md:px-12 lg:px-20 py-8">
+        <main className="px-4 sm:px-6 md:px-12 lg:px-20 py-6 sm:py-8">
           {error && (
             <div className="mb-6 p-4 border border-red-500/50 text-red-400 text-sm">{error}</div>
           )}
@@ -755,7 +768,7 @@ export default function Home() {
           </table>
         </main>
 
-        <footer className="border-t border-theme-text-primary/5 px-6 md:px-12 lg:px-20 py-6 flex items-center justify-between">
+        <footer className="border-t border-theme-text-primary/5 px-4 sm:px-6 md:px-12 lg:px-20 py-4 sm:py-6 flex items-center justify-between">
           <p className="text-xs text-theme-text-tertiary tracking-wide">
             BoilerFuel &middot; Purdue Dining Data &middot; {new Date().getFullYear()}
           </p>
