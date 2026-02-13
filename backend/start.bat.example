@@ -1,8 +1,0 @@
-@echo off
-cd /d "%~dp0"
-set "DATABASE_URL=postgresql://username:password@localhost:5432/boilerfuel"
-set "DATABASE_SSLMODE=require"
-set "JWT_SECRET_KEY=your-secret-key-here"
-set "ADMIN_PASSWORD=your-admin-password"
-set "FRONTEND_ORIGIN=http://localhost:3000"
-python app.py
