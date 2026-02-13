@@ -666,35 +666,23 @@ export default function Home() {
         </Link>
       </div>
 
-      {/* ── Profile icon — animates from near-center to top-right ── */}
+      {/* ── Profile icon — slides in from right when scrolled to results ── */}
       <Link href="/profile"
         title="Profile"
         className="group"
         style={{
           position: 'fixed', zIndex: 50,
-          top: 0, right: 0,
-          willChange: 'transform',
-          transition: `transform 0.85s ${EASE}`,
-          transform: isLanding
-            ? isMobile
-              ? 'translate(-50vw, 80vh)'
-              : 'translate(calc(-50vw + 20px), 50vh)'
-            : isMobile
-              ? 'translate(-8px, 8px)'
-              : 'translate(-24px, 14px)',
+          top: isMobile ? 10 : 13,
+          right: isMobile ? 10 : 24,
+          willChange: 'transform, opacity',
+          transition: `transform 0.5s ${EASE}, opacity 0.4s ${EASE}`,
+          transform: isLanding ? 'translateX(60px)' : 'translateX(0)',
+          opacity: isLanding ? 0 : 1,
+          pointerEvents: isLanding ? 'none' : 'auto',
         }}>
-        <div className="flex items-center justify-center rounded-lg border border-theme-text-primary/30 bg-theme-bg-secondary/80 backdrop-blur-sm text-theme-text-secondary group-hover:border-yellow-500 group-hover:text-yellow-500 transition-all duration-300"
-          style={{
-            transition: `width 0.7s ${EASE}, height 0.7s ${EASE}, padding 0.7s ${EASE}, border-color 0.3s, color 0.3s`,
-            width: isLanding ? 48 : 36,
-            height: isLanding ? 48 : 36,
-          }}>
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
-            style={{
-              transition: `width 0.7s ${EASE}, height 0.7s ${EASE}`,
-              width: isLanding ? 22 : 18,
-              height: isLanding ? 22 : 18,
-            }}>
+        <div className="flex items-center justify-center border border-theme-text-primary bg-theme-bg-secondary text-theme-text-primary hover:bg-theme-bg-hover transition-all"
+          style={{ width: 36, height: 36 }}>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-[18px] h-[18px]">
             <path fillRule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clipRule="evenodd" />
           </svg>
         </div>
