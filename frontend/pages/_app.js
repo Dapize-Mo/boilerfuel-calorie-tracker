@@ -1,7 +1,6 @@
 import '../styles/globals.css';
 import Head from 'next/head';
 import { useEffect } from 'react';
-import Layout from '../components/Layout';
 import { ThemeProvider } from '../context/ThemeContext';
 import { SessionProvider } from "next-auth/react";
 
@@ -12,8 +11,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
     }
   }, []);
 
-  // Use per-page layout if defined, otherwise wrap with shared Layout
-  const getLayout = Component.getLayout || ((page) => <Layout>{page}</Layout>);
+  const getLayout = Component.getLayout || ((page) => page);
 
   return (
     <SessionProvider session={session}>
