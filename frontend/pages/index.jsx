@@ -126,7 +126,7 @@ export default function Home() {
   const [locations, setLocations] = useState(['All']);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [view, setView] = useState('landing'); // 'landing' | 'fading' | 'results'
+  const [view, setView] = useState('landing'); // 'landing' | 'results'
 
   const mealTimes = ['All', 'Breakfast', 'Lunch', 'Dinner'];
 
@@ -160,13 +160,11 @@ export default function Home() {
 
   function handleViewMenu() {
     fetchFoods();
-    setView('fading');
-    setTimeout(() => setView('results'), 700);
+    setView('results');
   }
 
   function handleBack() {
-    setView('fading');
-    setTimeout(() => { setView('landing'); setFoods([]); }, 700);
+    setView('landing');
   }
 
   // Re-fetch when filters change while viewing results
@@ -178,9 +176,6 @@ export default function Home() {
   const dateObj = selectedDate ? new Date(selectedDate + 'T00:00:00') : new Date();
   const dateLabel = `${monthNames[dateObj.getMonth()]} ${dateObj.getDate()}, ${dateObj.getFullYear()}`;
 
-  const showLanding = view === 'landing' || (view === 'fading' && foods.length === 0);
-  const showResults = view === 'results' || (view === 'fading' && foods.length > 0);
-
   return (
     <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary font-mono relative">
       <Head>
@@ -191,8 +186,10 @@ export default function Home() {
       <div
         className={`
           absolute inset-0 flex flex-col items-center justify-center px-6
-          transition-opacity duration-700 ease-in-out
-          ${view === 'landing' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}
+          transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]
+          ${view === 'landing'
+            ? 'opacity-100 z-10 scale-100 translate-y-0'
+            : 'opacity-0 z-0 pointer-events-none scale-[1.03] -translate-y-4'}
         `}
       >
         <div className="text-center mb-12">
@@ -239,8 +236,10 @@ export default function Home() {
       <div
         className={`
           min-h-screen flex flex-col
-          transition-opacity duration-700 ease-in-out
-          ${view === 'results' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}
+          transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]
+          ${view === 'results'
+            ? 'opacity-100 z-10 translate-y-0'
+            : 'opacity-0 z-0 pointer-events-none translate-y-6'}
         `}
       >
         {/* ── Top bar: back + title on left, filters on right ── */}
