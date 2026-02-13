@@ -14,9 +14,9 @@ export default async function handler(req, res) {
 
     const filters = [];
     const params = [];
-    if (dining_court) { params.push(dining_court); filters.push(`dining_court = $${params.length}`); }
-    if (meal_time)    { params.push(meal_time);    filters.push(`meal_time = $${params.length}`); }
-    if (station)      { params.push(station);      filters.push(`station = $${params.length}`); }
+    if (dining_court) { params.push(dining_court.toLowerCase()); filters.push(`LOWER(dining_court) = $${params.length}`); }
+    if (meal_time)    { params.push(meal_time.toLowerCase());    filters.push(`LOWER(meal_time) = $${params.length}`); }
+    if (station)      { params.push(station.toLowerCase());      filters.push(`LOWER(station) = $${params.length}`); }
 
     const where = filters.length ? `WHERE ${filters.join(' AND ')}` : '';
     const sql = `SELECT id, name, calories, macros, dining_court, station, meal_time, next_available

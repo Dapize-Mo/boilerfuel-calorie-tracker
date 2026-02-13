@@ -5,6 +5,7 @@ import Head from 'next/head';
 export default function Home() {
   const [location, setLocation] = useState('All');
   const [mealTime, setMealTime] = useState('All');
+  const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [foods, setFoods] = useState([]);
   const [locations, setLocations] = useState(['All']);
   const [loading, setLoading] = useState(true);
@@ -69,6 +70,16 @@ export default function Home() {
       <main>
         <div className="flex flex-col md:flex-row gap-6 mb-12">
           <div className="flex-1">
+            <label className="block mb-2 font-bold uppercase text-sm">Date</label>
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="w-full p-2 border border-theme-text-primary bg-theme-bg-secondary text-theme-text-primary rounded-none font-mono date-input"
+            />
+          </div>
+
+          <div className="flex-1">
             <label className="block mb-2 font-bold uppercase text-sm">Location</label>
             <select
               value={location}
@@ -118,8 +129,8 @@ export default function Home() {
                 foods.map(food => (
                   <tr key={food.id} className="border-b border-theme-text-primary/10 hover:bg-theme-bg-secondary">
                     <td className="py-3 pr-4">{food.name}</td>
-                    <td className="py-3 px-4 text-theme-text-secondary">{food.dining_court}</td>
-                    <td className="py-3 px-4 text-theme-text-secondary">{food.meal_time}</td>
+                    <td className="py-3 px-4 text-theme-text-secondary capitalize">{food.dining_court}</td>
+                    <td className="py-3 px-4 text-theme-text-secondary capitalize">{food.meal_time}</td>
                     <td className="py-3 pl-4 text-right font-mono">{food.calories}</td>
                   </tr>
                 ))

@@ -13,8 +13,8 @@ export default async function handler(req, res) {
     let sql = 'SELECT DISTINCT dining_court FROM foods WHERE dining_court IS NOT NULL';
     const params = [];
     if (mealTime) {
-      sql += ' AND meal_time = $1';
-      params.push(mealTime);
+      sql += ' AND LOWER(meal_time) = $1';
+      params.push(mealTime.toLowerCase());
     }
     sql += ' ORDER BY dining_court';
 
