@@ -168,99 +168,138 @@ export default function Home() {
   }, [fetchFoods]);
 
   return (
-    <div className="min-h-screen p-8 bg-theme-bg-primary text-theme-text-primary font-mono max-w-4xl mx-auto">
+    <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary font-mono">
       <Head>
         <title>BoilerFuel - Dining Menu</title>
       </Head>
 
-      <header className="mb-12 border-b-2 border-theme-text-primary pb-8">
-        <h1 className="text-3xl font-bold mb-4 uppercase tracking-widest">BoilerFuel</h1>
-        <p className="mb-4 text-theme-text-secondary">
-          Browse dining court menus. Data powered by Neon PostgreSQL.
-        </p>
-        <Link href="/admin" className="text-sm underline hover:no-underline opacity-50 hover:opacity-100">
-          Admin / Settings
-        </Link>
+      {/* Full-width header */}
+      <header className="border-b border-theme-text-primary/10 px-6 md:px-12 lg:px-20 py-8">
+        <div className="flex items-end justify-between">
+          <div>
+            <h1 className="text-4xl md:text-5xl font-bold uppercase tracking-[0.2em]">BoilerFuel</h1>
+            <p className="mt-2 text-theme-text-secondary text-sm tracking-wide">
+              Purdue dining court menus
+            </p>
+          </div>
+          <Link href="/admin" className="text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
+            Admin
+          </Link>
+        </div>
       </header>
 
-      <main>
-        <div className="flex flex-col md:flex-row gap-6 mb-12">
-          <div className="flex-1">
-            <label className="block mb-2 font-bold uppercase text-sm">Date</label>
+      <main className="px-6 md:px-12 lg:px-20 py-10">
+        {/* Filters bar */}
+        <div className="flex flex-col sm:flex-row gap-4 mb-10">
+          <div className="sm:w-56">
+            <label className="block mb-1.5 font-bold uppercase text-xs tracking-wider text-theme-text-secondary">Date</label>
             <CalendarPicker value={selectedDate} onChange={setSelectedDate} />
           </div>
 
-          <div className="flex-1">
-            <label className="block mb-2 font-bold uppercase text-sm">Location</label>
+          <div className="sm:w-48">
+            <label className="block mb-1.5 font-bold uppercase text-xs tracking-wider text-theme-text-secondary">Location</label>
             <select
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              className="w-full p-2 border border-theme-text-primary bg-theme-bg-secondary text-theme-text-primary rounded-none"
+              className="w-full p-2 border border-theme-text-primary/30 bg-theme-bg-secondary text-theme-text-primary focus:border-theme-text-primary outline-none transition-colors"
             >
               {locations.map(l => <option key={l} value={l}>{l}</option>)}
             </select>
           </div>
 
-          <div className="flex-1">
-            <label className="block mb-2 font-bold uppercase text-sm">Meal Time</label>
+          <div className="sm:w-48">
+            <label className="block mb-1.5 font-bold uppercase text-xs tracking-wider text-theme-text-secondary">Meal Time</label>
             <select
               value={mealTime}
               onChange={(e) => setMealTime(e.target.value)}
-              className="w-full p-2 border border-theme-text-primary bg-theme-bg-secondary text-theme-text-primary rounded-none"
+              className="w-full p-2 border border-theme-text-primary/30 bg-theme-bg-secondary text-theme-text-primary focus:border-theme-text-primary outline-none transition-colors"
             >
               {mealTimes.map(m => <option key={m} value={m}>{m}</option>)}
             </select>
           </div>
+
+          {/* Active filter count */}
+          {(location !== 'All' || mealTime !== 'All') && (
+            <div className="flex items-end">
+              <button
+                onClick={() => { setLocation('All'); setMealTime('All'); }}
+                className="text-xs uppercase tracking-wider text-theme-text-tertiary hover:text-theme-text-primary border border-theme-text-primary/20 px-3 py-2 hover:border-theme-text-primary/50 transition-colors"
+              >
+                Clear filters
+              </button>
+            </div>
+          )}
         </div>
 
         {error && (
-          <div className="mb-6 p-4 border border-red-500 text-red-400 text-sm">
+          <div className="mb-6 p-4 border border-red-500/50 text-red-400 text-sm">
             {error}
           </div>
         )}
 
-        <div className="border-t border-theme-text-primary">
+        {/* Results */}
+        <div>
+          {/* Count bar */}
+          {!loading && (
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-theme-text-primary/10">
+              <span className="text-xs uppercase tracking-widest text-theme-text-tertiary">
+                {foods.length} item{foods.length !== 1 ? 's' : ''}
+              </span>
+              {foods.length > 0 && (
+                <span className="text-xs text-theme-text-tertiary">
+                  {location !== 'All' ? location : 'All locations'} &middot; {mealTime !== 'All' ? mealTime : 'All meals'}
+                </span>
+              )}
+            </div>
+          )}
+
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-theme-text-primary/20">
-                <th className="py-4 font-bold uppercase text-sm">Food Item</th>
-                <th className="py-4 font-bold uppercase text-sm">Location</th>
-                <th className="py-4 font-bold uppercase text-sm">Meal</th>
-                <th className="py-4 font-bold uppercase text-sm text-right">Calories</th>
+                <th className="py-3 font-bold uppercase text-xs tracking-wider text-theme-text-secondary">Food Item</th>
+                <th className="py-3 font-bold uppercase text-xs tracking-wider text-theme-text-secondary hidden sm:table-cell">Location</th>
+                <th className="py-3 font-bold uppercase text-xs tracking-wider text-theme-text-secondary hidden md:table-cell">Meal</th>
+                <th className="py-3 font-bold uppercase text-xs tracking-wider text-theme-text-secondary text-right">Cal</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={4} className="py-8 text-center text-theme-text-secondary">
-                    Loading foods...
+                  <td colSpan={4} className="py-16 text-center text-theme-text-tertiary">
+                    <span className="inline-block animate-pulse">Loading...</span>
                   </td>
                 </tr>
               ) : foods.length > 0 ? (
                 foods.map(food => (
-                  <tr key={food.id} className="border-b border-theme-text-primary/10 hover:bg-theme-bg-secondary">
-                    <td className="py-3 pr-4">{food.name}</td>
-                    <td className="py-3 px-4 text-theme-text-secondary capitalize">{food.dining_court}</td>
-                    <td className="py-3 px-4 text-theme-text-secondary capitalize">{food.meal_time}</td>
-                    <td className="py-3 pl-4 text-right font-mono">{food.calories}</td>
+                  <tr key={food.id} className="border-b border-theme-text-primary/5 hover:bg-theme-bg-secondary/50 transition-colors group">
+                    <td className="py-3 pr-4">
+                      <span className="group-hover:text-theme-text-primary transition-colors">{food.name}</span>
+                      {/* Show location on mobile */}
+                      <span className="block sm:hidden text-xs text-theme-text-tertiary capitalize mt-0.5">{food.dining_court} &middot; {food.meal_time}</span>
+                    </td>
+                    <td className="py-3 px-4 text-theme-text-secondary capitalize hidden sm:table-cell">{food.dining_court}</td>
+                    <td className="py-3 px-4 text-theme-text-tertiary capitalize hidden md:table-cell">{food.meal_time}</td>
+                    <td className="py-3 pl-4 text-right font-mono tabular-nums text-theme-text-secondary">{food.calories}</td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={4} className="py-8 text-center text-theme-text-secondary italic">
+                  <td colSpan={4} className="py-16 text-center text-theme-text-tertiary italic">
                     No foods found for this selection.
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
-          {!loading && foods.length > 0 && (
-            <p className="mt-4 text-xs text-theme-text-secondary opacity-50">
-              Showing {foods.length} item{foods.length !== 1 ? 's' : ''} from database
-            </p>
-          )}
         </div>
       </main>
+
+      {/* Subtle footer */}
+      <footer className="border-t border-theme-text-primary/5 px-6 md:px-12 lg:px-20 py-6">
+        <p className="text-xs text-theme-text-tertiary tracking-wide">
+          BoilerFuel &middot; Purdue Dining Data &middot; {new Date().getFullYear()}
+        </p>
+      </footer>
     </div>
   );
 }
