@@ -48,22 +48,39 @@ const TopNav = memo(function TopNav() {
             <span className="tracking-tight hidden sm:inline">BoilerFuel</span>
           </Link>
 
-          <nav className="flex items-center gap-1">
-            {navItems.map(item => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  router.pathname === item.href
-                    ? 'bg-theme-accent text-white'
-                    : 'text-theme-text-secondary hover:bg-theme-bg-hover'
-                }`}
-              >
-                <span className="mr-1 hidden sm:inline">{item.icon}</span>
-                {item.label}
-              </Link>
-            ))}
-          </nav>
+          <div className="flex items-center gap-1">
+            <nav className="flex items-center gap-1">
+              {navItems.map(item => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    router.pathname === item.href
+                      ? 'bg-theme-accent text-white'
+                      : 'text-theme-text-secondary hover:bg-theme-bg-hover'
+                  }`}
+                >
+                  <span className="mr-1 hidden sm:inline">{item.icon}</span>
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+
+            {/* Profile button */}
+            <Link
+              href="/profile"
+              className={`ml-2 p-2 rounded-full transition-colors ${
+                router.pathname === '/profile'
+                  ? 'bg-theme-accent text-white'
+                  : 'text-theme-text-secondary hover:bg-theme-bg-hover'
+              }`}
+              title="Profile"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                <path fillRule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clipRule="evenodd" />
+              </svg>
+            </Link>
+          </div>
         </div>
       </div>
     </header>

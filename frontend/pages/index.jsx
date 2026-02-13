@@ -1,7 +1,9 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo, memo } from 'react';
 import Link from 'next/link';
 import Head from 'next/head';
 import { LOCATION_CATEGORIES } from '../utils/diningLocations';
+
+const CHUNK_SIZE = 60; // items per render batch
 
 // ── Smoother easing ──
 const EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
@@ -513,6 +515,13 @@ export default function Home() {
   // ── Sort arrow indicator ──
   const sortArrow = calorieSort === 'asc' ? ' ▲' : calorieSort === 'desc' ? ' ▼' : '';
 
+  // ── Progressive rendering: show items in chunks ──
+  const [visibleCount, setVisibleCount] = useState(CHUNK_SIZE);
+  // Reset visible count when foods change
+  useEffect(() => { setVisibleCount(CHUNK_SIZE); }, [foods]);
+  const visibleGroups = useMemo(() => groupedFoods.slice(0, visibleCount), [groupedFoods, visibleCount]);
+  const hasMore = visibleCount < groupedFoods.length;
+
   // Count food rows
   let rowIndex = 0;
 
@@ -657,6 +666,40 @@ export default function Home() {
         </Link>
       </div>
 
+      {/* ── Profile icon — animates from near-center to top-right ── */}
+      <Link href="/profile"
+        title="Profile"
+        className="group"
+        style={{
+          position: 'fixed', zIndex: 50,
+          top: 0, right: 0,
+          willChange: 'transform',
+          transition: `transform 0.85s ${EASE}`,
+          transform: isLanding
+            ? isMobile
+              ? 'translate(-50vw, 80vh)'
+              : 'translate(calc(-50vw + 20px), 50vh)'
+            : isMobile
+              ? 'translate(-8px, 8px)'
+              : 'translate(-24px, 14px)',
+        }}>
+        <div className="flex items-center justify-center rounded-lg border border-theme-text-primary/30 bg-theme-bg-secondary/80 backdrop-blur-sm text-theme-text-secondary group-hover:border-yellow-500 group-hover:text-yellow-500 transition-all duration-300"
+          style={{
+            transition: `width 0.7s ${EASE}, height 0.7s ${EASE}, padding 0.7s ${EASE}, border-color 0.3s, color 0.3s`,
+            width: isLanding ? 48 : 36,
+            height: isLanding ? 48 : 36,
+          }}>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+            style={{
+              transition: `width 0.7s ${EASE}, height 0.7s ${EASE}`,
+              width: isLanding ? 22 : 18,
+              height: isLanding ? 22 : 18,
+            }}>
+            <path fillRule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clipRule="evenodd" />
+          </svg>
+        </div>
+      </Link>
+
       {/* ── Header divider line ── */}
       <div style={{
         position: 'fixed', top: isMobile ? 68 : 60, left: 0, right: 0, height: 1, zIndex: 15,
@@ -712,13 +755,14 @@ export default function Home() {
                     <span className="inline-block animate-pulse">Loading...</span>
                   </td>
                 </tr>
-              ) : groupedFoods.length > 0 ? (
-                groupedFoods.map((item, i) => {
+              ) : visibleGroups.length > 0 ? (
+                <>
+                {visibleGroups.map((item, i) => {
                   if (item.type === 'court-header') {
                     return (
                       <tr key={`court-${item.label}-${i}`}>
                         <td colSpan={4} className="pt-6 pb-2 px-0"
-                          style={i < 60 ? { animation: `slideInStation 0.35s ${EASE} ${Math.min(i * 0.008, 0.4)}s both` } : undefined}>
+                          style={i < 20 ? { animation: `slideInStation 0.3s ${EASE} ${Math.min(i * 0.015, 0.25)}s both` } : undefined}>
                           <div className="text-sm font-bold uppercase tracking-widest text-theme-text-primary border-b-2 border-theme-text-primary/20 pb-1">
                             {item.label}
                           </div>
@@ -730,7 +774,7 @@ export default function Home() {
                     return (
                       <tr key={`station-${item.court}-${item.label}-${i}`}>
                         <td colSpan={4} className="pt-4 pb-1 px-0"
-                          style={i < 60 ? { animation: `slideInStation 0.35s ${EASE} ${Math.min(i * 0.008, 0.4)}s both` } : undefined}>
+                          style={i < 20 ? { animation: `slideInStation 0.3s ${EASE} ${Math.min(i * 0.015, 0.25)}s both` } : undefined}>
                           <div className="text-xs font-bold uppercase tracking-wider text-theme-text-tertiary pl-1"
                             style={{ borderLeft: '3px solid', borderColor: 'rgb(var(--color-accent-primary))', paddingLeft: 8 }}>
                             {item.label}
@@ -745,7 +789,7 @@ export default function Home() {
                   return (
                     <tr key={food.id}
                       className="border-b border-theme-text-primary/5 hover:bg-theme-bg-secondary/50 transition-colors group cursor-default"
-                      style={ri < 40 ? { animation: `fadeInRow 0.35s ${EASE} ${Math.min(ri * 0.012, 0.5)}s both` } : undefined}
+                      style={ri < 20 ? { animation: `fadeInRow 0.3s ${EASE} ${Math.min(ri * 0.02, 0.3)}s both` } : undefined}
                       onMouseEnter={(e) => onFoodMouseEnter(food, e)}
                       onMouseMove={onFoodMouseMove}
                       onMouseLeave={onFoodMouseLeave}>
@@ -758,7 +802,19 @@ export default function Home() {
                       <td className="py-3 pl-4 text-right font-mono tabular-nums text-theme-text-secondary">{food.calories}</td>
                     </tr>
                   );
-                })
+                })}
+                {hasMore && (
+                  <tr>
+                    <td colSpan={4} className="py-6 text-center">
+                      <button
+                        onClick={() => setVisibleCount(c => c + CHUNK_SIZE)}
+                        className="px-6 py-2 text-sm uppercase tracking-wider border border-theme-text-primary/30 text-theme-text-secondary hover:bg-theme-bg-secondary hover:text-theme-text-primary transition-colors font-mono">
+                        Show more ({groupedFoods.length - visibleCount} remaining)
+                      </button>
+                    </td>
+                  </tr>
+                )}
+                </>
               ) : (
                 <tr>
                   <td colSpan={4} className="py-16 text-center text-theme-text-tertiary italic">
