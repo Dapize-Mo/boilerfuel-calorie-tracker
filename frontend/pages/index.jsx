@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo, memo } from 'react';
 import Link from 'next/link';
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 import { LOCATION_CATEGORIES } from '../utils/diningLocations';
 
 const CHUNK_SIZE = 60; // items per render batch
@@ -228,9 +229,11 @@ function MacroTooltip({ food, pos }) {
 // ── Main Home component ──
 // ══════════════════════════════════════
 export default function Home() {
+  const router = useRouter();
   // ── State ──
   const [location, setLocation] = useState({ type: 'all', value: 'All' });
   const [mealTime, setMealTime] = useState('All');
+  const [profileTransition, setProfileTransition] = useState(false);
   const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [foods, setFoods] = useState([]);
   const [availableLocations, setAvailableLocations] = useState([]);
@@ -536,7 +539,7 @@ export default function Home() {
       <button onClick={handleBack}
         className="text-theme-text-tertiary hover:text-theme-text-primary"
         style={{
-          position: 'fixed', top: isMobile ? 14 : 18, left: isMobile ? 12 : 24, zIndex: 30,
+          position: 'fixed', top: isMobile ? 12 : 16, left: isMobile ? 12 : 24, zIndex: 30,
           transition: `opacity 0.4s ${EASE}`,
           opacity: isLanding ? 0 : 1,
           pointerEvents: isLanding ? 'none' : 'auto',
@@ -557,7 +560,7 @@ export default function Home() {
           transition: `transform 0.85s ${EASE}, font-size 0.7s ${EASE}, letter-spacing 0.7s ${EASE}`,
           transform: isLanding
             ? `translate(calc(50vw - 50%), ${isMobile ? '18vh' : '35vh'})`
-            : isMobile ? 'translate(12px, 8px)' : 'translate(64px, 18px)',
+            : isMobile ? 'translate(38px, 12px)' : 'translate(64px, 16px)',
           fontSize: isLanding ? 'clamp(1.75rem, 5vw, 3.5rem)' : isMobile ? '0.85rem' : '1.25rem',
           letterSpacing: isLanding ? '0.25em' : '0.15em',
         }}>
@@ -594,8 +597,8 @@ export default function Home() {
             ? 'translate(calc(-50vw + 50%), 34vh)'
             : 'translate(calc(-50vw + 50%), 50vh)'
           : isMobile
-            ? 'translate(0, 32px)'
-            : 'translate(-24px, 13px)',
+            ? 'translate(0, 44px)'
+            : 'translate(-72px, 13px)',
         gap: isLanding ? (isMobile ? 10 : 16) : (isMobile ? 6 : 10),
         justifyContent: !isLanding && isMobile ? 'space-between' : undefined,
       }}>
@@ -666,13 +669,18 @@ export default function Home() {
         </Link>
       </div>
 
-      {/* ── Profile icon — slides in from right below the header bar ── */}
-      <Link href="/profile"
+      {/* ── Profile icon — in the title bar, right-aligned ── */}
+      <div
+        onClick={() => {
+          if (profileTransition || isLanding) return;
+          setProfileTransition(true);
+          setTimeout(() => router.push('/profile'), 450);
+        }}
         title="Profile"
-        className="group"
+        className="group cursor-pointer"
         style={{
           position: 'fixed', zIndex: 50,
-          top: isMobile ? 76 : 68,
+          top: isMobile ? 8 : 12,
           right: isMobile ? 12 : 24,
           willChange: 'transform, opacity',
           transition: `transform 0.5s ${EASE}, opacity 0.4s ${EASE}`,
@@ -686,11 +694,22 @@ export default function Home() {
             <path fillRule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clipRule="evenodd" />
           </svg>
         </div>
-      </Link>
+      </div>
+
+      {/* ── Profile transition overlay ── */}
+      <div
+        style={{
+          position: 'fixed', inset: 0, zIndex: 9999,
+          pointerEvents: profileTransition ? 'auto' : 'none',
+          background: 'rgb(var(--color-bg-primary))',
+          opacity: profileTransition ? 1 : 0,
+          transition: `opacity 0.4s ${EASE}`,
+        }}
+      />
 
       {/* ── Header divider line ── */}
       <div style={{
-        position: 'fixed', top: isMobile ? 68 : 60, left: 0, right: 0, height: 1, zIndex: 15,
+        position: 'fixed', top: isMobile ? 82 : 52, left: 0, right: 0, height: 1, zIndex: 15,
         transition: `opacity 0.5s ${EASE}`,
         opacity: isLanding ? 0 : 0.1,
         background: 'currentColor',
@@ -699,7 +718,7 @@ export default function Home() {
       {/* ── Results table area ── */}
       <div ref={resultsRef}
         style={{
-          position: 'fixed', top: isMobile ? 69 : 61, left: 0, right: 0, bottom: 0, zIndex: 10,
+          position: 'fixed', top: isMobile ? 83 : 53, left: 0, right: 0, bottom: 0, zIndex: 10,
           overflowY: 'auto',
           willChange: 'opacity',
           transition: `opacity 0.5s ${EASE} ${isLanding ? '0s' : '0.2s'}, visibility 0s ${isLanding ? '0.5s' : '0s'}`,
