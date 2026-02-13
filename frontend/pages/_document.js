@@ -14,7 +14,7 @@ export default function Document() {
         {/* SEO meta tags */}
         <meta name="description" content="Track your calories and macros with BoilerFuel - the calorie tracker for Purdue students" />
         <meta name="keywords" content="Purdue, calorie tracker, nutrition, fitness, dining halls, macros, health" />
-        <meta name="theme-color" content="#f59e0b" />
+        <meta name="theme-color" content="#0a0a0a" />
         
         {/* PWA-like experience */}
         <meta name="mobile-web-app-capable" content="yes" />
@@ -22,14 +22,13 @@ export default function Document() {
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="BoilerFuel" />
         
-        {/* Apple Touch Icons */}
-        <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192x192.png" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-192x192.png" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-192x192.png" />
+        {/* Favicon */}
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" href="/favicon.svg" />
         
         {/* Microsoft Tiles */}
-        <meta name="msapplication-TileColor" content="#f59e0b" />
-        <meta name="msapplication-TileImage" content="/icons/icon-144x144.png" />
+        <meta name="msapplication-TileColor" content="#0a0a0a" />
         
         {/* Performance hints */}
         <link rel="preconnect" href={process.env.NEXT_PUBLIC_API_URL || ''} />
