@@ -748,22 +748,21 @@ export default function Home() {
           </table>
         </main>
 
-        <footer className="border-t border-theme-text-primary/5 px-6 md:px-12 lg:px-20 py-6">
+        <footer className="border-t border-theme-text-primary/5 px-6 md:px-12 lg:px-20 py-6 flex items-center justify-between">
           <p className="text-xs text-theme-text-tertiary tracking-wide">
             BoilerFuel &middot; Purdue Dining Data &middot; {new Date().getFullYear()}
           </p>
+          <div className="flex gap-3 text-xs font-mono">
+            <Link href="/about" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">About</Link>
+            <Link href="/changelog" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Changelog</Link>
+            <Link href="/admin" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Admin</Link>
+          </div>
         </footer>
       </div>
 
       {/* ── Macro tooltip (results view only) ── */}
       {!isLanding && <MacroTooltip food={hoveredFood} pos={tooltipPos} />}
 
-      {/* ── Bottom-right nav links ── */}
-      <div className="fixed bottom-4 right-4 z-30 flex gap-3 text-xs font-mono">
-        <Link href="/about" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">About</Link>
-        <Link href="/changelog" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Changelog</Link>
-        <Link href="/admin" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Admin</Link>
-      </div>
     </div>
   );
 }
