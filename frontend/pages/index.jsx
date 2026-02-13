@@ -184,13 +184,14 @@ export default function Home() {
 
       {/* ═══ LANDING PAGE ═══ */}
       <div
-        className={`
-          absolute inset-0 flex flex-col items-center justify-center px-6
-          transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]
-          ${view === 'landing'
-            ? 'opacity-100 z-10 scale-100 translate-y-0'
-            : 'opacity-0 z-0 pointer-events-none scale-[1.03] -translate-y-4'}
-        `}
+        className="absolute inset-0 flex flex-col items-center justify-center px-6"
+        style={{
+          transition: 'opacity 0.6s ease, transform 0.6s ease',
+          opacity: view === 'landing' ? 1 : 0,
+          transform: view === 'landing' ? 'translateY(0) scale(1)' : 'translateY(-30px) scale(1.04)',
+          zIndex: view === 'landing' ? 10 : 0,
+          pointerEvents: view === 'landing' ? 'auto' : 'none',
+        }}
       >
         <div className="text-center mb-12">
           <h1 className="text-5xl md:text-7xl font-bold uppercase tracking-[0.25em] mb-3">
@@ -234,13 +235,14 @@ export default function Home() {
 
       {/* ═══ RESULTS PAGE ═══ */}
       <div
-        className={`
-          absolute inset-0 flex flex-col overflow-y-auto
-          transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]
-          ${view === 'results'
-            ? 'opacity-100 z-10 translate-y-0'
-            : 'opacity-0 z-0 pointer-events-none translate-y-6'}
-        `}
+        className="absolute inset-0 flex flex-col overflow-y-auto"
+        style={{
+          transition: 'opacity 0.6s ease, transform 0.6s ease',
+          opacity: view === 'results' ? 1 : 0,
+          transform: view === 'results' ? 'translateY(0)' : 'translateY(40px)',
+          zIndex: view === 'results' ? 10 : 0,
+          pointerEvents: view === 'results' ? 'auto' : 'none',
+        }}
       >
         {/* ── Top bar: back + title on left, filters on right ── */}
         <header className="border-b border-theme-text-primary/10 px-6 md:px-12 lg:px-20 py-4">
