@@ -413,29 +413,37 @@ export default function Home() {
   }, [foods, calorieSort]);
 
   // Group by dining court → station (for multi-court views), or just station (single court)
+  // "By Request" station is always placed last within each court
   const groupedFoods = useMemo(() => {
     const showCourtHeaders = location.type !== 'single';
-    const groups = [];
-    let currentCourt = null;
-    let currentStation = null;
 
+    // Build a nested structure: court → station → foods[]
+    const courtMap = new Map();
     for (const food of sortedFoods) {
       const court = food.dining_court || 'Unknown';
       const station = food.station || 'General';
+      if (!courtMap.has(court)) courtMap.set(court, new Map());
+      const stationMap = courtMap.get(court);
+      if (!stationMap.has(station)) stationMap.set(station, []);
+      stationMap.get(station).push(food);
+    }
 
-      if (showCourtHeaders && court !== currentCourt) {
-        groups.push({ type: 'court-header', label: court });
-        currentCourt = court;
-        currentStation = null;
-      }
-      if (station !== currentStation || (showCourtHeaders && court !== currentCourt)) {
-        // After a court-header, always show the first station
-        if (station !== currentStation) {
-          groups.push({ type: 'station-header', label: station, court });
-          currentStation = station;
+    // Sort stations within each court: "By Request" goes last
+    const isByRequest = (name) => name.toLowerCase().replace(/\s+/g, '') === 'byrequest';
+    const groups = [];
+    for (const [court, stationMap] of courtMap) {
+      if (showCourtHeaders) groups.push({ type: 'court-header', label: court });
+      const stations = [...stationMap.entries()].sort((a, b) => {
+        const aLast = isByRequest(a[0]) ? 1 : 0;
+        const bLast = isByRequest(b[0]) ? 1 : 0;
+        return aLast - bLast;
+      });
+      for (const [station, foods] of stations) {
+        groups.push({ type: 'station-header', label: station, court });
+        for (const food of foods) {
+          groups.push({ type: 'food', food });
         }
       }
-      groups.push({ type: 'food', food });
     }
     return groups;
   }, [sortedFoods, location.type]);
@@ -647,10 +655,9 @@ export default function Home() {
         style={{
           position: 'fixed', top: 61, left: 0, right: 0, bottom: 0, zIndex: 10,
           overflowY: 'auto',
-          willChange: 'transform, opacity',
-          transition: `opacity 0.55s ${EASE} ${isLanding ? '0s' : '0.15s'}, transform 0.55s ${EASE} ${isLanding ? '0s' : '0.15s'}, visibility 0s ${isLanding ? '0.55s' : '0s'}`,
+          willChange: 'opacity',
+          transition: `opacity 0.5s ${EASE} ${isLanding ? '0s' : '0.2s'}, visibility 0s ${isLanding ? '0.5s' : '0s'}`,
           opacity: isLanding ? 0 : 1,
-          transform: isLanding ? 'translateY(20px)' : 'translateY(0)',
           visibility: isLanding ? 'hidden' : 'visible',
           pointerEvents: isLanding ? 'none' : 'auto',
         }}>
