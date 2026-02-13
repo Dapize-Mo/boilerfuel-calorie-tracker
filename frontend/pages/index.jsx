@@ -444,15 +444,21 @@ export default function Home() {
     setCalorieSort(prev => prev === null ? 'asc' : prev === 'asc' ? 'desc' : null);
   }
 
-  // ── Tooltip handlers ──
+  // ── Tooltip handlers (RAF-throttled to avoid re-render storm) ──
+  const rafRef = useRef(null);
   function onFoodMouseEnter(food, e) {
     setHoveredFood(food);
     setTooltipPos({ x: e.clientX, y: e.clientY });
   }
   function onFoodMouseMove(e) {
-    setTooltipPos({ x: e.clientX, y: e.clientY });
+    if (rafRef.current) return;
+    rafRef.current = requestAnimationFrame(() => {
+      setTooltipPos({ x: e.clientX, y: e.clientY });
+      rafRef.current = null;
+    });
   }
   function onFoodMouseLeave() {
+    if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
     setHoveredFood(null);
     setTooltipPos(null);
   }
@@ -515,14 +521,17 @@ export default function Home() {
         </svg>
       </button>
 
-      {/* ── Title — slides from center to top-left ── */}
+      {/* ── Title — slides from center to top-left (GPU-composited) ── */}
       <h1 className="font-bold uppercase"
         style={{
           position: 'fixed', zIndex: 20, whiteSpace: 'nowrap', lineHeight: 1.1,
-          transition: `top 0.85s ${EASE}, left 0.85s ${EASE}, transform 0.85s ${EASE}, font-size 0.7s ${EASE}, letter-spacing 0.7s ${EASE}`,
-          top: isLanding ? '35vh' : 18,
-          left: isLanding ? '50%' : 64,
-          transform: isLanding ? 'translateX(-50%)' : 'translateX(0)',
+          willChange: 'transform, opacity',
+          /* Anchor at top-left, use transform for all movement */
+          top: 0, left: 0,
+          transition: `transform 0.85s ${EASE}, font-size 0.7s ${EASE}, letter-spacing 0.7s ${EASE}`,
+          transform: isLanding
+            ? 'translate(calc(50vw - 50%), 35vh)'
+            : 'translate(64px, 18px)',
           fontSize: isLanding ? 'clamp(2rem, 5vw, 3.5rem)' : '1.25rem',
           letterSpacing: isLanding ? '0.25em' : '0.15em',
         }}>
@@ -544,14 +553,17 @@ export default function Home() {
         Purdue Dining Court Menus
       </p>
 
-      {/* ── Filters — slide from center to top-right ── */}
+      {/* ── Filters — slide from center to top-right (GPU-composited) ── */}
       <div style={{
         position: 'fixed', zIndex: 40,
         display: 'flex', alignItems: 'flex-end',
-        transition: `top 0.85s ${EASE}, right 0.85s ${EASE}, transform 0.85s ${EASE}, gap 0.6s ${EASE}`,
-        top: isLanding ? '50vh' : 13,
-        right: isLanding ? '50%' : 24,
-        transform: isLanding ? 'translateX(50%)' : 'translateX(0)',
+        willChange: 'transform',
+        /* Anchor top-right, transform for movement */
+        top: 0, right: 0,
+        transition: `transform 0.85s ${EASE}, gap 0.6s ${EASE}`,
+        transform: isLanding
+          ? 'translate(calc(-50vw + 50%), 50vh)'
+          : 'translate(-24px, 13px)',
         gap: isLanding ? 16 : 10,
       }}>
         <div style={{ width: isLanding ? 180 : 150, transition: `width 0.7s ${EASE}` }}>
@@ -634,9 +646,11 @@ export default function Home() {
         style={{
           position: 'fixed', top: 61, left: 0, right: 0, bottom: 0, zIndex: 10,
           overflowY: 'auto',
-          transition: `opacity 0.65s ${EASE} ${isLanding ? '0s' : '0.1s'}, transform 0.65s ${EASE} ${isLanding ? '0s' : '0.1s'}`,
+          willChange: 'transform, opacity',
+          transition: `opacity 0.55s ${EASE} ${isLanding ? '0s' : '0.15s'}, transform 0.55s ${EASE} ${isLanding ? '0s' : '0.15s'}, visibility 0s ${isLanding ? '0.55s' : '0s'}`,
           opacity: isLanding ? 0 : 1,
-          transform: isLanding ? 'translateY(30px)' : 'translateY(0)',
+          transform: isLanding ? 'translateY(20px)' : 'translateY(0)',
+          visibility: isLanding ? 'hidden' : 'visible',
           pointerEvents: isLanding ? 'none' : 'auto',
         }}>
         <main className="px-6 md:px-12 lg:px-20 py-8">
@@ -681,7 +695,7 @@ export default function Home() {
                     return (
                       <tr key={`court-${item.label}-${i}`}>
                         <td colSpan={4} className="pt-6 pb-2 px-0"
-                          style={{ animation: `slideInStation 0.4s ${EASE} ${Math.min(i * 0.01, 0.8)}s both` }}>
+                          style={i < 60 ? { animation: `slideInStation 0.35s ${EASE} ${Math.min(i * 0.008, 0.4)}s both` } : undefined}>
                           <div className="text-sm font-bold uppercase tracking-widest text-theme-text-primary border-b-2 border-theme-text-primary/20 pb-1">
                             {item.label}
                           </div>
@@ -693,7 +707,7 @@ export default function Home() {
                     return (
                       <tr key={`station-${item.court}-${item.label}-${i}`}>
                         <td colSpan={4} className="pt-4 pb-1 px-0"
-                          style={{ animation: `slideInStation 0.4s ${EASE} ${Math.min(i * 0.01, 0.8)}s both` }}>
+                          style={i < 60 ? { animation: `slideInStation 0.35s ${EASE} ${Math.min(i * 0.008, 0.4)}s both` } : undefined}>
                           <div className="text-xs font-bold uppercase tracking-wider text-theme-text-tertiary pl-1"
                             style={{ borderLeft: '3px solid', borderColor: 'rgb(var(--color-accent-primary))', paddingLeft: 8 }}>
                             {item.label}
@@ -708,7 +722,7 @@ export default function Home() {
                   return (
                     <tr key={food.id}
                       className="border-b border-theme-text-primary/5 hover:bg-theme-bg-secondary/50 transition-colors group cursor-default"
-                      style={{ animation: `fadeInRow 0.4s ${EASE} ${Math.min(ri * 0.015, 1)}s both` }}
+                      style={ri < 40 ? { animation: `fadeInRow 0.35s ${EASE} ${Math.min(ri * 0.012, 0.5)}s both` } : undefined}
                       onMouseEnter={(e) => onFoodMouseEnter(food, e)}
                       onMouseMove={onFoodMouseMove}
                       onMouseLeave={onFoodMouseLeave}>
