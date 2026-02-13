@@ -8,191 +8,141 @@ export default function About() {
         <title>About - BoilerFuel</title>
         <meta name="description" content="Learn about BoilerFuel Calorie Tracker" />
       </Head>
-      <div className="mx-auto max-w-4xl space-y-10">
+
+      <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary font-mono">
+        <div className="max-w-3xl mx-auto px-6 sm:px-10 py-16 sm:py-24 space-y-16">
+
           {/* Header */}
-          <header className="border-b border-theme-border-primary pb-8">
-            <h1 className="text-5xl font-bold mb-4">About BoilerFuel</h1>
-            <p className="text-xl text-theme-text-tertiary">Your personal dining hall nutrition tracker</p>
+          <header className="space-y-4">
+            <Link href="/" className="text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
+              &larr; Back
+            </Link>
+            <h1 className="text-3xl sm:text-5xl font-bold uppercase tracking-[0.2em]">About</h1>
+            <div className="w-12 h-px bg-theme-text-primary/30" />
+            <p className="text-sm uppercase tracking-widest text-theme-text-tertiary">
+              Purdue dining nutrition tracker
+            </p>
           </header>
 
           {/* What is BoilerFuel */}
-          <section className="rounded-lg bg-theme-card-bg p-8 space-y-5">
-            <h2 className="text-2xl font-bold text-yellow-500">What is BoilerFuel?</h2>
-            <p className="text-theme-text-secondary leading-relaxed text-lg">
-              BoilerFuel is a privacy-focused calorie and macro tracker designed for college students and campus
-              dining halls. Track your meals, monitor your nutrition, and make informed decisions about your diet—all
-              while keeping your data completely private on your device.
+          <section className="space-y-4">
+            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
+              What is BoilerFuel
+            </h2>
+            <p className="text-theme-text-secondary leading-relaxed">
+              A privacy-focused calorie and macro tracker designed for Purdue students. 
+              Browse dining court menus, track your meals, and monitor nutrition&mdash;all 
+              without creating an account. Your data never leaves your device.
             </p>
           </section>
 
-          {/* Key Features */}
-          <section className="rounded-lg bg-theme-card-bg p-8 space-y-6">
-            <h2 className="text-2xl font-bold text-yellow-500">Key Features</h2>
-            <ul className="space-y-3 text-theme-text-secondary">
-              <li className="flex items-start gap-3">
-                <span className="text-green-500 text-xl">✓</span>
-                <div>
-                  <strong className="text-theme-text-primary">100% Privacy-First:</strong> All your meal logs stay on your device. 
-                  No accounts, no cloud storage, no tracking.
+          {/* Features — grid of bordered boxes */}
+          <section className="space-y-6">
+            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
+              Features
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-theme-text-primary/10">
+              {[
+                { label: 'Privacy-First', desc: 'All data stored locally. No accounts, no cloud, no tracking.' },
+                { label: 'Full Nutrition', desc: 'Calories, protein, carbs, and fats for every menu item.' },
+                { label: 'Filter & Sort', desc: 'Browse by dining court, meal time, and sort by any nutrient.' },
+                { label: 'Organized', desc: 'Menu items grouped by station — Grill, Salad Bar, and more.' },
+                { label: 'Quick Add', desc: 'One-click meal logging for fast daily tracking.' },
+                { label: 'Macro Goals', desc: 'Set custom calorie and macro targets in your profile.' },
+              ].map(f => (
+                <div key={f.label} className="bg-theme-bg-primary p-5 space-y-2">
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-theme-text-primary">{f.label}</h3>
+                  <p className="text-xs text-theme-text-tertiary leading-relaxed">{f.desc}</p>
                 </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="text-green-500 text-xl">✓</span>
-                <div>
-                  <strong className="text-theme-text-primary">Complete Nutrition Info:</strong> Track calories, protein, carbs, 
-                  and fats for every meal.
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="text-green-500 text-xl">✓</span>
-                <div>
-                  <strong className="text-theme-text-primary">Activity Tracking:</strong> Log your workouts and see net calories 
-                  for the day.
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="text-green-500 text-xl">✓</span>
-                <div>
-                  <strong className="text-theme-text-primary">Filter by Dining Hall & Meal Time:</strong> Easily find foods from 
-                  your favorite location and meal period.
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="text-green-500 text-xl">✓</span>
-                <div>
-                  <strong className="text-theme-text-primary">Organized by Station:</strong> Menu items grouped by dining hall 
-                  stations (Grill, Salad Bar, etc.).
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="text-green-500 text-xl">✓</span>
-                <div>
-                  <strong className="text-theme-text-primary">Quick Add:</strong> One-click meal logging for fast tracking.
-                </div>
-              </li>
-            </ul>
-          </section>
-
-          {/* How It Works */}
-          <section className="rounded-lg bg-theme-card-bg p-8 space-y-6">
-            <h2 className="text-2xl font-bold text-yellow-500">How It Works</h2>
-            <div className="space-y-4 text-theme-text-secondary">
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-yellow-500/20 flex items-center justify-center text-yellow-500 font-bold">
-                  1
-                </div>
-                <div>
-                  <strong className="text-theme-text-primary">Browse the Menu:</strong> Select your dining hall and meal time 
-                  to see available foods.
-                </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-yellow-500/20 flex items-center justify-center text-yellow-500 font-bold">
-                  2
-                </div>
-                <div>
-                  <strong className="text-theme-text-primary">Log Your Meals:</strong> Click the + button to quickly add foods 
-                  to your daily log.
-                </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-yellow-500/20 flex items-center justify-center text-yellow-500 font-bold">
-                  3
-                </div>
-                <div>
-                  <strong className="text-theme-text-primary">Track Activities:</strong> Log your workouts to see calories 
-                  burned vs. consumed.
-                </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-yellow-500/20 flex items-center justify-center text-yellow-500 font-bold">
-                  4
-                </div>
-                <div>
-                  <strong className="text-theme-text-primary">Monitor Your Progress:</strong> View your daily totals and make 
-                  informed nutrition decisions.
-                </div>
-              </div>
+              ))}
             </div>
           </section>
 
-          {/* Privacy & Security */}
-          <section className="rounded-lg bg-theme-card-bg p-8 space-y-6">
-            <h2 className="text-2xl font-bold text-yellow-500">Privacy & Security</h2>
-            <div className="space-y-3 text-theme-text-secondary">
-              <p>
-                <strong className="text-theme-text-primary">Your data is yours.</strong> BoilerFuel stores all meal and activity 
-                logs locally in your browser using cookies. This means:
-              </p>
-              <ul className="list-disc list-inside space-y-2 ml-4">
-                <li>No user accounts or sign-ups required</li>
-                <li>No personal data sent to servers</li>
-                <li>No tracking or analytics on your eating habits</li>
-                <li>Data stays on your device only</li>
-              </ul>
-              <p className="text-sm text-theme-text-tertiary mt-4">
-                <strong>Note:</strong> Because data is stored locally, it won&apos;t sync across devices. If you clear 
-                your browser cookies, your logs will be deleted.
-              </p>
+          {/* How It Works — numbered list */}
+          <section className="space-y-6">
+            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
+              How It Works
+            </h2>
+            <div className="space-y-0 border border-theme-text-primary/20">
+              {[
+                { n: '01', title: 'Browse', desc: 'Select a dining court and meal time to view the menu.' },
+                { n: '02', title: 'Log', desc: 'Add foods to your daily log with one click.' },
+                { n: '03', title: 'Track', desc: 'See your running calorie and macro totals for the day.' },
+                { n: '04', title: 'Adjust', desc: 'Update your goals anytime from your profile.' },
+              ].map((step, i) => (
+                <div key={step.n}
+                  className={`flex items-start gap-5 px-5 py-4 ${i > 0 ? 'border-t border-theme-text-primary/10' : ''}`}>
+                  <span className="text-lg font-bold text-theme-text-primary/20 tabular-nums shrink-0">{step.n}</span>
+                  <div>
+                    <span className="text-sm font-bold uppercase tracking-wider text-theme-text-primary">{step.title}</span>
+                    <p className="text-xs text-theme-text-tertiary mt-0.5">{step.desc}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </section>
 
-          {/* Technology */}
-          <section className="rounded-lg bg-theme-card-bg p-8 space-y-6">
-            <h2 className="text-2xl font-bold text-yellow-500">Technology</h2>
-            <p className="text-theme-text-secondary">
-              BoilerFuel is built with modern web technologies:
+          {/* Privacy */}
+          <section className="space-y-4">
+            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
+              Privacy &amp; Data
+            </h2>
+            <p className="text-theme-text-secondary leading-relaxed">
+              All meal and activity logs are stored locally in your browser. Nothing is sent to a server.
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-              <div className="bg-theme-bg-tertiary rounded p-4">
-                <h3 className="font-bold text-theme-text-primary mb-2">Frontend</h3>
-                <ul className="text-sm text-theme-text-tertiary space-y-1">
-                  <li>• Next.js & React</li>
-                  <li>• TailwindCSS</li>
-                  <li>• Deployed on Vercel</li>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-theme-text-primary/10 border border-theme-text-primary/10">
+              {['No Accounts', 'No Cloud Sync', 'No Tracking', 'Device Only'].map(item => (
+                <div key={item} className="bg-theme-bg-primary py-3 px-4 text-center">
+                  <span className="text-xs uppercase tracking-wider text-theme-text-secondary">{item}</span>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-theme-text-tertiary">
+              Clearing your browser cookies will delete your logs. Data does not sync across devices.
+            </p>
+          </section>
+
+          {/* Tech Stack */}
+          <section className="space-y-6">
+            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
+              Technology
+            </h2>
+            <div className="grid grid-cols-2 gap-px bg-theme-text-primary/10 border border-theme-text-primary/10">
+              <div className="bg-theme-bg-primary p-5 space-y-2">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-theme-text-primary">Frontend</h3>
+                <ul className="text-xs text-theme-text-tertiary space-y-1">
+                  <li>Next.js &amp; React</li>
+                  <li>TailwindCSS</li>
+                  <li>Vercel</li>
                 </ul>
               </div>
-              <div className="bg-theme-bg-tertiary rounded p-4">
-                <h3 className="font-bold text-theme-text-primary mb-2">Backend</h3>
-                <ul className="text-sm text-theme-text-tertiary space-y-1">
-                  <li>• Flask (Python)</li>
-                  <li>• PostgreSQL Database</li>
-                  <li>• Deployed on a cloud platform</li>
+              <div className="bg-theme-bg-primary p-5 space-y-2">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-theme-text-primary">Backend</h3>
+                <ul className="text-xs text-theme-text-tertiary space-y-1">
+                  <li>Flask (Python)</li>
+                  <li>PostgreSQL</li>
+                  <li>Web Scraper</li>
                 </ul>
               </div>
             </div>
           </section>
 
-          {/* Admin Info */}
-          <section className="rounded-lg bg-theme-card-bg p-8 space-y-5">
-            <h2 className="text-2xl font-bold text-yellow-500">For Administrators</h2>
-            <p className="text-theme-text-secondary">
-              Administrators can log in to manage the shared food database and activities list. The admin panel 
-              allows you to add, update, and remove menu items to keep the information current for all users.
-            </p>
-            <Link 
-              href="/admin"
-              className="inline-block rounded bg-theme-bg-tertiary border border-theme-card-border px-4 py-2 text-sm font-semibold text-theme-text-secondary hover:border-yellow-500 hover:text-theme-accent transition-colors"
-            >
-              Admin Login →
-            </Link>
-          </section>
-
-          {/* Get Started */}
-          <section className="rounded-lg bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/30 p-10 text-center space-y-5">
-            <h2 className="text-2xl font-bold">Ready to Start Tracking?</h2>
-            <p className="text-theme-text-secondary">
-              Head to the dashboard and begin logging your meals today!
-            </p>
-            <Link 
-              href="/dashboard"
-              className="inline-block rounded bg-yellow-500 px-6 py-3 font-semibold text-slate-900 hover:bg-yellow-600 transition-colors"
-            >
-              Open Dashboard
-            </Link>
-          </section>
+          {/* Footer links */}
+          <footer className="border-t border-theme-text-primary/10 pt-8 flex flex-wrap items-center justify-between gap-4">
+            <div className="flex gap-6 text-xs uppercase tracking-widest">
+              <Link href="/" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Home</Link>
+              <Link href="/changelog" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Changelog</Link>
+              <Link href="/admin" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Admin</Link>
+              <Link href="/profile" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Profile</Link>
+            </div>
+            <span className="text-xs text-theme-text-tertiary/40">{new Date().getFullYear()}</span>
+          </footer>
 
         </div>
+      </div>
     </>
   );
 }
+
+// About uses its own full-page layout
+About.getLayout = (page) => page;
