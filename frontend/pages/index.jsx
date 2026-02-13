@@ -666,14 +666,14 @@ export default function Home() {
         </Link>
       </div>
 
-      {/* ── Profile icon — slides in from right when scrolled to results ── */}
+      {/* ── Profile icon — slides in from right below the header bar ── */}
       <Link href="/profile"
         title="Profile"
         className="group"
         style={{
           position: 'fixed', zIndex: 50,
-          top: isMobile ? 10 : 13,
-          right: isMobile ? 10 : 24,
+          top: isMobile ? 76 : 68,
+          right: isMobile ? 12 : 24,
           willChange: 'transform, opacity',
           transition: `transform 0.5s ${EASE}, opacity 0.4s ${EASE}`,
           transform: isLanding ? 'translateX(60px)' : 'translateX(0)',
