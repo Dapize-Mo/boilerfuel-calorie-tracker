@@ -235,7 +235,7 @@ export default function Home() {
       {/* ═══ RESULTS PAGE ═══ */}
       <div
         className={`
-          min-h-screen flex flex-col
+          absolute inset-0 flex flex-col overflow-y-auto
           transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]
           ${view === 'results'
             ? 'opacity-100 z-10 translate-y-0'
