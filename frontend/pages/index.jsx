@@ -945,7 +945,7 @@ export default function Home() {
                           </div>
                           <div className="py-3 px-4 text-theme-text-secondary capitalize hidden sm:block w-36 shrink-0">{food.dining_court}</div>
                           <div className="py-3 px-4 text-theme-text-tertiary capitalize hidden md:block w-28 shrink-0">{food.meal_time}</div>
-                          <div className="py-3 pl-4 text-right font-mono tabular-nums text-theme-text-secondary w-16 shrink-0">{food.calories}</div>
+                          <div className="py-3 pl-4 text-right font-mono tabular-nums text-theme-text-secondary w-16 shrink-0">{food.calories || '—'}</div>
                         </div>
 
                         {/* Expanded detail panel */}
@@ -1074,7 +1074,7 @@ export default function Home() {
                     {(location.type === 'all-foodco' || location.source === 'foodco') ? (
                       <div className="space-y-2">
                         <div className="text-base not-italic font-bold text-theme-text-secondary">Purdue Food Co</div>
-                        <div className="text-sm">Retail dining locations do not publish daily menus through the API.</div>
+                        <div className="text-sm">No menu data available for this location yet.</div>
                         <div className="text-xs mt-3">Visit <a href="https://purduefoodco.com" target="_blank" rel="noopener noreferrer" className="underline text-theme-text-secondary hover:text-theme-text-primary">purduefoodco.com</a> for menus and ordering.</div>
                       </div>
                     ) : 'No foods found for this selection.'}

@@ -31,19 +31,28 @@ export const ALL_PURDUE_CATEGORIES = [
 
 // ── Purdue Food Co (retail dining) ──
 export const FOOD_CO_LOCATIONS = [
-  { id: '15093', name: 'Atlas Family Marketplace' },
+  // Atlas Family Marketplace sub-restaurants
+  { id: '47988', name: 'Burgers + Fries' },
+  { id: '89899', name: 'Choolaah Indian BBQ' },
+  { id: '37757', name: 'DSJ Asian Grill' },
+  { id: '47986', name: 'FoodLab' },
+  { id: '15087', name: 'Sushi Boss @ PMU' },
+  { id: '37761', name: 'Tenders, Love & Chicken' },
+  { id: '15089', name: "Walk On's Sports Bistreaux" },
+  { id: '15091', name: 'Zen' },
+  // Other Purdue Food Co locations
   { id: '87119', name: 'Boilermaker Market @ Burton-Morgan' },
   { id: '90976', name: 'Boilermaker Market @ Dudley' },
   { id: '14432', name: 'Boilermaker Market - Harrison' },
   { id: '16595', name: 'Boilermaker Market @ Niswonger Hall' },
   { id: '14434', name: 'Boilermaker Market - 3rd Street' },
-  { id: '14601', name: "Famous Frank's @ Cary Knight Spot" },
   { id: '14441', name: 'Catalyst Café' },
   { id: '90977', name: 'Centennial Station' },
   { id: '14439', name: 'Continuum Café' },
+  { id: '14601', name: "Famous Frank's @ Cary Knight Spot" },
+  { id: '14425', name: 'Freshens Fresh Food Studio' },
   { id: '83773', name: 'Java House' },
   { id: '92017', name: 'KNOW Eatery' },
-  { id: '14425', name: 'Freshens Fresh Food Studio' },
   { id: '14438', name: 'Shenye @ Harrison Grill' },
   { id: '14426', name: "Jersey Mike's" },
   { id: '14423', name: 'Panera' },

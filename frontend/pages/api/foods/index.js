@@ -19,7 +19,7 @@ export default async function handler(req, res) {
 
       if (useSnapshots) {
         params.push(date);
-        conditions.push(`menu_date = $${params.length}`);
+        conditions.push(`(menu_date = $${params.length} OR source = 'retail')`);
       }
 
       if (q) {
