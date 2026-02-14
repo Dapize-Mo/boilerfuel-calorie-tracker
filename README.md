@@ -5,8 +5,10 @@ BoilerFuel is a privacy-first calorie and fitness tracking application designed 
 ## ✨ Key Features
 
 - 📋 **Live Dining Menus** — Real-time menus from 7 Purdue dining courts with 1000+ foods
+- � **Purdue Food Co** — 20+ retail locations including Panera, Qdoba, Jersey Mike's, Starbucks
 - 🍽️ **Meal Logging** — Log meals with automatic calorie and macro (protein/carbs/fats) calculation
 - 🏋️ **Fitness Tracking** — Track workouts, calculate calories burned, and monitor PRs
+- 🍕 **Custom Foods** — Add your own foods with custom nutrition data for home-cooked meals
 - 📊 **Smart Dashboard** — Net calorie tracking, daily stats, weight charts, and streak tracking
 - 🎨 **Beautiful UI** — Dark mode, multiple view options, mobile-responsive design
 - 🔐 **Privacy First** — No account required; data stored securely in browser cookies
@@ -46,6 +48,8 @@ cp frontend/.env.example frontend/.env.local
 # 5. Initialize database
 createdb boilerfuel
 psql boilerfuel < db/schema.sql
+psql boilerfuel < db/seed.sql
+psql boilerfuel < db/retail_menu_seed.sql
 
 # 6. Run services (terminal 1: backend)
 cd backend && flask --app app run --debug
@@ -95,6 +99,59 @@ POST /api/admin/scrape-menus (bearerToken required)
 
 See [docs/API.md](docs/API.md) for complete reference.
 
+## 🏪 Purdue Food Co Integration
+
+BoilerFuel now includes 20+ retail dining locations across campus:
+
+### Chain Restaurants (Full Nutrition Data)
+- ✅ **Panera Bread** — 32 menu items with complete nutrition
+- ✅ **Qdoba Mexican Eats** — 24 items (burritos, bowls, tacos)
+- ✅ **Jersey Mike's Subs** — 24 items (hot & cold subs)
+- ✅ **Starbucks** (MSEE & Winifred Parker) — 46 items each
+- ✅ **Walk On's Sports Bistreaux** — 70+ items with calories
+- ✅ **Freshens Fresh Food Studio** — Frozen yogurt & smoothies
+
+### Campus Cafés & Markets (Placeholder Data)
+- Centennial Station
+- Atlas Family Marketplace
+- Boilermaker Markets (5 locations)
+- Famous Frank's, Java House, Saxbys, and more
+
+**Total:** 350+ Food Co menu items
+
+### Custom Foods Feature
+Create your own foods for home-cooked meals, meal prep, and recipes:
+- Add custom nutrition data (calories, protein, carbs, fats)
+- Specify serving sizes
+- Add notes and recipe details
+- Full CRUD interface at `/custom-foods`
+
+See [docs/CUSTOM_FOODS.md](docs/CUSTOM_FOODS.md) for complete guide.
+
+## 🔗 Quick API Reference
+
+```bash
+# Get foods (with filters)
+GET /api/foods?dining_court=Earhart&meal_time=lunch
+
+# Get custom foods (authentication required)
+GET /api/custom-foods
+
+# Create custom food
+POST /api/custom-foods { "name": "...", "calories": 300, "macros": {...} }
+
+# Get activities
+GET /api/activities
+
+# Admin login
+POST /api/admin/login { "password": "YOUR_PASSWORD" }
+
+# Trigger menu scraping
+POST /api/admin/scrape-menus (bearerToken required)
+```
+
+See [docs/API.md](docs/API.md) for complete reference.
+
 ## 🛠️ Tech Stack
 
 **Frontend**: Next.js 14 + React 18 + Tailwind CSS + Recharts  
@@ -107,6 +164,7 @@ See [docs/API.md](docs/API.md) for complete reference.
 
 - [ARCHITECTURE.md](docs/ARCHITECTURE.md) — System design & data flow  
 - [API.md](docs/API.md) — REST API reference  
+- [CUSTOM_FOODS.md](docs/CUSTOM_FOODS.md) — Custom foods feature guide
 - [DEPLOYMENT.md](docs/DEPLOYMENT.md) — Production setup guide  
 - [SETUP_LOCAL.md](docs/SETUP_LOCAL.md) — Local development  
 - [SETUP_DOCKER.md](docs/SETUP_DOCKER.md) — Docker setup  

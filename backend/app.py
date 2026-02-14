@@ -290,6 +290,24 @@ class User(db.Model):
 	)
 
 
+class CustomFood(db.Model):
+	__tablename__ = 'custom_foods'
+
+	id = db.Column(db.Integer, primary_key=True)
+	user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
+	name = db.Column(db.String(255), nullable=False)
+	calories = db.Column(db.Integer, nullable=False)
+	macros = db.Column(db.JSON, nullable=False)  # {"protein": X, "carbs": Y, "fats": Z}
+	serving_size = db.Column(db.String(100), nullable=True)
+	notes = db.Column(db.Text, nullable=True)
+	created_at = db.Column(
+		db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
+	)
+	updated_at = db.Column(
+		db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False
+	)
+
+
 def admin_enabled() -> bool:
 	return bool(app.config.get('ADMIN_PASSWORD'))
 
@@ -519,6 +537,229 @@ def delete_food(food_id: int):
 	except Exception as exc:  # pragma: no cover
 		db.session.rollback()
 		return jsonify({'error': f'Failed to delete food: {exc}'}), 500
+
+
+# ============================================================================
+# CUSTOM FOODS API - User-defined foods
+# ============================================================================
+
+@app.route('/api/custom-foods', methods=['GET'])
+@jwt_required()
+def get_custom_foods():
+	"""Get all custom foods for the authenticated user."""
+	user_email = get_jwt().get('sub')
+	user = User.query.filter_by(email=user_email).first()
+	if not user:
+		return jsonify({'error': 'User not found'}), 404
+	
+	query = CustomFood.query.filter_by(user_id=user.id).order_by(CustomFood.name.asc())
+	
+	# Optional search filter
+	search = request.args.get('q')
+	if search:
+		like = f"%{search.strip()}%"
+		query = query.filter(CustomFood.name.ilike(like))
+	
+	custom_foods = query.all()
+	return jsonify({
+		'custom_foods': [{
+			'id': f.id,
+			'name': f.name,
+			'calories': f.calories,
+			'macros': f.macros,
+			'serving_size': f.serving_size,
+			'notes': f.notes,
+			'created_at': f.created_at.isoformat(),
+			'updated_at': f.updated_at.isoformat(),
+			'source': 'custom'  # Mark as custom to distinguish from menu items
+		} for f in custom_foods]
+	}), 200
+
+
+@app.route('/api/custom-foods', methods=['POST'])
+@jwt_required()
+def create_custom_food():
+	"""Create a new custom food for the authenticated user."""
+	user_email = get_jwt().get('sub')
+	user = User.query.filter_by(email=user_email).first()
+	if not user:
+		return jsonify({'error': 'User not found'}), 404
+	
+	data = request.get_json() or {}
+	
+	# Validate required fields
+	name = (data.get('name') or '').strip()
+	calories = data.get('calories')
+	macros = data.get('macros')
+	
+	if not name:
+		return jsonify({'error': 'Food name is required'}), 400
+	if calories is None or not isinstance(calories, (int, float)) or calories < 0:
+		return jsonify({'error': 'Valid calories value is required (must be >= 0)'}), 400
+	if not macros or not isinstance(macros, dict):
+		return jsonify({'error': 'Macros are required (protein, carbs, fats)'}), 400
+	
+	# Validate macros structure
+	required_macros = ['protein', 'carbs', 'fats']
+	for macro in required_macros:
+		if macro not in macros:
+			return jsonify({'error': f'Macro "{macro}" is required'}), 400
+		if not isinstance(macros[macro], (int, float)) or macros[macro] < 0:
+			return jsonify({'error': f'Macro "{macro}" must be a number >= 0'}), 400
+	
+	# Optional fields
+	serving_size = (data.get('serving_size') or '').strip() or None
+	notes = (data.get('notes') or '').strip() or None
+	
+	try:
+		custom_food = CustomFood(
+			user_id=user.id,
+			name=name,
+			calories=int(calories),
+			macros=macros,
+			serving_size=serving_size,
+			notes=notes
+		)
+		db.session.add(custom_food)
+		db.session.commit()
+		
+		return jsonify({
+			'message': 'Custom food created successfully',
+			'custom_food': {
+				'id': custom_food.id,
+				'name': custom_food.name,
+				'calories': custom_food.calories,
+				'macros': custom_food.macros,
+				'serving_size': custom_food.serving_size,
+				'notes': custom_food.notes,
+				'created_at': custom_food.created_at.isoformat(),
+				'updated_at': custom_food.updated_at.isoformat(),
+				'source': 'custom'
+			}
+		}), 201
+	except Exception as exc:  # pragma: no cover
+		db.session.rollback()
+		return jsonify({'error': f'Failed to create custom food: {exc}'}), 500
+
+
+@app.route('/api/custom-foods/<int:food_id>', methods=['GET'])
+@jwt_required()
+def get_custom_food(food_id: int):
+	"""Get a specific custom food by ID."""
+	user_email = get_jwt().get('sub')
+	user = User.query.filter_by(email=user_email).first()
+	if not user:
+		return jsonify({'error': 'User not found'}), 404
+	
+	custom_food = CustomFood.query.filter_by(id=food_id, user_id=user.id).first()
+	if not custom_food:
+		return jsonify({'error': 'Custom food not found'}), 404
+	
+	return jsonify({
+		'id': custom_food.id,
+		'name': custom_food.name,
+		'calories': custom_food.calories,
+		'macros': custom_food.macros,
+		'serving_size': custom_food.serving_size,
+		'notes': custom_food.notes,
+		'created_at': custom_food.created_at.isoformat(),
+		'updated_at': custom_food.updated_at.isoformat(),
+		'source': 'custom'
+	}), 200
+
+
+@app.route('/api/custom-foods/<int:food_id>', methods=['PUT'])
+@jwt_required()
+def update_custom_food(food_id: int):
+	"""Update a custom food."""
+	user_email = get_jwt().get('sub')
+	user = User.query.filter_by(email=user_email).first()
+	if not user:
+		return jsonify({'error': 'User not found'}), 404
+	
+	custom_food = CustomFood.query.filter_by(id=food_id, user_id=user.id).first()
+	if not custom_food:
+		return jsonify({'error': 'Custom food not found'}), 404
+	
+	data = request.get_json() or {}
+	
+	# Update fields if provided
+	if 'name' in data:
+		name = (data['name'] or '').strip()
+		if not name:
+			return jsonify({'error': 'Food name cannot be empty'}), 400
+		custom_food.name = name
+	
+	if 'calories' in data:
+		calories = data['calories']
+		if not isinstance(calories, (int, float)) or calories < 0:
+			return jsonify({'error': 'Valid calories value is required (must be >= 0)'}), 400
+		custom_food.calories = int(calories)
+	
+	if 'macros' in data:
+		macros = data['macros']
+		if not isinstance(macros, dict):
+			return jsonify({'error': 'Macros must be an object'}), 400
+		
+		# Validate macros structure
+		required_macros = ['protein', 'carbs', 'fats']
+		for macro in required_macros:
+			if macro not in macros:
+				return jsonify({'error': f'Macro "{macro}" is required'}), 400
+			if not isinstance(macros[macro], (int, float)) or macros[macro] < 0:
+				return jsonify({'error': f'Macro "{macro}" must be a number >= 0'}), 400
+		
+		custom_food.macros = macros
+	
+	if 'serving_size' in data:
+		custom_food.serving_size = (data['serving_size'] or '').strip() or None
+	
+	if 'notes' in data:
+		custom_food.notes = (data['notes'] or '').strip() or None
+	
+	try:
+		custom_food.updated_at = datetime.now(timezone.utc)
+		db.session.commit()
+		
+		return jsonify({
+			'message': 'Custom food updated successfully',
+			'custom_food': {
+				'id': custom_food.id,
+				'name': custom_food.name,
+				'calories': custom_food.calories,
+				'macros': custom_food.macros,
+				'serving_size': custom_food.serving_size,
+				'notes': custom_food.notes,
+				'created_at': custom_food.created_at.isoformat(),
+				'updated_at': custom_food.updated_at.isoformat(),
+				'source': 'custom'
+			}
+		}), 200
+	except Exception as exc:  # pragma: no cover
+		db.session.rollback()
+		return jsonify({'error': f'Failed to update custom food: {exc}'}), 500
+
+
+@app.route('/api/custom-foods/<int:food_id>', methods=['DELETE'])
+@jwt_required()
+def delete_custom_food(food_id: int):
+	"""Delete a custom food."""
+	user_email = get_jwt().get('sub')
+	user = User.query.filter_by(email=user_email).first()
+	if not user:
+		return jsonify({'error': 'User not found'}), 404
+	
+	custom_food = CustomFood.query.filter_by(id=food_id, user_id=user.id).first()
+	if not custom_food:
+		return jsonify({'error': 'Custom food not found'}), 404
+	
+	try:
+		db.session.delete(custom_food)
+		db.session.commit()
+		return jsonify({'message': 'Custom food deleted successfully'}), 200
+	except Exception as exc:  # pragma: no cover
+		db.session.rollback()
+		return jsonify({'error': f'Failed to delete custom food: {exc}'}), 500
 
 
 @app.route('/api/activities', methods=['GET'])

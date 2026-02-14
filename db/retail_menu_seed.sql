@@ -170,3 +170,344 @@ INSERT INTO menu_snapshots (menu_date, name, calories, macros, dining_court, sta
 ('2099-01-01', 'FroYo Blast Oreo Overload', 370, '{"protein":11,"carbs":78,"fats":5}', 'Freshens Fresh Food Studio', 'FroYo Blasts', 'Lunch', 'retail'),
 ('2099-01-01', 'FroYo Blast M&M''s', 460, '{"protein":11,"carbs":89,"fats":9}', 'Freshens Fresh Food Studio', 'FroYo Blasts', 'Lunch', 'retail'),
 ('2099-01-01', 'FroYo Blast Reese''s Pieces', 600, '{"protein":19,"carbs":96,"fats":19}', 'Freshens Fresh Food Studio', 'FroYo Blasts', 'Lunch', 'retail');
+-- ============================================================================
+-- PANERA BREAD
+-- Source: Panera nutrition data (panerabread.com)
+-- ============================================================================
+
+INSERT INTO menu_snapshots (menu_date, name, calories, macros, dining_court, station, meal_time, source) VALUES
+('2099-01-01', 'Bacon, Egg & Cheese on Brioche', 560, '{"protein":28,"carbs":42,"fats":28}', 'Panera', 'Breakfast', 'Breakfast', 'retail'),
+('2099-01-01', 'Avocado, Egg White & Spinach Power Sandwich', 410, '{"protein":24,"carbs":38,"fats":17}', 'Panera', 'Breakfast', 'Breakfast', 'retail'),
+('2099-01-01', 'Steel Cut Oatmeal with Strawberries', 340, '{"protein":9,"carbs":67,"fats":4}', 'Panera', 'Breakfast', 'Breakfast', 'retail'),
+('2099-01-01', 'Blueberry Muffin', 420, '{"protein":6,"carbs":64,"fats":16}', 'Panera', 'Bakery', 'Breakfast', 'retail'),
+('2099-01-01', 'Broccoli Cheddar Soup (Cup)', 360, '{"protein":13,"carbs":23,"fats":24}', 'Panera', 'Soups', 'Lunch', 'retail'),
+('2099-01-01', 'Chicken Noodle Soup (Cup)', 140, '{"protein":9,"carbs":18,"fats":3}', 'Panera', 'Soups', 'Lunch', 'retail'),
+('2099-01-01', 'Cream of Chicken & Wild Rice Soup (Cup)', 260, '{"protein":10,"carbs":23,"fats":14}', 'Panera', 'Soups', 'Lunch', 'retail'),
+('2099-01-01', 'Baked Potato Soup (Cup)', 290, '{"protein":8,"carbs":30,"fats":15}', 'Panera', 'Soups', 'Lunch', 'retail'),
+('2099-01-01', 'Broccoli Cheddar Soup (Bowl)', 540, '{"protein":20,"carbs":34,"fats":36}', 'Panera', 'Soups', 'Lunch', 'retail'),
+('2099-01-01', 'Chicken Noodle Soup (Bowl)', 210, '{"protein":13,"carbs":27,"fats":5}', 'Panera', 'Soups', 'Lunch', 'retail'),
+('2099-01-01', 'Cream of Chicken & Wild Rice Soup (Bowl)', 390, '{"protein":15,"carbs":34,"fats":21}', 'Panera', 'Soups', 'Lunch', 'retail'),
+('2099-01-01', 'Baked Potato Soup (Bowl)', 440, '{"protein":12,"carbs":45,"fats":23}', 'Panera', 'Soups', 'Lunch', 'retail'),
+('2099-01-01', 'Caesar Salad (Whole)', 330, '{"protein":11,"carbs":22,"fats":23}', 'Panera', 'Salads', 'Lunch', 'retail'),
+('2099-01-01', 'Green Goddess Cobb Salad (Whole)', 560, '{"protein":37,"carbs":21,"fats":39}', 'Panera', 'Salads', 'Lunch', 'retail'),
+('2099-01-01', 'Asian Sesame Salad with Chicken (Whole)', 420, '{"protein":31,"carbs":36,"fats":17}', 'Panera', 'Salads', 'Lunch', 'retail'),
+('2099-01-01', 'Bacon Turkey Bravo on Tomato Basil', 800, '{"protein":50,"carbs":80,"fats":29}', 'Panera', 'Sandwiches', 'Lunch', 'retail'),
+('2099-01-01', 'Frontega Chicken on Focaccia', 870, '{"protein":54,"carbs":81,"fats":35}', 'Panera', 'Sandwiches', 'Lunch', 'retail'),
+('2099-01-01', 'Mediterranean Veggie on Tomato Basil', 590, '{"protein":21,"carbs":77,"fats":23}', 'Panera', 'Sandwiches', 'Lunch', 'retail'),
+('2099-01-01', 'Tuna Salad Sandwich on Honey Wheat', 490, '{"protein":21,"carbs":63,"fats":17}', 'Panera', 'Sandwiches', 'Lunch', 'retail'),
+('2099-01-01', 'Napa Almond Chicken Salad on Sesame Semolina', 680, '{"protein":31,"carbs":69,"fats":31}', 'Panera', 'Sandwiches', 'Lunch', 'retail'),
+('2099-01-01', 'Margherita Flatbread', 820, '{"protein":32,"carbs":86,"fats":38}', 'Panera', 'Flatbreads', 'Lunch', 'retail'),
+('2099-01-01', 'Chipotle Chicken & Bacon Flatbread', 970, '{"protein":48,"carbs":88,"fats":47}', 'Panera', 'Flatbreads', 'Lunch', 'retail'),
+('2099-01-01', 'Baguette', 180, '{"protein":6,"carbs":34,"fats":2}', 'Panera', 'Sides', 'Lunch', 'retail'),
+('2099-01-01', 'Chips', 150, '{"protein":2,"carbs":19,"fats":8}', 'Panera', 'Sides', 'Lunch', 'retail'),
+('2099-01-01', 'Apple', 80, '{"protein":0,"carbs":21,"fats":0}', 'Panera', 'Sides', 'Lunch', 'retail'),
+('2099-01-01', 'Chocolate Chip Cookie', 390, '{"protein":4,"carbs":54,"fats":18}', 'Panera', 'Bakery', 'Lunch', 'retail'),
+('2099-01-01', 'Chocolate Chipper Cookie', 440, '{"protein":5,"carbs":58,"fats":22}', 'Panera', 'Bakery', 'Lunch', 'retail'),
+('2099-01-01', 'Kitchen Sink Cookie', 420, '{"protein":6,"carbs":55,"fats":20}', 'Panera', 'Bakery', 'Lunch', 'retail'),
+('2099-01-01', 'Brownie', 470, '{"protein":5,"carbs":62,"fats":23}', 'Panera', 'Bakery', 'Lunch', 'retail'),
+('2099-01-01', 'Charged Lemonade (20oz)', 160, '{"protein":0,"carbs":40,"fats":0}', 'Panera', 'Beverages', 'Lunch', 'retail'),
+('2099-01-01', 'Green Tea (16oz)', 0, '{"protein":0,"carbs":0,"fats":0}', 'Panera', 'Beverages', 'Lunch', 'retail'),
+('2099-01-01', 'Coffee (16oz)', 5, '{"protein":1,"carbs":1,"fats":0}', 'Panera', 'Beverages', 'Lunch', 'retail');
+
+-- ============================================================================
+-- QDOBA MEXICAN EATS
+-- Source: Qdoba nutrition calculator (qdoba.com/nutrition)
+-- ============================================================================
+
+INSERT INTO menu_snapshots (menu_date, name, calories, macros, dining_court, station, meal_time, source) VALUES
+('2099-01-01', 'Chicken Burrito (Flour Tortilla)', 1050, '{"protein":58,"carbs":130,"fats":34}', 'Qdoba', 'Burritos', 'Lunch', 'retail'),
+('2099-01-01', 'Impossible Burrito (Flour Tortilla)', 860, '{"protein":42,"carbs":131,"fats":22}', 'Qdoba', 'Burritos', 'Lunch', 'retail'),
+('2099-01-01', 'Steak Burrito (Flour Tortilla)', 1100, '{"protein":60,"carbs":130,"fats":38}', 'Qdoba', 'Burritos', 'Lunch', 'retail'),
+('2099-01-01', 'Ground Beef Burrito (Flour Tortilla)', 1120, '{"protein":56,"carbs":130,"fats":42}', 'Qdoba', 'Burritos', 'Lunch', 'retail'),
+('2099-01-01', 'Veggie Burrito (Flour Tortilla)', 940, '{"protein":30,"carbs":135,"fats":32}', 'Qdoba', 'Burritos', 'Lunch', 'retail'),
+('2099-01-01', 'Chicken Burrito Bowl', 770, '{"protein":57,"carbs":76,"fats":30}', 'Qdoba', 'Bowls', 'Lunch', 'retail'),
+('2099-01-01', 'Steak Burrito Bowl', 820, '{"protein":59,"carbs":76,"fats":34}', 'Qdoba', 'Bowls', 'Lunch', 'retail'),
+('2099-01-01', 'Ground Beef Burrito Bowl', 840, '{"protein":55,"carbs":76,"fats":38}', 'Qdoba', 'Bowls', 'Lunch', 'retail'),
+('2099-01-01', 'Impossible Burrito Bowl', 580, '{"protein":41,"carbs":77,"fats":18}', 'Qdoba', 'Bowls', 'Lunch', 'retail'),
+('2099-01-01', 'Chicken Tacos (3)', 780, '{"protein":48,"carbs":72,"fats":30}', 'Qdoba', 'Tacos', 'Lunch', 'retail'),
+('2099-01-01', 'Steak Tacos (3)', 830, '{"protein":50,"carbs":72,"fats":34}', 'Qdoba', 'Tacos', 'Lunch', 'retail'),
+('2099-01-01', 'Ground Beef Tacos (3)', 850, '{"protein":46,"carbs":72,"fats":38}', 'Qdoba', 'Tacos', 'Lunch', 'retail'),
+('2099-01-01', 'Chicken Quesadilla', 1290, '{"protein":78,"carbs":106,"fats":58}', 'Qdoba', 'Quesadillas', 'Lunch', 'retail'),
+('2099-01-01', 'Steak Quesadilla', 1340, '{"protein":80,"carbs":106,"fats":62}', 'Qdoba', 'Quesadillas', 'Lunch', 'retail'),
+('2099-01-01', 'Veggie Quesadilla', 1030, '{"protein":42,"carbs":110,"fats":50}', 'Qdoba', 'Quesadillas', 'Lunch', 'retail'),
+('2099-01-01', 'Chicken Taco Salad', 980, '{"protein":62,"carbs":76,"fats":44}', 'Qdoba', 'Salads', 'Lunch', 'retail'),
+('2099-01-01', 'Steak Taco Salad', 1030, '{"protein":64,"carbs":76,"fats":48}', 'Qdoba', 'Salads', 'Lunch', 'retail'),
+('2099-01-01', 'Chips', 570, '{"protein":8,"carbs":74,"fats":28}', 'Qdoba', 'Sides', 'Lunch', 'retail'),
+('2099-01-01', 'Chips & Queso', 830, '{"protein":20,"carbs":82,"fats":46}', 'Qdoba', 'Sides', 'Lunch', 'retail'),
+('2099-01-01', 'Chips & Guacamole', 730, '{"protein":10,"carbs":82,"fats":42}', 'Qdoba', 'Sides', 'Lunch', 'retail'),
+('2099-01-01', 'Black Beans (Side)', 140, '{"protein":9,"carbs":23,"fats":1}', 'Qdoba', 'Sides', 'Lunch', 'retail'),
+('2099-01-01', 'Cilantro Lime Rice (Side)', 190, '{"protein":4,"carbs":40,"fats":2}', 'Qdoba', 'Sides', 'Lunch', 'retail'),
+('2099-01-01', 'Breakfast Burrito with Bacon', 780, '{"protein":36,"carbs":85,"fats":32}', 'Qdoba', 'Breakfast', 'Breakfast', 'retail'),
+('2099-01-01', 'Breakfast Burrito with Sausage', 870, '{"protein":36,"carbs":85,"fats":39}', 'Qdoba', 'Breakfast', 'Breakfast', 'retail');
+
+-- ============================================================================
+-- JERSEY MIKE'S SUBS
+-- Source: Jersey Mike's nutrition guide (jerseymikes.com/menu/nutrition)
+-- ============================================================================
+
+INSERT INTO menu_snapshots (menu_date, name, calories, macros, dining_court, station, meal_time, source) VALUES
+('2099-01-01', '#1 BLT (Regular)', 540, '{"protein":21,"carbs":52,"fats":27}', 'Jersey Mike's', 'Cold Subs', 'Lunch', 'retail'),
+('2099-01-01', '#2 Jersey Shore''s Favorite (Regular)', 630, '{"protein":31,"carbs":53,"fats":31}', 'Jersey Mike's', 'Cold Subs', 'Lunch', 'retail'),
+('2099-01-01', '#7 Turkey & Provolone (Regular)', 510, '{"protein":30,"carbs":53,"fats":18}', 'Jersey Mike's', 'Cold Subs', 'Lunch', 'retail'),
+('2099-01-01', '#8 Club Sub with Mayonnaise (Regular)', 640, '{"protein":38,"carbs":53,"fats":29}', 'Jersey Mike's', 'Cold Subs', 'Lunch', 'retail'),
+('2099-01-01', '#9 Club Supreme (Regular)', 680, '{"protein":40,"carbs":53,"fats":32}', 'Jersey Mike's', 'Cold Subs', 'Lunch', 'retail'),
+('2099-01-01', '#13 Original Italian (Regular)', 700, '{"protein":31,"carbs":53,"fats":39}', 'Jersey Mike's', 'Cold Subs', 'Lunch', 'retail'),
+('2099-01-01', '#14 The Veggie (Regular)', 520, '{"protein":20,"carbs":61,"fats":22}', 'Jersey Mike's', 'Cold Subs', 'Lunch', 'retail'),
+('2099-01-01', '#1 BLT (Giant)', 1080, '{"protein":42,"carbs":104,"fats":54}', 'Jersey Mike's', 'Cold Subs', 'Lunch', 'retail'),
+('2099-01-01', '#7 Turkey & Provolone (Giant)', 1020, '{"protein":60,"carbs":106,"fats":36}', 'Jersey Mike's', 'Cold Subs', 'Lunch', 'retail'),
+('2099-01-01', '#8 Club Sub with Mayonnaise (Giant)', 1280, '{"protein":76,"carbs":106,"fats":58}', 'Jersey Mike's', 'Cold Subs', 'Lunch', 'retail'),
+('2099-01-01', '#13 Original Italian (Giant)', 1400, '{"protein":62,"carbs":106,"fats":78}', 'Jersey Mike's', 'Cold Subs', 'Lunch', 'retail'),
+('2099-01-01', '#17 Mike''s Famous Philly (Regular)', 730, '{"protein":45,"carbs":58,"fats":34}', 'Jersey Mike's', 'Hot Subs', 'Lunch', 'retail'),
+('2099-01-01', '#26 Bacon Ranch Chicken Cheese Steak (Regular)', 910, '{"protein":50,"carbs":58,"fats":52}', 'Jersey Mike's', 'Hot Subs', 'Lunch', 'retail'),
+('2099-01-01', '#43 Chipotle Cheese Steak (Regular)', 850, '{"protein":47,"carbs":60,"fats":46}', 'Jersey Mike's', 'Hot Subs', 'Lunch', 'retail'),
+('2099-01-01', '#56 Big Kahuna Cheese Steak (Regular)', 880, '{"protein":47,"carbs":62,"fats":48}', 'Jersey Mike's', 'Hot Subs', 'Lunch', 'retail'),
+('2099-01-01', '#17 Mike''s Famous Philly (Giant)', 1460, '{"protein":90,"carbs":116,"fats":68}', 'Jersey Mike's', 'Hot Subs', 'Lunch', 'retail'),
+('2099-01-01', '#26 Bacon Ranch Chicken Cheese Steak (Giant)', 1820, '{"protein":100,"carbs":116,"fats":104}', 'Jersey Mike's', 'Hot Subs', 'Lunch', 'retail'),
+('2099-01-01', '#2 Jersey Shore''s Favorite (Mini)', 390, '{"protein":19,"carbs":36,"fats":19}', 'Jersey Mike's', 'Mini Subs', 'Lunch', 'retail'),
+('2099-01-01', '#7 Turkey & Provolone (Mini)', 320, '{"protein":18,"carbs":36,"fats":11}', 'Jersey Mike's', 'Mini Subs', 'Lunch', 'retail'),
+('2099-01-01', 'Grilled Buffalo Chicken Wrap', 600, '{"protein":45,"carbs":48,"fats":25}', 'Jersey Mike's', 'Wraps', 'Lunch', 'retail'),
+('2099-01-01', 'Grilled Chicken Caesar Wrap', 690, '{"protein":46,"carbs":48,"fats":32}', 'Jersey Mike's', 'Wraps', 'Lunch', 'retail'),
+('2099-01-01', 'Regular Chips', 150, '{"protein":2,"carbs":15,"fats":10}', 'Jersey Mike's', 'Sides', 'Lunch', 'retail'),
+('2099-01-01', 'Pickle', 5, '{"protein":0,"carbs":1,"fats":0}', 'Jersey Mike's', 'Sides', 'Lunch', 'retail'),
+('2099-01-01', 'Chocolate Chip Cookie', 420, '{"protein":5,"carbs":55,"fats":21}', 'Jersey Mike's', 'Desserts', 'Lunch', 'retail');
+
+-- ============================================================================
+-- STARBUCKS @ MSEE
+-- Source: Starbucks nutrition data (starbucks.com/menu)
+-- ============================================================================
+
+INSERT INTO menu_snapshots (menu_date, name, calories, macros, dining_court, station, meal_time, source) VALUES
+('2099-01-01', 'Caffe Americano (Grande)', 15, '{"protein":1,"carbs":3,"fats":0}', 'Starbucks @ MSEE', 'Hot Coffee', 'Breakfast', 'retail'),
+('2099-01-01', 'Caffe Latte (Grande)', 190, '{"protein":13,"carbs":19,"fats":7}', 'Starbucks @ MSEE', 'Hot Coffee', 'Breakfast', 'retail'),
+('2099-01-01', 'Cappuccino (Grande)', 140, '{"protein":10,"carbs":14,"fats":5}', 'Starbucks @ MSEE', 'Hot Coffee', 'Breakfast', 'retail'),
+('2099-01-01', 'Flat White (Grande)', 220, '{"protein":15,"carbs":22,"fats":9}', 'Starbucks @ MSEE', 'Hot Coffee', 'Breakfast', 'retail'),
+('2099-01-01', 'Caffe Mocha (Grande)', 370, '{"protein":13,"carbs":50,"fats":14}', 'Starbucks @ MSEE', 'Hot Coffee', 'Breakfast', 'retail'),
+('2099-01-01', 'White Chocolate Mocha (Grande)', 430, '{"protein":14,"carbs":59,"fats":16}', 'Starbucks @ MSEE', 'Hot Coffee', 'Breakfast', 'retail'),
+('2099-01-01', 'Caramel Macchiato (Grande)', 250, '{"protein":10,"carbs":34,"fats":7}', 'Starbucks @ MSEE', 'Hot Coffee', 'Breakfast', 'retail'),
+('2099-01-01', 'Pumpkin Spice Latte (Grande)', 380, '{"protein":14,"carbs":52,"fats":14}', 'Starbucks @ MSEE', 'Hot Coffee', 'Breakfast', 'retail'),
+('2099-01-01', 'Iced Caffe Americano (Grande)', 15, '{"protein":2,"carbs":3,"fats":0}', 'Starbucks @ MSEE', 'Cold Coffee', 'Lunch', 'retail'),
+('2099-01-01', 'Iced Latte (Grande)', 130, '{"protein":8,"carbs":13,"fats":5}', 'Starbucks @ MSEE', 'Cold Coffee', 'Lunch', 'retail'),
+('2099-01-01', 'Iced Caramel Macchiato (Grande)', 250, '{"protein":9,"carbs":35,"fats":7}', 'Starbucks @ MSEE', 'Cold Coffee', 'Lunch', 'retail'),
+('2099-01-01', 'Cold Brew (Grande)', 5, '{"protein":0,"carbs":0,"fats":0}', 'Starbucks @ MSEE', 'Cold Coffee', 'Lunch', 'retail'),
+('2099-01-01', 'Vanilla Sweet Cream Cold Brew (Grande)', 110, '{"protein":1,"carbs":14,"fats":5}', 'Starbucks @ MSEE', 'Cold Coffee', 'Lunch', 'retail'),
+('2099-01-01', 'Nitro Cold Brew (Grande)', 5, '{"protein":0,"carbs":0,"fats":0}', 'Starbucks @ MSEE', 'Cold Coffee', 'Lunch', 'retail'),
+('2099-01-01', 'Caffe Vanilla Frappuccino (Grande)', 400, '{"protein":5,"carbs":66,"fats":13}', 'Starbucks @ MSEE', 'Frappuccinos', 'Lunch', 'retail'),
+('2099-01-01', 'Caramel Frappuccino (Grande)', 420, '{"protein":5,"carbs":68,"fats":16}', 'Starbucks @ MSEE', 'Frappuccinos', 'Lunch', 'retail'),
+('2099-01-01', 'Mocha Frappuccino (Grande)', 410, '{"protein":6,"carbs":64,"fats":15}', 'Starbucks @ MSEE', 'Frappuccinos', 'Lunch', 'retail'),
+('2099-01-01', 'Java Chip Frappuccino (Grande)', 470, '{"protein":6,"carbs":69,"fats":19}', 'Starbucks @ MSEE', 'Frappuccinos', 'Lunch', 'retail'),
+('2099-01-01', 'Chai Tea Latte (Grande)', 240, '{"protein":6,"carbs":45,"fats":4}', 'Starbucks @ MSEE', 'Tea', 'Breakfast', 'retail'),
+('2099-01-01', 'Matcha Tea Latte (Grande)', 240, '{"protein":9,"carbs":34,"fats":7}', 'Starbucks @ MSEE', 'Tea', 'Breakfast', 'retail'),
+('2099-01-01', 'Hot Chocolate (Grande)', 370, '{"protein":14,"carbs":47,"fats":15}', 'Starbucks @ MSEE', 'Hot Chocolate', 'Breakfast', 'retail'),
+('2099-01-01', 'Iced Passion Tango Tea (Grande)', 0, '{"protein":0,"carbs":0,"fats":0}', 'Starbucks @ MSEE', 'Tea', 'Lunch', 'retail'),
+('2099-01-01', 'Espresso (Solo)', 5, '{"protein":0,"carbs":1,"fats":0}', 'Starbucks @ MSEE', 'Espresso', 'Breakfast', 'retail'),
+('2099-01-01', 'Espresso (Doppio)', 10, '{"protein":1,"carbs":2,"fats":0}', 'Starbucks @ MSEE', 'Espresso', 'Breakfast', 'retail'),
+('2099-01-01', 'Bacon, Gouda & Egg Sandwich', 360, '{"protein":19,"carbs":33,"fats":16}', 'Starbucks @ MSEE', 'Breakfast Sandwiches', 'Breakfast', 'retail'),
+('2099-01-01', 'Turkey Bacon & Egg White Sandwich', 230, '{"protein":17,"carbs":30,"fats":5}', 'Starbucks @ MSEE', 'Breakfast Sandwiches', 'Breakfast', 'retail'),
+('2099-01-01', 'Spinach, Feta & Egg White Wrap', 290, '{"protein":20,"carbs":33,"fats":10}', 'Starbucks @ MSEE', 'Breakfast Sandwiches', 'Breakfast', 'retail'),
+('2099-01-01', 'Butter Croissant', 310, '{"protein":5,"carbs":32,"fats":18}', 'Starbucks @ MSEE', 'Bakery', 'Breakfast', 'retail'),
+('2099-01-01', 'Blueberry Muffin', 420, '{"protein":6,"carbs":61,"fats":17}', 'Starbucks @ MSEE', 'Bakery', 'Breakfast', 'retail'),
+('2099-01-01', 'Turkey Pesto Panini', 500, '{"protein":28,"carbs":46,"fats":22}', 'Starbucks @ MSEE', 'Lunch', 'Lunch', 'retail'),
+('2099-01-01', 'Chicken Caprese Panini', 490, '{"protein":30,"carbs":45,"fats":20}', 'Starbucks @ MSEE', 'Lunch', 'Lunch', 'retail'),
+('2099-01-01', 'Tomato & Mozzarella Panini', 350, '{"protein":17,"carbs":40,"fats":14}', 'Starbucks @ MSEE', 'Lunch', 'Lunch', 'retail'),
+('2099-01-01', 'Everything Bagel', 290, '{"protein":11,"carbs":56,"fats":3}', 'Starbucks @ MSEE', 'Bakery', 'Breakfast', 'retail'),
+('2099-01-01', 'Chocolate Chip Cookie', 370, '{"protein":4,"carbs":47,"fats":19}', 'Starbucks @ MSEE', 'Bakery', 'Lunch', 'retail'),
+('2099-01-01', 'Double Chocolate Brownie', 480, '{"protein":6,"carbs":61,"fats":25}', 'Starbucks @ MSEE', 'Bakery', 'Lunch', 'retail'),
+('2099-01-01', 'Lemon Loaf', 470, '{"protein":5,"carbs":66,"fats":21}', 'Starbucks @ MSEE', 'Bakery', 'Lunch', 'retail'),
+('2099-01-01', 'Cake Pop', 170, '{"protein":2,"carbs":23,"fats":8}', 'Starbucks @ MSEE', 'Desserts', 'Lunch', 'retail');
+
+-- ============================================================================
+-- STARBUCKS @ WINIFRED PARKER HALL
+-- Source: Starbucks nutrition data (starbucks.com/menu)
+-- Same menu as MSEE location
+-- ============================================================================
+
+INSERT INTO menu_snapshots (menu_date, name, calories, macros, dining_court, station, meal_time, source) VALUES
+('2099-01-01', 'Caffe Americano (Grande)', 15, '{"protein":1,"carbs":3,"fats":0}', 'Starbucks @ Winifred Parker Hall', 'Hot Coffee', 'Breakfast', 'retail'),
+('2099-01-01', 'Caffe Latte (Grande)', 190, '{"protein":13,"carbs":19,"fats":7}', 'Starbucks @ Winifred Parker Hall', 'Hot Coffee', 'Breakfast', 'retail'),
+('2099-01-01', 'Cappuccino (Grande)', 140, '{"protein":10,"carbs":14,"fats":5}', 'Starbucks @ Winifred Parker Hall', 'Hot Coffee', 'Breakfast', 'retail'),
+('2099-01-01', 'Flat White (Grande)', 220, '{"protein":15,"carbs":22,"fats":9}', 'Starbucks @ Winifred Parker Hall', 'Hot Coffee', 'Breakfast', 'retail'),
+('2099-01-01', 'Caffe Mocha (Grande)', 370, '{"protein":13,"carbs":50,"fats":14}', 'Starbucks @ Winifred Parker Hall', 'Hot Coffee', 'Breakfast', 'retail'),
+('2099-01-01', 'White Chocolate Mocha (Grande)', 430, '{"protein":14,"carbs":59,"fats":16}', 'Starbucks @ Winifred Parker Hall', 'Hot Coffee', 'Breakfast', 'retail'),
+('2099-01-01', 'Caramel Macchiato (Grande)', 250, '{"protein":10,"carbs":34,"fats":7}', 'Starbucks @ Winifred Parker Hall', 'Hot Coffee', 'Breakfast', 'retail'),
+('2099-01-01', 'Pumpkin Spice Latte (Grande)', 380, '{"protein":14,"carbs":52,"fats":14}', 'Starbucks @ Winifred Parker Hall', 'Hot Coffee', 'Breakfast', 'retail'),
+('2099-01-01', 'Iced Caffe Americano (Grande)', 15, '{"protein":2,"carbs":3,"fats":0}', 'Starbucks @ Winifred Parker Hall', 'Cold Coffee', 'Lunch', 'retail'),
+('2099-01-01', 'Iced Latte (Grande)', 130, '{"protein":8,"carbs":13,"fats":5}', 'Starbucks @ Winifred Parker Hall', 'Cold Coffee', 'Lunch', 'retail'),
+('2099-01-01', 'Iced Caramel Macchiato (Grande)', 250, '{"protein":9,"carbs":35,"fats":7}', 'Starbucks @ Winifred Parker Hall', 'Cold Coffee', 'Lunch', 'retail'),
+('2099-01-01', 'Cold Brew (Grande)', 5, '{"protein":0,"carbs":0,"fats":0}', 'Starbucks @ Winifred Parker Hall', 'Cold Coffee', 'Lunch', 'retail'),
+('2099-01-01', 'Vanilla Sweet Cream Cold Brew (Grande)', 110, '{"protein":1,"carbs":14,"fats":5}', 'Starbucks @ Winifred Parker Hall', 'Cold Coffee', 'Lunch', 'retail'),
+('2099-01-01', 'Nitro Cold Brew (Grande)', 5, '{"protein":0,"carbs":0,"fats":0}', 'Starbucks @ Winifred Parker Hall', 'Cold Coffee', 'Lunch', 'retail'),
+('2099-01-01', 'Caffe Vanilla Frappuccino (Grande)', 400, '{"protein":5,"carbs":66,"fats":13}', 'Starbucks @ Winifred Parker Hall', 'Frappuccinos', 'Lunch', 'retail'),
+('2099-01-01', 'Caramel Frappuccino (Grande)', 420, '{"protein":5,"carbs":68,"fats":16}', 'Starbucks @ Winifred Parker Hall', 'Frappuccinos', 'Lunch', 'retail'),
+('2099-01-01', 'Mocha Frappuccino (Grande)', 410, '{"protein":6,"carbs":64,"fats":15}', 'Starbucks @ Winifred Parker Hall', 'Frappuccinos', 'Lunch', 'retail'),
+('2099-01-01', 'Java Chip Frappuccino (Grande)', 470, '{"protein":6,"carbs":69,"fats":19}', 'Starbucks @ Winifred Parker Hall', 'Frappuccinos', 'Lunch', 'retail'),
+('2099-01-01', 'Chai Tea Latte (Grande)', 240, '{"protein":6,"carbs":45,"fats":4}', 'Starbucks @ Winifred Parker Hall', 'Tea', 'Breakfast', 'retail'),
+('2099-01-01', 'Matcha Tea Latte (Grande)', 240, '{"protein":9,"carbs":34,"fats":7}', 'Starbucks @ Winifred Parker Hall', 'Tea', 'Breakfast', 'retail'),
+('2099-01-01', 'Hot Chocolate (Grande)', 370, '{"protein":14,"carbs":47,"fats":15}', 'Starbucks @ Winifred Parker Hall', 'Hot Chocolate', 'Breakfast', 'retail'),
+('2099-01-01', 'Iced Passion Tango Tea (Grande)', 0, '{"protein":0,"carbs":0,"fats":0}', 'Starbucks @ Winifred Parker Hall', 'Tea', 'Lunch', 'retail'),
+('2099-01-01', 'Espresso (Solo)', 5, '{"protein":0,"carbs":1,"fats":0}', 'Starbucks @ Winifred Parker Hall', 'Espresso', 'Breakfast', 'retail'),
+('2099-01-01', 'Espresso (Doppio)', 10, '{"protein":1,"carbs":2,"fats":0}', 'Starbucks @ Winifred Parker Hall', 'Espresso', 'Breakfast', 'retail'),
+('2099-01-01', 'Bacon, Gouda & Egg Sandwich', 360, '{"protein":19,"carbs":33,"fats":16}', 'Starbucks @ Winifred Parker Hall', 'Breakfast Sandwiches', 'Breakfast', 'retail'),
+('2099-01-01', 'Turkey Bacon & Egg White Sandwich', 230, '{"protein":17,"carbs":30,"fats":5}', 'Starbucks @ Winifred Parker Hall', 'Breakfast Sandwiches', 'Breakfast', 'retail'),
+('2099-01-01', 'Spinach, Feta & Egg White Wrap', 290, '{"protein":20,"carbs":33,"fats":10}', 'Starbucks @ Winifred Parker Hall', 'Breakfast Sandwiches', 'Breakfast', 'retail'),
+('2099-01-01', 'Butter Croissant', 310, '{"protein":5,"carbs":32,"fats":18}', 'Starbucks @ Winifred Parker Hall', 'Bakery', 'Breakfast', 'retail'),
+('2099-01-01', 'Blueberry Muffin', 420, '{"protein":6,"carbs":61,"fats":17}', 'Starbucks @ Winifred Parker Hall', 'Bakery', 'Breakfast', 'retail'),
+('2099-01-01', 'Turkey Pesto Panini', 500, '{"protein":28,"carbs":46,"fats":22}', 'Starbucks @ Winifred Parker Hall', 'Lunch', 'Lunch', 'retail'),
+('2099-01-01', 'Chicken Caprese Panini', 490, '{"protein":30,"carbs":45,"fats":20}', 'Starbucks @ Winifred Parker Hall', 'Lunch', 'Lunch', 'retail'),
+('2099-01-01', 'Tomato & Mozzarella Panini', 350, '{"protein":17,"carbs":40,"fats":14}', 'Starbucks @ Winifred Parker Hall', 'Lunch', 'Lunch', 'retail'),
+('2099-01-01', 'Everything Bagel', 290, '{"protein":11,"carbs":56,"fats":3}', 'Starbucks @ Winifred Parker Hall', 'Bakery', 'Breakfast', 'retail'),
+('2099-01-01', 'Chocolate Chip Cookie', 370, '{"protein":4,"carbs":47,"fats":19}', 'Starbucks @ Winifred Parker Hall', 'Bakery', 'Lunch', 'retail'),
+('2099-01-01', 'Double Chocolate Brownie', 480, '{"protein":6,"carbs":61,"fats":25}', 'Starbucks @ Winifred Parker Hall', 'Bakery', 'Lunch', 'retail'),
+('2099-01-01', 'Lemon Loaf', 470, '{"protein":5,"carbs":66,"fats":21}', 'Starbucks @ Winifred Parker Hall', 'Bakery', 'Lunch', 'retail'),
+('2099-01-01', 'Cake Pop', 170, '{"protein":2,"carbs":23,"fats":8}', 'Starbucks @ Winifred Parker Hall', 'Desserts', 'Lunch', 'retail');
+
+-- ============================================================================
+-- REMAINING FOOD CO LOCATIONS (Placeholder Data)
+-- These locations need manual menu updates or PDF parsing
+-- Items marked with calories=0 are placeholders
+-- ============================================================================
+
+-- ============================================================================
+-- BOILERMAKER MARKET @ BURTON-MORGAN
+-- Source: Convenience store items (common snacks/drinks estimated)
+-- ============================================================================
+
+INSERT INTO menu_snapshots (menu_date, name, calories, macros, dining_court, station, meal_time, source) VALUES
+('2099-01-01', 'Packaged Sandwich', 0, '{"protein":0,"carbs":0,"fats":0}', 'Boilermaker Market @ Burton-Morgan', 'Grab & Go', 'Lunch', 'retail'),
+('2099-01-01', 'Pre-Made Salad', 0, '{"protein":0,"carbs":0,"fats":0}', 'Boilermaker Market @ Burton-Morgan', 'Grab & Go', 'Lunch', 'retail'),
+('2099-01-01', 'Yogurt Cup', 0, '{"protein":0,"carbs":0,"fats":0}', 'Boilermaker Market @ Burton-Morgan', 'Grab & Go', 'Breakfast', 'retail'),
+('2099-01-01', 'Fresh Fruit', 0, '{"protein":0,"carbs":0,"fats":0}', 'Boilermaker Market @ Burton-Morgan', 'Grab & Go', 'Breakfast', 'retail'),
+('2099-01-01', 'Chips (Various)', 0, '{"protein":0,"carbs":0,"fats":0}', 'Boilermaker Market @ Burton-Morgan', 'Snacks', 'Lunch', 'retail'),
+('2099-01-01', 'Energy Bar', 0, '{"protein":0,"carbs":0,"fats":0}', 'Boilermaker Market @ Burton-Morgan', 'Snacks', 'Lunch', 'retail'),
+('2099-01-01', 'Bottled Beverage', 0, '{"protein":0,"carbs":0,"fats":0}', 'Boilermaker Market @ Burton-Morgan', 'Beverages', 'Lunch', 'retail');
+
+-- ============================================================================
+-- BOILERMAKER MARKET @ DUDLEY
+-- ============================================================================
+
+INSERT INTO menu_snapshots (menu_date, name, calories, macros, dining_court, station, meal_time, source) VALUES
+('2099-01-01', 'Packaged Sandwich', 0, '{"protein":0,"carbs":0,"fats":0}', 'Boilermaker Market @ Dudley', 'Grab & Go', 'Lunch', 'retail'),
+('2099-01-01', 'Pre-Made Salad', 0, '{"protein":0,"carbs":0,"fats":0}', 'Boilermaker Market @ Dudley', 'Grab & Go', 'Lunch', 'retail'),
+('2099-01-01', 'Yogurt Cup', 0, '{"protein":0,"carbs":0,"fats":0}', 'Boilermaker Market @ Dudley', 'Grab & Go', 'Breakfast', 'retail'),
+('2099-01-01', 'Fresh Fruit', 0, '{"protein":0,"carbs":0,"fats":0}', 'Boilermaker Market @ Dudley', 'Grab & Go', 'Breakfast', 'retail'),
+('2099-01-01', 'Chips (Various)', 0, '{"protein":0,"carbs":0,"fats":0}', 'Boilermaker Market @ Dudley', 'Snacks', 'Lunch', 'retail'),
+('2099-01-01', 'Energy Bar', 0, '{"protein":0,"carbs":0,"fats":0}', 'Boilermaker Market @ Dudley', 'Snacks', 'Lunch', 'retail');
+
+-- ============================================================================
+-- BOILERMAKER MARKET - HARRISON
+-- ============================================================================
+
+INSERT INTO menu_snapshots (menu_date, name, calories, macros, dining_court, station, meal_time, source) VALUES
+('2099-01-01', 'Packaged Sandwich', 0, '{"protein":0,"carbs":0,"fats":0}', 'Boilermaker Market - Harrison', 'Grab & Go', 'Lunch', 'retail'),
+('2099-01-01', 'Pre-Made Salad', 0, '{"protein":0,"carbs":0,"fats":0}', 'Boilermaker Market - Harrison', 'Grab & Go', 'Lunch', 'retail'),
+('2099-01-01', 'Yogurt Cup', 0, '{"protein":0,"carbs":0,"fats":0}', 'Boilermaker Market - Harrison', 'Grab & Go', 'Breakfast', 'retail'),
+('2099-01-01', 'Fresh Fruit', 0, '{"protein":0,"carbs":0,"fats":0}', 'Boilermaker Market - Harrison', 'Grab & Go', 'Breakfast', 'retail'),
+('2099-01-01', 'Chips (Various)', 0, '{"protein":0,"carbs":0,"fats":0}', 'Boilermaker Market - Harrison', 'Snacks', 'Lunch', 'retail');
+
+-- ============================================================================
+-- BOILERMAKER MARKET @ NISWONGER HALL
+-- ============================================================================
+
+INSERT INTO menu_snapshots (menu_date, name, calories, macros, dining_court, station, meal_time, source) VALUES
+('2099-01-01', 'Packaged Sandwich', 0, '{"protein":0,"carbs":0,"fats":0}', 'Boilermaker Market @ Niswonger Hall', 'Grab & Go', 'Lunch', 'retail'),
+('2099-01-01', 'Pre-Made Salad', 0, '{"protein":0,"carbs":0,"fats":0}', 'Boilermaker Market @ Niswonger Hall', 'Grab & Go', 'Lunch', 'retail'),
+('2099-01-01', 'Yogurt Cup', 0, '{"protein":0,"carbs":0,"fats":0}', 'Boilermaker Market @ Niswonger Hall', 'Grab & Go', 'Breakfast', 'retail'),
+('2099-01-01', 'Fresh Fruit', 0, '{"protein":0,"carbs":0,"fats":0}', 'Boilermaker Market @ Niswonger Hall', 'Grab & Go', 'Breakfast', 'retail'),
+('2099-01-01', 'Chips (Various)', 0, '{"protein":0,"carbs":0,"fats":0}', 'Boilermaker Market @ Niswonger Hall', 'Snacks', 'Lunch', 'retail');
+
+-- ============================================================================
+-- BOILERMAKER MARKET - 3RD STREET
+-- ============================================================================
+
+INSERT INTO menu_snapshots (menu_date, name, calories, macros, dining_court, station, meal_time, source) VALUES
+('2099-01-01', 'Packaged Sandwich', 0, '{"protein":0,"carbs":0,"fats":0}', 'Boilermaker Market - 3rd Street', 'Grab & Go', 'Lunch', 'retail'),
+('2099-01-01', 'Pre-Made Salad', 0, '{"protein":0,"carbs":0,"fats":0}', 'Boilermaker Market - 3rd Street', 'Grab & Go', 'Lunch', 'retail'),
+('2099-01-01', 'Yogurt Cup', 0, '{"protein":0,"carbs":0,"fats":0}', 'Boilermaker Market - 3rd Street', 'Grab & Go', 'Breakfast', 'retail'),
+('2099-01-01', 'Fresh Fruit', 0, '{"protein":0,"carbs":0,"fats":0}', 'Boilermaker Market - 3rd Street', 'Grab & Go', 'Breakfast', 'retail'),
+('2099-01-01', 'Chips (Various)', 0, '{"protein":0,"carbs":0,"fats":0}', 'Boilermaker Market - 3rd Street', 'Snacks', 'Lunch', 'retail');
+
+-- ============================================================================
+-- FAMOUS FRANK'S @ CARY KNIGHT SPOT
+-- ============================================================================
+
+INSERT INTO menu_snapshots (menu_date, name, calories, macros, dining_court, station, meal_time, source) VALUES
+('2099-01-01', 'Classic Hot Dog', 0, '{"protein":0,"carbs":0,"fats":0}', 'Famous Frank''s @ Cary Knight Spot', 'Hot Dogs', 'Lunch', 'retail'),
+('2099-01-01', 'Chili Cheese Dog', 0, '{"protein":0,"carbs":0,"fats":0}', 'Famous Frank''s @ Cary Knight Spot', 'Hot Dogs', 'Lunch', 'retail'),
+('2099-01-01', 'Chicago Dog', 0, '{"protein":0,"carbs":0,"fats":0}', 'Famous Frank''s @ Cary Knight Spot', 'Hot Dogs', 'Lunch', 'retail'),
+('2099-01-01', 'French Fries', 0, '{"protein":0,"carbs":0,"fats":0}', 'Famous Frank''s @ Cary Knight Spot', 'Sides', 'Lunch', 'retail'),
+('2099-01-01', 'Chips', 0, '{"protein":0,"carbs":0,"fats":0}', 'Famous Frank''s @ Cary Knight Spot', 'Sides', 'Lunch', 'retail');
+
+-- ============================================================================
+-- CATALYST CAFÉ
+-- ============================================================================
+
+INSERT INTO menu_snapshots (menu_date, name, calories, macros, dining_court, station, meal_time, source) VALUES
+('2099-01-01', 'Espresso', 0, '{"protein":0,"carbs":0,"fats":0}', 'Catalyst Café', 'Coffee', 'Breakfast', 'retail'),
+('2099-01-01', 'Latte', 0, '{"protein":0,"carbs":0,"fats":0}', 'Catalyst Café', 'Coffee', 'Breakfast', 'retail'),
+('2099-01-01', 'Cappuccino', 0, '{"protein":0,"carbs":0,"fats":0}', 'Catalyst Café', 'Coffee', 'Breakfast', 'retail'),
+('2099-01-01', 'Pastry', 0, '{"protein":0,"carbs":0,"fats":0}', 'Catalyst Café', 'Bakery', 'Breakfast', 'retail'),
+('2099-01-01', 'Muffin', 0, '{"protein":0,"carbs":0,"fats":0}', 'Catalyst Café', 'Bakery', 'Breakfast', 'retail');
+
+-- ============================================================================
+-- CONTINUUM CAFÉ
+-- ============================================================================
+
+INSERT INTO menu_snapshots (menu_date, name, calories, macros, dining_court, station, meal_time, source) VALUES
+('2099-01-01', 'Espresso', 0, '{"protein":0,"carbs":0,"fats":0}', 'Continuum Café', 'Coffee', 'Breakfast', 'retail'),
+('2099-01-01', 'Latte', 0, '{"protein":0,"carbs":0,"fats":0}', 'Continuum Café', 'Coffee', 'Breakfast', 'retail'),
+('2099-01-01', 'Cappuccino', 0, '{"protein":0,"carbs":0,"fats":0}', 'Continuum Café', 'Coffee', 'Breakfast', 'retail'),
+('2099-01-01', 'Pastry', 0, '{"protein":0,"carbs":0,"fats":0}', 'Continuum Café', 'Bakery', 'Breakfast', 'retail'),
+('2099-01-01', 'Sandwich', 0, '{"protein":0,"carbs":0,"fats":0}', 'Continuum Café', 'Lunch', 'Lunch', 'retail');
+
+-- ============================================================================
+-- JAVA HOUSE
+-- ============================================================================
+
+INSERT INTO menu_snapshots (menu_date, name, calories, macros, dining_court, station, meal_time, source) VALUES
+('2099-01-01', 'Drip Coffee', 0, '{"protein":0,"carbs":0,"fats":0}', 'Java House', 'Coffee', 'Breakfast', 'retail'),
+('2099-01-01', 'Latte', 0, '{"protein":0,"carbs":0,"fats":0}', 'Java House', 'Coffee', 'Breakfast', 'retail'),
+('2099-01-01', 'Cappuccino', 0, '{"protein":0,"carbs":0,"fats":0}', 'Java House', 'Coffee', 'Breakfast', 'retail'),
+('2099-01-01', 'Mocha', 0, '{"protein":0,"carbs":0,"fats":0}', 'Java House', 'Coffee', 'Breakfast', 'retail'),
+('2099-01-01', 'Bagel', 0, '{"protein":0,"carbs":0,"fats":0}', 'Java House', 'Bakery', 'Breakfast', 'retail');
+
+-- ============================================================================
+-- KNOW EATERY
+-- ============================================================================
+
+INSERT INTO menu_snapshots (menu_date, name, calories, macros, dining_court, station, meal_time, source) VALUES
+('2099-01-01', 'Build Your Own Bowl', 0, '{"protein":0,"carbs":0,"fats":0}', 'KNOW Eatery', 'Bowls', 'Lunch', 'retail'),
+('2099-01-01', 'Salad', 0, '{"protein":0,"carbs":0,"fats":0}', 'KNOW Eatery', 'Salads', 'Lunch', 'retail'),
+('2099-01-01', 'Wrap', 0, '{"protein":0,"carbs":0,"fats":0}', 'KNOW Eatery', 'Wraps', 'Lunch', 'retail'),
+('2099-01-01', 'Smoothie', 0, '{"protein":0,"carbs":0,"fats":0}', 'KNOW Eatery', 'Beverages', 'Lunch', 'retail');
+
+-- ============================================================================
+-- SHENYE @ HARRISON GRILL
+-- ============================================================================
+
+INSERT INTO menu_snapshots (menu_date, name, calories, macros, dining_court, station, meal_time, source) VALUES
+('2099-01-01', 'Stir Fry Bowl', 0, '{"protein":0,"carbs":0,"fats":0}', 'Shenye @ Harrison Grill', 'Entrees', 'Lunch', 'retail'),
+('2099-01-01', 'Fried Rice', 0, '{"protein":0,"carbs":0,"fats":0}', 'Shenye @ Harrison Grill', 'Entrees', 'Lunch', 'retail'),
+('2099-01-01', 'Lo Mein', 0, '{"protein":0,"carbs":0,"fats":0}', 'Shenye @ Harrison Grill', 'Entrees', 'Lunch', 'retail'),
+('2099-01-01', 'Spring Roll', 0, '{"protein":0,"carbs":0,"fats":0}', 'Shenye @ Harrison Grill', 'Appetizers', 'Lunch', 'retail');
+
+-- ============================================================================
+-- SAXBYS
+-- ============================================================================
+
+INSERT INTO menu_snapshots (menu_date, name, calories, macros, dining_court, station, meal_time, source) VALUES
+('2099-01-01', 'Drip Coffee', 0, '{"protein":0,"carbs":0,"fats":0}', 'Saxbys', 'Coffee', 'Breakfast', 'retail'),
+('2099-01-01', 'Latte', 0, '{"protein":0,"carbs":0,"fats":0}', 'Saxbys', 'Coffee', 'Breakfast', 'retail'),
+('2099-01-01', 'Cappuccino', 0, '{"protein":0,"carbs":0,"fats":0}', 'Saxbys', 'Coffee', 'Breakfast', 'retail'),
+('2099-01-01', 'Cold Brew', 0, '{"protein":0,"carbs":0,"fats":0}', 'Saxbys', 'Coffee', 'Breakfast', 'retail'),
+('2099-01-01', 'Breakfast Sandwich', 0, '{"protein":0,"carbs":0,"fats":0}', 'Saxbys', 'Breakfast', 'Breakfast', 'retail'),
+('2099-01-01', 'Bagel', 0, '{"protein":0,"carbs":0,"fats":0}', 'Saxbys', 'Bakery', 'Breakfast', 'retail');
+
+-- ============================================================================
+-- ATLAS FAMILY MARKETPLACE (Main location placeholder items)
+-- Note: Walk On's and FoodLab already seeded above
+-- ============================================================================
+
+INSERT INTO menu_snapshots (menu_date, name, calories, macros, dining_court, station, meal_time, source) VALUES
+('2099-01-01', 'Marketplace Grab & Go Sandwich', 0, '{"protein":0,"carbs":0,"fats":0}', 'Atlas Family Marketplace', 'Grab & Go', 'Lunch', 'retail'),
+('2099-01-01', 'Marketplace Salad', 0, '{"protein":0,"carbs":0,"fats":0}', 'Atlas Family Marketplace', 'Grab & Go', 'Lunch', 'retail'),
+('2099-01-01', 'Fresh Sushi', 0, '{"protein":0,"carbs":0,"fats":0}', 'Atlas Family Marketplace', 'Sushi', 'Lunch', 'retail'),
+('2099-01-01', 'Pizza Slice', 0, '{"protein":0,"carbs":0,"fats":0}', 'Atlas Family Marketplace', 'Pizza', 'Lunch', 'retail');
