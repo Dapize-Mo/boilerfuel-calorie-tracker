@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef, useMemo, memo } from 'react';
 import Link from 'next/link';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { LOCATION_CATEGORIES } from '../utils/diningLocations';
+import { LOCATION_CATEGORIES, FOOD_CO_LOCATIONS } from '../utils/diningLocations';
 import { useMeals } from '../context/MealContext';
 
 const CHUNK_SIZE = 60; // items per render batch
@@ -105,9 +105,10 @@ function CalendarPicker({ value, onChange, compact = false }) {
   );
 }
 
-// ── Custom grouped location dropdown ──
-function LocationDropdown({ value, onChange, availableLocations, compact = false }) {
+// ── Custom grouped location dropdown with two top-level groups ──
+function LocationDropdown({ value, onChange, availableLocations, retailLocations, compact = false }) {
   const [open, setOpen] = useState(false);
+  const [expanded, setExpanded] = useState(null); // 'purdue' | 'foodco' | null
   const ref = useRef(null);
 
   useEffect(() => {
@@ -118,15 +119,22 @@ function LocationDropdown({ value, onChange, availableLocations, compact = false
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  // Filter categories to only show locations that exist in DB
+  // Filter HFS categories to only show locations that exist in DB
   const availSet = new Set((availableLocations || []).map(l => l.toLowerCase()));
   const filteredCategories = LOCATION_CATEGORIES.map(cat => ({
     ...cat,
     locations: cat.locations.filter(loc => availSet.has(loc.toLowerCase())),
   })).filter(cat => cat.locations.length > 0);
 
+  // Merge static Food Co list with live data from DB
+  const foodCoList = (retailLocations && retailLocations.length > 0)
+    ? retailLocations
+    : FOOD_CO_LOCATIONS.map(l => l.name);
+
   // Display text
-  const displayText = value.type === 'all' ? 'All'
+  const displayText = value.type === 'all' ? 'All Locations'
+    : value.type === 'all-purdue' ? 'All Purdue'
+    : value.type === 'all-foodco' ? 'Purdue Food Co'
     : value.type === 'category' ? value.value
     : value.value;
 
@@ -136,6 +144,10 @@ function LocationDropdown({ value, onChange, availableLocations, compact = false
   }
 
   const isActive = (type, val) => value.type === type && value.value === val;
+
+  function toggleGroup(group) {
+    setExpanded(prev => prev === group ? null : group);
+  }
 
   return (
     <div ref={ref} className="relative" data-location-dropdown>
@@ -151,9 +163,9 @@ function LocationDropdown({ value, onChange, availableLocations, compact = false
       </button>
 
       {open && (
-        <div className="absolute z-50 mt-1 left-0 w-64 max-h-80 overflow-y-auto border border-theme-text-primary bg-theme-bg-primary shadow-lg"
+        <div className="absolute z-50 mt-1 left-0 w-72 max-h-96 overflow-y-auto border border-theme-text-primary bg-theme-bg-primary shadow-lg"
           style={{ animation: `fadeInTooltip 0.15s ${EASE} both` }}>
-          {/* All */}
+          {/* All Locations */}
           <button type="button" onClick={() => select({ type: 'all', value: 'All' })}
             className={`w-full text-left px-3 py-2 text-sm font-bold uppercase tracking-wider transition-colors ${
               isActive('all', 'All') ? 'bg-theme-text-primary text-theme-bg-primary' : 'hover:bg-theme-bg-hover text-theme-text-primary'
@@ -161,32 +173,102 @@ function LocationDropdown({ value, onChange, availableLocations, compact = false
             All Locations
           </button>
 
-          {filteredCategories.map(cat => (
-            <div key={cat.label}>
-              {/* Category header — clickable to select all in category */}
-              <button type="button"
-                onClick={() => select({ type: 'category', value: cat.label, locations: cat.locations })}
-                className={`w-full text-left px-3 py-2 text-xs font-bold uppercase tracking-widest border-t border-theme-text-primary/10 transition-colors ${
-                  isActive('category', cat.label)
-                    ? 'bg-theme-text-primary text-theme-bg-primary'
-                    : 'bg-theme-bg-tertiary/50 hover:bg-theme-bg-hover text-theme-text-secondary'
-                }`}>
-                {cat.label}
-              </button>
-              {/* Individual locations */}
-              {cat.locations.map(loc => (
-                <button key={loc} type="button"
-                  onClick={() => select({ type: 'single', value: loc })}
-                  className={`w-full text-left px-5 py-1.5 text-sm transition-colors ${
-                    isActive('single', loc)
-                      ? 'bg-theme-text-primary text-theme-bg-primary'
-                      : 'hover:bg-theme-bg-hover text-theme-text-primary'
+          {/* ── All Purdue (HFS) collapsible group ── */}
+          <div className="border-t border-theme-text-primary/20">
+            <button type="button"
+              onClick={() => toggleGroup('purdue')}
+              className={`w-full text-left px-3 py-2.5 text-xs font-bold uppercase tracking-[0.15em] flex items-center justify-between transition-colors ${
+                (value.type === 'all-purdue' || (value.type === 'category' && LOCATION_CATEGORIES.some(c => c.label === value.value)) || (value.type === 'single' && availSet.has(value.value?.toLowerCase())))
+                  ? 'bg-theme-text-primary/10 text-theme-text-primary'
+                  : 'bg-theme-bg-tertiary/50 text-theme-text-secondary hover:text-theme-text-primary hover:bg-theme-bg-hover'
+              }`}>
+              <span>All Purdue</span>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="opacity-50"
+                style={{ transform: expanded === 'purdue' ? 'rotate(180deg)' : 'rotate(0)', transition: `transform 0.2s ${EASE}` }}>
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+
+            {expanded === 'purdue' && (
+              <div>
+                {/* Select all HFS locations */}
+                <button type="button"
+                  onClick={() => select({ type: 'all-purdue', value: 'All Purdue', locations: filteredCategories.flatMap(c => c.locations) })}
+                  className={`w-full text-left px-5 py-1.5 text-sm font-bold transition-colors ${
+                    isActive('all-purdue', 'All Purdue') ? 'bg-theme-text-primary text-theme-bg-primary' : 'hover:bg-theme-bg-hover text-theme-text-primary'
                   }`}>
-                  {loc}
+                  All Purdue Dining
                 </button>
-              ))}
-            </div>
-          ))}
+
+                {filteredCategories.map(cat => (
+                  <div key={cat.label}>
+                    <button type="button"
+                      onClick={() => select({ type: 'category', value: cat.label, locations: cat.locations })}
+                      className={`w-full text-left px-5 py-1.5 text-[11px] font-bold uppercase tracking-widest transition-colors ${
+                        isActive('category', cat.label)
+                          ? 'bg-theme-text-primary text-theme-bg-primary'
+                          : 'text-theme-text-tertiary hover:bg-theme-bg-hover hover:text-theme-text-secondary'
+                      }`}>
+                      {cat.label}
+                    </button>
+                    {cat.locations.map(loc => (
+                      <button key={loc} type="button"
+                        onClick={() => select({ type: 'single', value: loc })}
+                        className={`w-full text-left px-8 py-1 text-sm transition-colors ${
+                          isActive('single', loc)
+                            ? 'bg-theme-text-primary text-theme-bg-primary'
+                            : 'hover:bg-theme-bg-hover text-theme-text-primary'
+                        }`}>
+                        {loc}
+                      </button>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* ── Purdue Food Co collapsible group ── */}
+          <div className="border-t border-theme-text-primary/20">
+            <button type="button"
+              onClick={() => toggleGroup('foodco')}
+              className={`w-full text-left px-3 py-2.5 text-xs font-bold uppercase tracking-[0.15em] flex items-center justify-between transition-colors ${
+                (value.type === 'all-foodco' || (value.type === 'single' && foodCoList.some(n => n === value.value)))
+                  ? 'bg-theme-text-primary/10 text-theme-text-primary'
+                  : 'bg-theme-bg-tertiary/50 text-theme-text-secondary hover:text-theme-text-primary hover:bg-theme-bg-hover'
+              }`}>
+              <span>Purdue Food Co</span>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="opacity-50"
+                style={{ transform: expanded === 'foodco' ? 'rotate(180deg)' : 'rotate(0)', transition: `transform 0.2s ${EASE}` }}>
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+
+            {expanded === 'foodco' && (
+              <div>
+                {/* Select all Food Co locations */}
+                <button type="button"
+                  onClick={() => select({ type: 'all-foodco', value: 'Purdue Food Co', locations: foodCoList })}
+                  className={`w-full text-left px-5 py-1.5 text-sm font-bold transition-colors ${
+                    isActive('all-foodco', 'Purdue Food Co') ? 'bg-theme-text-primary text-theme-bg-primary' : 'hover:bg-theme-bg-hover text-theme-text-primary'
+                  }`}>
+                  All Food Co
+                </button>
+
+                {foodCoList.map(name => (
+                  <button key={name} type="button"
+                    onClick={() => select({ type: 'single', value: name, source: 'foodco' })}
+                    className={`w-full text-left px-8 py-1 text-sm transition-colors ${
+                      isActive('single', name)
+                        ? 'bg-theme-text-primary text-theme-bg-primary'
+                        : 'hover:bg-theme-bg-hover text-theme-text-primary'
+                    }`}>
+                    {name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
@@ -238,6 +320,7 @@ export default function Home() {
   const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [foods, setFoods] = useState([]);
   const [availableLocations, setAvailableLocations] = useState([]);
+  const [retailLocations, setRetailLocations] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [view, setView] = useState('landing');
@@ -289,7 +372,7 @@ export default function Home() {
     return () => window.removeEventListener('resize', check);
   }, []);
 
-  // ── Fetch available locations ──
+  // ── Fetch available locations (HFS + retail) ──
   useEffect(() => {
     fetch('/api/dining-courts')
       .then(res => res.json())
@@ -297,6 +380,13 @@ export default function Home() {
         if (Array.isArray(courts)) setAvailableLocations(courts);
       })
       .catch(err => console.error('Failed to load locations:', err));
+
+    fetch('/api/retail-locations')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) setRetailLocations(data.map(l => l.name));
+      })
+      .catch(() => {}); // silently fail — static list fallback in dropdown
   }, []);
 
   // ── Fetch foods ──
@@ -308,6 +398,8 @@ export default function Home() {
       if (location.type === 'single') {
         params.set('dining_court', location.value);
       } else if (location.type === 'category' && location.locations) {
+        params.set('dining_court', location.locations.join(','));
+      } else if ((location.type === 'all-purdue' || location.type === 'all-foodco') && location.locations) {
         params.set('dining_court', location.locations.join(','));
       }
       if (mealTime !== 'All') params.set('meal_time', mealTime);
@@ -632,9 +724,9 @@ export default function Home() {
           <label style={labelStyle} className="text-theme-text-secondary">Date</label>
           <CalendarPicker value={selectedDate} onChange={setSelectedDate} compact={!isLanding} />
         </div>
-        <div style={{ flex: !isLanding && isMobile ? '1 1 0' : undefined, width: isLanding ? (isMobile ? 220 : 180) : (isMobile ? undefined : 150), transition: `width 0.7s ${EASE}` }}>
+        <div style={{ flex: !isLanding && isMobile ? '1 1 0' : undefined, width: isLanding ? (isMobile ? 220 : 200) : (isMobile ? undefined : 170), transition: `width 0.7s ${EASE}` }}>
           <label style={labelStyle} className="text-theme-text-secondary">Location</label>
-          <LocationDropdown value={location} onChange={setLocation} availableLocations={availableLocations} compact={!isLanding} />
+          <LocationDropdown value={location} onChange={setLocation} availableLocations={availableLocations} retailLocations={retailLocations} compact={!isLanding} />
         </div>
         <div style={{ flex: !isLanding && isMobile ? '1 1 0' : undefined, width: isLanding ? (isMobile ? 220 : 180) : (isMobile ? undefined : 130), transition: `width 0.7s ${EASE}` }}>
           <label style={labelStyle} className="text-theme-text-secondary">Meal Time</label>
@@ -979,7 +1071,13 @@ export default function Home() {
               ) : (
                 <tr>
                   <td colSpan={4} className="py-16 text-center text-theme-text-tertiary italic">
-                    No foods found for this selection.
+                    {(location.type === 'all-foodco' || location.source === 'foodco') ? (
+                      <div className="space-y-2">
+                        <div className="text-base not-italic font-bold text-theme-text-secondary">Purdue Food Co</div>
+                        <div className="text-sm">Retail dining locations don't publish daily menus through the API.</div>
+                        <div className="text-xs mt-3">Visit <a href="https://purduefoodco.com" target="_blank" rel="noopener noreferrer" className="underline text-theme-text-secondary hover:text-theme-text-primary">purduefoodco.com</a> for menus and ordering.</div>
+                      </div>
+                    ) : 'No foods found for this selection.'}
                   </td>
                 </tr>
               )}
