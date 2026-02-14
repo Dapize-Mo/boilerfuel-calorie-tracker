@@ -1074,7 +1074,7 @@ export default function Home() {
                     {(location.type === 'all-foodco' || location.source === 'foodco') ? (
                       <div className="space-y-2">
                         <div className="text-base not-italic font-bold text-theme-text-secondary">Purdue Food Co</div>
-                        <div className="text-sm">Retail dining locations don't publish daily menus through the API.</div>
+                        <div className="text-sm">Retail dining locations do not publish daily menus through the API.</div>
                         <div className="text-xs mt-3">Visit <a href="https://purduefoodco.com" target="_blank" rel="noopener noreferrer" className="underline text-theme-text-secondary hover:text-theme-text-primary">purduefoodco.com</a> for menus and ordering.</div>
                       </div>
                     ) : 'No foods found for this selection.'}
