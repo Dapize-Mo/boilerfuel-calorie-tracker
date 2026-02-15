@@ -335,7 +335,7 @@ export default function CustomFoods() {
           ) : customFoods.length === 0 ? (
             <div className="p-8 text-center text-gray-500">
               <p className="mb-2">No custom foods yet.</p>
-              <p className="text-sm">Click "Add Custom Food" to create your first one!</p>
+              <p className="text-sm">Click &ldquo;Add Custom Food&rdquo; to create your first one!</p>
             </div>
           ) : (
             <div className="divide-y divide-gray-200">
