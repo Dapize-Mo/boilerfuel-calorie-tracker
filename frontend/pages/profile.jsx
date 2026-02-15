@@ -139,6 +139,30 @@ export default function ProfilePage() {
               ))}
             </div>
 
+            {/* Extended nutrition breakdown */}
+            <div className="border border-theme-text-primary/10">
+              <div className="px-4 py-2 bg-theme-bg-secondary/50 border-b border-theme-text-primary/10">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-theme-text-tertiary">Detailed Breakdown</span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-px bg-theme-text-primary/10">
+                {[
+                  { label: 'Saturated Fat', value: totals.saturated_fat, unit: 'g' },
+                  { label: 'Cholesterol', value: totals.cholesterol, unit: 'mg' },
+                  { label: 'Sodium', value: totals.sodium, unit: 'mg' },
+                  { label: 'Fiber', value: totals.fiber, unit: 'g' },
+                  { label: 'Sugar', value: totals.sugar, unit: 'g' },
+                  { label: 'Added Sugar', value: totals.added_sugar, unit: 'g' },
+                ].map(s => (
+                  <div key={s.label} className="bg-theme-bg-primary px-4 py-3">
+                    <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary">{s.label}</div>
+                    <div className="text-base font-bold tabular-nums mt-1">
+                      {Math.round(s.value)}<span className="text-xs text-theme-text-tertiary ml-0.5">{s.unit}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             {/* Logged meals grouped by meal time */}
             {meals.length > 0 && (
               <div className="border border-theme-text-primary/10">

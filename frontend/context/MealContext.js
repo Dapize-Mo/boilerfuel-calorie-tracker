@@ -7,7 +7,7 @@ const MealContext = createContext({
   removeMeal: () => {},
   clearMeals: () => {},
   setGoals: () => {},
-  totals: { calories: 0, protein: 0, carbs: 0, fat: 0 },
+  totals: { calories: 0, protein: 0, carbs: 0, fat: 0, sugar: 0, fiber: 0, sodium: 0, cholesterol: 0, saturated_fat: 0, added_sugar: 0 },
 });
 
 const STORAGE_KEY = 'boilerfuel_meals';
@@ -108,8 +108,14 @@ export function MealProvider({ children }) {
       protein: acc.protein + (parseFloat(m.macros?.protein) || 0),
       carbs: acc.carbs + (parseFloat(m.macros?.carbs) || 0),
       fat: acc.fat + (parseFloat(m.macros?.fats || m.macros?.fat) || 0),
+      sugar: acc.sugar + (parseFloat(m.macros?.sugar) || 0),
+      fiber: acc.fiber + (parseFloat(m.macros?.fiber) || 0),
+      sodium: acc.sodium + (parseFloat(m.macros?.sodium) || 0),
+      cholesterol: acc.cholesterol + (parseFloat(m.macros?.cholesterol) || 0),
+      saturated_fat: acc.saturated_fat + (parseFloat(m.macros?.saturated_fat) || 0),
+      added_sugar: acc.added_sugar + (parseFloat(m.macros?.added_sugar) || 0),
     }),
-    { calories: 0, protein: 0, carbs: 0, fat: 0 }
+    { calories: 0, protein: 0, carbs: 0, fat: 0, sugar: 0, fiber: 0, sodium: 0, cholesterol: 0, saturated_fat: 0, added_sugar: 0 }
   );
 
   // Count how many times a food id appears today
