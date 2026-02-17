@@ -5,7 +5,18 @@ export default async function handler(req, res) {
   }
 
   try {
+    const debug = process.env.SCRAPE_DEBUG === 'true';
     const backendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || '';
+
+    if (debug) {
+      console.log('[admin/scrape] env', {
+        hasBackendUrl: Boolean(backendUrl),
+        backendUrl,
+        isVercel: Boolean(process.env.VERCEL),
+        hasGhToken: Boolean(process.env.GH_ACTIONS_TOKEN || process.env.GITHUB_TOKEN),
+        ghRepo: process.env.GH_REPO || process.env.GITHUB_REPOSITORY || null,
+      });
+    }
 
     // Guard: in production we must have a real backend URL (not localhost)
     if (process.env.VERCEL && (!backendUrl || /localhost|127\.0\.0\.1/.test(backendUrl))) {
@@ -28,6 +39,10 @@ export default async function handler(req, res) {
           },
           body: JSON.stringify({ ref, inputs: { trigger: 'admin' } })
         });
+
+        if (debug) {
+          console.log('[admin/scrape] GitHub dispatch status', ghResp.status);
+        }
 
         if (ghResp.status === 204) {
           return res.status(202).json({
@@ -72,13 +87,29 @@ export default async function handler(req, res) {
       }
     });
 
-    const data = await response.json();
+    const contentType = response.headers.get('content-type') || '';
+    const isJson = contentType.includes('application/json');
+    const rawBody = isJson ? null : await response.text();
+    const data = isJson ? await response.json() : null;
 
-    if (!response.ok) {
-      return res.status(response.status).json(data);
+    if (debug) {
+      console.log('[admin/scrape] backend response', {
+        status: response.status,
+        contentType,
+        bodyPreview: rawBody ? rawBody.slice(0, 500) : null,
+      });
     }
 
-    return res.status(response.status).json(data);
+    if (!response.ok) {
+      return res.status(response.status).json(
+        data || {
+          error: 'Backend returned a non-JSON response',
+          details: rawBody || 'No response body',
+        }
+      );
+    }
+
+    return res.status(response.status).json(data || { status: 'ok' });
     
   } catch (error) {
     console.error('Error triggering scraper:', error);
