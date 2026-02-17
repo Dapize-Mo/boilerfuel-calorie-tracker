@@ -72,14 +72,17 @@ export default function AdminPanel() {
     try {
       const res = await fetch('/api/admin/scrape', { method: 'POST' });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Scrape failed');
+      if (data.debug) console.log('[scrape debug]', data.debug);
+      if (!res.ok) {
+        const debugStr = data.debug ? `\n\nDebug: ${JSON.stringify(data.debug, null, 2)}` : '';
+        throw new Error((data.error || 'Scrape failed') + (data.details ? ` — ${data.details}` : '') + debugStr);
+      }
       setScrapeStatus('success');
       setScrapeMessage(`Scrape started via ${data.via || 'backend'}`);
       setTimeout(() => setScrapeStatus('idle'), 5000);
     } catch (err) {
       setScrapeStatus('error');
       setScrapeMessage(err.message || 'Scrape request failed');
-      setTimeout(() => setScrapeStatus('idle'), 5000);
     }
   }
 
