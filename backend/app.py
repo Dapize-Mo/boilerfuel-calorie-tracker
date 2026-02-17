@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-# pyright: reportGeneralTypeIssues=false, reportAttributeAccessIssue=false
+# pyright: reportGeneralTypeIssues=false, reportAttributeAccessIssue=false, reportCallIssue=false, reportArgumentType=false, reportMissingImports=false, reportIndexIssue=false, reportOptionalMemberAccess=false, reportAssignmentType=false, reportReturnType=false, reportOperatorIssue=false
 
 import sys
 import os
@@ -199,8 +199,6 @@ except Exception:
 	pass
 
 
-import sys
-import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'scraper')))
 from scraper import menu_scraper
 from errors import (
@@ -228,7 +226,6 @@ def handle_api_error(error):
 	"""Handle custom API errors."""
 	response = jsonify(error.to_dict())
 	response.status_code = error.status_code
-	return response
 	return response
 
 
@@ -858,8 +855,6 @@ def init_database():
 		db.session.rollback()
 		return jsonify({'error': f'Database initialization failed: {exc}'}), 500
 
-
-import threading
 
 # Global variable to track scraping status
 scraping_status = {

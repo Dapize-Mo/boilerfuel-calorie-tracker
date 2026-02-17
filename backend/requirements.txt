@@ -13,6 +13,6 @@ gunicorn==21.2.0
 SQLAlchemy==1.4.52
 python-dotenv==1.0.0
 selenium==4.15.2
-argon2-cffi==23.2.0
+argon2-cffi>=23.1.0
 # Flask 2.2 is not fully compatible with Werkzeug 3.x; pin to <3 to avoid runtime errors
 Werkzeug<3.0
