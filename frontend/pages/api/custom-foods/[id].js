@@ -1,9 +1,7 @@
-import { getBackendUrl } from '../../../utils/auth';
-
 export default async function handler(req, res) {
   const { method, query } = req;
   const { id } = query;
-  const backendUrl = getBackendUrl();
+  const backendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
   
   // Get authorization token from request
   const authHeader = req.headers.authorization;
