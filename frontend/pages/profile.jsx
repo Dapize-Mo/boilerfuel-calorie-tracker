@@ -282,7 +282,14 @@ export default function ProfilePage() {
                         </div>
                         {group.meals.map((m, i) => (
                           <div key={`${m.id}-${m.addedAt}-${i}`} className="flex items-center justify-between px-4 py-2 text-sm border-b border-theme-text-primary/5 last:border-b-0">
-                            <span className="truncate flex-1 mr-4">{m.name}</span>
+                            <div className="flex-1 min-w-0 mr-4">
+                              <span className="truncate block">{m.name}</span>
+                              {(m.dining_court || m.meal_time) && (
+                                <span className="text-[10px] text-theme-text-tertiary capitalize">
+                                  {m.dining_court}{m.dining_court && m.meal_time ? ' · ' : ''}{m.meal_time}
+                                </span>
+                              )}
+                            </div>
                             <span className="text-xs font-mono tabular-nums text-theme-text-secondary shrink-0">{m.calories} cal</span>
                           </div>
                         ))}
