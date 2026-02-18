@@ -339,7 +339,7 @@ export default function Home() {
   function handleAddMeal(food, e) {
     if (e) e.stopPropagation();
     if (mealTime !== 'All') {
-      addMeal(food, mealTime.toLowerCase());
+      addMeal(food, mealTime.toLowerCase(), selectedDate);
     } else if (food.meal_time && food.meal_time.toLowerCase() !== 'all') {
       const mt = food.meal_time.toLowerCase();
       // Compound meal times like "Breakfast/Lunch" → show picker with those options
@@ -348,7 +348,7 @@ export default function Home() {
         setMealPickerOptions(parts);
         setMealPickerFood(food);
       } else {
-        addMeal(food, mt);
+        addMeal(food, mt, selectedDate);
       }
     } else {
       setMealPickerOptions(null);
@@ -925,7 +925,7 @@ export default function Home() {
                   const food = item.food;
                   const ri = rowIndex++;
                   const isExpanded = expandedId === food.id;
-                  const count = getCount(food.id);
+                  const count = getCount(food.id, selectedDate);
                   const macros = food.macros || {};
                   const noNutrition = food.calories === 0 && !macros.protein && !macros.carbs && !(macros.fats || macros.fat);
                   return (
@@ -1064,14 +1064,14 @@ export default function Home() {
                                   Add
                                 </button>
                                 <button
-                                  onClick={(e) => { e.stopPropagation(); removeMeal(food); }}
+                                  onClick={(e) => { e.stopPropagation(); removeMeal(food, selectedDate); }}
                                   disabled={count === 0}
                                   className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 border text-xs uppercase tracking-wider font-bold transition-colors w-full sm:w-28 ${
                                     count > 0
                                       ? 'border-theme-text-primary/50 text-theme-text-secondary hover:bg-theme-text-primary hover:text-theme-bg-primary'
                                       : 'border-theme-text-primary/10 text-theme-text-tertiary/40 cursor-not-allowed'
                                   }`}
-                                  title="Remove from today's log">
+                                  title="Remove from log">
                                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="5" y1="12" x2="19" y2="12" /></svg>
                                   Remove
                                 </button>
@@ -1129,7 +1129,7 @@ export default function Home() {
                 </div>
                 <div className="max-h-[70vh] overflow-y-auto">
                   {beverageFoods.map((food) => {
-                    const count = getCount(food.id);
+                    const count = getCount(food.id, selectedDate);
                     const macros = food.macros || {};
                     return (
                       <div key={food.id}
@@ -1156,7 +1156,7 @@ export default function Home() {
                           </button>
                           {count > 0 && (
                             <button
-                              onClick={(e) => { e.stopPropagation(); removeMeal(food); }}
+                              onClick={(e) => { e.stopPropagation(); removeMeal(food, selectedDate); }}
                               className="p-1 border border-theme-text-primary/20 text-theme-text-tertiary hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors"
                               title="Remove from log">
                               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="5" y1="12" x2="19" y2="12" /></svg>
@@ -1210,7 +1210,7 @@ export default function Home() {
                 {(mealPickerOptions || ['Breakfast', 'Lunch', 'Dinner']).map(mt => (
                   <button key={mt}
                     onClick={() => {
-                      addMeal(mealPickerFood, mt.toLowerCase());
+                      addMeal(mealPickerFood, mt.toLowerCase(), selectedDate);
                       setMealPickerFood(null);
                     }}
                     className="w-full px-4 py-3 border border-theme-text-primary/30 text-sm font-bold uppercase tracking-wider text-theme-text-primary hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors text-left">

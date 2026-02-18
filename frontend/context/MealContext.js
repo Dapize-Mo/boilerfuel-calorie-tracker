@@ -52,7 +52,7 @@ export function MealProvider({ children }) {
   const todayKey = getTodayKey();
   const meals = mealsByDate[todayKey] || [];
 
-  const addMeal = useCallback((food, mealTimeOverride) => {
+  const addMeal = useCallback((food, mealTimeOverride, dateOverride) => {
     const entry = {
       id: food.id,
       name: food.name,
@@ -64,15 +64,15 @@ export function MealProvider({ children }) {
       addedAt: Date.now(),
     };
     setMealsByDate(prev => {
-      const key = getTodayKey();
+      const key = dateOverride || getTodayKey();
       const existing = prev[key] || [];
       return { ...prev, [key]: [...existing, entry] };
     });
   }, []);
 
-  const removeMeal = useCallback((food) => {
+  const removeMeal = useCallback((food, dateOverride) => {
     setMealsByDate(prev => {
-      const key = getTodayKey();
+      const key = dateOverride || getTodayKey();
       const existing = prev[key] || [];
       // Remove the last occurrence of this food id
       const idx = existing.findLastIndex(m => m.id === food.id);
@@ -119,9 +119,9 @@ export function MealProvider({ children }) {
     { calories: 0, protein: 0, carbs: 0, fat: 0, sugar: 0, fiber: 0, sodium: 0, cholesterol: 0, saturated_fat: 0, added_sugar: 0 }
   );
 
-  // Count how many times a food id appears today
-  const getCount = useCallback((foodId) => {
-    const key = getTodayKey();
+  // Count how many times a food id appears for the given date (defaults to today)
+  const getCount = useCallback((foodId, dateOverride) => {
+    const key = dateOverride || getTodayKey();
     const existing = mealsByDate[key] || [];
     return existing.filter(m => m.id === foodId).length;
   }, [mealsByDate]);
