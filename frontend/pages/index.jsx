@@ -556,7 +556,9 @@ export default function Home() {
     return { regularFoods: regular, beverageFoods: bevs };
   }, [foods]);
 
-  // ── Station items lookup: court|station → foods with nutrition (for collection expansion) ──
+  // ── Get collection components for a food item ──
+  // Uses macros.components from the database (scraped via GraphQL v3 API)
+  // Falls back to station-based grouping if no component data available
   const stationItemsMap = useMemo(() => {
     const map = new Map();
     for (const f of regularFoods) {
@@ -567,10 +569,39 @@ export default function Home() {
     return map;
   }, [regularFoods]);
 
-  function getStationComponents(food) {
+  function getCollectionComponents(food) {
+    const macros = food.macros || {};
+    // Prefer component data from the database (scraped via GraphQL)
+    if (macros.components && macros.components.length > 0) {
+      return macros.components.map((c, idx) => ({
+        id: `${food.id}-comp-${idx}`,
+        name: c.name,
+        calories: c.calories || 0,
+        macros: {
+          protein: c.protein || 0,
+          carbs: c.carbs || 0,
+          fats: c.fats || 0,
+          fat: c.fats || 0,
+          serving_size: c.serving_size || '1 serving',
+          saturated_fat: c.saturated_fat || 0,
+          cholesterol: c.cholesterol || 0,
+          sodium: c.sodium || 0,
+          fiber: c.fiber || 0,
+          sugar: c.sugar || 0,
+          added_sugar: c.added_sugar || 0,
+          is_vegetarian: c.is_vegetarian || false,
+          is_vegan: c.is_vegan || false,
+          allergens: c.allergens || [],
+          ingredients: c.ingredients || '',
+        },
+        dining_court: food.dining_court,
+        station: food.station,
+        meal_time: food.meal_time,
+      }));
+    }
+    // Fallback: group by station (other items with nutrition in same station)
     const key = `${(food.dining_court || '').toLowerCase()}|${(food.station || '').toLowerCase()}`;
     const items = stationItemsMap.get(key) || [];
-    // Return other items in same station that have nutrition data
     return items.filter(f => f.id !== food.id && (f.calories > 0 || f.macros?.protein || f.macros?.carbs || f.macros?.fats || f.macros?.fat));
   }
 
@@ -974,10 +1005,10 @@ export default function Home() {
                                   {macros.allergens.slice(0, 3).map(a => a.replace('Tree Nuts', 'Nuts').replace('Shellfish', 'Shell')).join(' · ')}{macros.allergens.length > 3 ? ' …' : ''}
                                 </span>
                               )}
-                              {noNutrition && getStationComponents(food).length > 0 && (
+                              {noNutrition && getCollectionComponents(food).length > 0 && (
                                 <span className="shrink-0 text-[9px] font-bold border border-theme-text-primary/40 text-theme-text-secondary px-1 py-0 rounded-sm leading-tight" title="Click to see components">Build Your Own</span>
                               )}
-                              {noNutrition && getStationComponents(food).length === 0 && (
+                              {noNutrition && getCollectionComponents(food).length === 0 && (
                                 <span className="shrink-0 text-[9px] font-bold border border-amber-500/50 text-amber-500/80 px-1 py-0 rounded-sm leading-tight" title="Nutrition data not available from Purdue">N/A</span>
                               )}
                               {count > 0 && (
@@ -995,7 +1026,7 @@ export default function Home() {
 
                         {/* Expanded detail panel */}
                         {isExpanded && (() => {
-                          const components = noNutrition ? getStationComponents(food) : [];
+                          const components = noNutrition ? getCollectionComponents(food) : [];
                           const isCollection = noNutrition && components.length > 0;
                           return (
                           <div className="border-t border-theme-text-primary/10 bg-theme-bg-secondary/30"

@@ -160,6 +160,95 @@ def fetch_item_nutrition(item_id, headers):
     except Exception as e:
         return None
 
+GRAPHQL_URL = "https://api.hfs.purdue.edu/menus/v3/GraphQL"
+
+MENU_COMPONENTS_QUERY = """
+query getLocationMenu($name: String!, $date: Date!) {
+  diningCourtByName(name: $name) {
+    name
+    dailyMenu(date: $date) {
+      meals {
+        name
+        stations {
+          name
+          items {
+            hasComponents
+            item {
+              itemId
+              name
+              isNutritionReady
+              isVegetarian
+              components {
+                name
+                itemId
+                isNutritionReady
+                isVegetarian
+                traits {
+                  name
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+"""
+
+
+def fetch_components_graphql(location_name, date_str, headers=None):
+    """
+    Fetch component data for collection items using the GraphQL v3 API.
+
+    Args:
+        location_name: Dining court name (e.g. 'Wiley', 'Earhart')
+        date_str: Date in YYYY-MM-DD format
+        headers: Optional request headers
+
+    Returns:
+        Dict mapping (station_name, item_name) -> list of component dicts
+        Each component has: name, itemId, isNutritionReady, isVegetarian, traits
+    """
+    try:
+        payload = json.dumps({
+            "query": MENU_COMPONENTS_QUERY,
+            "variables": {"name": location_name, "date": date_str}
+        })
+
+        resp = requests.post(
+            GRAPHQL_URL,
+            data=payload,
+            headers={"Content-Type": "application/json", "Accept": "application/json"},
+            timeout=15
+        )
+        resp.raise_for_status()
+        data = resp.json()
+
+        result = {}
+        meals = (data.get("data") or {}).get("diningCourtByName") or {}
+        daily_menu = meals.get("dailyMenu") or {}
+
+        for meal in daily_menu.get("meals") or []:
+            for station in meal.get("stations") or []:
+                station_name = station.get("name", "")
+                for item_entry in station.get("items") or []:
+                    if not item_entry.get("hasComponents"):
+                        continue
+                    item = item_entry.get("item") or {}
+                    item_name = item.get("name", "")
+                    components = item.get("components") or []
+                    if components:
+                        key = (station_name.lower().strip(), item_name.lower().strip())
+                        result[key] = components
+
+        return result
+
+    except Exception as e:
+        print(f"    GraphQL component fetch failed for {location_name}: {e}")
+        return {}
+
+
 def scrape_purdue_menu_api(api_location='Wiley', date_str=None, nutrition_cache=None,
                            display_name=None, court_code=None, available_date=None):
     """
@@ -364,7 +453,126 @@ def scrape_purdue_menu_api(api_location='Wiley', date_str=None, nutrition_cache=
         
         if cached_count > 0 or fetched_count > 0:
             print(f"  Used cache: {cached_count}, Fetched new: {fetched_count}")
-        
+
+        # Fetch component data via GraphQL v3 API
+        component_map = fetch_components_graphql(api_location, date_str, headers)
+        if component_map:
+            comp_fetched = 0
+            comp_cached = 0
+            for menu_item in menu_items:
+                key = (
+                    menu_item.get('station', '').lower().strip(),
+                    menu_item['name'].lower().strip()
+                )
+                components_raw = component_map.get(key)
+                if not components_raw:
+                    continue
+
+                # Fetch nutrition for each component
+                enriched_components = []
+                for comp in components_raw:
+                    comp_name = comp.get('name', '').strip()
+                    comp_item_id = comp.get('itemId')
+                    comp_nr = comp.get('isNutritionReady', False)
+                    comp_is_veg = comp.get('isVegetarian', False)
+
+                    # Check traits for vegan
+                    comp_is_vegan = False
+                    for trait in (comp.get('traits') or []):
+                        tname = (trait.get('name') or '').lower()
+                        if tname == 'vegan':
+                            comp_is_vegan = True
+                        if tname == 'vegetarian':
+                            comp_is_veg = True
+
+                    comp_entry = {
+                        'name': comp_name,
+                        'itemId': comp_item_id,
+                        'calories': 0,
+                        'protein': 0.0,
+                        'carbs': 0.0,
+                        'fats': 0.0,
+                        'saturated_fat': 0.0,
+                        'cholesterol': 0.0,
+                        'sodium': 0.0,
+                        'fiber': 0.0,
+                        'sugar': 0.0,
+                        'added_sugar': 0.0,
+                        'serving_size': '1 serving',
+                        'is_vegetarian': comp_is_veg,
+                        'is_vegan': comp_is_vegan,
+                        'allergens': [],
+                        'ingredients': '',
+                    }
+
+                    if comp_nr and comp_item_id:
+                        # Check nutrition cache
+                        comp_cache_key = (comp_name.lower().strip(),
+                                          (display_name or api_location).lower().strip())
+                        if comp_cache_key in nutrition_cache:
+                            cn = nutrition_cache[comp_cache_key]
+                            comp_entry['calories'] = cn.get('calories', 0)
+                            comp_entry['protein'] = cn.get('protein', 0.0)
+                            comp_entry['carbs'] = cn.get('carbs', 0.0)
+                            comp_entry['fats'] = cn.get('fats', 0.0)
+                            comp_entry['saturated_fat'] = cn.get('saturated_fat', 0.0)
+                            comp_entry['cholesterol'] = cn.get('cholesterol', 0.0)
+                            comp_entry['sodium'] = cn.get('sodium', 0.0)
+                            comp_entry['fiber'] = cn.get('fiber', 0.0)
+                            comp_entry['sugar'] = cn.get('sugar', 0.0)
+                            comp_entry['added_sugar'] = cn.get('added_sugar', 0.0)
+                            comp_entry['serving_size'] = cn.get('serving_size', '1 serving')
+                            comp_entry['is_vegetarian'] = cn.get('is_vegetarian', comp_is_veg)
+                            comp_entry['is_vegan'] = cn.get('is_vegan', comp_is_vegan)
+                            comp_entry['allergens'] = cn.get('allergens', [])
+                            comp_entry['ingredients'] = cn.get('ingredients', '')
+                            comp_cached += 1
+                        else:
+                            nutrition = fetch_item_nutrition(comp_item_id, headers)
+                            if nutrition:
+                                comp_entry['calories'] = nutrition.get('calories', 0)
+                                comp_entry['protein'] = nutrition.get('protein', 0.0)
+                                comp_entry['carbs'] = nutrition.get('carbs', 0.0)
+                                comp_entry['fats'] = nutrition.get('fats', 0.0)
+                                comp_entry['saturated_fat'] = nutrition.get('saturated_fat', 0.0)
+                                comp_entry['cholesterol'] = nutrition.get('cholesterol', 0.0)
+                                comp_entry['sodium'] = nutrition.get('sodium', 0.0)
+                                comp_entry['fiber'] = nutrition.get('fiber', 0.0)
+                                comp_entry['sugar'] = nutrition.get('sugar', 0.0)
+                                comp_entry['added_sugar'] = nutrition.get('added_sugar', 0.0)
+                                comp_entry['serving_size'] = nutrition.get('serving_size', '1 serving')
+                                comp_entry['is_vegetarian'] = nutrition.get('is_vegetarian', comp_is_veg)
+                                comp_entry['is_vegan'] = nutrition.get('is_vegan', comp_is_vegan)
+                                comp_entry['allergens'] = nutrition.get('allergens', [])
+                                comp_entry['ingredients'] = nutrition.get('ingredients', '')
+                                # Cache for this session
+                                nutrition_cache[comp_cache_key] = {
+                                    'calories': comp_entry['calories'],
+                                    'protein': comp_entry['protein'],
+                                    'carbs': comp_entry['carbs'],
+                                    'fats': comp_entry['fats'],
+                                    'serving_size': comp_entry['serving_size'],
+                                    'saturated_fat': comp_entry['saturated_fat'],
+                                    'cholesterol': comp_entry['cholesterol'],
+                                    'sodium': comp_entry['sodium'],
+                                    'fiber': comp_entry['fiber'],
+                                    'sugar': comp_entry['sugar'],
+                                    'added_sugar': comp_entry['added_sugar'],
+                                    'is_vegetarian': comp_entry['is_vegetarian'],
+                                    'is_vegan': comp_entry['is_vegan'],
+                                    'allergens': comp_entry['allergens'],
+                                    'ingredients': comp_entry['ingredients'],
+                                }
+                                comp_fetched += 1
+
+                    enriched_components.append(comp_entry)
+
+                # Store components in the menu item (will be saved into macros JSON)
+                menu_item['components'] = enriched_components
+
+            if comp_fetched > 0 or comp_cached > 0:
+                print(f"  Components: {comp_cached} cached, {comp_fetched} fetched")
+
         return menu_items
     
     except requests.RequestException as e:
@@ -770,6 +978,29 @@ def scrape_all_dining_courts_with_snapshots(date=None, use_cache=True, days_ahea
         schedule_start_date=schedule_start_date
     )
 
+def _build_macros_dict(item):
+    """Build the macros dictionary for a menu item, including components if present."""
+    macros = {
+        'protein': item['protein'],
+        'carbs': item['carbs'],
+        'fats': item['fats'],
+        'serving_size': item.get('serving_size', '1 serving'),
+        'saturated_fat': item.get('saturated_fat', 0.0),
+        'cholesterol': item.get('cholesterol', 0.0),
+        'sodium': item.get('sodium', 0.0),
+        'fiber': item.get('fiber', 0.0),
+        'sugar': item.get('sugar', 0.0),
+        'added_sugar': item.get('added_sugar', 0.0),
+        'is_vegetarian': item.get('is_vegetarian', False),
+        'is_vegan': item.get('is_vegan', False),
+        'allergens': item.get('allergens', []),
+        'ingredients': item.get('ingredients', ''),
+    }
+    if item.get('components'):
+        macros['components'] = item['components']
+    return macros
+
+
 def save_to_database(menu_items, database_url=None):
     """
     Save menu items to the database.
@@ -864,23 +1095,7 @@ def save_to_database(menu_items, database_url=None):
             if existing:
                 existing_id, existing_calories, existing_court_value = existing
                 
-                # Build extended macros JSON
-                macros_json = json.dumps({
-                    'protein': item['protein'],
-                    'carbs': item['carbs'],
-                    'fats': item['fats'],
-                    'serving_size': item.get('serving_size', '1 serving'),
-                    'saturated_fat': item.get('saturated_fat', 0.0),
-                    'cholesterol': item.get('cholesterol', 0.0),
-                    'sodium': item.get('sodium', 0.0),
-                    'fiber': item.get('fiber', 0.0),
-                    'sugar': item.get('sugar', 0.0),
-                    'added_sugar': item.get('added_sugar', 0.0),
-                    'is_vegetarian': item.get('is_vegetarian', False),
-                    'is_vegan': item.get('is_vegan', False),
-                    'allergens': item.get('allergens', []),
-                    'ingredients': item.get('ingredients', ''),
-                })
+                macros_json = json.dumps(_build_macros_dict(item))
 
                 # Always update with new schedule information
                 cursor.execute(
@@ -903,23 +1118,7 @@ def save_to_database(menu_items, database_url=None):
                 )
                 updated_count += 1
             else:
-                # Build extended macros JSON
-                macros_json = json.dumps({
-                    'protein': item['protein'],
-                    'carbs': item['carbs'],
-                    'fats': item['fats'],
-                    'serving_size': item.get('serving_size', '1 serving'),
-                    'saturated_fat': item.get('saturated_fat', 0.0),
-                    'cholesterol': item.get('cholesterol', 0.0),
-                    'sodium': item.get('sodium', 0.0),
-                    'fiber': item.get('fiber', 0.0),
-                    'sugar': item.get('sugar', 0.0),
-                    'added_sugar': item.get('added_sugar', 0.0),
-                    'is_vegetarian': item.get('is_vegetarian', False),
-                    'is_vegan': item.get('is_vegan', False),
-                    'allergens': item.get('allergens', []),
-                    'ingredients': item.get('ingredients', ''),
-                })
+                macros_json = json.dumps(_build_macros_dict(item))
 
                 # Insert new food item
                 cursor.execute(
@@ -1025,22 +1224,7 @@ def save_menu_snapshots(menu_items, database_url=None, source='api'):
             dining_court = item.get('dining_court') or item.get('dining_court_code') or 'Unknown'
             dining_court_code = item.get('dining_court_code')
 
-            macros_json = json.dumps({
-                'protein': item['protein'],
-                'carbs': item['carbs'],
-                'fats': item['fats'],
-                'serving_size': item.get('serving_size', '1 serving'),
-                'saturated_fat': item.get('saturated_fat', 0.0),
-                'cholesterol': item.get('cholesterol', 0.0),
-                'sodium': item.get('sodium', 0.0),
-                'fiber': item.get('fiber', 0.0),
-                'sugar': item.get('sugar', 0.0),
-                'added_sugar': item.get('added_sugar', 0.0),
-                'is_vegetarian': item.get('is_vegetarian', False),
-                'is_vegan': item.get('is_vegan', False),
-                'allergens': item.get('allergens', []),
-                'ingredients': item.get('ingredients', ''),
-            })
+            macros_json = json.dumps(_build_macros_dict(item))
 
             cursor.execute(
                 """
