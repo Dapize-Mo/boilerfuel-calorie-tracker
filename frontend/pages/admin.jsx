@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { signIn, signOut, useSession } from "next-auth/react";
@@ -26,6 +26,8 @@ export default function AdminPanel() {
   // Scraper state
   const [scrapeStatus, setScrapeStatus] = useState('idle'); // idle | running | success | error
   const [scrapeMessage, setScrapeMessage] = useState('');
+  const [scrapeProgress, setScrapeProgress] = useState(null); // { steps, current_step, elapsed_seconds, ... }
+  const pollRef = useRef(null);
 
   useEffect(() => {
     async function bootstrap() {
@@ -66,9 +68,43 @@ export default function AdminPanel() {
     catch { setLoginError('Failed to sign in with Google'); }
   }
 
+  const stopPolling = useCallback(() => {
+    if (pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+  }, []);
+
+  const pollScrapeStatus = useCallback(() => {
+    stopPolling();
+    pollRef.current = setInterval(async () => {
+      try {
+        const res = await fetch('/api/admin/scrape-status');
+        const data = await res.json();
+        setScrapeProgress(data);
+
+        if (data.status === 'completed') {
+          stopPolling();
+          setScrapeStatus(data.conclusion === 'success' ? 'success' : 'error');
+          setScrapeMessage(
+            data.conclusion === 'success'
+              ? `Scrape completed in ${formatElapsed(data.elapsed_seconds)}`
+              : `Scrape ${data.conclusion || 'failed'}`
+          );
+        }
+      } catch {
+        // Silently continue polling
+      }
+    }, 4000); // Poll every 4 seconds
+  }, [stopPolling]);
+
+  // Cleanup polling on unmount
+  useEffect(() => () => stopPolling(), [stopPolling]);
+
   async function handleRunScraper() {
     setScrapeStatus('running');
-    setScrapeMessage('');
+    setScrapeMessage('Dispatching workflow...');
+    setScrapeProgress(null);
     try {
       const res = await fetch('/api/admin/scrape', { method: 'POST' });
       const data = await res.json();
@@ -77,9 +113,9 @@ export default function AdminPanel() {
         const debugStr = data.debug ? `\n\nDebug: ${JSON.stringify(data.debug, null, 2)}` : '';
         throw new Error((data.error || 'Scrape failed') + (data.details ? ` — ${data.details}` : '') + debugStr);
       }
-      setScrapeStatus('success');
-      setScrapeMessage(`Scrape started via ${data.via || 'backend'}`);
-      setTimeout(() => setScrapeStatus('idle'), 5000);
+      setScrapeMessage('Workflow dispatched. Waiting for runner...');
+      // Start polling for progress after a brief delay (GitHub needs time to create the run)
+      setTimeout(() => pollScrapeStatus(), 3000);
     } catch (err) {
       setScrapeStatus('error');
       setScrapeMessage(err.message || 'Scrape request failed');
@@ -237,10 +273,116 @@ export default function AdminPanel() {
                    'Run Scraper'}
                 </button>
               </div>
+
+              {/* Status message */}
               {scrapeMessage && (
                 <p className={`text-xs ${scrapeStatus === 'error' ? 'text-red-400' : 'text-theme-text-tertiary'}`}>
                   {scrapeMessage}
                 </p>
+              )}
+
+              {/* Live progress panel */}
+              {scrapeStatus === 'running' && scrapeProgress && scrapeProgress.steps && (
+                <div className="border border-theme-text-primary/10 bg-theme-bg-secondary/30 p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-theme-text-tertiary">
+                      Progress
+                    </span>
+                    <span className="text-[10px] text-theme-text-tertiary tabular-nums">
+                      {formatElapsed(scrapeProgress.elapsed_seconds)}
+                    </span>
+                  </div>
+
+                  {/* Progress bar */}
+                  {scrapeProgress.total_steps > 0 && (
+                    <div className="w-full h-1 bg-theme-text-primary/10 overflow-hidden">
+                      <div
+                        className="h-full bg-theme-text-primary/60 transition-all duration-500"
+                        style={{ width: `${Math.round((scrapeProgress.completed_steps / scrapeProgress.total_steps) * 100)}%` }}
+                      />
+                    </div>
+                  )}
+
+                  {/* Steps list */}
+                  <div className="space-y-1">
+                    {scrapeProgress.steps.map((step, i) => (
+                      <div key={i} className="flex items-center gap-2 text-xs">
+                        <span className="w-4 text-center shrink-0">
+                          {step.status === 'completed' && step.conclusion === 'success' ? (
+                            <span className="text-green-400">&#10003;</span>
+                          ) : step.status === 'completed' && step.conclusion !== 'success' ? (
+                            <span className="text-red-400">&#10007;</span>
+                          ) : step.status === 'in_progress' ? (
+                            <span className="text-theme-text-primary animate-pulse">&#9679;</span>
+                          ) : (
+                            <span className="text-theme-text-tertiary/30">&#9675;</span>
+                          )}
+                        </span>
+                        <span className={
+                          step.status === 'in_progress' ? 'text-theme-text-primary font-bold' :
+                          step.status === 'completed' ? 'text-theme-text-tertiary' :
+                          'text-theme-text-tertiary/40'
+                        }>
+                          {step.name}
+                        </span>
+                        {step.status === 'completed' && step.started_at && step.completed_at && (
+                          <span className="text-[10px] text-theme-text-tertiary/40 tabular-nums ml-auto">
+                            {formatElapsed(Math.round((new Date(step.completed_at) - new Date(step.started_at)) / 1000))}
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Current step highlight */}
+                  {scrapeProgress.current_step && (
+                    <div className="text-xs text-theme-text-secondary">
+                      Running: <span className="font-bold">{scrapeProgress.current_step}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Completed progress summary */}
+              {(scrapeStatus === 'success' || scrapeStatus === 'error') && scrapeProgress?.steps && (
+                <div className={`border p-4 space-y-2 ${scrapeStatus === 'success' ? 'border-green-500/20 bg-green-500/5' : 'border-red-500/20 bg-red-500/5'}`}>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-theme-text-tertiary">
+                      {scrapeStatus === 'success' ? 'Completed' : 'Failed'}
+                    </span>
+                    {scrapeProgress.html_url && (
+                      <a href={scrapeProgress.html_url} target="_blank" rel="noopener noreferrer"
+                        className="text-[10px] text-theme-text-tertiary hover:text-theme-text-primary underline">
+                        View logs
+                      </a>
+                    )}
+                  </div>
+                  <div className="space-y-0.5">
+                    {scrapeProgress.steps.map((step, i) => (
+                      <div key={i} className="flex items-center gap-2 text-xs">
+                        <span className="w-4 text-center shrink-0">
+                          {step.conclusion === 'success' ? (
+                            <span className="text-green-400">&#10003;</span>
+                          ) : step.conclusion === 'failure' ? (
+                            <span className="text-red-400">&#10007;</span>
+                          ) : step.conclusion === 'skipped' ? (
+                            <span className="text-theme-text-tertiary/40">&#8211;</span>
+                          ) : (
+                            <span className="text-theme-text-tertiary/30">&#9675;</span>
+                          )}
+                        </span>
+                        <span className={step.conclusion === 'failure' ? 'text-red-400' : 'text-theme-text-tertiary'}>
+                          {step.name}
+                        </span>
+                        {step.started_at && step.completed_at && (
+                          <span className="text-[10px] text-theme-text-tertiary/40 tabular-nums ml-auto">
+                            {formatElapsed(Math.round((new Date(step.completed_at) - new Date(step.started_at)) / 1000))}
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
             </div>
           </section>
@@ -291,6 +433,13 @@ export default function AdminPanel() {
 AdminPanel.getLayout = function getLayout(page) {
   return page;
 };
+
+function formatElapsed(seconds) {
+  if (!seconds || seconds < 0) return '0s';
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return m > 0 ? `${m}m ${s}s` : `${s}s`;
+}
 
 /* ── Helper sub-components ────────────────────────────────── */
 
