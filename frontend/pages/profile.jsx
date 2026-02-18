@@ -27,7 +27,8 @@ function ProgressBar({ label, current, goal, unit = '', color = 'bg-theme-text-p
 }
 
 function getTodayKey() {
-  return new Date().toISOString().slice(0, 10);
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 function formatDateKey(key) {
@@ -40,7 +41,7 @@ function formatDateKey(key) {
 function shiftDate(dateKey, delta) {
   const d = new Date(dateKey + 'T00:00:00');
   d.setDate(d.getDate() + delta);
-  return d.toISOString().slice(0, 10);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 export default function ProfilePage() {

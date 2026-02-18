@@ -689,9 +689,11 @@ export default function Home() {
 
       {/* ── Title — slides from center to top-left (GPU-composited) ── */}
       <h1 className="font-bold uppercase"
+        onClick={() => { if (!isLanding) handleBack(); }}
         style={{
           position: 'fixed', zIndex: 20, whiteSpace: 'nowrap', lineHeight: 1.1,
           willChange: 'transform, opacity',
+          cursor: isLanding ? 'default' : 'pointer',
           top: 0, left: 0,
           transition: `transform 0.85s ${EASE}, font-size 0.7s ${EASE}, letter-spacing 0.7s ${EASE}`,
           transform: isLanding

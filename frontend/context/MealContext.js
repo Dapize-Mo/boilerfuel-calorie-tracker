@@ -14,7 +14,8 @@ const STORAGE_KEY = 'boilerfuel_meals';
 const GOALS_KEY = 'boilerfuel_goals';
 
 function getTodayKey() {
-  return new Date().toISOString().slice(0, 10);
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 const DEFAULT_GOALS = { calories: 2000, protein: 150, carbs: 250, fat: 65 };
