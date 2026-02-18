@@ -556,6 +556,24 @@ export default function Home() {
     return { regularFoods: regular, beverageFoods: bevs };
   }, [foods]);
 
+  // ── Station items lookup: court|station → foods with nutrition (for collection expansion) ──
+  const stationItemsMap = useMemo(() => {
+    const map = new Map();
+    for (const f of regularFoods) {
+      const key = `${(f.dining_court || '').toLowerCase()}|${(f.station || '').toLowerCase()}`;
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(f);
+    }
+    return map;
+  }, [regularFoods]);
+
+  function getStationComponents(food) {
+    const key = `${(food.dining_court || '').toLowerCase()}|${(food.station || '').toLowerCase()}`;
+    const items = stationItemsMap.get(key) || [];
+    // Return other items in same station that have nutrition data
+    return items.filter(f => f.id !== food.id && (f.calories > 0 || f.macros?.protein || f.macros?.carbs || f.macros?.fats || f.macros?.fat));
+  }
+
   // ── Sorted + grouped foods (excluding beverages) ──
   const sortedFoods = useMemo(() => {
     if (!calorieSort) return regularFoods;
@@ -956,7 +974,10 @@ export default function Home() {
                                   {macros.allergens.slice(0, 3).map(a => a.replace('Tree Nuts', 'Nuts').replace('Shellfish', 'Shell')).join(' · ')}{macros.allergens.length > 3 ? ' …' : ''}
                                 </span>
                               )}
-                              {noNutrition && (
+                              {noNutrition && getStationComponents(food).length > 0 && (
+                                <span className="shrink-0 text-[9px] font-bold border border-theme-text-primary/40 text-theme-text-secondary px-1 py-0 rounded-sm leading-tight" title="Click to see components">Build Your Own</span>
+                              )}
+                              {noNutrition && getStationComponents(food).length === 0 && (
                                 <span className="shrink-0 text-[9px] font-bold border border-amber-500/50 text-amber-500/80 px-1 py-0 rounded-sm leading-tight" title="Nutrition data not available from Purdue">N/A</span>
                               )}
                               {count > 0 && (
@@ -973,9 +994,72 @@ export default function Home() {
                         </div>
 
                         {/* Expanded detail panel */}
-                        {isExpanded && (
+                        {isExpanded && (() => {
+                          const components = noNutrition ? getStationComponents(food) : [];
+                          const isCollection = noNutrition && components.length > 0;
+                          return (
                           <div className="border-t border-theme-text-primary/10 bg-theme-bg-secondary/30"
                             style={{ animation: `fadeInRow 0.2s ${EASE} both` }}>
+
+                            {isCollection ? (
+                              /* ── Collection view: show station components ── */
+                              <div className="px-4 sm:px-6 py-4">
+                                <div className="text-xs font-bold uppercase tracking-wider text-theme-text-tertiary mb-3">
+                                  Build Your Own &middot; {components.length} item{components.length !== 1 ? 's' : ''}
+                                </div>
+                                <div className="space-y-1">
+                                  {components.map(comp => {
+                                    const cm = comp.macros || {};
+                                    const compCount = getCount(comp.id, selectedDate);
+                                    return (
+                                      <div key={comp.id} className="flex items-center gap-3 px-3 py-2.5 border border-theme-text-primary/5 hover:bg-theme-bg-secondary/50 transition-colors">
+                                        <div className="flex-1 min-w-0">
+                                          <div className="flex items-center gap-2">
+                                            <span className="text-sm truncate">{comp.name}</span>
+                                            {cm.is_vegetarian && (
+                                              <span className="shrink-0 text-[9px] font-bold border border-green-500/60 text-green-500 px-1 py-0 rounded-sm leading-tight">VG</span>
+                                            )}
+                                            {cm.is_vegan && (
+                                              <span className="shrink-0 text-[9px] font-bold border border-emerald-400/60 text-emerald-400 px-1 py-0 rounded-sm leading-tight">V</span>
+                                            )}
+                                            {compCount > 0 && (
+                                              <span className="shrink-0 text-[10px] font-bold bg-theme-text-primary text-theme-bg-primary px-1.5 py-0.5 tabular-nums">{compCount}</span>
+                                            )}
+                                          </div>
+                                          <div className="text-[10px] text-theme-text-tertiary tabular-nums mt-0.5">
+                                            {comp.calories} cal
+                                            {cm.protein != null && <> &middot; {cm.protein}g protein</>}
+                                            {cm.carbs != null && <> &middot; {cm.carbs}g carbs</>}
+                                            {(cm.fats ?? cm.fat) != null && <> &middot; {cm.fats ?? cm.fat}g fat</>}
+                                          </div>
+                                        </div>
+                                        <div className="flex items-center gap-1 shrink-0">
+                                          <button
+                                            onClick={(e) => handleAddMeal(comp, e)}
+                                            className="p-1.5 border border-theme-text-primary/30 text-theme-text-secondary hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors"
+                                            title="Add to log">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                                          </button>
+                                          {compCount > 0 && (
+                                            <button
+                                              onClick={(e) => { e.stopPropagation(); removeMeal(comp, selectedDate); }}
+                                              className="p-1.5 border border-theme-text-primary/30 text-theme-text-secondary hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors"
+                                              title="Remove from log">
+                                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                                            </button>
+                                          )}
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                                <div className="mt-3 text-[10px] text-theme-text-tertiary/60">
+                                  Add individual items above to track nutrition for this station.
+                                </div>
+                              </div>
+                            ) : (
+                              /* ── Normal item view ── */
+                              <>
                             {noNutrition && (
                               <div className="px-4 sm:px-6 pt-4 pb-2">
                                 <div className="border border-amber-500/30 bg-amber-500/5 px-4 py-3">
@@ -1082,8 +1166,11 @@ export default function Home() {
                               {food.meal_time && <span>Meal: <span className="text-theme-text-secondary capitalize">{food.meal_time}</span></span>}
                               {(macros.serving_size || food.serving_size) && <span>Serving: <span className="text-theme-text-secondary">{macros.serving_size || food.serving_size}</span></span>}
                             </div>
+                              </>
+                            )}
                           </div>
-                        )}
+                          );
+                        })()}
                       </td>
                     </tr>
                   );
