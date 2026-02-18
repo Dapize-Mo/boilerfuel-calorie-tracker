@@ -927,6 +927,7 @@ export default function Home() {
                   const isExpanded = expandedId === food.id;
                   const count = getCount(food.id);
                   const macros = food.macros || {};
+                  const noNutrition = food.calories === 0 && !macros.protein && !macros.carbs && !(macros.fats || macros.fat);
                   return (
                     <tr key={food.id}
                       className="border-b border-theme-text-primary/5 transition-colors group"
@@ -958,6 +959,9 @@ export default function Home() {
                                   {macros.allergens.slice(0, 3).map(a => a.replace('Tree Nuts', 'Nuts').replace('Shellfish', 'Shell')).join(' · ')}{macros.allergens.length > 3 ? ' …' : ''}
                                 </span>
                               )}
+                              {noNutrition && (
+                                <span className="shrink-0 text-[9px] font-bold border border-amber-500/50 text-amber-500/80 px-1 py-0 rounded-sm leading-tight" title="Nutrition data not available from Purdue">N/A</span>
+                              )}
                               {count > 0 && (
                                 <span className="shrink-0 text-[10px] font-bold bg-theme-text-primary text-theme-bg-primary px-1.5 py-0.5 tabular-nums">
                                   {count}
@@ -968,20 +972,28 @@ export default function Home() {
                           </div>
                           <div className="py-3 px-4 text-theme-text-secondary capitalize hidden sm:block w-36 shrink-0">{food.dining_court}</div>
                           <div className="py-3 px-4 text-theme-text-tertiary capitalize hidden md:block w-28 shrink-0">{food.meal_time}</div>
-                          <div className="py-3 pl-4 text-right font-mono tabular-nums text-theme-text-secondary w-16 shrink-0">{food.calories || '—'}</div>
+                          <div className={`py-3 pl-4 text-right font-mono tabular-nums w-16 shrink-0 ${noNutrition ? 'text-amber-500/60' : 'text-theme-text-secondary'}`}>{noNutrition ? 'N/A' : (food.calories || '—')}</div>
                         </div>
 
                         {/* Expanded detail panel */}
                         {isExpanded && (
                           <div className="border-t border-theme-text-primary/10 bg-theme-bg-secondary/30"
                             style={{ animation: `fadeInRow 0.2s ${EASE} both` }}>
+                            {noNutrition && (
+                              <div className="px-4 sm:px-6 pt-4 pb-2">
+                                <div className="border border-amber-500/30 bg-amber-500/5 px-4 py-3">
+                                  <div className="text-xs font-bold uppercase tracking-wider text-amber-500/80 mb-1">Nutrition Data Not Available</div>
+                                  <p className="text-xs text-theme-text-tertiary">Purdue did not provide nutrition information for this item. Calorie and macro values may be inaccurate or missing.</p>
+                                </div>
+                              </div>
+                            )}
                             <div className="px-4 sm:px-6 py-4 flex flex-col sm:flex-row gap-4 sm:items-start">
                               {/* Full nutrition grid */}
                               <div className="flex-1">
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
                                   <div className="border border-theme-text-primary/10 px-3 py-2">
                                     <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary">Calories</div>
-                                    <div className="text-lg font-bold tabular-nums">{food.calories}</div>
+                                    <div className={`text-lg font-bold tabular-nums ${noNutrition ? 'text-amber-500/60' : ''}`}>{noNutrition ? 'N/A' : food.calories}</div>
                                   </div>
                                   <div className="border border-theme-text-primary/10 px-3 py-2">
                                     <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary">Protein</div>
