@@ -809,25 +809,22 @@ export default function Home() {
         </Link>
       </div>
 
-      {/* ── Profile icon — in the title bar, right-aligned ── */}
+      {/* ── Profile icon — always visible, top-right ── */}
       <div
-        onClick={() => {
-          if (isLanding) return;
-          router.push('/profile');
-        }}
+        onClick={() => router.push('/profile')}
         title="Profile"
         className="group cursor-pointer"
         style={{
           position: 'fixed', zIndex: 50,
-          top: isMobile ? 8 : 12,
-          right: isMobile ? 12 : 24,
           willChange: 'transform, opacity',
-          transition: `transform 0.5s ${EASE}, opacity 0.4s ${EASE}`,
-          transform: isLanding ? 'translateX(60px)' : 'translateX(0)',
-          opacity: isLanding ? 0 : 1,
-          pointerEvents: isLanding ? 'none' : 'auto',
+          transition: `top 0.5s ${EASE}, right 0.5s ${EASE}, opacity 0.4s ${EASE}`,
+          top: isLanding ? (isMobile ? 16 : 24) : (isMobile ? 8 : 12),
+          right: isMobile ? 12 : 24,
+          opacity: 1,
         }}>
-        <div className="flex items-center justify-center border border-theme-text-primary bg-theme-bg-secondary text-theme-text-primary hover:bg-theme-bg-hover transition-all"
+        <div className={`flex items-center justify-center border text-theme-text-primary hover:bg-theme-bg-hover transition-all ${
+          isLanding ? 'border-theme-text-primary/30 bg-transparent' : 'border-theme-text-primary bg-theme-bg-secondary'
+        }`}
           style={{ width: 36, height: 36 }}>
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-[18px] h-[18px]">
             <path fillRule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clipRule="evenodd" />

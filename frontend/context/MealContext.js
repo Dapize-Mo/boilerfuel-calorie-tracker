@@ -18,7 +18,7 @@ function getTodayKey() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-const DEFAULT_GOALS = { calories: 2000, protein: 150, carbs: 250, fat: 65 };
+const DEFAULT_GOALS = { calories: 2000, protein: 150, carbs: 250, fat: 65, saturated_fat: 20, fiber: 28, sugar: 50, sodium: 2300, cholesterol: 300, added_sugar: 25 };
 
 export function MealProvider({ children }) {
   // { [dateKey]: [ { id, name, calories, macros, dining_court, station, meal_time, addedAt } ] }

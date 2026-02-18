@@ -123,6 +123,12 @@ export default function ProfilePage() {
       protein: Math.max(0, parseInt(draft.protein) || 0),
       carbs: Math.max(0, parseInt(draft.carbs) || 0),
       fat: Math.max(0, parseInt(draft.fat) || 0),
+      saturated_fat: Math.max(0, parseInt(draft.saturated_fat) || 0),
+      fiber: Math.max(0, parseInt(draft.fiber) || 0),
+      sugar: Math.max(0, parseInt(draft.sugar) || 0),
+      sodium: Math.max(0, parseInt(draft.sodium) || 0),
+      cholesterol: Math.max(0, parseInt(draft.cholesterol) || 0),
+      added_sugar: Math.max(0, parseInt(draft.added_sugar) || 0),
     });
     setEditingGoals(false);
   }
@@ -234,28 +240,14 @@ export default function ProfilePage() {
               ))}
             </div>
 
-            {/* Extended nutrition breakdown */}
-            <div className="border border-theme-text-primary/10">
-              <div className="px-4 py-2 bg-theme-bg-secondary/50 border-b border-theme-text-primary/10">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-theme-text-tertiary">Detailed Breakdown</span>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-px bg-theme-text-primary/10">
-                {[
-                  { label: 'Saturated Fat', value: dateTotals.saturated_fat, unit: 'g' },
-                  { label: 'Cholesterol', value: dateTotals.cholesterol, unit: 'mg' },
-                  { label: 'Sodium', value: dateTotals.sodium, unit: 'mg' },
-                  { label: 'Fiber', value: dateTotals.fiber, unit: 'g' },
-                  { label: 'Sugar', value: dateTotals.sugar, unit: 'g' },
-                  { label: 'Added Sugar', value: dateTotals.added_sugar, unit: 'g' },
-                ].map(s => (
-                  <div key={s.label} className="bg-theme-bg-primary px-4 py-3">
-                    <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary">{s.label}</div>
-                    <div className="text-base font-bold tabular-nums mt-1">
-                      {Math.round(s.value)}<span className="text-xs text-theme-text-tertiary ml-0.5">{s.unit}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
+            {/* Extended nutrition breakdown with progress bars */}
+            <div className="space-y-4">
+              <ProgressBar label="Saturated Fat" current={dateTotals.saturated_fat} goal={goals.saturated_fat ?? 20} unit="g" />
+              <ProgressBar label="Fiber" current={dateTotals.fiber} goal={goals.fiber ?? 28} unit="g" />
+              <ProgressBar label="Sugar" current={dateTotals.sugar} goal={goals.sugar ?? 50} unit="g" />
+              <ProgressBar label="Added Sugar" current={dateTotals.added_sugar} goal={goals.added_sugar ?? 25} unit="g" />
+              <ProgressBar label="Sodium" current={dateTotals.sodium} goal={goals.sodium ?? 2300} unit="mg" />
+              <ProgressBar label="Cholesterol" current={dateTotals.cholesterol} goal={goals.cholesterol ?? 300} unit="mg" />
             </div>
 
             {/* Logged meals grouped by meal time */}
@@ -328,6 +320,7 @@ export default function ProfilePage() {
 
             {editingGoals ? (
               <div className="space-y-4">
+                <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary">Primary</div>
                 <div className="grid grid-cols-2 gap-3">
                   {[
                     { key: 'calories', label: 'Calories', unit: 'kcal' },
@@ -347,6 +340,28 @@ export default function ProfilePage() {
                     </div>
                   ))}
                 </div>
+                <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary mt-2">Additional</div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {[
+                    { key: 'saturated_fat', label: 'Saturated Fat', unit: 'g' },
+                    { key: 'fiber', label: 'Fiber', unit: 'g' },
+                    { key: 'sugar', label: 'Sugar', unit: 'g' },
+                    { key: 'added_sugar', label: 'Added Sugar', unit: 'g' },
+                    { key: 'sodium', label: 'Sodium', unit: 'mg' },
+                    { key: 'cholesterol', label: 'Cholesterol', unit: 'mg' },
+                  ].map(f => (
+                    <div key={f.key} className="space-y-1">
+                      <label className="text-[10px] uppercase tracking-widest text-theme-text-tertiary block">{f.label} ({f.unit})</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={draft[f.key] ?? ''}
+                        onChange={e => setDraft(prev => ({ ...prev, [f.key]: e.target.value }))}
+                        className="w-full border border-theme-text-primary/30 bg-theme-bg-secondary text-theme-text-primary px-3 py-2 font-mono text-sm focus:border-theme-text-primary focus:outline-none transition-colors"
+                      />
+                    </div>
+                  ))}
+                </div>
                 <div className="flex gap-2">
                   <button onClick={saveGoals}
                     className="px-4 py-2 border border-theme-text-primary text-theme-text-primary text-xs font-bold uppercase tracking-wider hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors">
@@ -359,18 +374,35 @@ export default function ProfilePage() {
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-theme-text-primary/10 border border-theme-text-primary/10">
-                {[
-                  { label: 'Calories', value: `${goals.calories}`, unit: 'kcal' },
-                  { label: 'Protein', value: `${goals.protein}`, unit: 'g' },
-                  { label: 'Carbs', value: `${goals.carbs}`, unit: 'g' },
-                  { label: 'Fat', value: `${goals.fat}`, unit: 'g' },
-                ].map(g => (
-                  <div key={g.label} className="bg-theme-bg-primary px-4 py-3">
-                    <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary">{g.label}</div>
-                    <div className="text-base font-bold tabular-nums mt-1">{g.value}<span className="text-xs text-theme-text-tertiary ml-0.5">{g.unit}</span></div>
-                  </div>
-                ))}
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-theme-text-primary/10 border border-theme-text-primary/10">
+                  {[
+                    { label: 'Calories', value: `${goals.calories}`, unit: 'kcal' },
+                    { label: 'Protein', value: `${goals.protein}`, unit: 'g' },
+                    { label: 'Carbs', value: `${goals.carbs}`, unit: 'g' },
+                    { label: 'Fat', value: `${goals.fat}`, unit: 'g' },
+                  ].map(g => (
+                    <div key={g.label} className="bg-theme-bg-primary px-4 py-3">
+                      <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary">{g.label}</div>
+                      <div className="text-base font-bold tabular-nums mt-1">{g.value}<span className="text-xs text-theme-text-tertiary ml-0.5">{g.unit}</span></div>
+                    </div>
+                  ))}
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-px bg-theme-text-primary/10 border border-theme-text-primary/10">
+                  {[
+                    { label: 'Sat. Fat', value: goals.saturated_fat ?? 20, unit: 'g' },
+                    { label: 'Fiber', value: goals.fiber ?? 28, unit: 'g' },
+                    { label: 'Sugar', value: goals.sugar ?? 50, unit: 'g' },
+                    { label: 'Added Sugar', value: goals.added_sugar ?? 25, unit: 'g' },
+                    { label: 'Sodium', value: goals.sodium ?? 2300, unit: 'mg' },
+                    { label: 'Cholesterol', value: goals.cholesterol ?? 300, unit: 'mg' },
+                  ].map(g => (
+                    <div key={g.label} className="bg-theme-bg-primary px-4 py-3">
+                      <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary">{g.label}</div>
+                      <div className="text-base font-bold tabular-nums mt-1">{g.value}<span className="text-xs text-theme-text-tertiary ml-0.5">{g.unit}</span></div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </section>
