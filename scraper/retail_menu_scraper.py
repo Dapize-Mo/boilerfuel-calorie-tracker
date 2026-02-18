@@ -25,7 +25,9 @@ from chain_scrapers import (
     get_panera_items,
     get_qdoba_items,
     get_jersey_mikes_items,
-    get_starbucks_items
+    get_starbucks_items,
+    get_dining_court_beverage_items,
+    DINING_COURTS,
 )
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -82,10 +84,54 @@ def insert_menu_items(cursor, items, dining_court):
     logger.info(f"Inserted {len(menu_data)} items for {dining_court}")
 
 
+def insert_beverage_items(cursor, items, dining_court):
+    """Insert beverage items with full macros into database."""
+    menu_data = []
+    for item in items:
+        macros = {
+            'protein': item['protein'],
+            'carbs': item['carbs'],
+            'fats': item['fats'],
+            'saturated_fat': item.get('saturated_fat', 0),
+            'cholesterol': item.get('cholesterol', 0),
+            'sodium': item.get('sodium', 0),
+            'fiber': item.get('fiber', 0),
+            'sugar': item.get('sugar', 0),
+            'added_sugar': item.get('added_sugar', 0),
+            'is_vegetarian': item.get('is_vegetarian', False),
+            'is_vegan': item.get('is_vegan', False),
+            'allergens': item.get('allergens', []),
+            'ingredients': item.get('ingredients', ''),
+            'serving_size': item.get('serving_size', ''),
+        }
+        menu_data.append((
+            '2099-01-01',
+            item['name'],
+            item['calories'],
+            psycopg2.extras.Json(macros),
+            dining_court,
+            item['station'],
+            item['meal_time'],
+            'retail'
+        ))
+
+    execute_values(
+        cursor,
+        """
+        INSERT INTO menu_snapshots
+        (menu_date, name, calories, macros, dining_court, station, meal_time, source)
+        VALUES %s
+        """,
+        menu_data,
+        template="(%s, %s, %s, %s, %s, %s, %s, %s)"
+    )
+    logger.info(f"Inserted {len(menu_data)} beverage items for {dining_court}")
+
+
 def update_chain_restaurants(conn):
     """Update menu data for chain restaurants."""
     logger.info("Updating chain restaurant menus...")
-    
+
     chains = [
         ("Panera", get_panera_items),
         ("Qdoba", get_qdoba_items),
@@ -93,24 +139,37 @@ def update_chain_restaurants(conn):
         ("Starbucks @ MSEE", get_starbucks_items),
         ("Starbucks @ Winifred Parker Hall", get_starbucks_items),
     ]
-    
+
     cursor = conn.cursor()
-    
+
     for dining_court, scraper_func in chains:
         try:
             logger.info(f"Processing {dining_court}...")
             items = scraper_func()
-            
+
             clear_location_menu(cursor, dining_court)
             insert_menu_items(cursor, items, dining_court)
-            
+
             conn.commit()
             logger.info(f"✓ Successfully updated {dining_court}")
-        
+
         except Exception as e:
             logger.error(f"✗ Failed to update {dining_court}: {e}")
             conn.rollback()
-    
+
+    # Add beverages to all dining courts
+    beverage_items = get_dining_court_beverage_items()
+    for court in DINING_COURTS:
+        try:
+            logger.info(f"Adding beverages to {court}...")
+            clear_location_menu(cursor, court)
+            insert_beverage_items(cursor, beverage_items, court)
+            conn.commit()
+            logger.info(f"✓ Successfully added beverages to {court}")
+        except Exception as e:
+            logger.error(f"✗ Failed to add beverages to {court}: {e}")
+            conn.rollback()
+
     cursor.close()
 
 

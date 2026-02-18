@@ -389,8 +389,14 @@ export default function Home() {
       .catch(() => {}); // silently fail — static list fallback in dropdown
   }, []);
 
-  // ── Fetch foods ──
+  // ── Fetch foods (with abort to prevent stale responses) ──
+  const abortRef = useRef(null);
   const fetchFoods = useCallback(async () => {
+    // Cancel any in-flight request so stale responses never overwrite fresh ones
+    if (abortRef.current) abortRef.current.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     setLoading(true);
     setError(null);
     try {
@@ -404,15 +410,16 @@ export default function Home() {
       }
       if (mealTime !== 'All') params.set('meal_time', mealTime);
       if (selectedDate) params.set('date', selectedDate);
-      const res = await fetch(`/api/foods?${params.toString()}`);
+      const res = await fetch(`/api/foods?${params.toString()}`, { signal: controller.signal });
       if (!res.ok) throw new Error(`Server error ${res.status}`);
       const data = await res.json();
       setFoods(Array.isArray(data) ? data : []);
     } catch (err) {
+      if (err.name === 'AbortError') return; // superseded by a newer request
       setError('Could not load foods.');
       setFoods([]);
     } finally {
-      setLoading(false);
+      if (!controller.signal.aborted) setLoading(false);
     }
   }, [location, mealTime, selectedDate]);
 

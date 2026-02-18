@@ -126,7 +126,7 @@ export function MealProvider({ children }) {
   }, [mealsByDate]);
 
   return (
-    <MealContext.Provider value={{ meals, goals, addMeal, removeMeal, clearMeals, setGoals, totals, getCount }}>
+    <MealContext.Provider value={{ meals, goals, addMeal, removeMeal, clearMeals, setGoals, totals, getCount, mealsByDate }}>
       {children}
     </MealContext.Provider>
   );
