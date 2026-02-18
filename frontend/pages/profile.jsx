@@ -26,43 +26,91 @@ function ProgressBar({ label, current, goal, unit = '', color = 'bg-theme-text-p
   );
 }
 
+function getTodayKey() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function formatDateKey(key) {
+  const d = new Date(key + 'T00:00:00');
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  return `${days[d.getDay()]}, ${months[d.getMonth()]} ${d.getDate()}`;
+}
+
+function shiftDate(dateKey, delta) {
+  const d = new Date(dateKey + 'T00:00:00');
+  d.setDate(d.getDate() + delta);
+  return d.toISOString().slice(0, 10);
+}
+
 export default function ProfilePage() {
   const { theme, setTheme } = useTheme();
-  const { meals, goals, setGoals, totals, clearMeals } = useMeals();
+  const { meals, goals, setGoals, totals, clearMeals, mealsByDate } = useMeals();
   const [editingGoals, setEditingGoals] = useState(false);
   const [draft, setDraft] = useState(goals);
+  const [selectedDate, setSelectedDate] = useState(getTodayKey);
 
-  // Group meals by meal_time (normalize variants like "late lunch" → "lunch", "breakfast/lunch" → both)
+  const isToday = selectedDate === getTodayKey();
+
+  // Meals for the selected date (today uses context's `meals`, other dates use mealsByDate)
+  const dateMeals = useMemo(() => {
+    if (isToday) return meals;
+    return (mealsByDate || {})[selectedDate] || [];
+  }, [isToday, meals, mealsByDate, selectedDate]);
+
+  // Compute totals for the selected date
+  const dateTotals = useMemo(() => {
+    if (isToday) return totals;
+    return dateMeals.reduce(
+      (acc, m) => ({
+        calories: acc.calories + (m.calories || 0),
+        protein: acc.protein + (parseFloat(m.macros?.protein) || 0),
+        carbs: acc.carbs + (parseFloat(m.macros?.carbs) || 0),
+        fat: acc.fat + (parseFloat(m.macros?.fats || m.macros?.fat) || 0),
+        sugar: acc.sugar + (parseFloat(m.macros?.sugar) || 0),
+        fiber: acc.fiber + (parseFloat(m.macros?.fiber) || 0),
+        sodium: acc.sodium + (parseFloat(m.macros?.sodium) || 0),
+        cholesterol: acc.cholesterol + (parseFloat(m.macros?.cholesterol) || 0),
+        saturated_fat: acc.saturated_fat + (parseFloat(m.macros?.saturated_fat) || 0),
+        added_sugar: acc.added_sugar + (parseFloat(m.macros?.added_sugar) || 0),
+      }),
+      { calories: 0, protein: 0, carbs: 0, fat: 0, sugar: 0, fiber: 0, sodium: 0, cholesterol: 0, saturated_fat: 0, added_sugar: 0 }
+    );
+  }, [isToday, totals, dateMeals]);
+
+  // Dates that have logged meals (for dot indicators)
+  const datesWithData = useMemo(() => {
+    return new Set(Object.keys(mealsByDate || {}));
+  }, [mealsByDate]);
+
+  // Group meals by meal_time
   const mealGroups = useMemo(() => {
     const order = ['breakfast', 'lunch', 'dinner'];
     const normalize = (mt) => {
       const key = (mt || 'other').toLowerCase().trim();
       if (key === 'late lunch' || key === 'latelunch' || key === 'late-lunch') return ['lunch'];
-      // Compound meal times like "breakfast/lunch" → add to each group
       if (key.includes('/')) return key.split('/').map(k => k.trim());
       return [key];
     };
     const groups = {};
-    for (const m of meals) {
+    for (const m of dateMeals) {
       const keys = normalize(m.meal_time);
       for (const key of keys) {
         if (!groups[key]) groups[key] = [];
         groups[key].push(m);
       }
     }
-    // Sort by meal order
     const sorted = [];
     for (const key of order) {
       if (groups[key]) sorted.push({ label: key.charAt(0).toUpperCase() + key.slice(1), meals: groups[key] });
     }
-    // Any remaining (other)
     for (const key of Object.keys(groups)) {
       if (!order.includes(key)) {
         sorted.push({ label: key.charAt(0).toUpperCase() + key.slice(1), meals: groups[key] });
       }
     }
     return sorted;
-  }, [meals]);
+  }, [dateMeals]);
 
   function startEditing() {
     setDraft(goals);
@@ -105,32 +153,78 @@ export default function ProfilePage() {
 
           {/* ═══ NUTRITION ═══ */}
           <section className="space-y-6">
+            {/* Date navigation */}
             <div className="flex items-center justify-between border-b border-theme-text-primary/10 pb-2">
               <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary">
-                Today&apos;s Nutrition
+                {isToday ? "Today\u2019s" : formatDateKey(selectedDate)} Nutrition
               </h2>
-              {meals.length > 0 && (
+              {dateMeals.length > 0 && (
                 <span className="text-xs text-theme-text-tertiary">
-                  {meals.length} item{meals.length !== 1 ? 's' : ''} logged
+                  {dateMeals.length} item{dateMeals.length !== 1 ? 's' : ''} logged
                 </span>
               )}
             </div>
 
+            <div className="flex items-center justify-between">
+              <button
+                onClick={() => setSelectedDate(d => shiftDate(d, -1))}
+                className="px-3 py-2 border border-theme-text-primary/20 text-theme-text-secondary hover:bg-theme-bg-secondary hover:text-theme-text-primary transition-colors text-sm font-bold">
+                &larr;
+              </button>
+              <div className="flex flex-col items-center gap-1">
+                <span className="text-sm font-bold uppercase tracking-wider">{formatDateKey(selectedDate)}</span>
+                {!isToday && (
+                  <button
+                    onClick={() => setSelectedDate(getTodayKey())}
+                    className="text-[10px] uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
+                    Go to today
+                  </button>
+                )}
+                {/* Dot indicators for nearby dates with data */}
+                <div className="flex gap-1 mt-1">
+                  {[-3, -2, -1, 0, 1, 2, 3].map(offset => {
+                    const d = shiftDate(selectedDate, offset);
+                    const hasData = datesWithData.has(d);
+                    const isCurrent = offset === 0;
+                    return (
+                      <button key={offset}
+                        onClick={() => setSelectedDate(shiftDate(selectedDate, offset))}
+                        className={`w-2 h-2 rounded-full transition-colors ${
+                          isCurrent ? 'bg-theme-text-primary' :
+                          hasData ? 'bg-theme-text-primary/40 hover:bg-theme-text-primary/70' :
+                          'bg-theme-text-primary/10 hover:bg-theme-text-primary/20'
+                        }`}
+                        title={d}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedDate(d => shiftDate(d, 1))}
+                disabled={isToday}
+                className={`px-3 py-2 border border-theme-text-primary/20 text-sm font-bold transition-colors ${
+                  isToday ? 'text-theme-text-tertiary/30 cursor-not-allowed' : 'text-theme-text-secondary hover:bg-theme-bg-secondary hover:text-theme-text-primary'
+                }`}>
+                &rarr;
+              </button>
+            </div>
+
             {/* Progress bars */}
             <div className="space-y-4">
-              <ProgressBar label="Calories" current={totals.calories} goal={goals.calories} unit=" kcal" />
-              <ProgressBar label="Protein" current={totals.protein} goal={goals.protein} unit="g" />
-              <ProgressBar label="Carbs" current={totals.carbs} goal={goals.carbs} unit="g" />
-              <ProgressBar label="Fat" current={totals.fat} goal={goals.fat} unit="g" />
+              <ProgressBar label="Calories" current={dateTotals.calories} goal={goals.calories} unit=" kcal" />
+              <ProgressBar label="Protein" current={dateTotals.protein} goal={goals.protein} unit="g" />
+              <ProgressBar label="Carbs" current={dateTotals.carbs} goal={goals.carbs} unit="g" />
+              <ProgressBar label="Fat" current={dateTotals.fat} goal={goals.fat} unit="g" />
             </div>
 
             {/* Quick stats row */}
             <div className="grid grid-cols-4 gap-px bg-theme-text-primary/10">
               {[
-                { label: 'Cal', value: Math.round(totals.calories) },
-                { label: 'Pro', value: `${Math.round(totals.protein)}g` },
-                { label: 'Carb', value: `${Math.round(totals.carbs)}g` },
-                { label: 'Fat', value: `${Math.round(totals.fat)}g` },
+                { label: 'Cal', value: Math.round(dateTotals.calories) },
+                { label: 'Pro', value: `${Math.round(dateTotals.protein)}g` },
+                { label: 'Carb', value: `${Math.round(dateTotals.carbs)}g` },
+                { label: 'Fat', value: `${Math.round(dateTotals.fat)}g` },
               ].map(s => (
                 <div key={s.label} className="bg-theme-bg-primary px-3 py-3 text-center">
                   <div className="text-lg font-bold tabular-nums">{s.value}</div>
@@ -146,12 +240,12 @@ export default function ProfilePage() {
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-px bg-theme-text-primary/10">
                 {[
-                  { label: 'Saturated Fat', value: totals.saturated_fat, unit: 'g' },
-                  { label: 'Cholesterol', value: totals.cholesterol, unit: 'mg' },
-                  { label: 'Sodium', value: totals.sodium, unit: 'mg' },
-                  { label: 'Fiber', value: totals.fiber, unit: 'g' },
-                  { label: 'Sugar', value: totals.sugar, unit: 'g' },
-                  { label: 'Added Sugar', value: totals.added_sugar, unit: 'g' },
+                  { label: 'Saturated Fat', value: dateTotals.saturated_fat, unit: 'g' },
+                  { label: 'Cholesterol', value: dateTotals.cholesterol, unit: 'mg' },
+                  { label: 'Sodium', value: dateTotals.sodium, unit: 'mg' },
+                  { label: 'Fiber', value: dateTotals.fiber, unit: 'g' },
+                  { label: 'Sugar', value: dateTotals.sugar, unit: 'g' },
+                  { label: 'Added Sugar', value: dateTotals.added_sugar, unit: 'g' },
                 ].map(s => (
                   <div key={s.label} className="bg-theme-bg-primary px-4 py-3">
                     <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary">{s.label}</div>
@@ -164,15 +258,17 @@ export default function ProfilePage() {
             </div>
 
             {/* Logged meals grouped by meal time */}
-            {meals.length > 0 && (
+            {dateMeals.length > 0 && (
               <div className="border border-theme-text-primary/10">
                 <div className="flex items-center justify-between px-4 py-2 bg-theme-bg-secondary/50 border-b border-theme-text-primary/10">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-theme-text-tertiary">Logged Foods</span>
-                  <button
-                    onClick={clearMeals}
-                    className="text-[10px] uppercase tracking-widest text-theme-text-tertiary hover:text-red-500 transition-colors">
-                    Clear All
-                  </button>
+                  {isToday && (
+                    <button
+                      onClick={clearMeals}
+                      className="text-[10px] uppercase tracking-widest text-theme-text-tertiary hover:text-red-500 transition-colors">
+                      Clear All
+                    </button>
+                  )}
                 </div>
                 <div className="max-h-72 overflow-y-auto">
                   {mealGroups.map(group => {
@@ -196,10 +292,14 @@ export default function ProfilePage() {
               </div>
             )}
 
-            {meals.length === 0 && (
+            {dateMeals.length === 0 && (
               <div className="border border-dashed border-theme-text-primary/20 py-8 text-center">
-                <p className="text-sm text-theme-text-tertiary">No foods logged today.</p>
-                <p className="text-xs text-theme-text-tertiary/60 mt-1">Click a food on the menu and press Add to start tracking.</p>
+                <p className="text-sm text-theme-text-tertiary">
+                  {isToday ? 'No foods logged today.' : `No foods logged on ${formatDateKey(selectedDate)}.`}
+                </p>
+                {isToday && (
+                  <p className="text-xs text-theme-text-tertiary/60 mt-1">Click a food on the menu and press Add to start tracking.</p>
+                )}
               </div>
             )}
           </section>

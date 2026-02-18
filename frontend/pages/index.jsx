@@ -545,11 +545,22 @@ export default function Home() {
     };
   }, [view]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Sorted + grouped foods ──
+  // ── Split beverages from regular foods ──
+  const { regularFoods, beverageFoods } = useMemo(() => {
+    const regular = [];
+    const bevs = [];
+    for (const f of foods) {
+      if ((f.station || '').toLowerCase() === 'beverages') bevs.push(f);
+      else regular.push(f);
+    }
+    return { regularFoods: regular, beverageFoods: bevs };
+  }, [foods]);
+
+  // ── Sorted + grouped foods (excluding beverages) ──
   const sortedFoods = useMemo(() => {
-    if (!calorieSort) return foods;
-    return [...foods].sort((a, b) => calorieSort === 'asc' ? a.calories - b.calories : b.calories - a.calories);
-  }, [foods, calorieSort]);
+    if (!calorieSort) return regularFoods;
+    return [...regularFoods].sort((a, b) => calorieSort === 'asc' ? a.calories - b.calories : b.calories - a.calories);
+  }, [regularFoods, calorieSort]);
 
   // Group by dining court → station (for multi-court views), or just station (single court)
   // "By Request" station is always placed last within each court
@@ -857,6 +868,9 @@ export default function Home() {
             </div>
           )}
 
+          <div className={`${beverageFoods.length > 0 ? 'lg:flex lg:gap-6' : ''}`}>
+          {/* ── Main food table ── */}
+          <div className="flex-1 min-w-0">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-theme-text-primary/20">
@@ -1090,6 +1104,59 @@ export default function Home() {
               )}
             </tbody>
           </table>
+          </div>{/* end main food table wrapper */}
+
+          {/* ── Beverages sidebar (desktop) / bottom section (mobile) ── */}
+          {beverageFoods.length > 0 && (
+            <div className="lg:w-64 xl:w-72 shrink-0 mt-6 lg:mt-0">
+              <div className="border border-theme-text-primary/10 sticky top-0">
+                <div className="px-3 py-2 bg-theme-bg-secondary/50 border-b border-theme-text-primary/10">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-theme-text-tertiary">Beverages</span>
+                </div>
+                <div className="max-h-[70vh] overflow-y-auto">
+                  {beverageFoods.map((food) => {
+                    const count = getCount(food.id);
+                    const macros = food.macros || {};
+                    return (
+                      <div key={food.id}
+                        className="flex items-center gap-2 px-3 py-2 border-b border-theme-text-primary/5 hover:bg-theme-bg-secondary/50 transition-colors group/bev text-sm">
+                        <div className="flex-1 min-w-0">
+                          <div className="truncate text-theme-text-primary text-xs leading-tight">{food.name}</div>
+                          <div className="text-[10px] text-theme-text-tertiary tabular-nums mt-0.5">
+                            {food.calories} cal
+                            {macros.protein != null && <> · {macros.protein}p</>}
+                            {macros.carbs != null && <> · {macros.carbs}c</>}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          {count > 0 && (
+                            <span className="text-[9px] font-bold bg-theme-text-primary text-theme-bg-primary px-1 py-0.5 tabular-nums">
+                              {count}
+                            </span>
+                          )}
+                          <button
+                            onClick={(e) => handleAddMeal(food, e)}
+                            className="p-1 border border-theme-text-primary/20 text-theme-text-tertiary hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors"
+                            title="Add to log">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                          </button>
+                          {count > 0 && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); removeMeal(food); }}
+                              className="p-1 border border-theme-text-primary/20 text-theme-text-tertiary hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors"
+                              title="Remove from log">
+                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+          </div>{/* end flex wrapper */}
         </main>
 
         <footer className="border-t border-theme-text-primary/5 px-4 sm:px-6 md:px-12 lg:px-20 py-5 sm:py-6">
