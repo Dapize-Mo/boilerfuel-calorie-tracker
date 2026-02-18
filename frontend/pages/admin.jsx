@@ -5,9 +5,7 @@ import { signIn, signOut, useSession } from "next-auth/react";
 import {
   adminLogin,
   apiCall,
-  createActivity,
   createFood,
-  deleteActivity,
   deleteFood,
   logoutAdmin,
   verifyAdminSession,
@@ -209,7 +207,6 @@ export default function AdminPanel() {
     { key: 'stats', label: 'Stats' },
     { key: 'accuracy', label: 'Accuracy' },
     { key: 'foods', label: 'Foods' },
-    { key: 'exercises', label: 'Exercises' },
   ];
 
   return (
@@ -409,7 +406,6 @@ export default function AdminPanel() {
               {activeTab === 'stats' && <StatsTab />}
               {activeTab === 'accuracy' && <MenuAccuracyTab />}
               {activeTab === 'foods' && <FoodsTab />}
-              {activeTab === 'exercises' && <ExercisesTab />}
             </div>
           </section>
 
@@ -469,20 +465,12 @@ function StatsTab() {
   useEffect(() => {
     async function loadStats() {
       try {
-        const [foods, activities] = await Promise.all([
-          apiCall('/api/foods'),
-          apiCall('/api/activities')
-        ]);
+        const foods = await apiCall('/api/foods');
         setStats({
           foods: {
             total: foods?.length || 0,
             diningCourts: [...new Set(foods?.map(f => f.dining_court).filter(Boolean))].length,
             avgCalories: foods?.length ? Math.round(foods.reduce((s, f) => s + (f.calories || 0), 0) / foods.length) : 0,
-          },
-          activities: {
-            total: activities?.length || 0,
-            categories: [...new Set(activities?.map(a => a.category).filter(Boolean))].length,
-            avgCalories: activities?.length ? Math.round(activities.reduce((s, a) => s + (a.calories_per_hour || 0), 0) / activities.length) : 0,
           },
         });
       } catch { /* ignore */ }
@@ -498,23 +486,13 @@ function StatsTab() {
     <div className="space-y-8">
       <SectionLabel>Database Overview</SectionLabel>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-px border border-theme-text-primary/20">
-        {/* Foods */}
-        <div className="p-5 space-y-4 border-r border-b border-theme-text-primary/20 sm:border-b-0">
+      <div className="border border-theme-text-primary/20">
+        <div className="p-5 space-y-4">
           <p className="text-xs font-bold uppercase tracking-wider text-theme-text-tertiary">Foods</p>
           <div className="space-y-2">
             <StatRow label="Total" value={stats.foods.total} />
             <StatRow label="Dining Courts" value={stats.foods.diningCourts} />
             <StatRow label="Avg Calories" value={`${stats.foods.avgCalories} cal`} />
-          </div>
-        </div>
-        {/* Activities */}
-        <div className="p-5 space-y-4">
-          <p className="text-xs font-bold uppercase tracking-wider text-theme-text-tertiary">Exercises</p>
-          <div className="space-y-2">
-            <StatRow label="Total" value={stats.activities.total} />
-            <StatRow label="Categories" value={stats.activities.categories} />
-            <StatRow label="Avg Cal/hr" value={`${stats.activities.avgCalories} cal`} />
           </div>
         </div>
       </div>
@@ -762,104 +740,3 @@ function FoodsTab() {
   );
 }
 
-/* ── Exercises Tab ────────────────────────────────────────── */
-
-function ExercisesTab() {
-  const [activities, setActivities] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [filterCategory, setFilterCategory] = useState('all');
-  const [error, setError] = useState('');
-
-  useEffect(() => { loadActivities(); }, []);
-
-  async function loadActivities() {
-    try { setLoading(true); const data = await apiCall('/api/activities'); setActivities(data || []); setError(''); }
-    catch (err) { setError(err.message || 'Failed to load exercises'); }
-    finally { setLoading(false); }
-  }
-
-  async function handleDelete(id, name) {
-    if (!window.confirm(`Delete "${name}"?`)) return;
-    try { await deleteActivity(id); await loadActivities(); }
-    catch (err) { setError(err.message || 'Failed to delete'); }
-  }
-
-  const filteredActivities = useMemo(() => activities.filter(a => {
-    const matchesSearch = a.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = filterCategory === 'all' || a.category === filterCategory;
-    return matchesSearch && matchesCategory;
-  }), [activities, searchTerm, filterCategory]);
-
-  const paginatedActivities = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredActivities.slice(start, start + ITEMS_PER_PAGE);
-  }, [filteredActivities, currentPage]);
-
-  const totalPages = Math.ceil(filteredActivities.length / ITEMS_PER_PAGE);
-
-  if (loading) return <p className="text-xs uppercase tracking-widest text-theme-text-tertiary py-8 text-center">Loading exercises...</p>;
-
-  return (
-    <div className="space-y-6">
-      <SectionLabel>Exercises ({filteredActivities.length})</SectionLabel>
-
-      {error && <div className="border border-red-500/50 bg-red-500/5 px-4 py-3 text-sm text-red-400">{error}</div>}
-
-      <div className="flex gap-3">
-        <input
-          type="text"
-          placeholder="Search exercises..."
-          value={searchTerm}
-          onChange={e => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-          className="flex-1 border border-theme-text-primary/20 bg-transparent px-4 py-3 text-sm font-mono placeholder:text-theme-text-tertiary/50 focus:outline-none focus:border-theme-text-primary/40"
-        />
-        <select
-          value={filterCategory}
-          onChange={e => { setFilterCategory(e.target.value); setCurrentPage(1); }}
-          className="border border-theme-text-primary/20 bg-theme-bg-primary px-3 py-3 text-xs font-mono uppercase tracking-wider focus:outline-none"
-        >
-          <option value="all">All</option>
-          <option value="cardio">Cardio</option>
-          <option value="strength">Strength</option>
-          <option value="flexibility">Flexibility</option>
-          <option value="sports">Sports</option>
-          <option value="other">Other</option>
-        </select>
-      </div>
-
-      <div className="border border-theme-text-primary/20 divide-y divide-theme-text-primary/10">
-        {paginatedActivities.map(activity => (
-          <div key={activity.id} className="flex items-center justify-between gap-4 px-4 py-3 hover:bg-theme-bg-secondary transition-colors">
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-bold truncate">{activity.name}</p>
-              <p className="text-xs text-theme-text-tertiary">
-                {activity.calories_per_hour} cal/hr / {activity.category || 'other'} / {activity.intensity || 'moderate'}
-              </p>
-            </div>
-            <button
-              onClick={() => handleDelete(activity.id, activity.name)}
-              className="shrink-0 text-xs text-theme-text-tertiary hover:text-red-400 transition-colors uppercase tracking-wider"
-            >
-              Del
-            </button>
-          </div>
-        ))}
-        {paginatedActivities.length === 0 && (
-          <p className="text-xs text-theme-text-tertiary text-center py-6">No exercises found</p>
-        )}
-      </div>
-
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-4 text-xs uppercase tracking-wider">
-          <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}
-            className="text-theme-text-tertiary hover:text-theme-text-primary disabled:opacity-30 transition-colors">&larr; Prev</button>
-          <span className="text-theme-text-tertiary">{currentPage}/{totalPages}</span>
-          <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}
-            className="text-theme-text-tertiary hover:text-theme-text-primary disabled:opacity-30 transition-colors">Next &rarr;</button>
-        </div>
-      )}
-    </div>
-  );
-}
