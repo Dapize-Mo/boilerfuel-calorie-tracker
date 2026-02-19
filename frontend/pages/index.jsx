@@ -1119,16 +1119,16 @@ export default function Home() {
             </>
           )}
 
-          <div className={`${beverageFoods.length > 0 ? 'lg:flex lg:gap-6' : ''}`}>
+          <div className={`${beverageFoods.length > 0 ? 'xl:flex xl:gap-6' : ''}`}>
           {/* ── Main food table ── */}
           <div className="flex-1 min-w-0">
           <table className="w-full text-left border-collapse" style={{ tableLayout: 'fixed' }}>
             <thead>
               <tr className="border-b border-theme-text-primary/20">
                 <th className="py-3 font-bold uppercase text-xs tracking-wider text-theme-text-secondary">Food Item</th>
-                <th className="py-3 font-bold uppercase text-xs tracking-wider text-theme-text-secondary hidden sm:table-cell">Location</th>
-                <th className="py-3 font-bold uppercase text-xs tracking-wider text-theme-text-secondary hidden md:table-cell">Meal</th>
-                <th className="py-3 font-bold uppercase text-xs tracking-wider text-theme-text-secondary text-right cursor-pointer select-none hover:text-theme-text-primary transition-colors"
+                <th className="py-3 font-bold uppercase text-xs tracking-wider text-theme-text-secondary hidden sm:table-cell w-36">Location</th>
+                <th className="py-3 font-bold uppercase text-xs tracking-wider text-theme-text-secondary hidden md:table-cell w-28">Meal</th>
+                <th className="py-3 font-bold uppercase text-xs tracking-wider text-theme-text-secondary text-right cursor-pointer select-none hover:text-theme-text-primary transition-colors w-16"
                   onClick={toggleCalorieSort}
                   title="Click to sort by calories">
                   Cal{sortArrow}
@@ -1467,7 +1467,7 @@ export default function Home() {
 
           {/* ── Beverages sidebar (desktop) / bottom section (mobile) ── */}
           {beverageFoods.length > 0 && (
-            <div className="lg:w-64 xl:w-72 shrink-0 mt-6 lg:mt-0">
+            <div className="xl:w-72 shrink-0 mt-6 xl:mt-0">
               <div className="border border-theme-text-primary/10 sticky top-0">
                 <div className="px-3 py-2 bg-theme-bg-secondary/50 border-b border-theme-text-primary/10">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-theme-text-tertiary">Beverages</span>
