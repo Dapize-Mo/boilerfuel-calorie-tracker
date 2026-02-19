@@ -16,6 +16,11 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
   useEffect(() => {
     // Fade in on initial mount
     requestAnimationFrame(() => setDisplayChildren(true));
+
+    // Register service worker for offline support
+    if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    }
   }, []);
 
   useEffect(() => {

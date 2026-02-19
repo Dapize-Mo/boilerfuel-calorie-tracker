@@ -447,23 +447,36 @@ export default function Home() {
 
     setLoading(true);
     setError(null);
+    const params = new URLSearchParams();
+    if (location.type === 'single') {
+      params.set('dining_court', location.value);
+    } else if (location.type === 'category' && location.locations) {
+      params.set('dining_court', location.locations.join(','));
+    } else if ((location.type === 'all-purdue' || location.type === 'all-foodco') && location.locations) {
+      params.set('dining_court', location.locations.join(','));
+    }
+    if (mealTime !== 'All') params.set('meal_time', mealTime);
+    if (selectedDate) params.set('date', selectedDate);
+    const cacheKey = `bf_menu_${params.toString()}`;
     try {
-      const params = new URLSearchParams();
-      if (location.type === 'single') {
-        params.set('dining_court', location.value);
-      } else if (location.type === 'category' && location.locations) {
-        params.set('dining_court', location.locations.join(','));
-      } else if ((location.type === 'all-purdue' || location.type === 'all-foodco') && location.locations) {
-        params.set('dining_court', location.locations.join(','));
-      }
-      if (mealTime !== 'All') params.set('meal_time', mealTime);
-      if (selectedDate) params.set('date', selectedDate);
       const res = await fetch(`/api/foods?${params.toString()}`, { signal: controller.signal });
       if (!res.ok) throw new Error(`Server error ${res.status}`);
       const data = await res.json();
-      setFoods(Array.isArray(data) ? data : []);
+      const items = Array.isArray(data) ? data : [];
+      setFoods(items);
+      // Cache for offline use
+      try { localStorage.setItem(cacheKey, JSON.stringify(items)); } catch {}
     } catch (err) {
       if (err.name === 'AbortError') return; // superseded by a newer request
+      // Try loading from cache on network failure
+      try {
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+          setFoods(JSON.parse(cached));
+          setError('Showing cached data (offline)');
+          return;
+        }
+      } catch {}
       setError('Could not load foods.');
       setFoods([]);
     } finally {
