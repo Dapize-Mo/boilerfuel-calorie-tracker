@@ -304,114 +304,92 @@ export default function ProfilePage() {
             )}
           </section>
 
-          {/* ═══ GOALS ═══ */}
-          <section className="space-y-6">
-            <div className="flex items-center justify-between border-b border-theme-text-primary/10 pb-2">
-              <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary">
-                Daily Goals
-              </h2>
-              {!editingGoals && (
-                <button onClick={startEditing}
-                  className="text-[10px] uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
-                  Edit
-                </button>
-              )}
-            </div>
-
-            {editingGoals ? (
-              <div className="space-y-4">
-                <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary">Primary</div>
-                <div className="grid grid-cols-2 gap-3">
-                  {[
-                    { key: 'calories', label: 'Calories', unit: 'kcal' },
-                    { key: 'protein', label: 'Protein', unit: 'g' },
-                    { key: 'carbs', label: 'Carbs', unit: 'g' },
-                    { key: 'fat', label: 'Fat', unit: 'g' },
-                  ].map(f => (
-                    <div key={f.key} className="space-y-1">
-                      <label className="text-[10px] uppercase tracking-widest text-theme-text-tertiary block">{f.label} ({f.unit})</label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={draft[f.key]}
-                        onChange={e => setDraft(prev => ({ ...prev, [f.key]: e.target.value }))}
-                        className="w-full border border-theme-text-primary/30 bg-theme-bg-secondary text-theme-text-primary px-3 py-2 font-mono text-sm focus:border-theme-text-primary focus:outline-none transition-colors"
-                      />
-                    </div>
-                  ))}
-                </div>
-                <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary mt-2">Additional</div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {[
-                    { key: 'saturated_fat', label: 'Saturated Fat', unit: 'g' },
-                    { key: 'fiber', label: 'Fiber', unit: 'g' },
-                    { key: 'sugar', label: 'Sugar', unit: 'g' },
-                    { key: 'added_sugar', label: 'Added Sugar', unit: 'g' },
-                    { key: 'sodium', label: 'Sodium', unit: 'mg' },
-                    { key: 'cholesterol', label: 'Cholesterol', unit: 'mg' },
-                  ].map(f => (
-                    <div key={f.key} className="space-y-1">
-                      <label className="text-[10px] uppercase tracking-widest text-theme-text-tertiary block">{f.label} ({f.unit})</label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={draft[f.key] ?? ''}
-                        onChange={e => setDraft(prev => ({ ...prev, [f.key]: e.target.value }))}
-                        className="w-full border border-theme-text-primary/30 bg-theme-bg-secondary text-theme-text-primary px-3 py-2 font-mono text-sm focus:border-theme-text-primary focus:outline-none transition-colors"
-                      />
-                    </div>
-                  ))}
-                </div>
-                <div className="flex gap-2">
-                  <button onClick={saveGoals}
-                    className="px-4 py-2 border border-theme-text-primary text-theme-text-primary text-xs font-bold uppercase tracking-wider hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors">
-                    Save
-                  </button>
-                  <button onClick={cancelEditing}
-                    className="px-4 py-2 border border-theme-text-primary/30 text-theme-text-tertiary text-xs uppercase tracking-wider hover:text-theme-text-primary transition-colors">
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-theme-text-primary/10 border border-theme-text-primary/10">
-                  {[
-                    { label: 'Calories', value: `${goals.calories}`, unit: 'kcal' },
-                    { label: 'Protein', value: `${goals.protein}`, unit: 'g' },
-                    { label: 'Carbs', value: `${goals.carbs}`, unit: 'g' },
-                    { label: 'Fat', value: `${goals.fat}`, unit: 'g' },
-                  ].map(g => (
-                    <div key={g.label} className="bg-theme-bg-primary px-4 py-3">
-                      <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary">{g.label}</div>
-                      <div className="text-base font-bold tabular-nums mt-1">{g.value}<span className="text-xs text-theme-text-tertiary ml-0.5">{g.unit}</span></div>
-                    </div>
-                  ))}
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-px bg-theme-text-primary/10 border border-theme-text-primary/10">
-                  {[
-                    { label: 'Sat. Fat', value: goals.saturated_fat ?? 20, unit: 'g' },
-                    { label: 'Fiber', value: goals.fiber ?? 28, unit: 'g' },
-                    { label: 'Sugar', value: goals.sugar ?? 50, unit: 'g' },
-                    { label: 'Added Sugar', value: goals.added_sugar ?? 25, unit: 'g' },
-                    { label: 'Sodium', value: goals.sodium ?? 2300, unit: 'mg' },
-                    { label: 'Cholesterol', value: goals.cholesterol ?? 300, unit: 'mg' },
-                  ].map(g => (
-                    <div key={g.label} className="bg-theme-bg-primary px-4 py-3">
-                      <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary">{g.label}</div>
-                      <div className="text-base font-bold tabular-nums mt-1">{g.value}<span className="text-xs text-theme-text-tertiary ml-0.5">{g.unit}</span></div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </section>
-
           {/* ═══ SETTINGS ═══ */}
           <section className="space-y-6">
             <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
               Settings
             </h2>
+
+            {/* Daily Goals */}
+            <div>
+              <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary mb-2">Daily Goals</div>
+              {editingGoals ? (
+                <div className="border border-theme-text-primary/20 p-4 sm:p-5 space-y-4">
+                  <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary">Primary</div>
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { key: 'calories', label: 'Calories', unit: 'kcal' },
+                      { key: 'protein', label: 'Protein', unit: 'g' },
+                      { key: 'carbs', label: 'Carbs', unit: 'g' },
+                      { key: 'fat', label: 'Fat', unit: 'g' },
+                    ].map(f => (
+                      <div key={f.key} className="space-y-1">
+                        <label className="text-[10px] uppercase tracking-widest text-theme-text-tertiary block">{f.label} ({f.unit})</label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={draft[f.key]}
+                          onChange={e => setDraft(prev => ({ ...prev, [f.key]: e.target.value }))}
+                          className="w-full border border-theme-text-primary/30 bg-theme-bg-secondary text-theme-text-primary px-3 py-2 font-mono text-sm focus:border-theme-text-primary focus:outline-none transition-colors"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary mt-2">Additional</div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {[
+                      { key: 'saturated_fat', label: 'Saturated Fat', unit: 'g' },
+                      { key: 'fiber', label: 'Fiber', unit: 'g' },
+                      { key: 'sugar', label: 'Sugar', unit: 'g' },
+                      { key: 'added_sugar', label: 'Added Sugar', unit: 'g' },
+                      { key: 'sodium', label: 'Sodium', unit: 'mg' },
+                      { key: 'cholesterol', label: 'Cholesterol', unit: 'mg' },
+                    ].map(f => (
+                      <div key={f.key} className="space-y-1">
+                        <label className="text-[10px] uppercase tracking-widest text-theme-text-tertiary block">{f.label} ({f.unit})</label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={draft[f.key] ?? ''}
+                          onChange={e => setDraft(prev => ({ ...prev, [f.key]: e.target.value }))}
+                          className="w-full border border-theme-text-primary/30 bg-theme-bg-secondary text-theme-text-primary px-3 py-2 font-mono text-sm focus:border-theme-text-primary focus:outline-none transition-colors"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={saveGoals}
+                      className="px-4 py-2 border border-theme-text-primary text-theme-text-primary text-xs font-bold uppercase tracking-wider hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors">
+                      Save
+                    </button>
+                    <button onClick={cancelEditing}
+                      className="px-4 py-2 border border-theme-text-primary/30 text-theme-text-tertiary text-xs uppercase tracking-wider hover:text-theme-text-primary transition-colors">
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={startEditing}
+                  className="w-full flex items-center justify-between px-5 py-4 border border-theme-text-primary/20 hover:bg-theme-bg-secondary transition-colors"
+                >
+                  <div className="flex items-center gap-4">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0">
+                      <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="16" /><line x1="8" y1="12" x2="16" y2="12" />
+                    </svg>
+                    <div className="text-left">
+                      <span className="text-sm font-bold uppercase tracking-wider block">Edit Goals</span>
+                      <span className="text-xs text-theme-text-tertiary">
+                        {goals.calories} kcal &middot; {goals.protein}g P &middot; {goals.carbs}g C &middot; {goals.fat}g F
+                      </span>
+                    </div>
+                  </div>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-theme-text-tertiary shrink-0">
+                    <polyline points="9 6 15 12 9 18" />
+                  </svg>
+                </button>
+              )}
+            </div>
 
             {/* Theme Toggle */}
             <div>

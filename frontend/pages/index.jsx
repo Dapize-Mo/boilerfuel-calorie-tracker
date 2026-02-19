@@ -1071,14 +1071,13 @@ export default function Home() {
                                             title="Add to log">
                                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
                                           </button>
-                                          {compCount > 0 && (
-                                            <button
-                                              onClick={(e) => { e.stopPropagation(); removeMeal(comp, selectedDate); }}
-                                              className="p-1.5 border border-theme-text-primary/30 text-theme-text-secondary hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors"
-                                              title="Remove from log">
-                                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="5" y1="12" x2="19" y2="12" /></svg>
-                                            </button>
-                                          )}
+                                          <button
+                                            onClick={(e) => { e.stopPropagation(); removeMeal(comp, selectedDate); }}
+                                            disabled={compCount === 0}
+                                            className={`p-1.5 border transition-colors ${compCount > 0 ? 'border-theme-text-primary/30 text-theme-text-secondary hover:bg-theme-text-primary hover:text-theme-bg-primary' : 'border-theme-text-primary/10 text-theme-text-tertiary/20 cursor-not-allowed'}`}
+                                            title="Remove from log">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                                          </button>
                                         </div>
                                       </div>
                                     );
@@ -1195,7 +1194,7 @@ export default function Home() {
                               {food.station && <span>Station: <span className="text-theme-text-secondary">{food.station}</span></span>}
                               {food.dining_court && <span>Location: <span className="text-theme-text-secondary capitalize">{food.dining_court}</span></span>}
                               {food.meal_time && <span>Meal: <span className="text-theme-text-secondary capitalize">{food.meal_time}</span></span>}
-                              {(macros.serving_size || food.serving_size) && <span>Serving: <span className="text-theme-text-secondary">{macros.serving_size || food.serving_size}</span></span>}
+                              {(() => { const ss = macros.serving_size || food.serving_size || ''; const skip = !ss || /^(1 serving|serving|unknown)$/i.test(ss.trim()); return !skip ? <span>Serving: <span className="text-theme-text-secondary">{ss}</span></span> : null; })()}
                             </div>
                               </>
                             )}
@@ -1269,14 +1268,13 @@ export default function Home() {
                             title="Add to log">
                             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
                           </button>
-                          {count > 0 && (
-                            <button
-                              onClick={(e) => { e.stopPropagation(); removeMeal(food, selectedDate); }}
-                              className="p-1 border border-theme-text-primary/20 text-theme-text-tertiary hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors"
-                              title="Remove from log">
-                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="5" y1="12" x2="19" y2="12" /></svg>
-                            </button>
-                          )}
+                          <button
+                            onClick={(e) => { e.stopPropagation(); removeMeal(food, selectedDate); }}
+                            disabled={count === 0}
+                            className={`p-1 border transition-colors ${count > 0 ? 'border-theme-text-primary/20 text-theme-text-tertiary hover:bg-theme-text-primary hover:text-theme-bg-primary' : 'border-theme-text-primary/10 text-theme-text-tertiary/20 cursor-not-allowed'}`}
+                            title="Remove from log">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                          </button>
                         </div>
                       </div>
                     );
