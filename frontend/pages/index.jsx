@@ -380,7 +380,7 @@ export default function Home() {
   const [showFavsOnly, setShowFavsOnly] = useState(false);
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
 
-  const mealTimes = ['All', 'Breakfast', 'Lunch', 'Dinner'];
+  const mealTimes = ['All', 'Breakfast', 'Lunch', 'Late Lunch', 'Dinner'];
   const isLanding = view === 'landing';
 
   // ── Add meal handler (shows picker if mealTime is All) ──
@@ -1303,104 +1303,106 @@ export default function Home() {
                                 </div>
                               </div>
                             )}
-                            <div className="px-4 sm:px-6 py-4 flex flex-col sm:flex-row gap-4 sm:items-start">
-                              {/* Full nutrition grid */}
-                              <div className="flex-1">
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
-                                  <div className="border border-theme-text-primary/10 px-3 py-2">
-                                    <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary">Calories</div>
-                                    <div className={`text-lg font-bold tabular-nums ${noNutrition ? 'text-amber-500/60' : ''}`}>{noNutrition ? 'N/A' : food.calories}</div>
-                                  </div>
-                                  <div className="border border-theme-text-primary/10 px-3 py-2">
-                                    <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary">Protein</div>
-                                    <div className="text-lg font-bold tabular-nums">{macros.protein != null ? Number(macros.protein).toFixed(1) : '—'}<span className="text-xs text-theme-text-tertiary">g</span></div>
-                                  </div>
-                                  <div className="border border-theme-text-primary/10 px-3 py-2">
-                                    <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary">Carbs</div>
-                                    <div className="text-lg font-bold tabular-nums">{macros.carbs != null ? Number(macros.carbs).toFixed(1) : '—'}<span className="text-xs text-theme-text-tertiary">g</span></div>
-                                  </div>
-                                  <div className="border border-theme-text-primary/10 px-3 py-2">
-                                    <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary">Fat</div>
-                                    <div className="text-lg font-bold tabular-nums">{(macros.fats ?? macros.fat) != null ? Number(macros.fats ?? macros.fat).toFixed(1) : '—'}<span className="text-xs text-theme-text-tertiary">g</span></div>
-                                  </div>
+                            <div className="px-4 sm:px-6 py-4">
+                              {/* Main macros - 2x2 on mobile, 4-col on sm+ */}
+                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-2">
+                                <div className="border border-theme-text-primary/10 px-3 py-2">
+                                  <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary">Calories</div>
+                                  <div className={`text-lg font-bold tabular-nums ${noNutrition ? 'text-amber-500/60' : ''}`}>{noNutrition ? 'N/A' : food.calories}</div>
                                 </div>
-                                {/* Additional nutrition details */}
-                                <div className="grid grid-cols-3 sm:grid-cols-7 gap-2 text-center">
-                                  {[
-                                    { label: 'Saturated Fat', val: macros.saturated_fat },
-                                    { label: 'Cholesterol', val: macros.cholesterol, unit: 'mg' },
-                                    { label: 'Sodium', val: macros.sodium, unit: 'mg' },
-                                    { label: 'Fiber', val: macros.fiber },
-                                    { label: 'Sugar', val: macros.sugar },
-                                    { label: 'Added Sugar', val: macros.added_sugar },
-                                  ].map(n => (
-                                    <div key={n.label} className="border border-theme-text-primary/5 px-2 py-1.5">
-                                      <div className="text-[9px] uppercase tracking-wider text-theme-text-tertiary/70 leading-tight">{n.label}</div>
-                                      <div className="text-sm font-bold tabular-nums mt-0.5">
-                                        {n.val != null ? Number(n.val).toFixed(1) : '—'}
-                                        <span className="text-[10px] text-theme-text-tertiary">{n.unit || 'g'}</span>
-                                      </div>
-                                    </div>
-                                  ))}
-                                  {/* Info button inline */}
-                                  <button
-                                    onClick={(e) => { e.stopPropagation(); setInfoFood(food); }}
-                                    className="border border-theme-text-primary/5 px-2 py-1.5 hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors cursor-pointer flex flex-col items-center justify-center"
-                                    title="View ingredients & details">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mb-0.5">
-                                      <circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" />
-                                    </svg>
-                                    <div className="text-[9px] uppercase tracking-wider leading-tight">Info</div>
-                                  </button>
+                                <div className="border border-theme-text-primary/10 px-3 py-2">
+                                  <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary">Protein</div>
+                                  <div className="text-lg font-bold tabular-nums">{macros.protein != null ? Number(macros.protein).toFixed(1) : '—'}<span className="text-xs text-theme-text-tertiary">g</span></div>
                                 </div>
-
-                                {/* Dietary tags */}
-                                {(macros.is_vegetarian || macros.is_vegan || (macros.allergens && macros.allergens.length > 0)) && (
-                                  <div className="flex flex-wrap gap-1.5 mt-3">
-                                    {macros.is_vegan && (
-                                      <span className="text-[10px] font-bold border border-emerald-400/50 text-emerald-400 px-2 py-0.5 rounded-sm">Vegan</span>
-                                    )}
-                                    {macros.is_vegetarian && !macros.is_vegan && (
-                                      <span className="text-[10px] font-bold border border-green-500/50 text-green-500 px-2 py-0.5 rounded-sm">Vegetarian</span>
-                                    )}
-                                    {macros.allergens && macros.allergens.map(a => (
-                                      <span key={a} className="text-[10px] border border-theme-text-tertiary/20 text-theme-text-tertiary px-2 py-0.5 rounded-sm">{a}</span>
-                                    ))}
-                                  </div>
-                                )}
+                                <div className="border border-theme-text-primary/10 px-3 py-2">
+                                  <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary">Carbs</div>
+                                  <div className="text-lg font-bold tabular-nums">{macros.carbs != null ? Number(macros.carbs).toFixed(1) : '—'}<span className="text-xs text-theme-text-tertiary">g</span></div>
+                                </div>
+                                <div className="border border-theme-text-primary/10 px-3 py-2">
+                                  <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary">Fat</div>
+                                  <div className="text-lg font-bold tabular-nums">{(macros.fats ?? macros.fat) != null ? Number(macros.fats ?? macros.fat).toFixed(1) : '—'}<span className="text-xs text-theme-text-tertiary">g</span></div>
+                                </div>
                               </div>
 
-                              {/* Favorite + Servings + Add/Remove */}
-                              <div className="flex sm:flex-col gap-2 shrink-0 items-end">
-                                {/* Favorite toggle */}
+                              {/* Secondary nutrients - clean 3-col on mobile, 6-col on sm+ */}
+                              <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5 text-center">
+                                {[
+                                  { label: 'Sat. Fat', val: macros.saturated_fat },
+                                  { label: 'Cholesterol', val: macros.cholesterol, unit: 'mg' },
+                                  { label: 'Sodium', val: macros.sodium, unit: 'mg' },
+                                  { label: 'Fiber', val: macros.fiber },
+                                  { label: 'Sugar', val: macros.sugar },
+                                  { label: 'Added Sugar', val: macros.added_sugar },
+                                ].map(n => (
+                                  <div key={n.label} className="border border-theme-text-primary/5 px-1.5 py-1.5">
+                                    <div className="text-[8px] sm:text-[9px] uppercase tracking-wider text-theme-text-tertiary/70 leading-tight">{n.label}</div>
+                                    <div className="text-sm font-bold tabular-nums mt-0.5">
+                                      {n.val != null ? Number(n.val).toFixed(1) : '—'}
+                                      <span className="text-[10px] text-theme-text-tertiary">{n.unit || 'g'}</span>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+
+                              {/* Tags + Info row */}
+                              <div className="flex items-center flex-wrap gap-1.5 mt-3">
+                                {macros.is_vegan && (
+                                  <span className="text-[10px] font-bold border border-emerald-400/50 text-emerald-400 px-2 py-0.5 rounded-sm">Vegan</span>
+                                )}
+                                {macros.is_vegetarian && !macros.is_vegan && (
+                                  <span className="text-[10px] font-bold border border-green-500/50 text-green-500 px-2 py-0.5 rounded-sm">Vegetarian</span>
+                                )}
+                                {macros.allergens && macros.allergens.map(a => (
+                                  <span key={a} className="text-[10px] border border-theme-text-tertiary/20 text-theme-text-tertiary px-2 py-0.5 rounded-sm">{a}</span>
+                                ))}
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setInfoFood(food); }}
+                                  className="text-[10px] border border-theme-text-tertiary/20 text-theme-text-tertiary px-2 py-0.5 rounded-sm hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors cursor-pointer inline-flex items-center gap-1"
+                                  title="View ingredients & details">
+                                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                    <circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" />
+                                  </svg>
+                                  Info
+                                </button>
+                              </div>
+
+                              {/* Metadata chips */}
+                              <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-[10px] text-theme-text-tertiary">
+                                {food.station && <span>{food.station}</span>}
+                                {food.dining_court && <span className="capitalize">{food.dining_court}</span>}
+                                {food.meal_time && <span className="capitalize">{food.meal_time}</span>}
+                                {(() => { const ss = macros.serving_size || food.serving_size || ''; const skip = !ss || /^(1 serving|serving|unknown)$/i.test(ss.trim()); return !skip ? <span>{ss}</span> : null; })()}
+                              </div>
+
+                              {/* Actions row */}
+                              <div className="flex items-center gap-2 mt-3 pt-3 border-t border-theme-text-primary/5">
                                 <button
                                   onClick={(e) => { e.stopPropagation(); toggleFavorite(food.id); }}
-                                  className={`p-2 border transition-colors ${fav ? 'border-yellow-500/50 text-yellow-500' : 'border-theme-text-primary/20 text-theme-text-tertiary hover:text-yellow-500'}`}
+                                  className={`p-2 border transition-colors shrink-0 ${fav ? 'border-yellow-500/50 text-yellow-500' : 'border-theme-text-primary/20 text-theme-text-tertiary hover:text-yellow-500'}`}
                                   title={fav ? 'Remove from favorites' : 'Add to favorites'}>
                                   <svg width="14" height="14" viewBox="0 0 24 24" fill={fav ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
                                     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                                   </svg>
                                 </button>
-                                {/* Serving size */}
-                                <div className="flex items-center gap-1 border border-theme-text-primary/20 px-2 py-1">
+                                <div className="flex items-center gap-1 border border-theme-text-primary/20 px-2 py-1.5 shrink-0">
                                   <span className="text-[9px] uppercase tracking-wider text-theme-text-tertiary">Srv</span>
                                   <select
                                     value={servingsInput[food.id] || 1}
                                     onChange={e => { e.stopPropagation(); setServingsInput(p => ({ ...p, [food.id]: parseFloat(e.target.value) })); }}
                                     onClick={e => e.stopPropagation()}
-                                    className="bg-transparent text-xs font-mono text-theme-text-primary w-12 focus:outline-none cursor-pointer">
-                                    <option value={0.25}>0.25</option>
-                                    <option value={0.5}>0.5</option>
-                                    <option value={0.75}>0.75</option>
-                                    <option value={1}>1</option>
-                                    <option value={1.5}>1.5</option>
-                                    <option value={2}>2</option>
-                                    <option value={3}>3</option>
+                                    className="bg-theme-bg-primary text-xs font-mono text-theme-text-primary w-12 focus:outline-none cursor-pointer">
+                                    <option value={0.25} className="bg-theme-bg-primary text-theme-text-primary">0.25</option>
+                                    <option value={0.5} className="bg-theme-bg-primary text-theme-text-primary">0.5</option>
+                                    <option value={0.75} className="bg-theme-bg-primary text-theme-text-primary">0.75</option>
+                                    <option value={1} className="bg-theme-bg-primary text-theme-text-primary">1</option>
+                                    <option value={1.5} className="bg-theme-bg-primary text-theme-text-primary">1.5</option>
+                                    <option value={2} className="bg-theme-bg-primary text-theme-text-primary">2</option>
+                                    <option value={3} className="bg-theme-bg-primary text-theme-text-primary">3</option>
                                   </select>
                                 </div>
                                 <button
                                   onClick={(e) => handleAddMeal(food, e)}
-                                  className="flex items-center justify-center gap-1.5 px-4 py-2 border border-theme-text-primary text-theme-text-primary text-xs uppercase tracking-wider font-bold hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors w-full sm:w-28"
+                                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 border border-theme-text-primary text-theme-text-primary text-xs uppercase tracking-wider font-bold hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors"
                                   title="Add to today's log">
                                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
                                   Add
@@ -1408,7 +1410,7 @@ export default function Home() {
                                 <button
                                   onClick={(e) => { e.stopPropagation(); removeMeal(food, selectedDate); }}
                                   disabled={count === 0}
-                                  className={`flex items-center justify-center gap-1.5 px-4 py-2 border text-xs uppercase tracking-wider font-bold transition-colors w-full sm:w-28 ${
+                                  className={`px-3 py-2 border text-xs uppercase tracking-wider font-bold transition-colors shrink-0 flex items-center gap-1.5 ${
                                     count > 0
                                       ? 'border-theme-text-primary/50 text-theme-text-secondary hover:bg-theme-text-primary hover:text-theme-bg-primary'
                                       : 'border-theme-text-primary/10 text-theme-text-tertiary/40 cursor-not-allowed'
@@ -1418,14 +1420,6 @@ export default function Home() {
                                   Remove
                                 </button>
                               </div>
-                            </div>
-
-                            {/* Extra info row */}
-                            <div className="px-4 sm:px-6 pb-3 flex flex-wrap gap-x-6 gap-y-1 text-xs text-theme-text-tertiary">
-                              {food.station && <span>Station: <span className="text-theme-text-secondary">{food.station}</span></span>}
-                              {food.dining_court && <span>Location: <span className="text-theme-text-secondary capitalize">{food.dining_court}</span></span>}
-                              {food.meal_time && <span>Meal: <span className="text-theme-text-secondary capitalize">{food.meal_time}</span></span>}
-                              {(() => { const ss = macros.serving_size || food.serving_size || ''; const skip = !ss || /^(1 serving|serving|unknown)$/i.test(ss.trim()); return !skip ? <span>Serving: <span className="text-theme-text-secondary">{ss}</span></span> : null; })()}
                             </div>
                               </>
                             )}
