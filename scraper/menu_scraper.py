@@ -176,13 +176,9 @@ query getLocationMenu($name: String!, $date: Date!) {
             item {
               itemId
               name
-              isNutritionReady
-              isVegetarian
               components {
                 name
                 itemId
-                isNutritionReady
-                isVegetarian
                 traits {
                   name
                 }
@@ -473,10 +469,9 @@ def scrape_purdue_menu_api(api_location='Wiley', date_str=None, nutrition_cache=
                 for comp in components_raw:
                     comp_name = comp.get('name', '').strip()
                     comp_item_id = comp.get('itemId')
-                    comp_nr = comp.get('isNutritionReady', False)
-                    comp_is_veg = comp.get('isVegetarian', False)
 
-                    # Check traits for vegan
+                    # Extract vegetarian/vegan from traits
+                    comp_is_veg = False
                     comp_is_vegan = False
                     for trait in (comp.get('traits') or []):
                         tname = (trait.get('name') or '').lower()
@@ -505,7 +500,7 @@ def scrape_purdue_menu_api(api_location='Wiley', date_str=None, nutrition_cache=
                         'ingredients': '',
                     }
 
-                    if comp_nr and comp_item_id:
+                    if comp_item_id:
                         # Check nutrition cache
                         comp_cache_key = (comp_name.lower().strip(),
                                           (display_name or api_location).lower().strip())
