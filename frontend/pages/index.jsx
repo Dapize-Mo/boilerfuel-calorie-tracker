@@ -4,6 +4,9 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { LOCATION_CATEGORIES, FOOD_CO_LOCATIONS } from '../utils/diningLocations';
 import { useMeals } from '../context/MealContext';
+import dynamic from 'next/dynamic';
+
+const BarcodeScanner = dynamic(() => import('../components/BarcodeScanner'), { ssr: false });
 
 const CHUNK_SIZE = 60; // items per render batch
 
@@ -313,7 +316,7 @@ function MacroTooltip({ food, pos }) {
 // ══════════════════════════════════════
 export default function Home() {
   const router = useRouter();
-  const { addMeal, removeMeal, getCount } = useMeals();
+  const { addMeal, removeMeal, getCount, isFavorite, toggleFavorite, dietaryPrefs, getWater, addWater, mealsByDate } = useMeals();
   // ── State ──
   const [location, setLocation] = useState({ type: 'all', value: 'All' });
   const [mealTime, setMealTime] = useState('All');
@@ -331,15 +334,22 @@ export default function Home() {
   const [mealPickerFood, setMealPickerFood] = useState(null); // food waiting for meal selection
   const [mealPickerOptions, setMealPickerOptions] = useState(null); // restricted options for compound meal times
   const [infoFood, setInfoFood] = useState(null); // food for the ingredients/info modal
+  const [searchText, setSearchText] = useState(''); // food search filter
+  const [servingsInput, setServingsInput] = useState({}); // { [foodId]: number }
+  const [showFilters, setShowFilters] = useState(false); // dietary/nutrition filter panel
+  const [nutritionFilter, setNutritionFilter] = useState({ minProtein: '', maxCalories: '', vegetarian: false, vegan: false, allergenFree: '' });
+  const [showFavsOnly, setShowFavsOnly] = useState(false);
+  const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
 
   const mealTimes = ['All', 'Breakfast', 'Lunch', 'Dinner'];
   const isLanding = view === 'landing';
 
   // ── Add meal handler (shows picker if mealTime is All) ──
-  function handleAddMeal(food, e) {
+  function handleAddMeal(food, e, servingsOverride) {
     if (e) e.stopPropagation();
+    const servings = servingsOverride || servingsInput[food.id] || 1;
     if (mealTime !== 'All') {
-      addMeal(food, mealTime.toLowerCase(), selectedDate);
+      addMeal(food, mealTime.toLowerCase(), selectedDate, servings);
     } else if (food.meal_time && food.meal_time.toLowerCase() !== 'all') {
       const mt = food.meal_time.toLowerCase();
       // Compound meal times like "Breakfast/Lunch" → show picker with those options
@@ -348,7 +358,7 @@ export default function Home() {
         setMealPickerOptions(parts);
         setMealPickerFood(food);
       } else {
-        addMeal(food, mt, selectedDate);
+        addMeal(food, mt, selectedDate, servings);
       }
     } else {
       setMealPickerOptions(null);
@@ -545,16 +555,54 @@ export default function Home() {
     };
   }, [view]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Split beverages from regular foods ──
+  // ── Split beverages from regular foods + apply filters ──
   const { regularFoods, beverageFoods } = useMemo(() => {
     const regular = [];
     const bevs = [];
     for (const f of foods) {
+      // Text search filter
+      if (searchText && !f.name.toLowerCase().includes(searchText.toLowerCase())) continue;
+      // Favorites filter
+      if (showFavsOnly && !isFavorite(f.id)) continue;
+      // Dietary filters
+      const macros = f.macros || {};
+      if (nutritionFilter.vegetarian && !macros.is_vegetarian) continue;
+      if (nutritionFilter.vegan && !macros.is_vegan) continue;
+      if (nutritionFilter.allergenFree) {
+        const exclude = nutritionFilter.allergenFree.toLowerCase().split(',').map(s => s.trim()).filter(Boolean);
+        const allergens = (macros.allergens || []).map(a => a.toLowerCase());
+        if (exclude.some(e => allergens.some(a => a.includes(e)))) continue;
+      }
+      // Nutrition range filters
+      if (nutritionFilter.minProtein && (parseFloat(macros.protein) || 0) < parseFloat(nutritionFilter.minProtein)) continue;
+      if (nutritionFilter.maxCalories && f.calories > parseFloat(nutritionFilter.maxCalories)) continue;
+      // Also apply global dietary prefs from context
+      if (dietaryPrefs.vegetarian && !macros.is_vegetarian) continue;
+      if (dietaryPrefs.vegan && !macros.is_vegan) continue;
+      if (dietaryPrefs.excludeAllergens?.length > 0) {
+        const allergens = (macros.allergens || []).map(a => a.toLowerCase());
+        if (dietaryPrefs.excludeAllergens.some(e => allergens.some(a => a.includes(e.toLowerCase())))) continue;
+      }
+
       if ((f.station || '').toLowerCase() === 'beverages') bevs.push(f);
       else regular.push(f);
     }
     return { regularFoods: regular, beverageFoods: bevs };
-  }, [foods]);
+  }, [foods, searchText, showFavsOnly, isFavorite, nutritionFilter, dietaryPrefs]);
+
+  // ── Recent beverages (logged before, across all dates) ──
+  const recentBeverageIds = useMemo(() => {
+    const freq = {};
+    for (const [, dayMeals] of Object.entries(mealsByDate)) {
+      for (const m of dayMeals) {
+        if ((m.station || '').toLowerCase() === 'beverages' || (m.dining_court || '').toLowerCase() === 'beverages') {
+          freq[m.id] = (freq[m.id] || 0) + 1;
+        }
+      }
+    }
+    // Sort by frequency, return top IDs
+    return Object.entries(freq).sort((a, b) => b[1] - a[1]).map(([id]) => id);
+  }, [mealsByDate]);
 
   // ── Get collection components for a food item ──
   // Uses macros.components from the database (scraped via GraphQL v3 API)
@@ -906,14 +954,124 @@ export default function Home() {
           )}
 
           {!loading && !isLanding && (
-            <div className="flex items-center justify-between mb-4 pb-3 border-b border-theme-text-primary/10">
+            <>
+            <div className="flex items-center justify-between mb-3 pb-3 border-b border-theme-text-primary/10">
               <span className="text-xs uppercase tracking-widest text-theme-text-tertiary">
-                {foods.length} item{foods.length !== 1 ? 's' : ''}
+                {regularFoods.length + beverageFoods.length} item{regularFoods.length + beverageFoods.length !== 1 ? 's' : ''}
+                {searchText && <> matching &ldquo;{searchText}&rdquo;</>}
               </span>
-              <span className="text-xs text-theme-text-tertiary">
-                {dateLabel} &middot; {locationLabel} &middot; {mealTime !== 'All' ? mealTime : 'All meals'}
-              </span>
+              <div className="flex items-center gap-3">
+                {/* Water tracker */}
+                <div className="flex items-center gap-1 text-xs" title="Water intake today">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-400">
+                    <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
+                  </svg>
+                  <button onClick={() => addWater(-1, selectedDate)} className="px-1 text-theme-text-tertiary hover:text-theme-text-primary">-</button>
+                  <span className="font-mono tabular-nums text-blue-400 font-bold">{getWater(selectedDate)}</span>
+                  <button onClick={() => addWater(1, selectedDate)} className="px-1 text-theme-text-tertiary hover:text-theme-text-primary">+</button>
+                </div>
+                <span className="text-theme-text-primary/10">|</span>
+                {/* Stats link */}
+                <Link href="/stats" className="text-[10px] uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
+                  Stats
+                </Link>
+              </div>
             </div>
+
+            {/* Search + filter bar */}
+            <div className="flex flex-wrap items-center gap-2 mb-4">
+              <div className="flex-1 min-w-[140px] relative">
+                <input
+                  type="text"
+                  value={searchText}
+                  onChange={e => setSearchText(e.target.value)}
+                  placeholder="Search foods..."
+                  className="w-full border border-theme-text-primary/20 bg-transparent text-theme-text-primary px-3 py-1.5 text-xs focus:border-theme-text-primary focus:outline-none transition-colors pl-8"
+                />
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="absolute left-2.5 top-1/2 -translate-y-1/2 text-theme-text-tertiary">
+                  <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                {searchText && (
+                  <button onClick={() => setSearchText('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-theme-text-tertiary hover:text-theme-text-primary text-xs">&times;</button>
+                )}
+              </div>
+              <button
+                onClick={() => setShowFavsOnly(f => !f)}
+                className={`px-2 py-1.5 border text-xs transition-colors ${showFavsOnly ? 'border-yellow-500 text-yellow-500 bg-yellow-500/10' : 'border-theme-text-primary/20 text-theme-text-tertiary hover:text-theme-text-primary'}`}
+                title="Show favorites only"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill={showFavsOnly ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                </svg>
+              </button>
+              <button
+                onClick={() => setShowFilters(f => !f)}
+                className={`px-2.5 py-1.5 border text-[10px] uppercase tracking-wider font-bold transition-colors ${showFilters ? 'border-theme-text-primary text-theme-text-primary' : 'border-theme-text-primary/20 text-theme-text-tertiary hover:text-theme-text-primary'}`}
+              >
+                Filters
+              </button>
+              <button
+                onClick={() => setShowBarcodeScanner(true)}
+                className="px-2 py-1.5 border border-theme-text-primary/20 text-theme-text-tertiary hover:text-theme-text-primary text-xs transition-colors"
+                title="Scan barcode"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="2" y="4" width="20" height="16" rx="1" /><line x1="6" y1="8" x2="6" y2="16" /><line x1="9" y1="8" x2="9" y2="16" strokeWidth="1" /><line x1="11" y1="8" x2="11" y2="16" /><line x1="14" y1="8" x2="14" y2="16" strokeWidth="1" /><line x1="16" y1="8" x2="16" y2="16" /><line x1="18" y1="8" x2="18" y2="16" strokeWidth="1" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Filter panel */}
+            {showFilters && (
+              <div className="mb-4 p-3 border border-theme-text-primary/15 bg-theme-bg-secondary/30 space-y-3"
+                style={{ animation: `fadeInRow 0.2s ${EASE} both` }}>
+                <div className="flex flex-wrap gap-3">
+                  <label className="flex items-center gap-1.5 text-xs cursor-pointer">
+                    <input type="checkbox" checked={nutritionFilter.vegetarian}
+                      onChange={e => setNutritionFilter(p => ({ ...p, vegetarian: e.target.checked }))}
+                      className="accent-green-500" />
+                    <span className="text-green-500 font-bold">VG</span> Vegetarian
+                  </label>
+                  <label className="flex items-center gap-1.5 text-xs cursor-pointer">
+                    <input type="checkbox" checked={nutritionFilter.vegan}
+                      onChange={e => setNutritionFilter(p => ({ ...p, vegan: e.target.checked }))}
+                      className="accent-emerald-400" />
+                    <span className="text-emerald-400 font-bold">V</span> Vegan
+                  </label>
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  <div className="flex items-center gap-1.5">
+                    <label className="text-[10px] uppercase tracking-widest text-theme-text-tertiary whitespace-nowrap">Min Protein</label>
+                    <input type="number" min="0" value={nutritionFilter.minProtein}
+                      onChange={e => setNutritionFilter(p => ({ ...p, minProtein: e.target.value }))}
+                      placeholder="0"
+                      className="w-16 border border-theme-text-primary/20 bg-transparent text-theme-text-primary px-2 py-1 text-xs font-mono focus:outline-none" />
+                    <span className="text-[10px] text-theme-text-tertiary">g</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <label className="text-[10px] uppercase tracking-widest text-theme-text-tertiary whitespace-nowrap">Max Calories</label>
+                    <input type="number" min="0" value={nutritionFilter.maxCalories}
+                      onChange={e => setNutritionFilter(p => ({ ...p, maxCalories: e.target.value }))}
+                      placeholder="any"
+                      className="w-16 border border-theme-text-primary/20 bg-transparent text-theme-text-primary px-2 py-1 text-xs font-mono focus:outline-none" />
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <label className="text-[10px] uppercase tracking-widest text-theme-text-tertiary whitespace-nowrap">Exclude allergens</label>
+                    <input type="text" value={nutritionFilter.allergenFree}
+                      onChange={e => setNutritionFilter(p => ({ ...p, allergenFree: e.target.value }))}
+                      placeholder="e.g. gluten, eggs"
+                      className="w-32 border border-theme-text-primary/20 bg-transparent text-theme-text-primary px-2 py-1 text-xs focus:outline-none" />
+                  </div>
+                </div>
+                {(nutritionFilter.vegetarian || nutritionFilter.vegan || nutritionFilter.minProtein || nutritionFilter.maxCalories || nutritionFilter.allergenFree) && (
+                  <button onClick={() => setNutritionFilter({ minProtein: '', maxCalories: '', vegetarian: false, vegan: false, allergenFree: '' })}
+                    className="text-[10px] uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
+                    Clear all filters
+                  </button>
+                )}
+              </div>
+            )}
+            </>
           )}
 
           <div className={`${beverageFoods.length > 0 ? 'lg:flex lg:gap-6' : ''}`}>
@@ -974,9 +1132,10 @@ export default function Home() {
                   const count = getCount(food.id, selectedDate);
                   const macros = food.macros || {};
                   const noNutrition = food.calories === 0 && !macros.protein && !macros.carbs && !(macros.fats || macros.fat);
+                  const fav = isFavorite(food.id);
                   return (
                     <tr key={food.id}
-                      className="border-b border-theme-text-primary/5 transition-colors group"
+                      className={`border-b border-theme-text-primary/5 transition-colors group ${fav ? 'bg-yellow-500/[0.03]' : ''}`}
                       style={ri < 20 ? { animation: `fadeInRow 0.3s ${EASE} ${Math.min(ri * 0.02, 0.3)}s both` } : undefined}>
                       <td colSpan={4} className="p-0">
                         {/* Clickable summary row — hover shows tooltip, click expands */}
@@ -992,6 +1151,7 @@ export default function Home() {
                                 style={{ transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}>
                                 <polyline points="9 6 15 12 9 18" />
                               </svg>
+                              {fav && <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1" className="shrink-0 text-yellow-500"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>}
                               <span className="group-hover:text-theme-text-primary transition-colors truncate">{food.name}</span>
                               {/* Dietary tag icons */}
                               {macros.is_vegetarian && (
@@ -1165,11 +1325,37 @@ export default function Home() {
                                 )}
                               </div>
 
-                              {/* Add / Remove buttons — equal width */}
-                              <div className="flex sm:flex-col gap-2 shrink-0">
+                              {/* Favorite + Servings + Add/Remove */}
+                              <div className="flex sm:flex-col gap-2 shrink-0 items-end">
+                                {/* Favorite toggle */}
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); toggleFavorite(food.id); }}
+                                  className={`p-2 border transition-colors ${fav ? 'border-yellow-500/50 text-yellow-500' : 'border-theme-text-primary/20 text-theme-text-tertiary hover:text-yellow-500'}`}
+                                  title={fav ? 'Remove from favorites' : 'Add to favorites'}>
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill={fav ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
+                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                  </svg>
+                                </button>
+                                {/* Serving size */}
+                                <div className="flex items-center gap-1 border border-theme-text-primary/20 px-2 py-1">
+                                  <span className="text-[9px] uppercase tracking-wider text-theme-text-tertiary">Srv</span>
+                                  <select
+                                    value={servingsInput[food.id] || 1}
+                                    onChange={e => { e.stopPropagation(); setServingsInput(p => ({ ...p, [food.id]: parseFloat(e.target.value) })); }}
+                                    onClick={e => e.stopPropagation()}
+                                    className="bg-transparent text-xs font-mono text-theme-text-primary w-12 focus:outline-none cursor-pointer">
+                                    <option value={0.25}>0.25</option>
+                                    <option value={0.5}>0.5</option>
+                                    <option value={0.75}>0.75</option>
+                                    <option value={1}>1</option>
+                                    <option value={1.5}>1.5</option>
+                                    <option value={2}>2</option>
+                                    <option value={3}>3</option>
+                                  </select>
+                                </div>
                                 <button
                                   onClick={(e) => handleAddMeal(food, e)}
-                                  className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 border border-theme-text-primary text-theme-text-primary text-xs uppercase tracking-wider font-bold hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors w-full sm:w-28"
+                                  className="flex items-center justify-center gap-1.5 px-4 py-2 border border-theme-text-primary text-theme-text-primary text-xs uppercase tracking-wider font-bold hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors w-full sm:w-28"
                                   title="Add to today's log">
                                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
                                   Add
@@ -1177,7 +1363,7 @@ export default function Home() {
                                 <button
                                   onClick={(e) => { e.stopPropagation(); removeMeal(food, selectedDate); }}
                                   disabled={count === 0}
-                                  className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 border text-xs uppercase tracking-wider font-bold transition-colors w-full sm:w-28 ${
+                                  className={`flex items-center justify-center gap-1.5 px-4 py-2 border text-xs uppercase tracking-wider font-bold transition-colors w-full sm:w-28 ${
                                     count > 0
                                       ? 'border-theme-text-primary/50 text-theme-text-secondary hover:bg-theme-text-primary hover:text-theme-bg-primary'
                                       : 'border-theme-text-primary/10 text-theme-text-tertiary/40 cursor-not-allowed'
@@ -1242,6 +1428,58 @@ export default function Home() {
                   <span className="text-[10px] font-bold uppercase tracking-widest text-theme-text-tertiary">Beverages</span>
                 </div>
                 <div className="max-h-[70vh] overflow-y-auto">
+                  {/* Recent drinks section */}
+                  {(() => {
+                    const recentInCurrent = beverageFoods.filter(f => recentBeverageIds.includes(f.id));
+                    if (recentInCurrent.length === 0) return null;
+                    return (
+                      <>
+                        <div className="px-3 py-1.5 bg-theme-bg-secondary/30 border-b border-theme-text-primary/5">
+                          <span className="text-[9px] font-bold uppercase tracking-widest text-theme-text-tertiary/60">Recent</span>
+                        </div>
+                        {recentInCurrent.slice(0, 5).map((food) => {
+                          const count = getCount(food.id, selectedDate);
+                          const macros = food.macros || {};
+                          return (
+                            <div key={`recent-${food.id}`}
+                              className="flex items-center gap-2 px-3 py-2 border-b border-theme-text-primary/5 hover:bg-theme-bg-secondary/50 transition-colors text-sm bg-yellow-500/[0.03]">
+                              <div className="flex-1 min-w-0">
+                                <div className="truncate text-theme-text-primary text-xs leading-tight">{food.name}</div>
+                                <div className="text-[10px] text-theme-text-tertiary tabular-nums mt-0.5">
+                                  {food.calories} cal
+                                  {macros.protein != null && <> · {macros.protein}p</>}
+                                  {macros.carbs != null && <> · {macros.carbs}c</>}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-1 shrink-0">
+                                {count > 0 && (
+                                  <span className="text-[9px] font-bold bg-theme-text-primary text-theme-bg-primary px-1 py-0.5 tabular-nums">
+                                    {count}
+                                  </span>
+                                )}
+                                <button
+                                  onClick={(e) => handleAddMeal(food, e)}
+                                  className="p-1 border border-theme-text-primary/20 text-theme-text-tertiary hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors"
+                                  title="Add to log">
+                                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                                </button>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); removeMeal(food, selectedDate); }}
+                                  disabled={count === 0}
+                                  className={`p-1 border transition-colors ${count > 0 ? 'border-theme-text-primary/20 text-theme-text-tertiary hover:bg-theme-text-primary hover:text-theme-bg-primary' : 'border-theme-text-primary/10 text-theme-text-tertiary/20 cursor-not-allowed'}`}
+                                  title="Remove from log">
+                                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                        <div className="px-3 py-1.5 bg-theme-bg-secondary/30 border-b border-theme-text-primary/5">
+                          <span className="text-[9px] font-bold uppercase tracking-widest text-theme-text-tertiary/60">All</span>
+                        </div>
+                      </>
+                    );
+                  })()}
                   {beverageFoods.map((food) => {
                     const count = getCount(food.id, selectedDate);
                     const macros = food.macros || {};
@@ -1436,6 +1674,17 @@ export default function Home() {
           </div>
         );
       })()}
+
+      {/* ── Barcode scanner modal ── */}
+      {showBarcodeScanner && (
+        <BarcodeScanner
+          onClose={() => setShowBarcodeScanner(false)}
+          onFoodFound={(food) => {
+            addMeal(food, null, selectedDate);
+            setShowBarcodeScanner(false);
+          }}
+        />
+      )}
 
     </div>
   );

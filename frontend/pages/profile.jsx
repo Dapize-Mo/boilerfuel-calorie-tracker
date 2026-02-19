@@ -46,9 +46,10 @@ function shiftDate(dateKey, delta) {
 
 export default function ProfilePage() {
   const { theme, setTheme } = useTheme();
-  const { meals, goals, setGoals, totals, clearMeals, mealsByDate } = useMeals();
+  const { meals, goals, setGoals, totals, clearMeals, mealsByDate, getWeight, setWeight, exportData, templates, saveTemplate, deleteTemplate, applyTemplate, dietaryPrefs, setDietaryPrefs, waterByDate, getWater, addWater } = useMeals();
   const [editingGoals, setEditingGoals] = useState(false);
   const [draft, setDraft] = useState(goals);
+  const [weightInput, setWeightInput] = useState('');
   const [selectedDate, setSelectedDate] = useState(getTodayKey);
 
   const isToday = selectedDate === getTodayKey();
@@ -444,10 +445,150 @@ export default function ProfilePage() {
             </div>
           </section>
 
+          {/* ═══ WEIGHT TRACKING ═══ */}
+          <section className="space-y-6">
+            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
+              Weight Tracking
+            </h2>
+            <div className="flex items-end gap-3">
+              <div className="flex-1 space-y-1">
+                <label className="text-[10px] uppercase tracking-widest text-theme-text-tertiary block">Today&rsquo;s Weight (lbs)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  value={weightInput || (getWeight(selectedDate) ?? '')}
+                  onChange={e => setWeightInput(e.target.value)}
+                  placeholder="Enter weight"
+                  className="w-full border border-theme-text-primary/30 bg-theme-bg-secondary text-theme-text-primary px-3 py-2 font-mono text-sm focus:border-theme-text-primary focus:outline-none transition-colors"
+                />
+              </div>
+              <button
+                onClick={() => { if (weightInput) { setWeight(weightInput, selectedDate); setWeightInput(''); } }}
+                className="px-4 py-2 border border-theme-text-primary text-theme-text-primary text-xs font-bold uppercase tracking-wider hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors">
+                Save
+              </button>
+            </div>
+            <Link href="/stats" className="text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors inline-flex items-center gap-1">
+              View weight trend &rarr;
+            </Link>
+          </section>
+
+          {/* ═══ DIETARY PREFERENCES ═══ */}
+          <section className="space-y-6">
+            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
+              Dietary Preferences
+            </h2>
+            <p className="text-xs text-theme-text-tertiary">These filters apply globally across the menu. Foods that don&rsquo;t match will be hidden.</p>
+            <div className="space-y-3">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" checked={dietaryPrefs.vegetarian}
+                  onChange={e => setDietaryPrefs({ vegetarian: e.target.checked })}
+                  className="accent-green-500 w-4 h-4" />
+                <span className="text-sm"><span className="text-green-500 font-bold">VG</span> Vegetarian only</span>
+              </label>
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" checked={dietaryPrefs.vegan}
+                  onChange={e => setDietaryPrefs({ vegan: e.target.checked })}
+                  className="accent-emerald-400 w-4 h-4" />
+                <span className="text-sm"><span className="text-emerald-400 font-bold">V</span> Vegan only</span>
+              </label>
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase tracking-widest text-theme-text-tertiary block">Exclude allergens (comma-separated)</label>
+                <input
+                  type="text"
+                  value={(dietaryPrefs.excludeAllergens || []).join(', ')}
+                  onChange={e => setDietaryPrefs({ excludeAllergens: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
+                  placeholder="e.g. Gluten, Eggs, Tree Nuts"
+                  className="w-full border border-theme-text-primary/30 bg-theme-bg-secondary text-theme-text-primary px-3 py-2 text-sm focus:border-theme-text-primary focus:outline-none transition-colors"
+                />
+              </div>
+            </div>
+          </section>
+
+          {/* ═══ MEAL TEMPLATES (BETA) ═══ */}
+          <section className="space-y-6">
+            <div className="flex items-center gap-2 border-b border-theme-text-primary/10 pb-2">
+              <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary">
+                Meal Templates
+              </h2>
+              <span className="text-[9px] font-bold border border-blue-500/50 text-blue-500 px-1.5 py-0.5 rounded-sm uppercase tracking-wider">Beta</span>
+            </div>
+            {meals.length > 0 && (
+              <div>
+                <button
+                  onClick={() => {
+                    const name = prompt('Template name:');
+                    if (name) saveTemplate(name, meals);
+                  }}
+                  className="px-4 py-2 border border-theme-text-primary/30 text-theme-text-tertiary text-xs uppercase tracking-wider hover:text-theme-text-primary hover:border-theme-text-primary transition-colors">
+                  Save today&rsquo;s meals as template
+                </button>
+              </div>
+            )}
+            {templates.length > 0 ? (
+              <div className="border border-theme-text-primary/10 divide-y divide-theme-text-primary/5">
+                {templates.map(t => (
+                  <div key={t.id} className="flex items-center justify-between px-4 py-3">
+                    <div>
+                      <div className="text-sm font-bold">{t.name}</div>
+                      <div className="text-[10px] text-theme-text-tertiary">{t.foods.length} items &middot; {Math.round(t.foods.reduce((s, f) => s + (f.calories || 0), 0))} cal</div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={() => applyTemplate(t)}
+                        className="px-3 py-1.5 border border-theme-text-primary/30 text-xs uppercase tracking-wider text-theme-text-secondary hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors">
+                        Apply
+                      </button>
+                      <button onClick={() => deleteTemplate(t.id)}
+                        className="px-3 py-1.5 border border-red-500/30 text-xs uppercase tracking-wider text-red-500/60 hover:bg-red-500 hover:text-white transition-colors">
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-theme-text-tertiary">No templates saved yet. Log some meals and save them as a template for quick re-use.</p>
+            )}
+          </section>
+
+          {/* ═══ EXPORT DATA ═══ */}
+          <section className="space-y-6">
+            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
+              Export Data
+            </h2>
+            <p className="text-xs text-theme-text-tertiary">Download your meal history. All data is stored locally in your browser.</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  const csv = exportData('csv');
+                  const blob = new Blob([csv], { type: 'text/csv' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a'); a.href = url; a.download = `boilerfuel-export-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
+                  URL.revokeObjectURL(url);
+                }}
+                className="px-4 py-2 border border-theme-text-primary text-theme-text-primary text-xs font-bold uppercase tracking-wider hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors">
+                Export CSV
+              </button>
+              <button
+                onClick={() => {
+                  const json = exportData('json');
+                  const blob = new Blob([json], { type: 'application/json' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a'); a.href = url; a.download = `boilerfuel-export-${new Date().toISOString().slice(0, 10)}.json`; a.click();
+                  URL.revokeObjectURL(url);
+                }}
+                className="px-4 py-2 border border-theme-text-primary/30 text-theme-text-tertiary text-xs uppercase tracking-wider hover:text-theme-text-primary hover:border-theme-text-primary transition-colors">
+                Export JSON
+              </button>
+            </div>
+          </section>
+
           {/* Footer */}
           <footer className="border-t border-theme-text-primary/10 pt-8 flex flex-wrap items-center justify-between gap-4">
             <div className="flex gap-6 text-xs uppercase tracking-widest">
               <Link href="/" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Home</Link>
+              <Link href="/stats" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Stats</Link>
               <Link href="/about" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">About</Link>
               <Link href="/changelog" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Changelog</Link>
               <Link href="/admin" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Admin</Link>

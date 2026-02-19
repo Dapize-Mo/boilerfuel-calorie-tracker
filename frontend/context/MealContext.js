@@ -12,6 +12,11 @@ const MealContext = createContext({
 
 const STORAGE_KEY = 'boilerfuel_meals';
 const GOALS_KEY = 'boilerfuel_goals';
+const FAVORITES_KEY = 'boilerfuel_favorites';
+const WATER_KEY = 'boilerfuel_water';
+const WEIGHT_KEY = 'boilerfuel_weight';
+const TEMPLATES_KEY = 'boilerfuel_templates';
+const DIETARY_KEY = 'boilerfuel_dietary';
 
 function getTodayKey() {
   const d = new Date();
@@ -21,9 +26,24 @@ function getTodayKey() {
 const DEFAULT_GOALS = { calories: 2000, protein: 150, carbs: 250, fat: 65, saturated_fat: 20, fiber: 28, sugar: 50, sodium: 2300, cholesterol: 300, added_sugar: 25 };
 
 export function MealProvider({ children }) {
-  // { [dateKey]: [ { id, name, calories, macros, dining_court, station, meal_time, addedAt } ] }
+  // { [dateKey]: [ { id, name, calories, macros, dining_court, station, meal_time, addedAt, servings } ] }
   const [mealsByDate, setMealsByDate] = useState({});
   const [goals, setGoalsState] = useState(DEFAULT_GOALS);
+
+  // Favorites: Set of food IDs
+  const [favorites, setFavoritesState] = useState(new Set());
+
+  // Water: { [dateKey]: number (glasses) }
+  const [waterByDate, setWaterByDate] = useState({});
+
+  // Weight: { [dateKey]: number (lbs/kg) }
+  const [weightByDate, setWeightByDate] = useState({});
+
+  // Meal templates: [ { id, name, foods: [...] } ]
+  const [templates, setTemplatesState] = useState([]);
+
+  // Dietary preferences: { vegetarian: bool, vegan: bool, excludeAllergens: string[] }
+  const [dietaryPrefs, setDietaryPrefsState] = useState({ vegetarian: false, vegan: false, excludeAllergens: [] });
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -34,6 +54,26 @@ export function MealProvider({ children }) {
     try {
       const savedGoals = localStorage.getItem(GOALS_KEY);
       if (savedGoals) setGoalsState(JSON.parse(savedGoals));
+    } catch {}
+    try {
+      const savedFavs = localStorage.getItem(FAVORITES_KEY);
+      if (savedFavs) setFavoritesState(new Set(JSON.parse(savedFavs)));
+    } catch {}
+    try {
+      const savedWater = localStorage.getItem(WATER_KEY);
+      if (savedWater) setWaterByDate(JSON.parse(savedWater));
+    } catch {}
+    try {
+      const savedWeight = localStorage.getItem(WEIGHT_KEY);
+      if (savedWeight) setWeightByDate(JSON.parse(savedWeight));
+    } catch {}
+    try {
+      const savedTemplates = localStorage.getItem(TEMPLATES_KEY);
+      if (savedTemplates) setTemplatesState(JSON.parse(savedTemplates));
+    } catch {}
+    try {
+      const savedDietary = localStorage.getItem(DIETARY_KEY);
+      if (savedDietary) setDietaryPrefsState(JSON.parse(savedDietary));
     } catch {}
   }, []);
 
@@ -49,18 +89,61 @@ export function MealProvider({ children }) {
     localStorage.setItem(GOALS_KEY, JSON.stringify(goals));
   }, [goals]);
 
+  // Persist favorites
+  useEffect(() => {
+    localStorage.setItem(FAVORITES_KEY, JSON.stringify([...favorites]));
+  }, [favorites]);
+
+  // Persist water
+  useEffect(() => {
+    if (Object.keys(waterByDate).length > 0) {
+      localStorage.setItem(WATER_KEY, JSON.stringify(waterByDate));
+    }
+  }, [waterByDate]);
+
+  // Persist weight
+  useEffect(() => {
+    if (Object.keys(weightByDate).length > 0) {
+      localStorage.setItem(WEIGHT_KEY, JSON.stringify(weightByDate));
+    }
+  }, [weightByDate]);
+
+  // Persist templates
+  useEffect(() => {
+    localStorage.setItem(TEMPLATES_KEY, JSON.stringify(templates));
+  }, [templates]);
+
+  // Persist dietary prefs
+  useEffect(() => {
+    localStorage.setItem(DIETARY_KEY, JSON.stringify(dietaryPrefs));
+  }, [dietaryPrefs]);
+
   const todayKey = getTodayKey();
   const meals = mealsByDate[todayKey] || [];
 
-  const addMeal = useCallback((food, mealTimeOverride, dateOverride) => {
+  const addMeal = useCallback((food, mealTimeOverride, dateOverride, servings = 1) => {
+    const mult = servings || 1;
     const entry = {
       id: food.id,
       name: food.name,
-      calories: food.calories || 0,
-      macros: food.macros || {},
+      calories: Math.round((food.calories || 0) * mult),
+      macros: food.macros ? {
+        ...food.macros,
+        protein: parseFloat(((parseFloat(food.macros.protein) || 0) * mult).toFixed(1)),
+        carbs: parseFloat(((parseFloat(food.macros.carbs) || 0) * mult).toFixed(1)),
+        fats: parseFloat(((parseFloat(food.macros.fats || food.macros.fat) || 0) * mult).toFixed(1)),
+        fat: parseFloat(((parseFloat(food.macros.fats || food.macros.fat) || 0) * mult).toFixed(1)),
+        sugar: parseFloat(((parseFloat(food.macros.sugar) || 0) * mult).toFixed(1)),
+        fiber: parseFloat(((parseFloat(food.macros.fiber) || 0) * mult).toFixed(1)),
+        sodium: parseFloat(((parseFloat(food.macros.sodium) || 0) * mult).toFixed(1)),
+        cholesterol: parseFloat(((parseFloat(food.macros.cholesterol) || 0) * mult).toFixed(1)),
+        saturated_fat: parseFloat(((parseFloat(food.macros.saturated_fat) || 0) * mult).toFixed(1)),
+        added_sugar: parseFloat(((parseFloat(food.macros.added_sugar) || 0) * mult).toFixed(1)),
+      } : {},
       dining_court: food.dining_court || '',
       station: food.station || '',
       meal_time: mealTimeOverride || food.meal_time || '',
+      servings: mult,
       addedAt: Date.now(),
     };
     setMealsByDate(prev => {
@@ -102,6 +185,77 @@ export function MealProvider({ children }) {
     setGoalsState(prev => ({ ...prev, ...newGoals }));
   }, []);
 
+  // ── Favorites ──
+  const toggleFavorite = useCallback((foodId) => {
+    setFavoritesState(prev => {
+      const next = new Set(prev);
+      if (next.has(foodId)) next.delete(foodId);
+      else next.add(foodId);
+      return next;
+    });
+  }, []);
+
+  const isFavorite = useCallback((foodId) => favorites.has(foodId), [favorites]);
+
+  // ── Water tracking ──
+  const getWater = useCallback((dateOverride) => {
+    const key = dateOverride || getTodayKey();
+    return waterByDate[key] || 0;
+  }, [waterByDate]);
+
+  const addWater = useCallback((amount = 1, dateOverride) => {
+    const key = dateOverride || getTodayKey();
+    setWaterByDate(prev => ({ ...prev, [key]: Math.max(0, (prev[key] || 0) + amount) }));
+  }, []);
+
+  const setWater = useCallback((amount, dateOverride) => {
+    const key = dateOverride || getTodayKey();
+    setWaterByDate(prev => ({ ...prev, [key]: Math.max(0, amount) }));
+  }, []);
+
+  // ── Weight tracking ──
+  const getWeight = useCallback((dateOverride) => {
+    const key = dateOverride || getTodayKey();
+    return weightByDate[key] || null;
+  }, [weightByDate]);
+
+  const setWeight = useCallback((weight, dateOverride) => {
+    const key = dateOverride || getTodayKey();
+    setWeightByDate(prev => {
+      if (weight === null || weight === undefined || weight === '') {
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      }
+      return { ...prev, [key]: parseFloat(weight) };
+    });
+  }, []);
+
+  // ── Meal templates ──
+  const saveTemplate = useCallback((name, foods) => {
+    const template = { id: `tmpl-${Date.now()}`, name, foods, createdAt: Date.now() };
+    setTemplatesState(prev => [...prev, template]);
+    return template;
+  }, []);
+
+  const deleteTemplate = useCallback((templateId) => {
+    setTemplatesState(prev => prev.filter(t => t.id !== templateId));
+  }, []);
+
+  const applyTemplate = useCallback((template, dateOverride) => {
+    const key = dateOverride || getTodayKey();
+    setMealsByDate(prev => {
+      const existing = prev[key] || [];
+      const newEntries = template.foods.map(f => ({ ...f, addedAt: Date.now() }));
+      return { ...prev, [key]: [...existing, ...newEntries] };
+    });
+  }, []);
+
+  // ── Dietary preferences ──
+  const setDietaryPrefs = useCallback((prefs) => {
+    setDietaryPrefsState(prev => ({ ...prev, ...prefs }));
+  }, []);
+
   // Compute totals for today
   const totals = meals.reduce(
     (acc, m) => ({
@@ -126,8 +280,86 @@ export function MealProvider({ children }) {
     return existing.filter(m => m.id === foodId).length;
   }, [mealsByDate]);
 
+  // ── Export data ──
+  const exportData = useCallback((format = 'json') => {
+    const data = {
+      meals: mealsByDate,
+      goals,
+      water: waterByDate,
+      weight: weightByDate,
+      favorites: [...favorites],
+      templates,
+      exportedAt: new Date().toISOString(),
+      app: 'BoilerFuel',
+    };
+
+    if (format === 'csv') {
+      // Flatten meals to CSV
+      const rows = [['Date', 'Food', 'Calories', 'Protein(g)', 'Carbs(g)', 'Fat(g)', 'Servings', 'Dining Court', 'Station', 'Meal Time']];
+      for (const [date, dateMeals] of Object.entries(mealsByDate)) {
+        for (const m of dateMeals) {
+          rows.push([
+            date, m.name, m.calories,
+            parseFloat(m.macros?.protein) || 0,
+            parseFloat(m.macros?.carbs) || 0,
+            parseFloat(m.macros?.fats || m.macros?.fat) || 0,
+            m.servings || 1,
+            m.dining_court || '', m.station || '', m.meal_time || '',
+          ]);
+        }
+      }
+      return rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+    }
+
+    return JSON.stringify(data, null, 2);
+  }, [mealsByDate, goals, waterByDate, weightByDate, favorites, templates]);
+
+  // ── Weekly/monthly analytics helpers ──
+  const getDateRange = useCallback((startDate, endDate) => {
+    const result = [];
+    const start = new Date(startDate + 'T00:00:00');
+    const end = new Date(endDate + 'T00:00:00');
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const dayMeals = mealsByDate[key] || [];
+      const dayTotals = dayMeals.reduce(
+        (acc, m) => ({
+          calories: acc.calories + (m.calories || 0),
+          protein: acc.protein + (parseFloat(m.macros?.protein) || 0),
+          carbs: acc.carbs + (parseFloat(m.macros?.carbs) || 0),
+          fat: acc.fat + (parseFloat(m.macros?.fats || m.macros?.fat) || 0),
+          sugar: acc.sugar + (parseFloat(m.macros?.sugar) || 0),
+          fiber: acc.fiber + (parseFloat(m.macros?.fiber) || 0),
+          sodium: acc.sodium + (parseFloat(m.macros?.sodium) || 0),
+          cholesterol: acc.cholesterol + (parseFloat(m.macros?.cholesterol) || 0),
+          saturated_fat: acc.saturated_fat + (parseFloat(m.macros?.saturated_fat) || 0),
+          added_sugar: acc.added_sugar + (parseFloat(m.macros?.added_sugar) || 0),
+        }),
+        { calories: 0, protein: 0, carbs: 0, fat: 0, sugar: 0, fiber: 0, sodium: 0, cholesterol: 0, saturated_fat: 0, added_sugar: 0 }
+      );
+      result.push({ date: key, meals: dayMeals, totals: dayTotals, water: waterByDate[key] || 0, weight: weightByDate[key] || null });
+    }
+    return result;
+  }, [mealsByDate, waterByDate, weightByDate]);
+
   return (
-    <MealContext.Provider value={{ meals, goals, addMeal, removeMeal, clearMeals, setGoals, totals, getCount, mealsByDate }}>
+    <MealContext.Provider value={{
+      meals, goals, addMeal, removeMeal, clearMeals, setGoals, totals, getCount, mealsByDate,
+      // Favorites
+      favorites, toggleFavorite, isFavorite,
+      // Water
+      waterByDate, getWater, addWater, setWater,
+      // Weight
+      weightByDate, getWeight, setWeight,
+      // Templates
+      templates, saveTemplate, deleteTemplate, applyTemplate,
+      // Dietary
+      dietaryPrefs, setDietaryPrefs,
+      // Export
+      exportData,
+      // Analytics
+      getDateRange,
+    }}>
       {children}
     </MealContext.Provider>
   );
