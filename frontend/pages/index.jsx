@@ -278,6 +278,44 @@ function LocationDropdown({ value, onChange, availableLocations, retailLocations
   );
 }
 
+// ── Beverage row (used in sidebar) ──
+function BeverageRow({ food, getCount, selectedDate, handleAddMeal, removeMeal, highlight }) {
+  const count = getCount(food.id, selectedDate);
+  const macros = food.macros || {};
+  return (
+    <div className={`flex items-center gap-2 px-3 py-2 border-b border-theme-text-primary/5 hover:bg-theme-bg-secondary/50 transition-colors text-sm ${highlight ? 'bg-yellow-500/[0.03]' : ''}`}>
+      <div className="flex-1 min-w-0">
+        <div className="truncate text-theme-text-primary text-xs leading-tight">{food.name}</div>
+        <div className="text-[10px] text-theme-text-tertiary tabular-nums mt-0.5">
+          {food.calories} cal
+          {macros.protein != null && <> · {macros.protein}p</>}
+          {macros.carbs != null && <> · {macros.carbs}c</>}
+        </div>
+      </div>
+      <div className="flex items-center gap-1 shrink-0">
+        {count > 0 && (
+          <span className="text-[9px] font-bold bg-theme-text-primary text-theme-bg-primary px-1 py-0.5 tabular-nums">
+            {count}
+          </span>
+        )}
+        <button
+          onClick={(e) => handleAddMeal(food, e)}
+          className="p-1 border border-theme-text-primary/20 text-theme-text-tertiary hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors"
+          title="Add to log">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+        </button>
+        <button
+          onClick={(e) => { e.stopPropagation(); removeMeal(food, selectedDate); }}
+          disabled={count === 0}
+          className={`p-1 border transition-colors ${count > 0 ? 'border-theme-text-primary/20 text-theme-text-tertiary hover:bg-theme-text-primary hover:text-theme-bg-primary' : 'border-theme-text-primary/10 text-theme-text-tertiary/20 cursor-not-allowed'}`}
+          title="Remove from log">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="5" y1="12" x2="19" y2="12" /></svg>
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ── Macro tooltip ──
 function MacroTooltip({ food, pos }) {
   if (!food || !pos) return null;
@@ -961,16 +999,6 @@ export default function Home() {
                 {searchText && <> matching &ldquo;{searchText}&rdquo;</>}
               </span>
               <div className="flex items-center gap-3">
-                {/* Water tracker */}
-                <div className="flex items-center gap-1 text-xs" title="Water intake today">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-400">
-                    <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
-                  </svg>
-                  <button onClick={() => addWater(-1, selectedDate)} className="px-1 text-theme-text-tertiary hover:text-theme-text-primary">-</button>
-                  <span className="font-mono tabular-nums text-blue-400 font-bold">{getWater(selectedDate)}</span>
-                  <button onClick={() => addWater(1, selectedDate)} className="px-1 text-theme-text-tertiary hover:text-theme-text-primary">+</button>
-                </div>
-                <span className="text-theme-text-primary/10">|</span>
                 {/* Stats link */}
                 <Link href="/stats" className="text-[10px] uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
                   Stats
@@ -1428,6 +1456,29 @@ export default function Home() {
                   <span className="text-[10px] font-bold uppercase tracking-widest text-theme-text-tertiary">Beverages</span>
                 </div>
                 <div className="max-h-[70vh] overflow-y-auto">
+                  {/* Water tracker at the top */}
+                  <div className="flex items-center justify-between px-3 py-2.5 border-b border-theme-text-primary/10 bg-blue-500/[0.04]">
+                    <div className="flex items-center gap-2">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-400">
+                        <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
+                      </svg>
+                      <span className="text-xs font-bold text-theme-text-primary">Water</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button onClick={() => addWater(-1, selectedDate)}
+                        disabled={getWater(selectedDate) === 0}
+                        className={`p-1 border transition-colors ${getWater(selectedDate) > 0 ? 'border-theme-text-primary/20 text-theme-text-tertiary hover:bg-theme-text-primary hover:text-theme-bg-primary' : 'border-theme-text-primary/10 text-theme-text-tertiary/20 cursor-not-allowed'}`}>
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                      </button>
+                      <span className="text-xs font-mono tabular-nums text-blue-400 font-bold min-w-[20px] text-center">{getWater(selectedDate)}</span>
+                      <button onClick={() => addWater(1, selectedDate)}
+                        className="p-1 border border-theme-text-primary/20 text-theme-text-tertiary hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                      </button>
+                      <span className="text-[9px] text-theme-text-tertiary ml-0.5">glasses</span>
+                    </div>
+                  </div>
+
                   {/* Recent drinks section */}
                   {(() => {
                     const recentInCurrent = beverageFoods.filter(f => recentBeverageIds.includes(f.id));
@@ -1437,86 +1488,43 @@ export default function Home() {
                         <div className="px-3 py-1.5 bg-theme-bg-secondary/30 border-b border-theme-text-primary/5">
                           <span className="text-[9px] font-bold uppercase tracking-widest text-theme-text-tertiary/60">Recent</span>
                         </div>
-                        {recentInCurrent.slice(0, 5).map((food) => {
-                          const count = getCount(food.id, selectedDate);
-                          const macros = food.macros || {};
-                          return (
-                            <div key={`recent-${food.id}`}
-                              className="flex items-center gap-2 px-3 py-2 border-b border-theme-text-primary/5 hover:bg-theme-bg-secondary/50 transition-colors text-sm bg-yellow-500/[0.03]">
-                              <div className="flex-1 min-w-0">
-                                <div className="truncate text-theme-text-primary text-xs leading-tight">{food.name}</div>
-                                <div className="text-[10px] text-theme-text-tertiary tabular-nums mt-0.5">
-                                  {food.calories} cal
-                                  {macros.protein != null && <> · {macros.protein}p</>}
-                                  {macros.carbs != null && <> · {macros.carbs}c</>}
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-1 shrink-0">
-                                {count > 0 && (
-                                  <span className="text-[9px] font-bold bg-theme-text-primary text-theme-bg-primary px-1 py-0.5 tabular-nums">
-                                    {count}
-                                  </span>
-                                )}
-                                <button
-                                  onClick={(e) => handleAddMeal(food, e)}
-                                  className="p-1 border border-theme-text-primary/20 text-theme-text-tertiary hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors"
-                                  title="Add to log">
-                                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
-                                </button>
-                                <button
-                                  onClick={(e) => { e.stopPropagation(); removeMeal(food, selectedDate); }}
-                                  disabled={count === 0}
-                                  className={`p-1 border transition-colors ${count > 0 ? 'border-theme-text-primary/20 text-theme-text-tertiary hover:bg-theme-text-primary hover:text-theme-bg-primary' : 'border-theme-text-primary/10 text-theme-text-tertiary/20 cursor-not-allowed'}`}
-                                  title="Remove from log">
-                                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="5" y1="12" x2="19" y2="12" /></svg>
-                                </button>
-                              </div>
-                            </div>
-                          );
-                        })}
-                        <div className="px-3 py-1.5 bg-theme-bg-secondary/30 border-b border-theme-text-primary/5">
-                          <span className="text-[9px] font-bold uppercase tracking-widest text-theme-text-tertiary/60">All</span>
-                        </div>
+                        {recentInCurrent.slice(0, 5).map((food) => (
+                          <BeverageRow key={`recent-${food.id}`} food={food} getCount={getCount} selectedDate={selectedDate} handleAddMeal={handleAddMeal} removeMeal={removeMeal} highlight />
+                        ))}
                       </>
                     );
                   })()}
-                  {beverageFoods.map((food) => {
-                    const count = getCount(food.id, selectedDate);
-                    const macros = food.macros || {};
+
+                  {/* Grouped beverages: Milk, then Non-Milk */}
+                  {(() => {
+                    const isMilk = (name) => /milk|chocolate\s*milk|skim|2%|1%|whole milk|buttermilk|oat\s*milk|almond\s*milk|soy\s*milk/i.test(name);
+                    const milkDrinks = beverageFoods.filter(f => isMilk(f.name));
+                    const nonMilkDrinks = beverageFoods.filter(f => !isMilk(f.name));
                     return (
-                      <div key={food.id}
-                        className="flex items-center gap-2 px-3 py-2 border-b border-theme-text-primary/5 hover:bg-theme-bg-secondary/50 transition-colors group/bev text-sm">
-                        <div className="flex-1 min-w-0">
-                          <div className="truncate text-theme-text-primary text-xs leading-tight">{food.name}</div>
-                          <div className="text-[10px] text-theme-text-tertiary tabular-nums mt-0.5">
-                            {food.calories} cal
-                            {macros.protein != null && <> · {macros.protein}p</>}
-                            {macros.carbs != null && <> · {macros.carbs}c</>}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1 shrink-0">
-                          {count > 0 && (
-                            <span className="text-[9px] font-bold bg-theme-text-primary text-theme-bg-primary px-1 py-0.5 tabular-nums">
-                              {count}
-                            </span>
-                          )}
-                          <button
-                            onClick={(e) => handleAddMeal(food, e)}
-                            className="p-1 border border-theme-text-primary/20 text-theme-text-tertiary hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors"
-                            title="Add to log">
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
-                          </button>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); removeMeal(food, selectedDate); }}
-                            disabled={count === 0}
-                            className={`p-1 border transition-colors ${count > 0 ? 'border-theme-text-primary/20 text-theme-text-tertiary hover:bg-theme-text-primary hover:text-theme-bg-primary' : 'border-theme-text-primary/10 text-theme-text-tertiary/20 cursor-not-allowed'}`}
-                            title="Remove from log">
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="5" y1="12" x2="19" y2="12" /></svg>
-                          </button>
-                        </div>
-                      </div>
+                      <>
+                        {milkDrinks.length > 0 && (
+                          <>
+                            <div className="px-3 py-1.5 bg-theme-bg-secondary/30 border-b border-theme-text-primary/5">
+                              <span className="text-[9px] font-bold uppercase tracking-widest text-theme-text-tertiary/60">Milk</span>
+                            </div>
+                            {milkDrinks.map((food) => (
+                              <BeverageRow key={food.id} food={food} getCount={getCount} selectedDate={selectedDate} handleAddMeal={handleAddMeal} removeMeal={removeMeal} />
+                            ))}
+                          </>
+                        )}
+                        {nonMilkDrinks.length > 0 && (
+                          <>
+                            <div className="px-3 py-1.5 bg-theme-bg-secondary/30 border-b border-theme-text-primary/5">
+                              <span className="text-[9px] font-bold uppercase tracking-widest text-theme-text-tertiary/60">Other Drinks</span>
+                            </div>
+                            {nonMilkDrinks.map((food) => (
+                              <BeverageRow key={food.id} food={food} getCount={getCount} selectedDate={selectedDate} handleAddMeal={handleAddMeal} removeMeal={removeMeal} />
+                            ))}
+                          </>
+                        )}
+                      </>
                     );
-                  })}
+                  })()}
                 </div>
               </div>
             </div>
