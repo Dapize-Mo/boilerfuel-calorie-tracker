@@ -818,7 +818,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary font-mono"
-         style={{ position: 'relative', overflow: 'hidden' }}>
+         style={{ position: 'relative', overflow: 'hidden', maxWidth: '100vw' }}>
       <Head>
         <title>BoilerFuel - Dining Menu</title>
       </Head>
@@ -996,7 +996,7 @@ export default function Home() {
       <div ref={resultsRef}
         style={{
           position: 'fixed', top: isMobile ? 83 : 53, left: 0, right: 0, bottom: 0, zIndex: 10,
-          overflowY: 'auto',
+          overflowY: 'auto', overflowX: 'hidden',
           willChange: 'opacity',
           transition: `opacity 0.5s ${EASE} ${isLanding ? '0s' : '0.2s'}, visibility 0s ${isLanding ? '0.5s' : '0s'}`,
           opacity: isLanding ? 0 : 1,
@@ -1122,7 +1122,7 @@ export default function Home() {
           <div className={`${beverageFoods.length > 0 ? 'lg:flex lg:gap-6' : ''}`}>
           {/* ── Main food table ── */}
           <div className="flex-1 min-w-0">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full text-left border-collapse" style={{ tableLayout: 'fixed' }}>
             <thead>
               <tr className="border-b border-theme-text-primary/20">
                 <th className="py-3 font-bold uppercase text-xs tracking-wider text-theme-text-secondary">Food Item</th>
@@ -1184,13 +1184,13 @@ export default function Home() {
                       style={ri < 20 ? { animation: `fadeInRow 0.3s ${EASE} ${Math.min(ri * 0.02, 0.3)}s both` } : undefined}>
                       <td colSpan={4} className="p-0">
                         {/* Clickable summary row — hover shows tooltip, click expands */}
-                        <div className="flex items-center cursor-pointer hover:bg-theme-bg-secondary/50 transition-colors"
+                        <div className="flex items-center cursor-pointer hover:bg-theme-bg-secondary/50 transition-colors overflow-hidden"
                           onClick={() => setExpandedId(isExpanded ? null : food.id)}
                           onMouseEnter={(e) => { if (!isExpanded) onFoodMouseEnter(food, e); }}
                           onMouseMove={(e) => { if (!isExpanded) onFoodMouseMove(e); }}
                           onMouseLeave={onFoodMouseLeave}>
-                          <div className="py-3 pr-4 flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
+                          <div className="py-3 pr-4 flex-1 min-w-0 overflow-hidden">
+                            <div className="flex items-center gap-2 overflow-hidden">
                               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"
                                 className="shrink-0 text-theme-text-tertiary transition-transform duration-200"
                                 style={{ transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}>
