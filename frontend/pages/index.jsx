@@ -854,7 +854,7 @@ export default function Home() {
           fontSize: isLanding ? 'clamp(1.75rem, 5vw, 3.5rem)' : isMobile ? '0.85rem' : '1.25rem',
           letterSpacing: isLanding ? '0.25em' : '0.15em',
         }}>
-        BoilerFuel
+        Boiler<span style={{ color: 'rgb(var(--color-accent-primary))' }}>Fuel</span>
       </h1>
 
       {/* ── Subtitle — fades out ── */}
@@ -1012,12 +1012,12 @@ export default function Home() {
             <>
             <div className="flex items-center justify-between mb-3 pb-3 border-b border-theme-text-primary/10">
               <span className="text-xs uppercase tracking-widest text-theme-text-tertiary">
-                {regularFoods.length + beverageFoods.length} item{regularFoods.length + beverageFoods.length !== 1 ? 's' : ''}
+                <span className="text-yellow-500/80 font-bold">{regularFoods.length + beverageFoods.length}</span> item{regularFoods.length + beverageFoods.length !== 1 ? 's' : ''}
                 {searchText && <> matching &ldquo;{searchText}&rdquo;</>}
               </span>
               <div className="flex items-center gap-3">
                 {/* Stats link */}
-                <Link href="/stats" className="text-[10px] uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
+                <Link href="/stats" className="text-[10px] uppercase tracking-widest text-yellow-500/70 hover:text-yellow-500 transition-colors">
                   Stats
                 </Link>
               </div>
@@ -1128,7 +1128,7 @@ export default function Home() {
                 <th className="py-3 font-bold uppercase text-xs tracking-wider text-theme-text-secondary">Food Item</th>
                 <th className="py-3 font-bold uppercase text-xs tracking-wider text-theme-text-secondary hidden sm:table-cell w-36">Location</th>
                 <th className="py-3 font-bold uppercase text-xs tracking-wider text-theme-text-secondary hidden md:table-cell w-28">Meal</th>
-                <th className="py-3 font-bold uppercase text-xs tracking-wider text-theme-text-secondary text-right cursor-pointer select-none hover:text-theme-text-primary transition-colors w-16"
+                <th className="py-3 font-bold uppercase text-xs tracking-wider text-yellow-500/70 text-right cursor-pointer select-none hover:text-yellow-500 transition-colors w-16"
                   onClick={toggleCalorieSort}
                   title="Click to sort by calories">
                   Cal{sortArrow}
@@ -1150,7 +1150,7 @@ export default function Home() {
                       <tr key={`court-${item.label}-${i}`}>
                         <td colSpan={4} className="pt-6 pb-2 px-0"
                           style={i < 20 ? { animation: `slideInStation 0.3s ${EASE} ${Math.min(i * 0.015, 0.25)}s both` } : undefined}>
-                          <div className="text-sm font-bold uppercase tracking-widest text-theme-text-primary border-b-2 border-theme-text-primary/20 pb-1">
+                          <div className="text-sm font-bold uppercase tracking-widest text-theme-text-primary border-b-2 border-yellow-500/30 pb-1">
                             {item.label}
                           </div>
                         </td>
@@ -1548,7 +1548,7 @@ export default function Home() {
         <footer className="border-t border-theme-text-primary/5 px-4 sm:px-6 md:px-12 lg:px-20 py-5 sm:py-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
             <p className="text-xs text-theme-text-tertiary tracking-wide text-center sm:text-left">
-              BoilerFuel &middot; Purdue Dining Data &middot; {new Date().getFullYear()}
+              Boiler<span className="text-yellow-500/70">Fuel</span> &middot; Purdue Dining Data &middot; {new Date().getFullYear()}
             </p>
             <div className="flex gap-4 text-xs font-mono">
               <Link href="/about" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">About</Link>

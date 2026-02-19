@@ -168,7 +168,7 @@ export default function ProfilePage() {
       </Head>
 
       <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary font-mono">
-        <div className="max-w-3xl mx-auto px-6 sm:px-10 py-16 sm:py-24 space-y-16">
+        <div className="max-w-6xl mx-auto px-6 sm:px-10 py-16 sm:py-24 space-y-16">
 
           {/* Header */}
           <header className="space-y-4">
@@ -176,22 +176,25 @@ export default function ProfilePage() {
               &larr; Back
             </Link>
             <h1 className="text-3xl sm:text-5xl font-bold uppercase tracking-[0.2em]">Profile</h1>
-            <div className="w-12 h-px bg-theme-text-primary/30" />
+            <div className="w-12 h-0.5 bg-yellow-500" />
             <p className="text-sm uppercase tracking-widest text-theme-text-tertiary">
               Nutrition &amp; Preferences
             </p>
           </header>
 
+          <div className="lg:grid lg:grid-cols-2 lg:gap-16 space-y-16 lg:space-y-0">
+          {/* ── Left column: Nutrition ── */}
+          <div>
           {/* ═══ NUTRITION ═══ */}
           <section className="space-y-6">
             {/* Date navigation */}
-            <div className="flex items-center justify-between border-b border-theme-text-primary/10 pb-2">
+            <div className="flex items-center justify-between border-b border-yellow-500/20 pb-2">
               <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary">
                 {isToday ? "Today\u2019s" : formatDateKey(selectedDate)} Nutrition
               </h2>
               {dateMeals.length > 0 && (
                 <span className="text-xs text-theme-text-tertiary">
-                  {dateMeals.length} item{dateMeals.length !== 1 ? 's' : ''} logged
+                  <span className="text-yellow-500/80 font-bold">{dateMeals.length}</span> item{dateMeals.length !== 1 ? 's' : ''} logged
                 </span>
               )}
             </div>
@@ -290,23 +293,36 @@ export default function ProfilePage() {
                 <div className="max-h-72 overflow-y-auto">
                   {mealGroups.map(group => {
                     const groupCals = group.meals.reduce((s, m) => s + (m.calories || 0), 0);
+                    // Group meals by food id
+                    const grouped = [];
+                    const seen = {};
+                    for (const m of group.meals) {
+                      const key = m.id || m.name;
+                      if (seen[key]) { seen[key].count++; seen[key].totalCal += (m.calories || 0); }
+                      else { const entry = { ...m, count: 1, totalCal: m.calories || 0 }; seen[key] = entry; grouped.push(entry); }
+                    }
                     return (
                       <div key={group.label}>
                         <div className="flex items-center justify-between px-4 py-1.5 bg-theme-bg-tertiary/50 border-b border-theme-text-primary/5">
                           <span className="text-[10px] font-bold uppercase tracking-widest text-theme-text-secondary">{group.label}</span>
                           <span className="text-[10px] font-mono tabular-nums text-theme-text-tertiary">{Math.round(groupCals)} cal</span>
                         </div>
-                        {group.meals.map((m, i) => (
-                          <div key={`${m.id}-${m.addedAt}-${i}`} className="flex items-center justify-between px-4 py-2 text-sm border-b border-theme-text-primary/5 last:border-b-0">
+                        {grouped.map((m, i) => (
+                          <div key={`${m.id}-${i}`} className="flex items-center justify-between px-4 py-2 text-sm border-b border-theme-text-primary/5 last:border-b-0">
                             <div className="flex-1 min-w-0 mr-4">
-                              <span className="truncate block">{m.name}</span>
+                              <div className="flex items-center gap-2">
+                                <span className="truncate">{m.name}</span>
+                                {m.count > 1 && (
+                                  <span className="shrink-0 text-[10px] font-bold bg-theme-text-primary text-theme-bg-primary px-1.5 py-0.5 tabular-nums">{m.count}</span>
+                                )}
+                              </div>
                               {(m.dining_court || m.meal_time) && (
                                 <span className="text-[10px] text-theme-text-tertiary capitalize">
                                   {m.dining_court}{m.dining_court && m.meal_time ? ' · ' : ''}{m.meal_time}
                                 </span>
                               )}
                             </div>
-                            <span className="text-xs font-mono tabular-nums text-theme-text-secondary shrink-0">{m.calories} cal</span>
+                            <span className="text-xs font-mono tabular-nums text-theme-text-secondary shrink-0">{Math.round(m.totalCal)} cal</span>
                           </div>
                         ))}
                       </div>
@@ -327,10 +343,13 @@ export default function ProfilePage() {
               </div>
             )}
           </section>
+          </div>{/* end left column */}
 
+          {/* ── Right column: Settings & more ── */}
+          <div className="space-y-16">
           {/* ═══ SETTINGS ═══ */}
           <section className="space-y-6">
-            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
+            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-yellow-500/20 pb-2">
               Settings
             </h2>
 
@@ -470,7 +489,7 @@ export default function ProfilePage() {
 
           {/* ═══ WEIGHT TRACKING ═══ */}
           <section className="space-y-6">
-            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
+            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-yellow-500/20 pb-2">
               Weight Tracking
             </h2>
             <div className="flex items-end gap-3">
@@ -499,7 +518,7 @@ export default function ProfilePage() {
 
           {/* ═══ DIETARY PREFERENCES ═══ */}
           <section className="space-y-6">
-            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
+            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-yellow-500/20 pb-2">
               Dietary Preferences
             </h2>
             <p className="text-xs text-theme-text-tertiary">These filters apply globally across the menu. Foods that don&rsquo;t match will be hidden.</p>
@@ -577,7 +596,7 @@ export default function ProfilePage() {
 
           {/* ═══ EXPORT DATA ═══ */}
           <section className="space-y-6">
-            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
+            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-yellow-500/20 pb-2">
               Export Data
             </h2>
             <p className="text-xs text-theme-text-tertiary">Download your meal history. All data is stored locally in your browser.</p>
@@ -609,7 +628,7 @@ export default function ProfilePage() {
 
           {/* ═══ DEVICE SYNC ═══ */}
           <section className="space-y-6">
-            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
+            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-yellow-500/20 pb-2">
               Device Sync
             </h2>
             <p className="text-xs text-theme-text-tertiary">
@@ -792,6 +811,8 @@ export default function ProfilePage() {
               </div>
             )}
           </section>
+          </div>{/* end right column */}
+          </div>{/* end two-column grid */}
 
           {/* Footer */}
           <footer className="border-t border-theme-text-primary/10 pt-8 flex flex-wrap items-center justify-between gap-4">
