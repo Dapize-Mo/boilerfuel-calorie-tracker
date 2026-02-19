@@ -1,7 +1,34 @@
+import { useState } from 'react';
 import Link from 'next/link';
 import Head from 'next/head';
 
 export default function About() {
+  const [fbType, setFbType] = useState('idea');
+  const [fbMessage, setFbMessage] = useState('');
+  const [fbContact, setFbContact] = useState('');
+  const [fbStatus, setFbStatus] = useState(''); // '' | 'sending' | 'sent' | 'error'
+
+  const handleSubmitFeedback = async (e) => {
+    e.preventDefault();
+    if (!fbMessage.trim()) return;
+    setFbStatus('sending');
+    try {
+      const res = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: fbType, message: fbMessage, contact: fbContact }),
+      });
+      if (!res.ok) throw new Error();
+      setFbStatus('sent');
+      setFbMessage('');
+      setFbContact('');
+      setTimeout(() => setFbStatus(''), 4000);
+    } catch {
+      setFbStatus('error');
+      setTimeout(() => setFbStatus(''), 4000);
+    }
+  };
+
   return (
     <>
       <Head>
@@ -125,6 +152,52 @@ export default function About() {
                 </ul>
               </div>
             </div>
+          </section>
+
+          {/* ═══ FEEDBACK ═══ */}
+          <section className="space-y-4">
+            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
+              Feedback
+            </h2>
+            <p className="text-xs text-theme-text-tertiary">
+              Have an idea or found a problem? Let us know. All feedback is anonymous unless you include contact info.
+            </p>
+            <form onSubmit={handleSubmitFeedback} className="space-y-3">
+              <div className="flex gap-px border border-theme-text-primary/20 w-fit">
+                {[{ key: 'idea', label: 'Idea' }, { key: 'bug', label: 'Bug' }, { key: 'other', label: 'Other' }].map(t => (
+                  <button key={t.key} type="button" onClick={() => setFbType(t.key)}
+                    className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-colors ${
+                      fbType === t.key ? 'bg-theme-text-primary text-theme-bg-primary' : 'text-theme-text-tertiary hover:text-theme-text-primary'
+                    }`}>
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+              <textarea
+                value={fbMessage}
+                onChange={e => setFbMessage(e.target.value)}
+                placeholder={fbType === 'idea' ? 'Describe your idea or feature request...' : fbType === 'bug' ? 'Describe the issue you encountered...' : 'Your feedback...'}
+                rows={4}
+                maxLength={2000}
+                className="w-full border border-theme-text-primary/20 bg-transparent text-theme-text-primary px-3 py-2 text-xs focus:border-theme-text-primary focus:outline-none transition-colors resize-none"
+                required
+              />
+              <input
+                type="text"
+                value={fbContact}
+                onChange={e => setFbContact(e.target.value)}
+                placeholder="Contact (optional — email or @handle)"
+                className="w-full border border-theme-text-primary/20 bg-transparent text-theme-text-primary px-3 py-2 text-xs focus:border-theme-text-primary focus:outline-none transition-colors"
+              />
+              <div className="flex items-center gap-3">
+                <button type="submit" disabled={fbStatus === 'sending' || !fbMessage.trim()}
+                  className="px-4 py-2 border border-theme-text-primary text-theme-text-primary text-xs font-bold uppercase tracking-wider hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+                  {fbStatus === 'sending' ? 'Sending...' : 'Submit'}
+                </button>
+                {fbStatus === 'sent' && <span className="text-xs text-green-500">Sent! Thanks for the feedback.</span>}
+                {fbStatus === 'error' && <span className="text-xs text-red-500">Failed to send. Try again.</span>}
+              </div>
+            </form>
           </section>
 
           {/* Footer links */}

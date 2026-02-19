@@ -104,6 +104,100 @@ function BarChart({ data, max, height = 120, label = '' }) {
   );
 }
 
+// ── Line Chart ──
+function LineChart({ data, max, height = 120, label = '', color = 'rgb(var(--color-text-primary))', goalLine }) {
+  const actualMax = max || Math.max(...data.map(d => d.value), 1);
+  const padding = { top: 20, right: 8, bottom: 24, left: 8 };
+  const chartW = 100; // percentage-based
+  const chartH = height - padding.top - padding.bottom;
+
+  const points = data.map((d, i) => ({
+    x: data.length > 1 ? (i / (data.length - 1)) * 100 : 50,
+    y: padding.top + chartH - (Math.min(d.value / actualMax, 1) * chartH),
+    ...d,
+  }));
+
+  const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+  const areaD = pathD + ` L ${points[points.length - 1]?.x ?? 0} ${padding.top + chartH} L ${points[0]?.x ?? 0} ${padding.top + chartH} Z`;
+
+  const goalY = goalLine ? padding.top + chartH - (Math.min(goalLine / actualMax, 1) * chartH) : null;
+
+  return (
+    <div>
+      {label && <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary mb-2">{label}</div>}
+      <svg width="100%" height={height} viewBox={`0 0 100 ${height}`} preserveAspectRatio="none" className="overflow-visible">
+        {/* Fill area */}
+        <path d={areaD} fill={color} opacity="0.08" />
+        {/* Line */}
+        <path d={pathD} fill="none" stroke={color} strokeWidth="0.8" opacity="0.8" />
+        {/* Goal line */}
+        {goalY != null && (
+          <line x1="0" y1={goalY} x2="100" y2={goalY} stroke="currentColor" strokeWidth="0.3" strokeDasharray="2 2" className="text-theme-text-tertiary" />
+        )}
+        {/* Data points */}
+        {points.map((p, i) => (
+          <circle key={i} cx={p.x} cy={p.y} r={data.length <= 14 ? 1.2 : 0.6} fill={p.date === getTodayKey() ? color : 'currentColor'} className={p.date === getTodayKey() ? '' : 'text-theme-text-primary/40'} />
+        ))}
+      </svg>
+      {/* X-axis labels */}
+      <div className="flex justify-between mt-1">
+        {data.length <= 14 ? data.map((d, i) => (
+          <div key={i} className={`text-[9px] flex-1 text-center ${d.date === getTodayKey() ? 'font-bold text-theme-text-primary' : 'text-theme-text-tertiary'}`}>
+            {d.dayLabel}
+          </div>
+        )) : (
+          <>
+            <span className="text-[9px] text-theme-text-tertiary">{data[0]?.dayLabel}</span>
+            <span className="text-[9px] text-theme-text-tertiary">{data[Math.floor(data.length / 2)]?.dayLabel}</span>
+            <span className="text-[9px] text-theme-text-tertiary">{data[data.length - 1]?.dayLabel}</span>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Multi-Line Chart (for macro trends) ──
+function MultiLineChart({ datasets, data, max, height = 120 }) {
+  const actualMax = max || Math.max(...datasets.flatMap(ds => data.map(d => d[ds.key] || 0)), 1);
+  const padding = { top: 12, bottom: 24 };
+  const chartH = height - padding.top - padding.bottom;
+
+  return (
+    <div>
+      <svg width="100%" height={height} viewBox={`0 0 100 ${height}`} preserveAspectRatio="none" className="overflow-visible">
+        {datasets.map(ds => {
+          const points = data.map((d, i) => ({
+            x: data.length > 1 ? (i / (data.length - 1)) * 100 : 50,
+            y: padding.top + chartH - (Math.min((d[ds.key] || 0) / actualMax, 1) * chartH),
+          }));
+          const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+          return <path key={ds.key} d={pathD} fill="none" stroke={ds.color} strokeWidth="0.7" opacity="0.85" />;
+        })}
+      </svg>
+      <div className="flex justify-between mt-1">
+        {data.length <= 14 ? data.map((d, i) => (
+          <div key={i} className="text-[9px] flex-1 text-center text-theme-text-tertiary">{d.dayLabel}</div>
+        )) : (
+          <>
+            <span className="text-[9px] text-theme-text-tertiary">{data[0]?.dayLabel}</span>
+            <span className="text-[9px] text-theme-text-tertiary">{data[data.length - 1]?.dayLabel}</span>
+          </>
+        )}
+      </div>
+      {/* Legend */}
+      <div className="flex gap-4 mt-2">
+        {datasets.map(ds => (
+          <div key={ds.key} className="flex items-center gap-1.5 text-[10px]">
+            <div className="w-3 h-0.5" style={{ backgroundColor: ds.color }} />
+            <span className="text-theme-text-tertiary">{ds.label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ── Progress Ring ──
 function ProgressRing({ value, goal, label, unit = '', size = 80, color = 'rgb(var(--color-text-primary))' }) {
   const pct = goal > 0 ? Math.min(value / goal, 1) : 0;
@@ -132,6 +226,7 @@ export default function StatsPage() {
   const { theme } = useTheme();
   const { goals, mealsByDate, waterByDate, weightByDate, getDateRange } = useMeals();
   const [period, setPeriod] = useState('week'); // week | month
+  const [chartType, setChartType] = useState('bar'); // bar | line
   const today = getTodayKey();
 
   // Compute date ranges
@@ -181,10 +276,17 @@ export default function StatsPage() {
     { label: 'Fat', value: calFromFat, color: macroColors.fat },
   ];
 
-  // Bar chart data (calories per day)
-  const barData = rangeData.slice(period === 'week' ? 0 : -14).map(d => {
+  // Chart data (calories per day)
+  const chartSlice = period === 'week' ? rangeData : rangeData.slice(-14);
+  const barData = chartSlice.map(d => {
     const info = formatShort(d.date);
     return { value: d.totals.calories, dayLabel: info.day, label: formatDate(d.date), date: d.date };
+  });
+
+  // Macro trend data (for multi-line chart)
+  const macroTrendData = chartSlice.map(d => {
+    const info = formatShort(d.date);
+    return { dayLabel: info.day, date: d.date, protein: d.totals.protein, carbs: d.totals.carbs, fat: d.totals.fat };
   });
 
   // Most eaten foods
@@ -310,16 +412,50 @@ export default function StatsPage() {
 
           {/* ═══ DAILY CALORIES CHART ═══ */}
           <section className="space-y-4">
-            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
-              Daily Calories
-            </h2>
+            <div className="flex items-center justify-between border-b border-theme-text-primary/10 pb-2">
+              <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary">
+                Daily Calories
+              </h2>
+              <div className="flex gap-px border border-theme-text-primary/20">
+                {[{ key: 'bar', label: 'Bar' }, { key: 'line', label: 'Line' }].map(t => (
+                  <button key={t.key} onClick={() => setChartType(t.key)}
+                    className={`px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider transition-colors ${
+                      chartType === t.key ? 'bg-theme-text-primary text-theme-bg-primary' : 'text-theme-text-tertiary hover:text-theme-text-primary'
+                    }`}>
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div className="border border-theme-text-primary/10 p-4">
-              <BarChart data={barData} max={goals.calories * 1.3} height={140} />
+              {chartType === 'bar' ? (
+                <BarChart data={barData} max={goals.calories * 1.3} height={140} />
+              ) : (
+                <LineChart data={barData} max={goals.calories * 1.3} height={140} goalLine={goals.calories} />
+              )}
               <div className="flex items-center gap-4 mt-3 text-[10px] text-theme-text-tertiary">
                 <span>Goal: <span className="font-bold text-theme-text-secondary">{goals.calories} kcal</span></span>
                 <span>Avg: <span className="font-bold text-theme-text-secondary">{Math.round(avgCalories)} kcal</span></span>
                 {bestDay && <span>Peak: <span className="font-bold text-theme-text-secondary">{Math.round(bestDay.totals.calories)} kcal</span> ({formatDate(bestDay.date)})</span>}
               </div>
+            </div>
+          </section>
+
+          {/* ═══ MACRO TRENDS ═══ */}
+          <section className="space-y-4">
+            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
+              Macro Trends
+            </h2>
+            <div className="border border-theme-text-primary/10 p-4">
+              <MultiLineChart
+                data={macroTrendData}
+                datasets={[
+                  { key: 'protein', label: 'Protein', color: macroColors.protein },
+                  { key: 'carbs', label: 'Carbs', color: macroColors.carbs },
+                  { key: 'fat', label: 'Fat', color: macroColors.fat },
+                ]}
+                height={140}
+              />
             </div>
           </section>
 
