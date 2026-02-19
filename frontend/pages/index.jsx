@@ -323,8 +323,9 @@ function MacroTooltip({ food, pos }) {
   return (
     <div style={{
       position: 'fixed', zIndex: 100,
-      left: Math.min(pos.x + 12, (typeof window !== 'undefined' ? window.innerWidth - 200 : 600)),
-      top: pos.y - 10,
+      left: Math.min(pos.x + 12, (typeof window !== 'undefined' ? window.innerWidth - 240 : 600)),
+      top: Math.min(pos.y - 10, (typeof window !== 'undefined' ? window.innerHeight - 180 : 400)),
+      maxWidth: 'calc(100vw - 32px)',
       animation: `fadeInTooltip 0.15s ${EASE} both`,
       pointerEvents: 'none',
     }}
@@ -751,13 +752,16 @@ export default function Home() {
     setCalorieSort(prev => prev === null ? 'asc' : prev === 'asc' ? 'desc' : null);
   }
 
-  // ── Tooltip handlers (RAF-throttled to avoid re-render storm) ──
+  // ── Tooltip handlers (RAF-throttled, disabled on touch devices) ──
   const rafRef = useRef(null);
+  const isTouchDevice = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
   function onFoodMouseEnter(food, e) {
+    if (isTouchDevice) return;
     setHoveredFood(food);
     setTooltipPos({ x: e.clientX, y: e.clientY });
   }
   function onFoodMouseMove(e) {
+    if (isTouchDevice) return;
     if (rafRef.current) return;
     rafRef.current = requestAnimationFrame(() => {
       setTooltipPos({ x: e.clientX, y: e.clientY });
