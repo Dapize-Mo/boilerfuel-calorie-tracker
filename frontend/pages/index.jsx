@@ -1497,9 +1497,11 @@ export default function Home() {
 
                   {/* Grouped beverages: Milk, then Non-Milk */}
                   {(() => {
+                    const isWater = (name) => /^water\b/i.test(name.trim());
                     const isMilk = (name) => /milk|chocolate\s*milk|skim|2%|1%|whole milk|buttermilk|oat\s*milk|almond\s*milk|soy\s*milk/i.test(name);
-                    const milkDrinks = beverageFoods.filter(f => isMilk(f.name));
-                    const nonMilkDrinks = beverageFoods.filter(f => !isMilk(f.name));
+                    const filtered = beverageFoods.filter(f => !isWater(f.name));
+                    const milkDrinks = filtered.filter(f => isMilk(f.name));
+                    const nonMilkDrinks = filtered.filter(f => !isMilk(f.name));
                     return (
                       <>
                         {milkDrinks.length > 0 && (
