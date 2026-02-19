@@ -1,8 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { useTheme } from '../context/ThemeContext';
 import { useMeals } from '../context/MealContext';
+
+const QRCode = dynamic(() => import('../components/QRCode'), { ssr: false });
 
 function ProgressBar({ label, current, goal, unit = '', color = 'bg-theme-text-primary' }) {
   const pct = goal > 0 ? Math.min((current / goal) * 100, 100) : 0;
@@ -46,11 +49,31 @@ function shiftDate(dateKey, delta) {
 
 export default function ProfilePage() {
   const { theme, setTheme } = useTheme();
-  const { meals, goals, setGoals, totals, clearMeals, mealsByDate, getWeight, setWeight, exportData, templates, saveTemplate, deleteTemplate, applyTemplate, dietaryPrefs, setDietaryPrefs, waterByDate, getWater, addWater } = useMeals();
+  const { meals, goals, setGoals, totals, clearMeals, mealsByDate, getWeight, setWeight, exportData, templates, saveTemplate, deleteTemplate, applyTemplate, dietaryPrefs, setDietaryPrefs, waterByDate, getWater, addWater, syncNow, reloadFromStorage } = useMeals();
   const [editingGoals, setEditingGoals] = useState(false);
   const [draft, setDraft] = useState(goals);
   const [weightInput, setWeightInput] = useState('');
   const [selectedDate, setSelectedDate] = useState(getTodayKey);
+  const [syncStatus, setSyncStatus] = useState('idle'); // idle | creating | paired | joining | error
+  const [syncCode, setSyncCode] = useState('');
+  const [syncSecret, setSyncSecret] = useState('');
+  const [joinCode, setJoinCode] = useState('');
+  const [joinSecret, setJoinSecret] = useState('');
+  const [syncError, setSyncError] = useState('');
+  const [syncMsg, setSyncMsg] = useState('');
+
+  // Check if already paired on mount
+  useEffect(() => {
+    try {
+      const token = localStorage.getItem('boilerfuel_sync_token');
+      const secret = localStorage.getItem('boilerfuel_sync_secret');
+      if (token && secret) {
+        setSyncCode(token);
+        setSyncSecret(secret);
+        setSyncStatus('paired');
+      }
+    } catch {}
+  }, []);
 
   const isToday = selectedDate === getTodayKey();
 
@@ -582,6 +605,192 @@ export default function ProfilePage() {
                 Export JSON
               </button>
             </div>
+          </section>
+
+          {/* ═══ DEVICE SYNC ═══ */}
+          <section className="space-y-6">
+            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
+              Device Sync
+            </h2>
+            <p className="text-xs text-theme-text-tertiary">
+              Sync your data between devices. Your data is encrypted before leaving your browser — the server only stores an encrypted blob.
+            </p>
+
+            {syncError && (
+              <div className="text-xs text-red-500 border border-red-500/20 px-3 py-2">{syncError}</div>
+            )}
+            {syncMsg && (
+              <div className="text-xs text-green-600 border border-green-600/20 px-3 py-2">{syncMsg}</div>
+            )}
+
+            {/* Already paired */}
+            {syncStatus === 'paired' && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full" />
+                  <span className="text-xs font-bold text-theme-text-primary">Paired</span>
+                  <span className="text-xs text-theme-text-tertiary font-mono">{syncCode}</span>
+                </div>
+                <p className="text-[10px] text-theme-text-tertiary">
+                  Your data syncs automatically when you open the app or log meals. Changes are pushed after a 3-second delay.
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={async () => {
+                      setSyncMsg('');
+                      setSyncError('');
+                      try {
+                        await syncNow();
+                        setSyncMsg('Synced successfully!');
+                        setTimeout(() => setSyncMsg(''), 3000);
+                      } catch {
+                        setSyncError('Sync failed. Check your connection.');
+                      }
+                    }}
+                    className="px-4 py-2 border border-theme-text-primary text-theme-text-primary text-xs font-bold uppercase tracking-wider hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors">
+                    Sync Now
+                  </button>
+                  <button
+                    onClick={async () => {
+                      const { unpair } = await import('../utils/sync');
+                      await unpair();
+                      setSyncStatus('idle');
+                      setSyncCode('');
+                      setSyncSecret('');
+                      setSyncMsg('Unpaired successfully.');
+                      setTimeout(() => setSyncMsg(''), 3000);
+                    }}
+                    className="px-4 py-2 border border-red-500/30 text-red-500 text-xs uppercase tracking-wider hover:bg-red-500 hover:text-white transition-colors">
+                    Unpair
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Not paired — show options */}
+            {syncStatus === 'idle' && (
+              <div className="space-y-4">
+                <div className="flex gap-3">
+                  <button
+                    onClick={async () => {
+                      setSyncStatus('creating');
+                      setSyncError('');
+                      try {
+                        const { createSyncPair } = await import('../utils/sync');
+                        const { token, secret } = await createSyncPair();
+                        setSyncCode(token);
+                        setSyncSecret(secret);
+                        setSyncStatus('paired');
+                      } catch (err) {
+                        setSyncError(err.message || 'Failed to create sync pair');
+                        setSyncStatus('idle');
+                      }
+                    }}
+                    className="px-4 py-2 border border-theme-text-primary text-theme-text-primary text-xs font-bold uppercase tracking-wider hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors">
+                    Create Sync Code
+                  </button>
+                  <button
+                    onClick={() => { setSyncStatus('joining'); setSyncError(''); }}
+                    className="px-4 py-2 border border-theme-text-primary/30 text-theme-text-tertiary text-xs uppercase tracking-wider hover:text-theme-text-primary hover:border-theme-text-primary transition-colors">
+                    Join Existing
+                  </button>
+                </div>
+                <p className="text-[10px] text-theme-text-tertiary">
+                  <strong>Create:</strong> generates a code + QR on this device. Open the other device and choose &ldquo;Join Existing&rdquo; there.<br />
+                  <strong>Join:</strong> enter the code from your other device to pair.
+                </p>
+              </div>
+            )}
+
+            {/* Creating state */}
+            {syncStatus === 'creating' && (
+              <div className="text-xs text-theme-text-tertiary animate-pulse">Creating sync pair...</div>
+            )}
+
+            {/* Join flow */}
+            {syncStatus === 'joining' && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-theme-text-tertiary">Sync Code</label>
+                  <input
+                    type="text"
+                    value={joinCode}
+                    onChange={e => setJoinCode(e.target.value.toUpperCase())}
+                    placeholder="e.g. BF7X3K"
+                    maxLength={6}
+                    className="w-full border border-theme-text-primary/20 bg-transparent text-theme-text-primary px-3 py-2 text-sm font-mono tracking-[0.3em] text-center focus:border-theme-text-primary focus:outline-none transition-colors uppercase"
+                    autoFocus
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-theme-text-tertiary">Secret Key</label>
+                  <input
+                    type="text"
+                    value={joinSecret}
+                    onChange={e => setJoinSecret(e.target.value)}
+                    placeholder="Paste the secret from your other device"
+                    className="w-full border border-theme-text-primary/20 bg-transparent text-theme-text-primary px-3 py-2 text-xs font-mono focus:border-theme-text-primary focus:outline-none transition-colors"
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={async () => {
+                      if (!joinCode || !joinSecret) {
+                        setSyncError('Enter both the sync code and secret key.');
+                        return;
+                      }
+                      setSyncError('');
+                      try {
+                        const { joinSyncPair } = await import('../utils/sync');
+                        await joinSyncPair(joinCode.trim(), joinSecret.trim());
+                        setSyncCode(joinCode.trim());
+                        setSyncSecret(joinSecret.trim());
+                        setSyncStatus('paired');
+                        reloadFromStorage();
+                        setSyncMsg('Paired and synced!');
+                        setTimeout(() => setSyncMsg(''), 3000);
+                      } catch (err) {
+                        setSyncError(err.message || 'Failed to join. Check your code and secret.');
+                      }
+                    }}
+                    className="px-4 py-2 border border-theme-text-primary text-theme-text-primary text-xs font-bold uppercase tracking-wider hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors">
+                    Join
+                  </button>
+                  <button
+                    onClick={() => { setSyncStatus('idle'); setSyncError(''); setJoinCode(''); setJoinSecret(''); }}
+                    className="px-4 py-2 border border-theme-text-primary/20 text-theme-text-tertiary text-xs uppercase tracking-wider hover:text-theme-text-primary transition-colors">
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Show code + QR when just paired (from Create) */}
+            {syncStatus === 'paired' && syncSecret && (
+              <div className="space-y-4 border border-theme-text-primary/10 p-4">
+                <div className="text-[10px] font-bold uppercase tracking-widest text-theme-text-tertiary">
+                  Share with your other device
+                </div>
+                <div className="flex flex-col sm:flex-row gap-6 items-center">
+                  <div className="border border-theme-text-primary/10 p-2 bg-white">
+                    <QRCode text={`BF:${syncCode}:${syncSecret}`} size={160} />
+                  </div>
+                  <div className="space-y-3 flex-1">
+                    <div>
+                      <div className="text-[9px] text-theme-text-tertiary uppercase tracking-widest mb-1">Sync Code</div>
+                      <div className="text-2xl font-mono font-bold tracking-[0.3em] text-theme-text-primary select-all">{syncCode}</div>
+                    </div>
+                    <div>
+                      <div className="text-[9px] text-theme-text-tertiary uppercase tracking-widest mb-1">Secret Key</div>
+                      <div className="text-xs font-mono text-theme-text-secondary break-all select-all bg-theme-bg-secondary px-2 py-1">{syncSecret}</div>
+                    </div>
+                    <p className="text-[10px] text-theme-text-tertiary">
+                      On your other device, go to Profile &rarr; Device Sync &rarr; Join Existing, and enter both values above.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </section>
 
           {/* Footer */}

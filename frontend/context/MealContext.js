@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 
 const MealContext = createContext({
   meals: [],
@@ -117,6 +117,60 @@ export function MealProvider({ children }) {
   useEffect(() => {
     localStorage.setItem(DIETARY_KEY, JSON.stringify(dietaryPrefs));
   }, [dietaryPrefs]);
+
+  // ── Auto-sync: pull on mount, debounced push on changes ──
+  const syncPushTimer = useRef(null);
+  const mountedRef = useRef(false);
+
+  // Pull on mount (if synced)
+  useEffect(() => {
+    (async () => {
+      try {
+        const { isSynced, pullData } = await import('../utils/sync');
+        if (!isSynced()) return;
+        const updated = await pullData();
+        if (updated) {
+          // Reload state from localStorage after pull merged new data
+          reloadFromStorage();
+        }
+      } catch {}
+      mountedRef.current = true;
+    })();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Debounced push after any data change (skip initial mount)
+  useEffect(() => {
+    if (!mountedRef.current) return;
+    if (syncPushTimer.current) clearTimeout(syncPushTimer.current);
+    syncPushTimer.current = setTimeout(async () => {
+      try {
+        const { isSynced, pushData } = await import('../utils/sync');
+        if (isSynced()) await pushData();
+      } catch {}
+    }, 3000); // 3 second debounce
+    return () => { if (syncPushTimer.current) clearTimeout(syncPushTimer.current); };
+  }, [mealsByDate, goals, favorites, waterByDate, weightByDate, templates, dietaryPrefs]);
+
+  // Reload all state from localStorage (after sync pull)
+  const reloadFromStorage = useCallback(() => {
+    try { const s = localStorage.getItem(STORAGE_KEY); if (s) setMealsByDate(JSON.parse(s)); } catch {}
+    try { const s = localStorage.getItem(GOALS_KEY); if (s) setGoalsState(JSON.parse(s)); } catch {}
+    try { const s = localStorage.getItem(FAVORITES_KEY); if (s) setFavoritesState(new Set(JSON.parse(s))); } catch {}
+    try { const s = localStorage.getItem(WATER_KEY); if (s) setWaterByDate(JSON.parse(s)); } catch {}
+    try { const s = localStorage.getItem(WEIGHT_KEY); if (s) setWeightByDate(JSON.parse(s)); } catch {}
+    try { const s = localStorage.getItem(TEMPLATES_KEY); if (s) setTemplatesState(JSON.parse(s)); } catch {}
+    try { const s = localStorage.getItem(DIETARY_KEY); if (s) setDietaryPrefsState(JSON.parse(s)); } catch {}
+  }, []);
+
+  // Manual sync trigger (for UI button)
+  const syncNow = useCallback(async () => {
+    const { isSynced, pushData, pullData } = await import('../utils/sync');
+    if (!isSynced()) return false;
+    await pushData();
+    const updated = await pullData();
+    if (updated) reloadFromStorage();
+    return true;
+  }, [reloadFromStorage]);
 
   const todayKey = getTodayKey();
   const meals = mealsByDate[todayKey] || [];
@@ -359,6 +413,8 @@ export function MealProvider({ children }) {
       exportData,
       // Analytics
       getDateRange,
+      // Sync
+      syncNow, reloadFromStorage,
     }}>
       {children}
     </MealContext.Provider>
