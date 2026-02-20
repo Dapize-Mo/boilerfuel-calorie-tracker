@@ -12,6 +12,13 @@ Soda nutrition: Coca-Cola official fountain data, scaled to 16 oz.
 # The five residential dining courts
 DINING_COURTS = ["Earhart", "Ford", "Hillenbrand", "Wiley", "Windsor"]
 
+# Quick Bites locations — same Coca-Cola fountain machine + water as dining courts
+QUICK_BITES_LOCATIONS = [
+    "1bowl at Meredith Hall",
+    "Pete's Za at Tarkington Hall",
+    "Sushi Boss at Meredith Hall",
+]
+
 
 def get_dining_court_beverage_items():
     """Return list of beverages available at all Purdue dining courts.
@@ -380,3 +387,15 @@ def get_dining_court_beverage_items():
     ]
 
     return beverages
+
+
+def get_quick_bites_beverage_items():
+    """Return fountain sodas and water available at Quick Bites locations.
+
+    Quick Bites locations (1bowl, Pete's Za, Sushi Boss) have the same
+    Coca-Cola fountain machine and water as the residential dining courts.
+    They do not have Prairie Farms milk dispensers.
+    """
+    all_beverages = get_dining_court_beverage_items()
+    # Exclude the three milk items (first three entries)
+    return [item for item in all_beverages if "Milk" not in item["name"]]

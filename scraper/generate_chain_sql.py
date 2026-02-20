@@ -11,7 +11,10 @@ from chain_scrapers import (
     get_jersey_mikes_items,
     get_starbucks_items,
     get_dining_court_beverage_items,
+    get_quick_bites_beverage_items,
+    get_lawson_beverage_items,
     DINING_COURTS,
+    QUICK_BITES_LOCATIONS,
 )
 
 
@@ -128,6 +131,31 @@ def generate_chain_sql():
         print("INSERT INTO menu_snapshots (menu_date, name, calories, macros, dining_court, station, meal_time, source) VALUES")
         sql_lines = [generate_beverage_sql_insert(item, court) for item in beverage_items]
         print(",\n".join(sql_lines) + ";\n")
+
+    # Quick Bites Beverages (Coca-Cola fountain + water, same machine as dining courts)
+    quick_bites_items = get_quick_bites_beverage_items()
+    for location in QUICK_BITES_LOCATIONS:
+        label = location.upper()
+        print("-- ============================================================================")
+        print(f"-- {label} - BEVERAGES")
+        print("-- Source: Coca-Cola (fountain drinks)")
+        print("-- Cup size: 16 oz")
+        print("-- ============================================================================\n")
+
+        print("INSERT INTO menu_snapshots (menu_date, name, calories, macros, dining_court, station, meal_time, source) VALUES")
+        sql_lines = [generate_beverage_sql_insert(item, location) for item in quick_bites_items]
+        print(",\n".join(sql_lines) + ";\n")
+
+    # Lawson On-the-GO! Beverages (coffee kiosk)
+    print("-- ============================================================================")
+    print("-- LAWSON ON-THE-GO! - BEVERAGES")
+    print("-- Source: Standard coffee preparation / commercial ingredient labels")
+    print("-- ============================================================================\n")
+
+    lawson_items = get_lawson_beverage_items()
+    print("INSERT INTO menu_snapshots (menu_date, name, calories, macros, dining_court, station, meal_time, source) VALUES")
+    sql_lines = [generate_sql_insert(item, 'Lawson On-the-GO!') for item in lawson_items]
+    print(",\n".join(sql_lines) + ";\n")
 
 
 if __name__ == "__main__":
