@@ -51,6 +51,7 @@ def main():
     schema_path = os.path.join(repo_root, 'db', 'schema.sql')
     seed_path = os.path.join(repo_root, 'db', 'seed.sql')
     retail_path = os.path.join(repo_root, 'db', 'retail_foods.sql')
+    retail_menu_seed_path = os.path.join(repo_root, 'db', 'retail_menu_seed.sql')
 
     print(f"Applying schema from {schema_path}...")
     run_sql_file(engine, schema_path)
@@ -65,6 +66,11 @@ def main():
         print(f"Seeding retail foods from {retail_path}...")
         run_sql_file(engine, retail_path)
         print("Retail foods seeded.")
+
+    if os.path.exists(retail_menu_seed_path):
+        print(f"Seeding retail menu snapshots from {retail_menu_seed_path}...")
+        run_sql_file(engine, retail_menu_seed_path)
+        print("Retail menu snapshots seeded.")
 
     print("Done.")
 
