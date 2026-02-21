@@ -482,22 +482,45 @@ function StatsTab() {
 
   if (loading) return <p className="text-xs uppercase tracking-widest text-theme-text-tertiary py-8 text-center">Loading...</p>;
 
-  const total = foods?.length || 0;
-  // Only count items with actual calorie data for stats
-  const calFoods = (foods || []).filter(f => f.calories > 0);
-  const avgCal = calFoods.length ? Math.round(calFoods.reduce((s, f) => s + f.calories, 0) / calFoods.length) : null;
+  // For BYO items with no direct calories, estimate from component data
+  function getEffectiveCalories(food) {
+    if (food.calories > 0) return food.calories;
+    const components = food.macros?.components;
+    if (!components || components.length === 0) return 0;
+    const compsWithCal = components.filter(c => c.calories > 0);
+    if (compsWithCal.length === 0) return 0;
+    const highCal = [...compsWithCal].filter(c => c.calories >= 150).sort((a, b) => a.calories - b.calories);
+    let chosen = compsWithCal;
+    if (highCal.length >= 2) {
+      const maxCal = highCal[highCal.length - 1].calories;
+      const alts = highCal.filter(c => c.calories >= maxCal * 0.5);
+      if (alts.length >= 2) {
+        const picked = alts[Math.floor((alts.length - 1) / 2)];
+        const excludeNames = new Set(alts.filter(c => c.name !== picked.name).map(c => c.name));
+        chosen = compsWithCal.filter(c => !excludeNames.has(c.name));
+      }
+    }
+    return chosen.reduce((s, c) => s + c.calories, 0);
+  }
 
-  // Per-court breakdown — separate total count from calorie-bearing count
+  const total = foods?.length || 0;
+  // Use effective calories (real or BYO-estimated) for stats
+  const calFoods = (foods || []).map(f => ({ ...f, _eff: getEffectiveCalories(f) })).filter(f => f._eff > 0);
+  const avgCal = calFoods.length ? Math.round(calFoods.reduce((s, f) => s + f._eff, 0) / calFoods.length) : null;
+
+  // Per-court breakdown — use estimated calories for BYO items
   const courtMap = {};
   for (const f of (foods || [])) {
     const c = f.dining_court || 'Unknown';
-    if (!courtMap[c]) courtMap[c] = { count: 0, calCount: 0, totalCal: 0, minCal: Infinity, maxCal: -Infinity };
+    if (!courtMap[c]) courtMap[c] = { count: 0, calCount: 0, totalCal: 0, minCal: Infinity, maxCal: -Infinity, hasEstimates: false };
     courtMap[c].count++;
-    if (f.calories > 0) {
+    const eff = getEffectiveCalories(f);
+    if (eff > 0) {
       courtMap[c].calCount++;
-      courtMap[c].totalCal += f.calories;
-      if (f.calories < courtMap[c].minCal) courtMap[c].minCal = f.calories;
-      if (f.calories > courtMap[c].maxCal) courtMap[c].maxCal = f.calories;
+      courtMap[c].totalCal += eff;
+      if (eff < courtMap[c].minCal) courtMap[c].minCal = eff;
+      if (eff > courtMap[c].maxCal) courtMap[c].maxCal = eff;
+      if (f.calories === 0) courtMap[c].hasEstimates = true;
     }
   }
   const courts = Object.entries(courtMap).sort((a, b) => b[1].count - a[1].count);
@@ -537,6 +560,7 @@ function StatsTab() {
                     <>
                       <span className="font-mono">{Math.round(d.totalCal / d.calCount)} avg</span>
                       <span className="ml-3 text-theme-text-tertiary/50">{d.minCal}–{d.maxCal} cal</span>
+                      {d.hasEstimates && <span className="ml-1 text-theme-text-tertiary/40 text-[9px]">~est</span>}
                     </>
                   ) : (
                     <span className="text-theme-text-tertiary/40">no calorie data</span>
