@@ -921,11 +921,15 @@ export default function Home() {
       }}>
         <div style={{ flex: !isLanding && isMobile ? '1 1 0' : undefined, width: isLanding ? (isMobile ? 220 : 180) : (isMobile ? undefined : 150), transition: `width 0.7s ${EASE}` }}>
           <label style={labelStyle} className="text-theme-text-secondary">Date</label>
-          <div className="flex items-stretch gap-0.5">
-            <button onClick={prevDay} className={`border text-theme-text-secondary hover:bg-theme-bg-hover hover:text-theme-text-primary transition-colors font-bold ${isLanding ? 'border-theme-text-primary px-2' : 'border-theme-text-primary/30 px-1.5'}`} style={{ fontSize: isLanding ? '1rem' : '0.75rem' }}>&#8249;</button>
-            <div className="flex-1 min-w-0"><CalendarPicker value={selectedDate} onChange={setSelectedDate} compact={!isLanding} /></div>
-            <button onClick={nextDay} className={`border text-theme-text-secondary hover:bg-theme-bg-hover hover:text-theme-text-primary transition-colors font-bold ${isLanding ? 'border-theme-text-primary px-2' : 'border-theme-text-primary/30 px-1.5'}`} style={{ fontSize: isLanding ? '1rem' : '0.75rem' }}>&#8250;</button>
-          </div>
+          {isLanding ? (
+            <CalendarPicker value={selectedDate} onChange={setSelectedDate} compact={false} />
+          ) : (
+            <div className="flex items-stretch gap-0.5">
+              <button onClick={prevDay} className="border border-theme-text-primary/30 px-1.5 text-sm font-bold text-theme-text-secondary hover:bg-theme-bg-hover hover:text-theme-text-primary transition-colors">&#8249;</button>
+              <div className="flex-1 min-w-0"><CalendarPicker value={selectedDate} onChange={setSelectedDate} compact={true} /></div>
+              <button onClick={nextDay} className="border border-theme-text-primary/30 px-1.5 text-sm font-bold text-theme-text-secondary hover:bg-theme-bg-hover hover:text-theme-text-primary transition-colors">&#8250;</button>
+            </div>
+          )}
         </div>
         <div style={{ flex: !isLanding && isMobile ? '1 1 0' : undefined, width: isLanding ? (isMobile ? 220 : 200) : (isMobile ? undefined : 170), transition: `width 0.7s ${EASE}` }}>
           <label style={labelStyle} className="text-theme-text-secondary">Location</label>
