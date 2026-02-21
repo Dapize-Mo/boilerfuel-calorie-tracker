@@ -207,6 +207,7 @@ export default function AdminPanel() {
     { key: 'stats', label: 'Stats' },
     { key: 'accuracy', label: 'Accuracy' },
     { key: 'foods', label: 'Foods' },
+    { key: 'feedback', label: 'Feedback' },
   ];
 
   return (
@@ -408,8 +409,12 @@ export default function AdminPanel() {
               {activeTab === 'stats' && <StatsTab />}
               {activeTab === 'accuracy' && <MenuAccuracyTab />}
               {activeTab === 'foods' && <FoodsTab />}
+              {activeTab === 'feedback' && <FeedbackTab />}
             </div>
           </section>
+
+          {/* Danger Zone */}
+          <DangerZone />
 
           {/* Footer */}
           <footer className="border-t border-theme-text-primary/10 pt-6 flex items-center justify-between">
@@ -456,42 +461,116 @@ function SectionLabel({ children }) {
 /* ── Stats Tab ────────────────────────────────────────────── */
 
 function StatsTab() {
-  const [stats, setStats] = useState(null);
+  const [foods, setFoods] = useState(null);
+  const [scrapeInfo, setScrapeInfo] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function loadStats() {
+    async function load() {
       try {
-        const foods = await apiCall('/api/foods');
-        setStats({
-          foods: {
-            total: foods?.length || 0,
-            diningCourts: [...new Set(foods?.map(f => f.dining_court).filter(Boolean))].length,
-            avgCalories: foods?.length ? Math.round(foods.reduce((s, f) => s + (f.calories || 0), 0) / foods.length) : 0,
-          },
-        });
+        const [foodData, scrapeData] = await Promise.allSettled([
+          apiCall('/api/foods'),
+          fetch('/api/admin/scrape-status').then(r => r.json()),
+        ]);
+        if (foodData.status === 'fulfilled') setFoods(foodData.value || []);
+        if (scrapeData.status === 'fulfilled') setScrapeInfo(scrapeData.value);
       } catch { /* ignore */ }
       finally { setLoading(false); }
     }
-    loadStats();
+    load();
   }, []);
 
-  if (loading) return <p className="text-xs uppercase tracking-widest text-theme-text-tertiary py-8 text-center">Loading stats...</p>;
-  if (!stats) return <p className="text-xs uppercase tracking-widest text-theme-text-tertiary py-8 text-center">Failed to load</p>;
+  if (loading) return <p className="text-xs uppercase tracking-widest text-theme-text-tertiary py-8 text-center">Loading...</p>;
+
+  const total = foods?.length || 0;
+  const avgCal = total ? Math.round(foods.reduce((s, f) => s + (f.calories || 0), 0) / total) : 0;
+
+  // Per-court breakdown
+  const courtMap = {};
+  for (const f of (foods || [])) {
+    const c = f.dining_court || 'Unknown';
+    if (!courtMap[c]) courtMap[c] = { count: 0, totalCal: 0, minCal: Infinity, maxCal: -Infinity };
+    courtMap[c].count++;
+    courtMap[c].totalCal += f.calories || 0;
+    if (f.calories < courtMap[c].minCal) courtMap[c].minCal = f.calories;
+    if (f.calories > courtMap[c].maxCal) courtMap[c].maxCal = f.calories;
+  }
+  const courts = Object.entries(courtMap).sort((a, b) => b[1].count - a[1].count);
 
   return (
-    <div className="space-y-8">
-      <SectionLabel>Database Overview</SectionLabel>
+    <div className="space-y-10">
+      {/* Summary row */}
+      <div>
+        <SectionLabel>Database Overview</SectionLabel>
+        <div className="grid grid-cols-3 gap-px bg-theme-text-primary/10 border border-theme-text-primary/20">
+          {[
+            { label: 'Total Items', value: total },
+            { label: 'Dining Courts', value: courts.length },
+            { label: 'Avg Calories', value: `${avgCal} cal` },
+          ].map(s => (
+            <div key={s.label} className="bg-theme-bg-primary p-5 text-center">
+              <div className="text-2xl font-bold tabular-nums">{s.value}</div>
+              <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary mt-1">{s.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
 
-      <div className="border border-theme-text-primary/20">
-        <div className="p-5 space-y-4">
-          <p className="text-xs font-bold uppercase tracking-wider text-theme-text-tertiary">Foods</p>
-          <div className="space-y-2">
-            <StatRow label="Total" value={stats.foods.total} />
-            <StatRow label="Dining Courts" value={stats.foods.diningCourts} />
-            <StatRow label="Avg Calories" value={`${stats.foods.avgCalories} cal`} />
+      {/* Per-court breakdown */}
+      {courts.length > 0 && (
+        <div>
+          <SectionLabel>By Dining Court</SectionLabel>
+          <div className="border border-theme-text-primary/20 divide-y divide-theme-text-primary/10">
+            {courts.map(([name, d]) => (
+              <div key={name} className="flex items-center justify-between px-4 py-3">
+                <div>
+                  <span className="text-sm font-bold capitalize">{name}</span>
+                  <span className="ml-3 text-xs text-theme-text-tertiary tabular-nums">{d.count} items</span>
+                </div>
+                <div className="text-xs text-theme-text-tertiary tabular-nums text-right">
+                  <span className="font-mono">{Math.round(d.totalCal / d.count)} avg</span>
+                  <span className="ml-3 text-theme-text-tertiary/50">{d.minCal === Infinity ? '—' : d.minCal}–{d.maxCal === -Infinity ? '—' : d.maxCal} cal</span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
+      )}
+
+      {/* Recent scrape activity */}
+      <div>
+        <SectionLabel>Recent Activity</SectionLabel>
+        {scrapeInfo ? (
+          <div className="border border-theme-text-primary/20 p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider">
+                Last Scrape
+              </span>
+              <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 border ${
+                scrapeInfo.status === 'completed' && scrapeInfo.conclusion === 'success'
+                  ? 'border-green-500/40 text-green-400'
+                  : scrapeInfo.status === 'in_progress'
+                  ? 'border-theme-text-primary/30 text-theme-text-secondary animate-pulse'
+                  : 'border-red-500/40 text-red-400'
+              }`}>
+                {scrapeInfo.status === 'completed' ? (scrapeInfo.conclusion || 'done') : scrapeInfo.status || 'unknown'}
+              </span>
+            </div>
+            {scrapeInfo.elapsed_seconds != null && (
+              <p className="text-xs text-theme-text-tertiary">
+                Duration: <span className="font-mono">{formatElapsed(scrapeInfo.elapsed_seconds)}</span>
+              </p>
+            )}
+            {scrapeInfo.html_url && (
+              <a href={scrapeInfo.html_url} target="_blank" rel="noopener noreferrer"
+                className="text-xs text-theme-text-tertiary hover:text-theme-text-primary underline">
+                View run on GitHub &rarr;
+              </a>
+            )}
+          </div>
+        ) : (
+          <p className="text-xs text-theme-text-tertiary">No recent scrape data available.</p>
+        )}
       </div>
     </div>
   );
@@ -503,6 +582,177 @@ function StatRow({ label, value }) {
       <span className="text-theme-text-tertiary">{label}</span>
       <span className="font-bold">{value}</span>
     </div>
+  );
+}
+
+/* ── Feedback Tab ─────────────────────────────────────────── */
+
+function FeedbackTab() {
+  const [entries, setEntries] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [filter, setFilter] = useState('all'); // all | idea | bug | other
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await fetch('/api/feedback');
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed');
+        setEntries(data.feedback || []);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, []);
+
+  if (loading) return <p className="text-xs uppercase tracking-widest text-theme-text-tertiary py-8 text-center">Loading feedback...</p>;
+  if (error) return <div className="border border-red-500/50 bg-red-500/5 px-4 py-3 text-sm text-red-400">{error}</div>;
+
+  const filtered = filter === 'all' ? entries : entries.filter(e => e.type === filter);
+
+  const typeStyle = {
+    idea: 'border-blue-500/40 text-blue-400',
+    bug: 'border-red-500/40 text-red-400',
+    other: 'border-theme-text-primary/30 text-theme-text-tertiary',
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <SectionLabel>Feedback ({filtered.length})</SectionLabel>
+        <div className="flex gap-px border border-theme-text-primary/20">
+          {['all', 'idea', 'bug', 'other'].map(f => (
+            <button key={f} onClick={() => setFilter(f)}
+              className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-colors ${
+                filter === f ? 'bg-theme-text-primary text-theme-bg-primary' : 'text-theme-text-tertiary hover:text-theme-text-primary'
+              }`}>
+              {f}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {filtered.length === 0 && (
+        <p className="text-xs text-theme-text-tertiary text-center py-8">No feedback yet.</p>
+      )}
+
+      <div className="space-y-3">
+        {filtered.map(fb => (
+          <div key={fb.id} className="border border-theme-text-primary/20 p-4 space-y-2">
+            <div className="flex items-center justify-between gap-3">
+              <span className={`text-[10px] font-bold uppercase tracking-widest border px-2 py-0.5 ${typeStyle[fb.type] || typeStyle.other}`}>
+                {fb.type}
+              </span>
+              <span className="text-[10px] text-theme-text-tertiary tabular-nums">
+                {new Date(fb.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              </span>
+            </div>
+            <p className="text-sm text-theme-text-secondary leading-relaxed">{fb.message}</p>
+            {fb.contact && (
+              <p className="text-xs text-theme-text-tertiary">
+                Contact: <span className="font-mono">{fb.contact}</span>
+              </p>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── Danger Zone ──────────────────────────────────────────── */
+
+function DangerZone() {
+  const [unlocked, setUnlocked] = useState(false);
+  const [confirm, setConfirm] = useState('');
+  const [status, setStatus] = useState('idle'); // idle | loading | success | error
+  const [msg, setMsg] = useState('');
+  const REQUIRED = 'DELETE FOODS';
+
+  async function handleClearFoods() {
+    if (confirm !== REQUIRED) return;
+    setStatus('loading');
+    try {
+      const res = await fetch('/api/admin/clear-foods', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed');
+      setStatus('success');
+      setMsg(`Cleared ${data.deleted} food items from the database.`);
+      setConfirm('');
+    } catch (err) {
+      setStatus('error');
+      setMsg(err.message || 'Failed to clear foods.');
+    }
+  }
+
+  return (
+    <section className="space-y-4">
+      <div className="flex items-center gap-3 border-b border-red-500/20 pb-2">
+        <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-red-500/70">
+          Danger Zone
+        </h2>
+        <span className="text-[10px] border border-red-500/30 text-red-500/60 px-1.5 py-0.5 uppercase tracking-wider">
+          Irreversible
+        </span>
+      </div>
+
+      <div className="border border-red-500/20 p-5 space-y-4">
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-1">
+            <p className="text-sm font-bold uppercase tracking-wider text-theme-text-primary">Clear Food Database</p>
+            <p className="text-xs text-theme-text-tertiary">
+              Permanently deletes all items from the foods table. Does not affect user meal logs, weight data, or any other user data.
+            </p>
+          </div>
+          {!unlocked && (
+            <button
+              onClick={() => setUnlocked(true)}
+              className="shrink-0 border border-red-500/30 px-4 py-2 text-xs font-bold uppercase tracking-wider text-red-500/70 hover:text-red-400 hover:border-red-500/60 transition-colors">
+              Unlock
+            </button>
+          )}
+        </div>
+
+        {unlocked && (
+          <div className="space-y-3 border-t border-red-500/10 pt-4">
+            <p className="text-xs text-theme-text-tertiary">
+              Type <span className="font-mono font-bold text-red-400">{REQUIRED}</span> to confirm.
+            </p>
+            <input
+              type="text"
+              value={confirm}
+              onChange={e => setConfirm(e.target.value)}
+              placeholder={REQUIRED}
+              className="w-full max-w-xs border border-red-500/30 bg-transparent text-red-400 px-3 py-2 text-xs font-mono tracking-wider focus:border-red-500/60 focus:outline-none transition-colors placeholder:text-red-500/20"
+            />
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleClearFoods}
+                disabled={confirm !== REQUIRED || status === 'loading'}
+                className="px-4 py-2 border border-red-500/60 text-red-400 text-xs font-bold uppercase tracking-wider hover:bg-red-500 hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                {status === 'loading' ? 'Clearing...' : 'Clear All Foods'}
+              </button>
+              <button
+                onClick={() => { setUnlocked(false); setConfirm(''); setStatus('idle'); setMsg(''); }}
+                className="text-xs text-theme-text-tertiary hover:text-theme-text-primary uppercase tracking-wider transition-colors">
+                Cancel
+              </button>
+            </div>
+            {msg && (
+              <p className={`text-xs ${status === 'error' ? 'text-red-400' : 'text-green-400'}`}>{msg}</p>
+            )}
+          </div>
+        )}
+      </div>
+    </section>
   );
 }
 
