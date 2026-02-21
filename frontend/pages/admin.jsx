@@ -483,17 +483,22 @@ function StatsTab() {
   if (loading) return <p className="text-xs uppercase tracking-widest text-theme-text-tertiary py-8 text-center">Loading...</p>;
 
   const total = foods?.length || 0;
-  const avgCal = total ? Math.round(foods.reduce((s, f) => s + (f.calories || 0), 0) / total) : 0;
+  // Only count items with actual calorie data for stats
+  const calFoods = (foods || []).filter(f => f.calories > 0);
+  const avgCal = calFoods.length ? Math.round(calFoods.reduce((s, f) => s + f.calories, 0) / calFoods.length) : null;
 
-  // Per-court breakdown
+  // Per-court breakdown — separate total count from calorie-bearing count
   const courtMap = {};
   for (const f of (foods || [])) {
     const c = f.dining_court || 'Unknown';
-    if (!courtMap[c]) courtMap[c] = { count: 0, totalCal: 0, minCal: Infinity, maxCal: -Infinity };
+    if (!courtMap[c]) courtMap[c] = { count: 0, calCount: 0, totalCal: 0, minCal: Infinity, maxCal: -Infinity };
     courtMap[c].count++;
-    courtMap[c].totalCal += f.calories || 0;
-    if (f.calories < courtMap[c].minCal) courtMap[c].minCal = f.calories;
-    if (f.calories > courtMap[c].maxCal) courtMap[c].maxCal = f.calories;
+    if (f.calories > 0) {
+      courtMap[c].calCount++;
+      courtMap[c].totalCal += f.calories;
+      if (f.calories < courtMap[c].minCal) courtMap[c].minCal = f.calories;
+      if (f.calories > courtMap[c].maxCal) courtMap[c].maxCal = f.calories;
+    }
   }
   const courts = Object.entries(courtMap).sort((a, b) => b[1].count - a[1].count);
 
@@ -506,7 +511,7 @@ function StatsTab() {
           {[
             { label: 'Total Items', value: total },
             { label: 'Dining Courts', value: courts.length },
-            { label: 'Avg Calories', value: `${avgCal} cal` },
+            { label: 'Avg Calories', value: avgCal != null ? `${avgCal} cal` : '—' },
           ].map(s => (
             <div key={s.label} className="bg-theme-bg-primary p-5 text-center">
               <div className="text-2xl font-bold tabular-nums">{s.value}</div>
@@ -528,8 +533,14 @@ function StatsTab() {
                   <span className="ml-3 text-xs text-theme-text-tertiary tabular-nums">{d.count} items</span>
                 </div>
                 <div className="text-xs text-theme-text-tertiary tabular-nums text-right">
-                  <span className="font-mono">{Math.round(d.totalCal / d.count)} avg</span>
-                  <span className="ml-3 text-theme-text-tertiary/50">{d.minCal === Infinity ? '—' : d.minCal}–{d.maxCal === -Infinity ? '—' : d.maxCal} cal</span>
+                  {d.calCount > 0 ? (
+                    <>
+                      <span className="font-mono">{Math.round(d.totalCal / d.calCount)} avg</span>
+                      <span className="ml-3 text-theme-text-tertiary/50">{d.minCal}–{d.maxCal} cal</span>
+                    </>
+                  ) : (
+                    <span className="text-theme-text-tertiary/40">no calorie data</span>
+                  )}
                 </div>
               </div>
             ))}
@@ -907,6 +918,7 @@ function FoodsTab() {
   const [foods, setFoods] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [courtFilter, setCourtFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [error, setError] = useState('');
 
@@ -924,10 +936,17 @@ function FoodsTab() {
     catch (err) { setError(err.message || 'Failed to delete'); }
   }
 
-  const filteredFoods = useMemo(() => foods.filter(f =>
-    f.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    f.dining_court?.toLowerCase().includes(searchTerm.toLowerCase())
-  ), [foods, searchTerm]);
+  const courts = useMemo(() => {
+    const s = new Set(foods.map(f => f.dining_court).filter(Boolean));
+    return [...s].sort();
+  }, [foods]);
+
+  const filteredFoods = useMemo(() => foods.filter(f => {
+    const matchesSearch = f.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      f.dining_court?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCourt = !courtFilter || f.dining_court === courtFilter;
+    return matchesSearch && matchesCourt;
+  }), [foods, searchTerm, courtFilter]);
 
   const paginatedFoods = useMemo(() => {
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -944,13 +963,25 @@ function FoodsTab() {
 
       {error && <div className="border border-red-500/50 bg-red-500/5 px-4 py-3 text-sm text-red-400">{error}</div>}
 
-      <input
-        type="text"
-        placeholder="Search foods..."
-        value={searchTerm}
-        onChange={e => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-        className="w-full border border-theme-text-primary/20 bg-transparent px-4 py-3 text-sm font-mono placeholder:text-theme-text-tertiary/50 focus:outline-none focus:border-theme-text-primary/40"
-      />
+      <div className="flex gap-2">
+        <input
+          type="text"
+          placeholder="Search foods..."
+          value={searchTerm}
+          onChange={e => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+          className="flex-1 border border-theme-text-primary/20 bg-transparent px-4 py-3 text-sm font-mono placeholder:text-theme-text-tertiary/50 focus:outline-none focus:border-theme-text-primary/40"
+        />
+        <select
+          value={courtFilter}
+          onChange={e => { setCourtFilter(e.target.value); setCurrentPage(1); }}
+          className="border border-theme-text-primary/20 bg-theme-bg-primary text-theme-text-secondary px-3 py-3 text-xs font-mono focus:outline-none focus:border-theme-text-primary/40 cursor-pointer"
+        >
+          <option value="">All courts</option>
+          {courts.map(c => (
+            <option key={c} value={c}>{c}</option>
+          ))}
+        </select>
+      </div>
 
       <div className="border border-theme-text-primary/20 divide-y divide-theme-text-primary/10">
         {paginatedFoods.map(food => (
