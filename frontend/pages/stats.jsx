@@ -54,7 +54,7 @@ function PieChart({ data, size = 160 }) {
   });
 
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
         {slices.map((s, i) => (
           <path key={i} d={s.path} fill={s.color} stroke="rgb(var(--color-bg-primary))" strokeWidth="2" />

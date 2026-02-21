@@ -69,7 +69,7 @@ function CalendarPicker({ value, onChange, compact = false }) {
         </svg>
       </button>
       {open && (
-        <div className="absolute z-50 mt-1 left-0 w-72 border border-theme-text-primary bg-theme-bg-primary shadow-lg">
+        <div className="absolute z-50 mt-1 left-0 w-72 max-w-[calc(100vw-2rem)] border border-theme-text-primary bg-theme-bg-primary shadow-lg">
           <div className="flex items-center justify-between p-3 border-b border-theme-text-primary/20">
             <button type="button" onClick={prevMonth} className="px-2 py-1 hover:bg-theme-bg-hover text-theme-text-primary font-bold">&lt;</button>
             <span className="font-bold text-sm uppercase tracking-wider">{monthNames[viewMonth]} {viewYear}</span>
@@ -166,7 +166,7 @@ function LocationDropdown({ value, onChange, availableLocations, retailLocations
       </button>
 
       {open && (
-        <div className="absolute z-50 mt-1 left-0 w-72 max-h-96 overflow-y-auto border border-theme-text-primary bg-theme-bg-primary shadow-lg"
+        <div className="absolute z-50 mt-1 left-0 w-72 max-w-[calc(100vw-2rem)] max-h-96 overflow-y-auto border border-theme-text-primary bg-theme-bg-primary shadow-lg"
           style={{ animation: `fadeInTooltip 0.15s ${EASE} both` }}>
           {/* All Locations */}
           <button type="button" onClick={() => select({ type: 'all', value: 'All' })}
@@ -1090,7 +1090,7 @@ export default function Home() {
                     <input type="number" min="0" value={nutritionFilter.minProtein}
                       onChange={e => setNutritionFilter(p => ({ ...p, minProtein: e.target.value }))}
                       placeholder="0"
-                      className="w-16 border border-theme-text-primary/20 bg-transparent text-theme-text-primary px-2 py-1 text-xs font-mono focus:outline-none" />
+                      className="w-20 border border-theme-text-primary/20 bg-transparent text-theme-text-primary px-2 py-1 text-xs font-mono focus:outline-none" />
                     <span className="text-[10px] text-theme-text-tertiary">g</span>
                   </div>
                   <div className="flex items-center gap-1.5">
@@ -1098,7 +1098,7 @@ export default function Home() {
                     <input type="number" min="0" value={nutritionFilter.maxCalories}
                       onChange={e => setNutritionFilter(p => ({ ...p, maxCalories: e.target.value }))}
                       placeholder="any"
-                      className="w-16 border border-theme-text-primary/20 bg-transparent text-theme-text-primary px-2 py-1 text-xs font-mono focus:outline-none" />
+                      className="w-20 border border-theme-text-primary/20 bg-transparent text-theme-text-primary px-2 py-1 text-xs font-mono focus:outline-none" />
                   </div>
                   <div className="flex items-center gap-1.5">
                     <label className="text-[10px] uppercase tracking-widest text-theme-text-tertiary whitespace-nowrap">Exclude allergens</label>
@@ -1269,17 +1269,17 @@ export default function Home() {
                                             {(cm.fats ?? cm.fat) != null && <> &middot; {cm.fats ?? cm.fat}g fat</>}
                                           </div>
                                         </div>
-                                        <div className="flex items-center gap-1 shrink-0">
+                                        <div className="flex items-center gap-1.5 shrink-0">
                                           <button
                                             onClick={(e) => handleAddMeal(comp, e)}
-                                            className="p-1.5 border border-theme-text-primary/30 text-theme-text-secondary hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors"
+                                            className="p-2.5 border border-theme-text-primary/30 text-theme-text-secondary hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors"
                                             title="Add to log">
                                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
                                           </button>
                                           <button
                                             onClick={(e) => { e.stopPropagation(); removeMeal(comp, selectedDate); }}
                                             disabled={compCount === 0}
-                                            className={`p-1.5 border transition-colors ${compCount > 0 ? 'border-theme-text-primary/30 text-theme-text-secondary hover:bg-theme-text-primary hover:text-theme-bg-primary' : 'border-theme-text-primary/10 text-theme-text-tertiary/20 cursor-not-allowed'}`}
+                                            className={`p-2.5 border transition-colors ${compCount > 0 ? 'border-theme-text-primary/30 text-theme-text-secondary hover:bg-theme-text-primary hover:text-theme-bg-primary' : 'border-theme-text-primary/10 text-theme-text-tertiary/20 cursor-not-allowed'}`}
                                             title="Remove from log">
                                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="5" y1="12" x2="19" y2="12" /></svg>
                                           </button>
@@ -1402,7 +1402,7 @@ export default function Home() {
                                 </div>
                                 <button
                                   onClick={(e) => handleAddMeal(food, e)}
-                                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 border border-theme-text-primary text-theme-text-primary text-xs uppercase tracking-wider font-bold hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors"
+                                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 border border-theme-text-primary text-theme-text-primary text-xs uppercase tracking-wider font-bold hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors"
                                   title="Add to today's log">
                                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
                                   Add
@@ -1410,7 +1410,7 @@ export default function Home() {
                                 <button
                                   onClick={(e) => { e.stopPropagation(); removeMeal(food, selectedDate); }}
                                   disabled={count === 0}
-                                  className={`px-3 py-2 border text-xs uppercase tracking-wider font-bold transition-colors shrink-0 flex items-center gap-1.5 ${
+                                  className={`px-3 py-2.5 border text-xs uppercase tracking-wider font-bold transition-colors shrink-0 flex items-center gap-1.5 ${
                                     count > 0
                                       ? 'border-theme-text-primary/50 text-theme-text-secondary hover:bg-theme-text-primary hover:text-theme-bg-primary'
                                       : 'border-theme-text-primary/10 text-theme-text-tertiary/40 cursor-not-allowed'

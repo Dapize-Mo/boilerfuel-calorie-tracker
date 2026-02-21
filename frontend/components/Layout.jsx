@@ -54,14 +54,15 @@ const TopNav = memo(function TopNav() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  title={item.label}
+                  className={`px-2 sm:px-3 py-2 rounded-lg text-sm font-medium transition-colors min-w-[40px] flex items-center justify-center sm:justify-start ${
                     router.pathname === item.href
                       ? 'bg-theme-accent text-white'
                       : 'text-theme-text-secondary hover:bg-theme-bg-hover'
                   }`}
                 >
-                  <span className="mr-1 hidden sm:inline">{item.icon}</span>
-                  {item.label}
+                  <span className="sm:mr-1">{item.icon}</span>
+                  <span className="hidden sm:inline">{item.label}</span>
                 </Link>
               ))}
             </nav>
