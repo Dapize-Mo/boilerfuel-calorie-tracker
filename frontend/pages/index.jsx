@@ -379,9 +379,22 @@ export default function Home() {
   const [nutritionFilter, setNutritionFilter] = useState({ minProtein: '', maxCalories: '', vegetarian: false, vegan: false, allergenFree: '' });
   const [showFavsOnly, setShowFavsOnly] = useState(false);
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
+  const [showProfileTooltip, setShowProfileTooltip] = useState(false);
 
   const mealTimes = ['All', 'Breakfast', 'Brunch', 'Lunch', 'Late Lunch', 'Dinner'];
   const isLanding = view === 'landing';
+
+  // ── Date navigation ──
+  function prevDay() {
+    const d = new Date(selectedDate + 'T00:00:00');
+    d.setDate(d.getDate() - 1);
+    setSelectedDate(d.toISOString().slice(0, 10));
+  }
+  function nextDay() {
+    const d = new Date(selectedDate + 'T00:00:00');
+    d.setDate(d.getDate() + 1);
+    setSelectedDate(d.toISOString().slice(0, 10));
+  }
 
   // ── Add meal handler (shows picker if mealTime is All) ──
   function handleAddMeal(food, e, servingsOverride) {
@@ -779,6 +792,20 @@ export default function Home() {
   const dateObj = selectedDate ? new Date(selectedDate + 'T00:00:00') : new Date();
   const dateLabel = `${monthNames[dateObj.getMonth()]} ${dateObj.getDate()}, ${dateObj.getFullYear()}`;
 
+  // ── Selected date totals (for profile tooltip) ──
+  const selectedDateTotals = useMemo(() => {
+    const dayMeals = mealsByDate[selectedDate] || [];
+    return dayMeals.reduce(
+      (acc, m) => ({
+        calories: acc.calories + (m.calories || 0),
+        protein: acc.protein + (parseFloat(m.macros?.protein) || 0),
+        carbs: acc.carbs + (parseFloat(m.macros?.carbs) || 0),
+        fat: acc.fat + (parseFloat(m.macros?.fats || m.macros?.fat) || 0),
+      }),
+      { calories: 0, protein: 0, carbs: 0, fat: 0 }
+    );
+  }, [mealsByDate, selectedDate]);
+
   // ── Location display for summary bar ──
   const locationLabel = location.type === 'all' ? 'All locations'
     : location.type === 'category' ? location.value
@@ -894,7 +921,11 @@ export default function Home() {
       }}>
         <div style={{ flex: !isLanding && isMobile ? '1 1 0' : undefined, width: isLanding ? (isMobile ? 220 : 180) : (isMobile ? undefined : 150), transition: `width 0.7s ${EASE}` }}>
           <label style={labelStyle} className="text-theme-text-secondary">Date</label>
-          <CalendarPicker value={selectedDate} onChange={setSelectedDate} compact={!isLanding} />
+          <div className="flex items-stretch gap-0.5">
+            <button onClick={prevDay} className={`border text-theme-text-secondary hover:bg-theme-bg-hover hover:text-theme-text-primary transition-colors font-bold ${isLanding ? 'border-theme-text-primary px-2' : 'border-theme-text-primary/30 px-1.5'}`} style={{ fontSize: isLanding ? '1rem' : '0.75rem' }}>&#8249;</button>
+            <div className="flex-1 min-w-0"><CalendarPicker value={selectedDate} onChange={setSelectedDate} compact={!isLanding} /></div>
+            <button onClick={nextDay} className={`border text-theme-text-secondary hover:bg-theme-bg-hover hover:text-theme-text-primary transition-colors font-bold ${isLanding ? 'border-theme-text-primary px-2' : 'border-theme-text-primary/30 px-1.5'}`} style={{ fontSize: isLanding ? '1rem' : '0.75rem' }}>&#8250;</button>
+          </div>
         </div>
         <div style={{ flex: !isLanding && isMobile ? '1 1 0' : undefined, width: isLanding ? (isMobile ? 220 : 200) : (isMobile ? undefined : 170), transition: `width 0.7s ${EASE}` }}>
           <label style={labelStyle} className="text-theme-text-secondary">Location</label>
@@ -964,6 +995,8 @@ export default function Home() {
       {/* ── Profile icon — always visible, top-right ── */}
       <div
         onClick={() => router.push('/profile')}
+        onMouseEnter={() => !isTouchDevice && setShowProfileTooltip(true)}
+        onMouseLeave={() => setShowProfileTooltip(false)}
         title="Profile"
         className="group cursor-pointer"
         style={{
@@ -982,6 +1015,19 @@ export default function Home() {
             <path fillRule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clipRule="evenodd" />
           </svg>
         </div>
+        {showProfileTooltip && selectedDateTotals.calories > 0 && (
+          <div className="absolute right-0 top-full mt-1.5 w-44 border border-theme-text-primary/20 bg-theme-bg-secondary shadow-lg p-3 font-mono pointer-events-none"
+            style={{ animation: `fadeInTooltip 0.15s ${EASE} both` }}>
+            <div className="text-[9px] uppercase tracking-widest text-theme-text-tertiary mb-2">{dateLabel}</div>
+            <div className="text-2xl font-bold tabular-nums leading-none">{selectedDateTotals.calories}</div>
+            <div className="text-[9px] text-theme-text-tertiary mb-2">calories</div>
+            <div className="flex gap-2 text-[10px] tabular-nums">
+              <div><span className="font-bold">{Math.round(selectedDateTotals.protein)}</span><span className="text-theme-text-tertiary">g P</span></div>
+              <div><span className="font-bold">{Math.round(selectedDateTotals.carbs)}</span><span className="text-theme-text-tertiary">g C</span></div>
+              <div><span className="font-bold">{Math.round(selectedDateTotals.fat)}</span><span className="text-theme-text-tertiary">g F</span></div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ── Header divider line ── */}
@@ -1288,8 +1334,41 @@ export default function Home() {
                                     );
                                   })}
                                 </div>
-                                <div className="mt-3 text-[10px] text-theme-text-tertiary/60">
-                                  Add individual items above to track nutrition for this station.
+                                {(() => {
+                                  const compsWithCal = components.filter(c => c.calories > 0);
+                                  if (compsWithCal.length === 0) return null;
+                                  // Detect protein alternatives: high-cal items (>=150) within 80% of max cal
+                                  const highCal = [...compsWithCal].filter(c => c.calories >= 150).sort((a, b) => a.calories - b.calories);
+                                  let suggestedComps = compsWithCal;
+                                  let meatNote = null;
+                                  if (highCal.length >= 2) {
+                                    const maxCal = highCal[highCal.length - 1].calories;
+                                    const alts = highCal.filter(c => c.calories >= maxCal * 0.5);
+                                    if (alts.length >= 2) {
+                                      const picked = alts[Math.floor((alts.length - 1) / 2)]; // median
+                                      const exclude = new Set(alts.filter(c => c.id !== picked.id).map(c => c.id));
+                                      suggestedComps = compsWithCal.filter(c => !exclude.has(c.id));
+                                      meatNote = picked.name;
+                                    }
+                                  }
+                                  const total = suggestedComps.reduce((s, c) => s + c.calories, 0);
+                                  return (
+                                    <div className="mt-3 pt-3 border-t border-theme-text-primary/10 flex items-center justify-between gap-3">
+                                      <div>
+                                        <span className="text-xs font-bold uppercase tracking-wider">Est. full meal: </span>
+                                        <span className="text-xs font-mono font-bold tabular-nums">{total} cal</span>
+                                        {meatNote && <p className="text-[10px] text-theme-text-tertiary mt-0.5">Protein: {meatNote} (median)</p>}
+                                      </div>
+                                      <button
+                                        onClick={(e) => { e.stopPropagation(); suggestedComps.forEach(c => addMeal(c, food.meal_time?.toLowerCase() || mealTime.toLowerCase(), selectedDate)); }}
+                                        className="shrink-0 text-[10px] border border-theme-text-primary/30 px-2.5 py-1.5 font-bold uppercase tracking-wider hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors whitespace-nowrap">
+                                        Add all
+                                      </button>
+                                    </div>
+                                  );
+                                })()}
+                                <div className="mt-2 text-[10px] text-theme-text-tertiary/60">
+                                  Add individual items above or use Add all to log the full combo.
                                 </div>
                               </div>
                             ) : (
