@@ -543,7 +543,19 @@ const VERSIONS = [
   },
 ];
 
+const ERAS = [
+  { id: 'v3', prefix: '3', label: '3.x.x', name: 'Beverages, Live Data & Sync',  span: 'Feb 17–20, 2026' },
+  { id: 'v2', prefix: '2', label: '2.x.x', name: 'Calorie Tracking System',       span: 'Feb 13–15, 2026' },
+  { id: 'v1', prefix: '1', label: '1.x.x', name: 'Monochrome Brutalist Redesign', span: 'Feb 12–13, 2026' },
+  { id: 'v0', prefix: '0', label: '0.x.x', name: 'Bootstrap Era',                 span: 'Sep 29 – Nov 22, 2025' },
+];
+
 export default function Changelog() {
+  const grouped = ERAS.map(era => ({
+    ...era,
+    versions: VERSIONS.filter(v => v.version.startsWith(era.prefix + '.')),
+  }));
+
   return (
     <>
       <Head>
@@ -552,10 +564,10 @@ export default function Changelog() {
       </Head>
 
       <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary font-mono">
-        <div className="max-w-3xl mx-auto px-6 sm:px-10 py-16 sm:py-24 space-y-16">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12 py-16 sm:py-24">
 
           {/* Header */}
-          <header className="space-y-4">
+          <header className="mb-12 space-y-4">
             <Link href="/" className="text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
               &larr; Back
             </Link>
@@ -566,61 +578,134 @@ export default function Changelog() {
             </p>
           </header>
 
-          {/* Versions */}
-          {VERSIONS.map((v) => (
-            <section key={v.version} className="space-y-4">
-              {/* Version header */}
-              <div className="flex items-baseline justify-between border-b border-theme-text-primary/10 pb-2">
-                <div className="flex items-baseline gap-3">
-                  <h2 className="text-lg font-bold uppercase tracking-wider">{v.version}</h2>
-                  {v.latest && (
-                    <span className="text-[10px] uppercase tracking-widest border border-theme-text-primary/30 px-2 py-0.5 text-theme-text-tertiary">
-                      Latest
-                    </span>
-                  )}
-                  {v.initial && (
-                    <span className="text-[10px] uppercase tracking-widest border border-theme-text-primary/30 px-2 py-0.5 text-theme-text-tertiary">
-                      Initial
-                    </span>
-                  )}
+          {/* Mobile era pills */}
+          <nav className="lg:hidden flex gap-2 flex-wrap mb-12">
+            {ERAS.map(era => (
+              <a
+                key={era.id}
+                href={`#${era.id}`}
+                className="text-[10px] uppercase tracking-widest border border-theme-text-primary/20 px-3 py-1.5 text-theme-text-tertiary hover:text-theme-text-primary hover:border-theme-text-primary/50 transition-colors"
+              >
+                {era.label}
+              </a>
+            ))}
+          </nav>
+
+          {/* Body */}
+          <div className="flex gap-12 xl:gap-20 items-start">
+
+            {/* Sticky sidebar — desktop only */}
+            <aside className="hidden lg:block w-52 shrink-0">
+              <div className="sticky top-10 space-y-1">
+                <div className="text-[9px] uppercase tracking-[0.2em] text-theme-text-tertiary/50 mb-4 pb-2 border-b border-theme-text-primary/10">
+                  Jump to era
                 </div>
-                <span className="text-xs text-theme-text-tertiary">{v.date}</span>
-              </div>
-
-              {/* Change categories */}
-              <div className="border border-theme-text-primary/10">
-                {v.changes.map((group, gi) => (
-                  <div key={group.cat}>
-                    {gi > 0 && <div className="h-px bg-theme-text-primary/10" />}
-                    <div className="px-4 py-3">
-                      <div className="text-[10px] font-bold uppercase tracking-[0.15em] text-theme-text-tertiary mb-2">
-                        {group.cat}
-                      </div>
-                      <ul className="space-y-1">
-                        {group.items.map((item, ii) => (
-                          <li key={ii} className="text-xs text-theme-text-secondary leading-relaxed flex gap-2">
-                            <span className="text-theme-text-primary/20 shrink-0">&mdash;</span>
-                            {item}
-                          </li>
-                        ))}
-                      </ul>
+                {ERAS.map(era => (
+                  <a
+                    key={era.id}
+                    href={`#${era.id}`}
+                    className="block py-2.5 border-l-2 border-transparent pl-3 hover:border-theme-text-primary/40 hover:text-theme-text-primary transition-all group"
+                  >
+                    <div className="text-xs font-bold uppercase tracking-wider text-theme-text-secondary group-hover:text-theme-text-primary transition-colors">
+                      {era.label}
                     </div>
-                  </div>
+                    <div className="text-[10px] text-theme-text-tertiary mt-0.5 leading-tight">
+                      {era.name}
+                    </div>
+                    <div className="text-[9px] text-theme-text-tertiary/50 mt-0.5">
+                      {era.span}
+                    </div>
+                  </a>
                 ))}
-              </div>
-            </section>
-          ))}
 
-          {/* Footer */}
-          <footer className="border-t border-theme-text-primary/10 pt-8 flex flex-wrap items-center justify-between gap-4">
-            <div className="flex gap-6 text-xs uppercase tracking-widest">
-              <Link href="/" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Home</Link>
-              <Link href="/about" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">About</Link>
-              <Link href="/admin" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Admin</Link>
-              <Link href="/profile" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Profile</Link>
-            </div>
-            <span className="text-xs text-theme-text-tertiary/40">{new Date().getFullYear()}</span>
-          </footer>
+                <div className="pt-6 mt-6 border-t border-theme-text-primary/10 flex flex-col gap-2">
+                  {[['/', 'Home'], ['/about', 'About'], ['/admin', 'Admin'], ['/profile', 'Profile']].map(([href, label]) => (
+                    <Link key={href} href={href} className="text-[10px] uppercase tracking-widest text-theme-text-tertiary/50 hover:text-theme-text-primary transition-colors">
+                      {label}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </aside>
+
+            {/* Main content */}
+            <main className="flex-1 min-w-0 space-y-24">
+              {grouped.map(era => (
+                <section key={era.id} id={era.id}>
+
+                  {/* Era header */}
+                  <div className="flex flex-wrap items-baseline justify-between gap-2 border-b-2 border-theme-text-primary/20 pb-4 mb-8">
+                    <div>
+                      <div className="text-[10px] uppercase tracking-[0.2em] text-theme-text-tertiary mb-1">
+                        {era.name}
+                      </div>
+                      <h2 className="text-2xl sm:text-3xl font-bold uppercase tracking-widest">
+                        {era.label}
+                      </h2>
+                    </div>
+                    <span className="text-xs text-theme-text-tertiary">{era.span}</span>
+                  </div>
+
+                  {/* Version grid — 2 columns on md+ */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                    {era.versions.map(v => (
+                      <div key={v.version} className="border border-theme-text-primary/10 flex flex-col">
+
+                        {/* Version header row */}
+                        <div className="flex items-baseline justify-between px-4 py-3 border-b border-theme-text-primary/10">
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-sm font-bold uppercase tracking-wider">{v.version}</span>
+                            {v.latest && (
+                              <span className="text-[9px] uppercase tracking-widest border border-theme-text-primary/30 px-1.5 py-0.5 text-theme-text-tertiary">
+                                Latest
+                              </span>
+                            )}
+                            {v.initial && (
+                              <span className="text-[9px] uppercase tracking-widest border border-theme-text-primary/30 px-1.5 py-0.5 text-theme-text-tertiary">
+                                Initial
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-[10px] text-theme-text-tertiary shrink-0 ml-2">{v.date}</span>
+                        </div>
+
+                        {/* Change categories */}
+                        {v.changes.map((group, gi) => (
+                          <div key={group.cat}>
+                            {gi > 0 && <div className="h-px bg-theme-text-primary/10" />}
+                            <div className="px-4 py-3">
+                              <div className="text-[9px] font-bold uppercase tracking-[0.18em] text-theme-text-tertiary mb-2">
+                                {group.cat}
+                              </div>
+                              <ul className="space-y-1">
+                                {group.items.map((item, ii) => (
+                                  <li key={ii} className="text-xs text-theme-text-secondary leading-relaxed flex gap-2">
+                                    <span className="text-theme-text-primary/20 shrink-0">&mdash;</span>
+                                    {item}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              ))}
+
+              {/* Footer */}
+              <footer className="border-t border-theme-text-primary/10 pt-8 flex flex-wrap items-center justify-between gap-4">
+                <div className="flex gap-6 text-xs uppercase tracking-widest lg:hidden">
+                  <Link href="/" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Home</Link>
+                  <Link href="/about" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">About</Link>
+                  <Link href="/admin" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Admin</Link>
+                  <Link href="/profile" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Profile</Link>
+                </div>
+                <span className="text-xs text-theme-text-tertiary/40">{new Date().getFullYear()}</span>
+              </footer>
+            </main>
+          </div>
 
         </div>
       </div>
