@@ -1227,6 +1227,23 @@ export default function Home() {
                   const count = getCount(food.id, selectedDate);
                   const macros = food.macros || {};
                   const noNutrition = food.calories === 0 && !macros.protein && !macros.carbs && !(macros.fats || macros.fat);
+                  // Estimate calories from component data for BYO items
+                  const estimatedCal = noNutrition ? (() => {
+                    const comps = (macros.components || []).filter(c => c.calories > 0);
+                    if (comps.length === 0) return null;
+                    const high = [...comps].filter(c => c.calories >= 150).sort((a, b) => a.calories - b.calories);
+                    let chosen = comps;
+                    if (high.length >= 2) {
+                      const maxCal = high[high.length - 1].calories;
+                      const alts = high.filter(c => c.calories >= maxCal * 0.5);
+                      if (alts.length >= 2) {
+                        const picked = alts[Math.floor((alts.length - 1) / 2)];
+                        const ex = new Set(alts.filter(c => c.name !== picked.name).map(c => c.name));
+                        chosen = comps.filter(c => !ex.has(c.name));
+                      }
+                    }
+                    return chosen.reduce((s, c) => s + c.calories, 0);
+                  })() : null;
                   const fav = isFavorite(food.id);
                   return (
                     <tr key={food.id}
@@ -1276,7 +1293,9 @@ export default function Home() {
                           </div>
                           <div className="py-3 px-4 text-theme-text-secondary capitalize hidden sm:block w-36 shrink-0">{food.dining_court}</div>
                           <div className="py-3 px-4 text-theme-text-tertiary capitalize hidden md:block w-28 shrink-0">{food.meal_time}</div>
-                          <div className={`py-3 pl-4 text-right font-mono tabular-nums w-16 shrink-0 ${noNutrition ? 'text-amber-500/60' : 'text-theme-text-secondary'}`}>{noNutrition ? 'N/A' : (food.calories || '—')}</div>
+                          <div className={`py-3 pl-4 text-right font-mono tabular-nums w-16 shrink-0 ${noNutrition && !estimatedCal ? 'text-amber-500/60' : noNutrition && estimatedCal ? 'text-theme-text-tertiary' : 'text-theme-text-secondary'}`}>
+                            {noNutrition ? (estimatedCal ? `~${estimatedCal}` : 'N/A') : (food.calories || '—')}
+                          </div>
                         </div>
 
                         {/* Expanded detail panel */}
