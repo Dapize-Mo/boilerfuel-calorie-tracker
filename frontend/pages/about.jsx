@@ -6,7 +6,7 @@ export default function About() {
   const [fbType, setFbType] = useState('idea');
   const [fbMessage, setFbMessage] = useState('');
   const [fbContact, setFbContact] = useState('');
-  const [fbStatus, setFbStatus] = useState(''); // '' | 'sending' | 'sent' | 'error'
+  const [fbStatus, setFbStatus] = useState('');
 
   const handleSubmitFeedback = async (e) => {
     e.preventDefault();
@@ -53,125 +53,35 @@ export default function About() {
       </Head>
 
       <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary font-mono">
-        <div className="max-w-7xl mx-auto px-6 sm:px-10 py-12 sm:py-20 space-y-12">
+        <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 py-12 sm:py-20 space-y-12">
 
-          {/* ── Hero ── */}
-          <header className="border-b border-theme-text-primary/10 pb-10">
+          {/* Header */}
+          <header className="space-y-4 border-b border-theme-text-primary/10 pb-10">
             <Link href="/" className="text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
               &larr; Back
             </Link>
-            <div className="mt-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6">
+            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6">
               <div className="space-y-3">
                 <h1 className="text-4xl sm:text-6xl font-bold uppercase tracking-[0.2em]">About</h1>
                 <p className="text-sm uppercase tracking-widest text-theme-text-tertiary">
                   Purdue dining nutrition tracker
                 </p>
               </div>
-              {/* Quick nav pills */}
-              <nav className="flex flex-wrap gap-2 sm:justify-end">
-                {[
-                  { href: '/', label: 'Home' },
-                  { href: '/changelog', label: 'Changelog' },
-                  { href: '/profile', label: 'Profile' },
-                ].map(({ href, label }) => (
-                  <Link key={href} href={href}
-                    className="px-3 py-1.5 border border-theme-text-primary/20 text-[10px] uppercase tracking-wider text-theme-text-tertiary hover:text-theme-text-primary hover:border-theme-text-primary/50 transition-colors">
-                    {label}
-                  </Link>
-                ))}
-              </nav>
+              <p className="text-sm text-theme-text-secondary leading-relaxed max-w-md">
+                A privacy-focused calorie and macro tracker designed for Purdue students.
+                Browse dining court menus, track your meals, and monitor nutrition&mdash;no account required.
+              </p>
             </div>
           </header>
 
-          {/* ── Two-column body ── */}
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.4fr] gap-10 lg:gap-16 items-start">
+          {/* Two-column body */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-16">
 
-            {/* Left column */}
-            <div className="space-y-10">
+            {/* Left: main content */}
+            <div className="lg:col-span-2 space-y-12">
 
-              {/* What is BoilerFuel */}
-              <section className="space-y-4">
-                <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
-                  What is BoilerFuel
-                </h2>
-                <p className="text-theme-text-secondary leading-relaxed">
-                  A privacy-focused calorie and macro tracker designed for Purdue students.
-                  Browse dining court menus, track your meals, and monitor nutrition&mdash;all
-                  without creating an account. Your data never leaves your device.
-                </p>
-              </section>
-
-              {/* How It Works */}
-              <section className="space-y-4">
-                <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
-                  How It Works
-                </h2>
-                <div className="border border-theme-text-primary/20">
-                  {steps.map((step, i) => (
-                    <div key={step.n}
-                      className={`flex items-start gap-5 px-5 py-4 ${i > 0 ? 'border-t border-theme-text-primary/10' : ''}`}>
-                      <span className="text-xl font-bold text-theme-text-primary/20 tabular-nums shrink-0 w-8">{step.n}</span>
-                      <div>
-                        <span className="text-sm font-bold uppercase tracking-wider text-theme-text-primary">{step.title}</span>
-                        <p className="text-xs text-theme-text-tertiary mt-0.5 leading-relaxed">{step.desc}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </section>
-
-              {/* Privacy */}
-              <section className="space-y-4">
-                <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
-                  Privacy &amp; Data
-                </h2>
-                <p className="text-theme-text-secondary leading-relaxed">
-                  All meal logs are stored locally in your browser. Nothing is sent to a server.
-                </p>
-                <div className="grid grid-cols-2 gap-px bg-theme-text-primary/10 border border-theme-text-primary/10">
-                  {['No Accounts', 'No Cloud Sync', 'No Tracking', 'Device Only'].map(item => (
-                    <div key={item} className="bg-theme-bg-primary py-4 px-4 text-center">
-                      <span className="text-xs uppercase tracking-wider text-theme-text-secondary">{item}</span>
-                    </div>
-                  ))}
-                </div>
-                <p className="text-xs text-theme-text-tertiary">
-                  Clearing your browser cookies will delete your logs. Data does not sync across devices.
-                </p>
-              </section>
-
-              {/* Tech Stack */}
-              <section className="space-y-4">
-                <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
-                  Technology
-                </h2>
-                <div className="grid grid-cols-2 gap-px bg-theme-text-primary/10 border border-theme-text-primary/10">
-                  <div className="bg-theme-bg-primary p-5 space-y-2">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-theme-text-primary">Frontend</h3>
-                    <ul className="text-xs text-theme-text-tertiary space-y-1.5">
-                      <li>Next.js &amp; React</li>
-                      <li>TailwindCSS</li>
-                      <li>Vercel</li>
-                    </ul>
-                  </div>
-                  <div className="bg-theme-bg-primary p-5 space-y-2">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-theme-text-primary">Backend</h3>
-                    <ul className="text-xs text-theme-text-tertiary space-y-1.5">
-                      <li>Flask (Python)</li>
-                      <li>PostgreSQL</li>
-                      <li>Web Scraper</li>
-                    </ul>
-                  </div>
-                </div>
-              </section>
-
-            </div>
-
-            {/* Right column */}
-            <div className="space-y-10">
-
-              {/* Features — 3-col grid on large screens */}
-              <section className="space-y-4">
+              {/* Features */}
+              <section className="space-y-5">
                 <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
                   Features
                 </h2>
@@ -180,6 +90,24 @@ export default function About() {
                     <div key={f.label} className="bg-theme-bg-primary p-5 space-y-2">
                       <h3 className="text-sm font-bold uppercase tracking-wider text-theme-text-primary">{f.label}</h3>
                       <p className="text-xs text-theme-text-tertiary leading-relaxed">{f.desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              {/* How It Works */}
+              <section className="space-y-5">
+                <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
+                  How It Works
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-theme-text-primary/10 border border-theme-text-primary/10">
+                  {steps.map(step => (
+                    <div key={step.n} className="bg-theme-bg-primary flex items-start gap-5 px-5 py-5">
+                      <span className="text-2xl font-bold text-theme-text-primary/15 tabular-nums shrink-0 leading-none pt-0.5">{step.n}</span>
+                      <div>
+                        <span className="text-sm font-bold uppercase tracking-wider text-theme-text-primary">{step.title}</span>
+                        <p className="text-xs text-theme-text-tertiary mt-1 leading-relaxed">{step.desc}</p>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -207,12 +135,8 @@ export default function About() {
                   <textarea
                     value={fbMessage}
                     onChange={e => setFbMessage(e.target.value)}
-                    placeholder={
-                      fbType === 'idea' ? 'Describe your idea or feature request...'
-                      : fbType === 'bug' ? 'Describe the issue you encountered...'
-                      : 'Your feedback...'
-                    }
-                    rows={5}
+                    placeholder={fbType === 'idea' ? 'Describe your idea or feature request...' : fbType === 'bug' ? 'Describe the issue you encountered...' : 'Your feedback...'}
+                    rows={4}
                     maxLength={2000}
                     className="w-full border border-theme-text-primary/20 bg-transparent text-theme-text-primary px-3 py-2 text-xs focus:border-theme-text-primary focus:outline-none transition-colors resize-none"
                     required
@@ -236,17 +160,85 @@ export default function About() {
               </section>
 
             </div>
+
+            {/* Right: sidebar */}
+            <div className="space-y-10">
+
+              {/* Privacy */}
+              <section className="space-y-4">
+                <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
+                  Privacy &amp; Data
+                </h2>
+                <p className="text-xs text-theme-text-secondary leading-relaxed">
+                  All meal logs are stored locally in your browser. Nothing is sent to a server.
+                </p>
+                <div className="space-y-px border border-theme-text-primary/10">
+                  {['No Accounts', 'No Cloud Sync', 'No Tracking', 'Device Only'].map(item => (
+                    <div key={item} className="bg-theme-text-primary/5 px-4 py-2.5 flex items-center gap-3">
+                      <span className="w-1.5 h-1.5 bg-theme-text-primary/30 shrink-0" />
+                      <span className="text-xs uppercase tracking-wider text-theme-text-secondary">{item}</span>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-[10px] text-theme-text-tertiary leading-relaxed">
+                  Clearing browser storage will delete your logs. Data does not sync across devices.
+                </p>
+              </section>
+
+              {/* Technology */}
+              <section className="space-y-4">
+                <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
+                  Technology
+                </h2>
+                <div className="space-y-px border border-theme-text-primary/10">
+                  <div className="bg-theme-bg-primary p-4 space-y-2">
+                    <h3 className="text-[10px] font-bold uppercase tracking-wider text-theme-text-primary">Frontend</h3>
+                    <ul className="text-xs text-theme-text-tertiary space-y-1">
+                      <li>Next.js &amp; React</li>
+                      <li>TailwindCSS</li>
+                      <li>Vercel</li>
+                    </ul>
+                  </div>
+                  <div className="bg-theme-bg-primary p-4 space-y-2">
+                    <h3 className="text-[10px] font-bold uppercase tracking-wider text-theme-text-primary">Backend</h3>
+                    <ul className="text-xs text-theme-text-tertiary space-y-1">
+                      <li>Flask (Python)</li>
+                      <li>PostgreSQL</li>
+                      <li>Web Scraper</li>
+                    </ul>
+                  </div>
+                </div>
+              </section>
+
+              {/* Navigate */}
+              <section className="space-y-4">
+                <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
+                  Navigate
+                </h2>
+                <div className="space-y-px border border-theme-text-primary/10">
+                  {[
+                    { href: '/', label: 'Home' },
+                    { href: '/profile', label: 'Profile' },
+                    { href: '/changelog', label: 'Changelog' },
+                  ].map(link => (
+                    <Link key={link.href} href={link.href}
+                      className="flex items-center justify-between px-4 py-3 bg-theme-bg-primary hover:bg-theme-text-primary/5 transition-colors group">
+                      <span className="text-xs uppercase tracking-wider text-theme-text-secondary group-hover:text-theme-text-primary transition-colors">
+                        {link.label}
+                      </span>
+                      <span className="text-theme-text-tertiary/40 group-hover:text-theme-text-tertiary transition-colors text-xs">&rarr;</span>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+
+            </div>
           </div>
 
-          {/* ── Footer ── */}
-          <footer className="border-t border-theme-text-primary/10 pt-8 flex flex-wrap items-center justify-between gap-4">
-            <div className="flex gap-6 text-xs uppercase tracking-widest">
-              <Link href="/" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Home</Link>
-              <Link href="/changelog" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Changelog</Link>
-              <Link href="/admin" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Admin</Link>
-              <Link href="/profile" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Profile</Link>
-            </div>
-            <span className="text-xs text-theme-text-tertiary/40">{new Date().getFullYear()}</span>
+          {/* Footer */}
+          <footer className="border-t border-theme-text-primary/10 pt-6 flex items-center justify-between">
+            <span className="text-[10px] uppercase tracking-widest text-theme-text-tertiary/40">BoilerFuel</span>
+            <span className="text-[10px] text-theme-text-tertiary">{new Date().getFullYear()}</span>
           </footer>
 
         </div>
@@ -255,5 +247,4 @@ export default function About() {
   );
 }
 
-// About uses its own full-page layout
 About.getLayout = (page) => page;
