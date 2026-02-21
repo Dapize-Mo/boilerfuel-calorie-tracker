@@ -217,21 +217,23 @@ export default function AdminPanel() {
       </Head>
 
       <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary font-mono">
-        <div className="max-w-5xl mx-auto px-6 sm:px-10 py-16 sm:py-24 space-y-16">
+        <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 py-12 sm:py-20 space-y-12">
 
           {/* Header */}
-          <header className="space-y-4">
-            <div className="flex items-start justify-between gap-4">
+          <header className="border-b border-theme-text-primary/10 pb-10">
+            <Link href="/" className="text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
+              &larr; Back
+            </Link>
+            <div className="mt-6 flex items-end justify-between gap-4">
               <div className="space-y-3">
-                <Link href="/" className="text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
-                  &larr; Back
-                </Link>
-                <h1 className="text-3xl sm:text-5xl font-bold uppercase tracking-[0.2em]">Admin</h1>
-                <div className="w-12 h-px bg-theme-text-primary/30" />
+                <h1 className="text-4xl sm:text-6xl font-bold uppercase tracking-[0.2em]">Admin</h1>
+                <p className="text-sm uppercase tracking-widest text-theme-text-tertiary">
+                  {session?.user?.email ?? 'Authenticated'}
+                </p>
               </div>
               <button
                 onClick={handleLogout}
-                className="border border-theme-text-primary/20 px-4 py-2 text-xs font-bold uppercase tracking-wider text-theme-text-tertiary hover:text-theme-text-primary hover:border-theme-text-primary/40 transition-colors mt-6"
+                className="border border-theme-text-primary/20 px-4 py-2 text-xs font-bold uppercase tracking-wider text-theme-text-tertiary hover:text-theme-text-primary hover:border-theme-text-primary/40 transition-colors"
               >
                 Logout
               </button>
@@ -410,14 +412,9 @@ export default function AdminPanel() {
           </section>
 
           {/* Footer */}
-          <footer className="border-t border-theme-text-primary/10 pt-8 flex flex-wrap items-center justify-between gap-4">
-            <div className="flex gap-6 text-xs uppercase tracking-widest">
-              <Link href="/" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Home</Link>
-              <Link href="/about" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">About</Link>
-              <Link href="/changelog" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Changelog</Link>
-              <Link href="/profile" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Profile</Link>
-            </div>
-            <span className="text-xs text-theme-text-tertiary/40">{new Date().getFullYear()}</span>
+          <footer className="border-t border-theme-text-primary/10 pt-6 flex items-center justify-between">
+            <span className="text-[10px] uppercase tracking-widest text-theme-text-tertiary/40">BoilerFuel</span>
+            <span className="text-[10px] text-theme-text-tertiary">{new Date().getFullYear()}</span>
           </footer>
 
         </div>
