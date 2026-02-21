@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
@@ -49,7 +49,7 @@ function shiftDate(dateKey, delta) {
 
 export default function ProfilePage() {
   const { theme, setTheme } = useTheme();
-  const { meals, goals, setGoals, totals, clearMeals, mealsByDate, getWeight, setWeight, exportData, templates, saveTemplate, deleteTemplate, applyTemplate, dietaryPrefs, setDietaryPrefs, waterByDate, getWater, addWater, syncNow, reloadFromStorage } = useMeals();
+  const { meals, goals, setGoals, totals, clearMeals, mealsByDate, getWeight, setWeight, weightByDate, exportData, templates, saveTemplate, deleteTemplate, applyTemplate, dietaryPrefs, setDietaryPrefs, waterByDate, getWater, addWater, syncNow, reloadFromStorage } = useMeals();
   const [editingGoals, setEditingGoals] = useState(false);
   const [draft, setDraft] = useState(goals);
   const [weightInput, setWeightInput] = useState('');
@@ -61,6 +61,9 @@ export default function ProfilePage() {
   const [joinSecret, setJoinSecret] = useState('');
   const [syncError, setSyncError] = useState('');
   const [syncMsg, setSyncMsg] = useState('');
+  const [weightImportStatus, setWeightImportStatus] = useState(''); // '' | 'success' | 'error'
+  const [weightImportMsg, setWeightImportMsg] = useState('');
+  const weightFileRef = useRef(null);
 
   // Check if already paired on mount
   useEffect(() => {
@@ -158,6 +161,77 @@ export default function ProfilePage() {
   }
   function cancelEditing() {
     setEditingGoals(false);
+  }
+
+  function exportWeightCSV() {
+    const rows = Object.entries(weightByDate || {})
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([date, w]) => `${date},${w}`);
+    const csv = ['date,weight_lbs', ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `boilerfuel-weight-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function exportWeightJSON() {
+    const sorted = Object.fromEntries(
+      Object.entries(weightByDate || {}).sort(([a], [b]) => a.localeCompare(b))
+    );
+    const blob = new Blob([JSON.stringify(sorted, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `boilerfuel-weight-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function handleWeightImport(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const text = ev.target.result;
+        let entries = {};
+        if (file.name.endsWith('.json')) {
+          const parsed = JSON.parse(text);
+          if (typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('Invalid JSON format');
+          entries = parsed;
+        } else {
+          // CSV: skip header row, parse date,weight_lbs
+          const lines = text.trim().split('\n').filter(Boolean);
+          for (const line of lines) {
+            if (line.toLowerCase().startsWith('date')) continue;
+            const [date, weight] = line.split(',');
+            if (!date || !weight) continue;
+            const d = date.trim();
+            const w = parseFloat(weight.trim());
+            if (/^\d{4}-\d{2}-\d{2}$/.test(d) && !isNaN(w) && w > 0) {
+              entries[d] = w;
+            }
+          }
+        }
+        const count = Object.keys(entries).length;
+        if (count === 0) throw new Error('No valid entries found');
+        for (const [date, weight] of Object.entries(entries)) {
+          setWeight(weight, date);
+        }
+        setWeightImportStatus('success');
+        setWeightImportMsg(`Imported ${count} weight entr${count === 1 ? 'y' : 'ies'}.`);
+        setTimeout(() => { setWeightImportStatus(''); setWeightImportMsg(''); }, 4000);
+      } catch (err) {
+        setWeightImportStatus('error');
+        setWeightImportMsg(err.message || 'Failed to parse file.');
+        setTimeout(() => { setWeightImportStatus(''); setWeightImportMsg(''); }, 4000);
+      }
+    };
+    reader.readAsText(file);
   }
 
   return (
@@ -514,6 +588,45 @@ export default function ProfilePage() {
             <Link href="/stats" className="text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors inline-flex items-center gap-1">
               View weight trend &rarr;
             </Link>
+
+            {/* Import / Export */}
+            <div className="space-y-2">
+              <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary">Import &amp; Export</div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={exportWeightCSV}
+                  disabled={!Object.keys(weightByDate || {}).length}
+                  className="px-3 py-1.5 border border-theme-text-primary/30 text-theme-text-secondary text-[10px] font-bold uppercase tracking-wider hover:text-theme-text-primary hover:border-theme-text-primary transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                  Export CSV
+                </button>
+                <button
+                  onClick={exportWeightJSON}
+                  disabled={!Object.keys(weightByDate || {}).length}
+                  className="px-3 py-1.5 border border-theme-text-primary/30 text-theme-text-secondary text-[10px] font-bold uppercase tracking-wider hover:text-theme-text-primary hover:border-theme-text-primary transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                  Export JSON
+                </button>
+                <button
+                  onClick={() => weightFileRef.current?.click()}
+                  className="px-3 py-1.5 border border-theme-text-primary/20 text-theme-text-tertiary text-[10px] font-bold uppercase tracking-wider hover:text-theme-text-primary hover:border-theme-text-primary transition-colors">
+                  Import
+                </button>
+                <input
+                  ref={weightFileRef}
+                  type="file"
+                  accept=".csv,.json"
+                  className="hidden"
+                  onChange={handleWeightImport}
+                />
+              </div>
+              {weightImportMsg && (
+                <p className={`text-xs ${weightImportStatus === 'error' ? 'text-red-400' : 'text-green-500'}`}>
+                  {weightImportMsg}
+                </p>
+              )}
+              <p className="text-[10px] text-theme-text-tertiary">
+                CSV format: <span className="font-mono">date,weight_lbs</span> &mdash; one row per day. Import merges with existing data.
+              </p>
+            </div>
           </section>
 
           {/* ═══ DIETARY PREFERENCES ═══ */}
