@@ -15,7 +15,7 @@ const EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
 const TRANSITION_MS = 900; // cooldown for scroll-triggered transitions
 
 // ── Custom black & white calendar picker ──
-function CalendarPicker({ value, onChange, compact = false }) {
+function CalendarPicker({ value, onChange, compact = false, hideIcon = false }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   const current = value ? new Date(value + 'T00:00:00') : new Date();
@@ -60,13 +60,15 @@ function CalendarPicker({ value, onChange, compact = false }) {
   return (
     <div ref={ref} className="relative" data-calendar>
       <button type="button" onClick={() => setOpen(o => !o)}
-        className={`w-full border bg-theme-bg-secondary text-theme-text-primary text-left font-mono flex items-center justify-between hover:bg-theme-bg-hover transition-all ${
+        className={`w-full border bg-theme-bg-secondary text-theme-text-primary text-left font-mono flex items-center hover:bg-theme-bg-hover transition-all ${
           compact ? 'px-2 py-1.5 border-theme-text-primary/30 text-sm gap-2' : 'p-2 border-theme-text-primary gap-3'
-        }`}>
+        } ${hideIcon ? 'justify-center' : 'justify-between'}`}>
         <span className="whitespace-nowrap">{displayDate}</span>
-        <svg width={compact ? 14 : 18} height={compact ? 14 : 18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="opacity-60 shrink-0">
-          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
-        </svg>
+        {!hideIcon && (
+          <svg width={compact ? 14 : 18} height={compact ? 14 : 18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="opacity-60 shrink-0">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+          </svg>
+        )}
       </button>
       {open && (
         <div className="absolute z-50 mt-1 left-0 w-72 max-w-[calc(100vw-2rem)] border border-theme-text-primary bg-theme-bg-primary shadow-lg">
@@ -926,7 +928,7 @@ export default function Home() {
           ) : (
             <div className="flex items-stretch gap-0.5">
               <button onClick={prevDay} className="border border-theme-text-primary/30 px-1.5 text-sm font-bold text-theme-text-secondary hover:bg-theme-bg-hover hover:text-theme-text-primary transition-colors">&#8249;</button>
-              <div className="flex-1 min-w-0"><CalendarPicker value={selectedDate} onChange={setSelectedDate} compact={true} /></div>
+              <div className="flex-1 min-w-0"><CalendarPicker value={selectedDate} onChange={setSelectedDate} compact={true} hideIcon={true} /></div>
               <button onClick={nextDay} className="border border-theme-text-primary/30 px-1.5 text-sm font-bold text-theme-text-secondary hover:bg-theme-bg-hover hover:text-theme-text-primary transition-colors">&#8250;</button>
             </div>
           )}
@@ -1227,22 +1229,11 @@ export default function Home() {
                   const count = getCount(food.id, selectedDate);
                   const macros = food.macros || {};
                   const noNutrition = food.calories === 0 && !macros.protein && !macros.carbs && !(macros.fats || macros.fat);
-                  // Estimate calories from component data for BYO items
+                  // Estimate calories from component data for BYO items — sum all non-zero components
                   const estimatedCal = noNutrition ? (() => {
                     const comps = (macros.components || []).filter(c => c.calories > 0);
                     if (comps.length === 0) return null;
-                    const high = [...comps].filter(c => c.calories >= 150).sort((a, b) => a.calories - b.calories);
-                    let chosen = comps;
-                    if (high.length >= 2) {
-                      const maxCal = high[high.length - 1].calories;
-                      const alts = high.filter(c => c.calories >= maxCal * 0.5);
-                      if (alts.length >= 2) {
-                        const picked = alts[Math.floor((alts.length - 1) / 2)];
-                        const ex = new Set(alts.filter(c => c.name !== picked.name).map(c => c.name));
-                        chosen = comps.filter(c => !ex.has(c.name));
-                      }
-                    }
-                    return chosen.reduce((s, c) => s + c.calories, 0);
+                    return comps.reduce((s, c) => s + c.calories, 0);
                   })() : null;
                   const fav = isFavorite(food.id);
                   return (
@@ -1360,30 +1351,15 @@ export default function Home() {
                                 {(() => {
                                   const compsWithCal = components.filter(c => c.calories > 0);
                                   if (compsWithCal.length === 0) return null;
-                                  // Detect protein alternatives: high-cal items (>=150) within 80% of max cal
-                                  const highCal = [...compsWithCal].filter(c => c.calories >= 150).sort((a, b) => a.calories - b.calories);
-                                  let suggestedComps = compsWithCal;
-                                  let meatNote = null;
-                                  if (highCal.length >= 2) {
-                                    const maxCal = highCal[highCal.length - 1].calories;
-                                    const alts = highCal.filter(c => c.calories >= maxCal * 0.5);
-                                    if (alts.length >= 2) {
-                                      const picked = alts[Math.floor((alts.length - 1) / 2)]; // median
-                                      const exclude = new Set(alts.filter(c => c.id !== picked.id).map(c => c.id));
-                                      suggestedComps = compsWithCal.filter(c => !exclude.has(c.id));
-                                      meatNote = picked.name;
-                                    }
-                                  }
-                                  const total = suggestedComps.reduce((s, c) => s + c.calories, 0);
+                                  const total = compsWithCal.reduce((s, c) => s + c.calories, 0);
                                   return (
                                     <div className="mt-3 pt-3 border-t border-theme-text-primary/10 flex items-center justify-between gap-3">
                                       <div>
                                         <span className="text-xs font-bold uppercase tracking-wider">Est. full meal: </span>
                                         <span className="text-xs font-mono font-bold tabular-nums">{total} cal</span>
-                                        {meatNote && <p className="text-[10px] text-theme-text-tertiary mt-0.5">Protein: {meatNote} (median)</p>}
                                       </div>
                                       <button
-                                        onClick={(e) => { e.stopPropagation(); suggestedComps.forEach(c => addMeal(c, food.meal_time?.toLowerCase() || mealTime.toLowerCase(), selectedDate)); }}
+                                        onClick={(e) => { e.stopPropagation(); compsWithCal.forEach(c => addMeal(c, food.meal_time?.toLowerCase() || mealTime.toLowerCase(), selectedDate)); }}
                                         className="shrink-0 text-[10px] border border-theme-text-primary/30 px-2.5 py-1.5 font-bold uppercase tracking-wider hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors whitespace-nowrap">
                                         Add all
                                       </button>

@@ -482,25 +482,12 @@ function StatsTab() {
 
   if (loading) return <p className="text-xs uppercase tracking-widest text-theme-text-tertiary py-8 text-center">Loading...</p>;
 
-  // For BYO items with no direct calories, estimate from component data
+  // For BYO items with no direct calories, estimate from component data — sum all non-zero components
   function getEffectiveCalories(food) {
     if (food.calories > 0) return food.calories;
     const components = food.macros?.components;
     if (!components || components.length === 0) return 0;
-    const compsWithCal = components.filter(c => c.calories > 0);
-    if (compsWithCal.length === 0) return 0;
-    const highCal = [...compsWithCal].filter(c => c.calories >= 150).sort((a, b) => a.calories - b.calories);
-    let chosen = compsWithCal;
-    if (highCal.length >= 2) {
-      const maxCal = highCal[highCal.length - 1].calories;
-      const alts = highCal.filter(c => c.calories >= maxCal * 0.5);
-      if (alts.length >= 2) {
-        const picked = alts[Math.floor((alts.length - 1) / 2)];
-        const excludeNames = new Set(alts.filter(c => c.name !== picked.name).map(c => c.name));
-        chosen = compsWithCal.filter(c => !excludeNames.has(c.name));
-      }
-    }
-    return chosen.reduce((s, c) => s + c.calories, 0);
+    return components.filter(c => c.calories > 0).reduce((s, c) => s + c.calories, 0);
   }
 
   const total = foods?.length || 0;
