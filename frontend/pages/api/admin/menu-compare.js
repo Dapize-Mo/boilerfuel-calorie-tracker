@@ -15,6 +15,7 @@ function normalizeMeal(name) {
   const key = normalizeText(name);
   if (key === 'late lunch' || key === 'latelunch') return 'late lunch';
   if (key === 'breakfast') return 'breakfast';
+  if (key === 'brunch') return 'brunch';
   if (key === 'lunch') return 'lunch';
   if (key === 'dinner') return 'dinner';
   return name || 'Unknown';

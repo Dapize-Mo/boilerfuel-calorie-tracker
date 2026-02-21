@@ -380,7 +380,7 @@ export default function Home() {
   const [showFavsOnly, setShowFavsOnly] = useState(false);
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
 
-  const mealTimes = ['All', 'Breakfast', 'Lunch', 'Late Lunch', 'Dinner'];
+  const mealTimes = ['All', 'Breakfast', 'Brunch', 'Lunch', 'Late Lunch', 'Dinner'];
   const isLanding = view === 'landing';
 
   // ── Add meal handler (shows picker if mealTime is All) ──
@@ -1579,7 +1579,7 @@ export default function Home() {
             <div className="px-5 py-3">
               <div className="text-xs uppercase tracking-widest text-theme-text-tertiary mb-3">Select meal</div>
               <div className="flex flex-col gap-2">
-                {(mealPickerOptions || ['Breakfast', 'Lunch', 'Dinner']).map(mt => (
+                {(mealPickerOptions || ['Breakfast', 'Brunch', 'Lunch', 'Dinner']).map(mt => (
                   <button key={mt}
                     onClick={() => {
                       addMeal(mealPickerFood, mt.toLowerCase(), selectedDate);

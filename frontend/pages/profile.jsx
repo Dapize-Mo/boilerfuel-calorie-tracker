@@ -113,7 +113,7 @@ export default function ProfilePage() {
 
   // Group meals by meal_time
   const mealGroups = useMemo(() => {
-    const order = ['breakfast', 'lunch', 'dinner'];
+    const order = ['breakfast', 'brunch', 'lunch', 'dinner'];
     const normalize = (mt) => {
       const key = (mt || 'other').toLowerCase().trim();
       if (key === 'late lunch' || key === 'latelunch' || key === 'late-lunch') return ['lunch'];
