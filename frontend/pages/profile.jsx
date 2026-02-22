@@ -111,6 +111,24 @@ export default function ProfilePage() {
     return new Set(Object.keys(mealsByDate || {}));
   }, [mealsByDate]);
 
+  // Logging streak (consecutive days from today going backward)
+  const loggingStreak = useMemo(() => {
+    let streak = 0;
+    const today = getTodayKey();
+    const d = new Date(today + 'T00:00:00');
+    // Only count today if it has meals
+    while (true) {
+      const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      if ((mealsByDate[key] || []).length > 0) {
+        streak++;
+        d.setDate(d.getDate() - 1);
+      } else {
+        break;
+      }
+    }
+    return streak;
+  }, [mealsByDate]);
+
   // Group meals by meal_time
   const mealGroups = useMemo(() => {
     const order = ['breakfast', 'brunch', 'lunch', 'dinner'];
@@ -317,6 +335,19 @@ export default function ProfilePage() {
                 &rarr;
               </button>
             </div>
+
+            {/* Streak badge */}
+            {loggingStreak > 0 && (
+              <div className="flex items-center gap-2 px-3 py-2 border border-yellow-500/20 bg-yellow-500/5">
+                <span className="text-lg leading-none" role="img" aria-label="fire">🔥</span>
+                <div>
+                  <span className="text-sm font-bold tabular-nums text-yellow-500">{loggingStreak}</span>
+                  <span className="text-xs text-theme-text-tertiary"> day{loggingStreak !== 1 ? 's' : ''} in a row</span>
+                </div>
+                {loggingStreak >= 7 && <span className="ml-auto text-[10px] text-yellow-500/60 font-bold uppercase tracking-wider">Week streak!</span>}
+                {loggingStreak >= 30 && <span className="ml-auto text-[10px] text-yellow-500/80 font-bold uppercase tracking-wider">Month streak!</span>}
+              </div>
+            )}
 
             {/* Progress bars */}
             <div className="space-y-4">

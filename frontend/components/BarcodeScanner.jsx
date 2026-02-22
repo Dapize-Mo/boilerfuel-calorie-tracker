@@ -9,6 +9,7 @@ export default function BarcodeScanner({ onFoodFound, onClose }) {
   const [foundFood, setFoundFood] = useState(null);
   const [manualCode, setManualCode] = useState('');
   const [scannedCode, setScannedCode] = useState('');
+  const [savedAsCustom, setSavedAsCustom] = useState(false);
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const scanningRef = useRef(false);
@@ -143,7 +144,31 @@ export default function BarcodeScanner({ onFoodFound, onClose }) {
     setScannedCode('');
     setManualCode('');
     setError('');
+    setSavedAsCustom(false);
     startScanning();
+  };
+
+  const saveAsCustomFood = async () => {
+    if (!foundFood) return;
+    try {
+      const body = {
+        name: foundFood.brand ? `${foundFood.name} (${foundFood.brand})` : foundFood.name,
+        calories: foundFood.calories,
+        protein: foundFood.macros.protein,
+        carbs: foundFood.macros.carbs,
+        fats: foundFood.macros.fat,
+        serving_size: foundFood.serving_size || '',
+        notes: `Barcode: ${scannedCode}`,
+      };
+      // Save to localStorage via custom foods format (no auth needed for local storage approach)
+      const key = 'boilerfuel_custom_foods';
+      const existing = JSON.parse(localStorage.getItem(key) || '[]');
+      existing.push({ ...body, id: `custom-${Date.now()}`, createdAt: Date.now() });
+      localStorage.setItem(key, JSON.stringify(existing));
+      setSavedAsCustom(true);
+    } catch {
+      setSavedAsCustom(false);
+    }
   };
 
   return (
@@ -299,6 +324,16 @@ export default function BarcodeScanner({ onFoodFound, onClose }) {
                   Scan Another
                 </button>
               </div>
+              <button
+                onClick={saveAsCustomFood}
+                disabled={savedAsCustom}
+                className={`w-full mt-1.5 py-1.5 border text-[10px] uppercase tracking-widest font-bold transition-colors ${
+                  savedAsCustom
+                    ? 'border-green-500/30 text-green-500/60 cursor-default'
+                    : 'border-theme-text-primary/15 text-theme-text-tertiary/60 hover:text-theme-text-primary hover:border-theme-text-primary/30'
+                }`}>
+                {savedAsCustom ? '✓ Saved to custom foods' : 'Save as custom food'}
+              </button>
             </div>
           )}
 

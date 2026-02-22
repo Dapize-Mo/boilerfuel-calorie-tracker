@@ -997,7 +997,22 @@ export default function Home() {
           <LocationDropdown value={location} onChange={setLocation} availableLocations={availableLocations} retailLocations={retailLocations} compact={!isLanding} />
         </div>
         <div style={{ flex: !isLanding && isMobile ? '1 1 0' : undefined, width: isLanding ? (isMobile ? 220 : 180) : (isMobile ? undefined : 130), transition: `width 0.7s ${EASE}` }}>
-          <label style={labelStyle} className="text-theme-text-secondary">Meal Time</label>
+          <div className="flex items-center justify-between" style={labelStyle}>
+            <span className="text-theme-text-secondary">Meal Time</span>
+            <button
+              onClick={() => {
+                const h = new Date().getHours();
+                if (h < 10) setMealTime('Breakfast');
+                else if (h < 11) setMealTime('Brunch');
+                else if (h < 14) setMealTime('Lunch');
+                else if (h < 15) setMealTime('Late Lunch');
+                else setMealTime('Dinner');
+              }}
+              className="text-[9px] font-bold uppercase tracking-widest text-theme-text-tertiary/60 hover:text-theme-text-primary transition-colors border border-theme-text-primary/15 px-1 py-0.5 leading-tight"
+              title="Auto-select based on current time">
+              Now
+            </button>
+          </div>
           <select value={mealTime} onChange={(e) => setMealTime(e.target.value)}
             className={`border bg-theme-bg-secondary text-theme-text-primary focus:border-theme-text-primary ${
               isLanding ? 'border-theme-text-primary' : 'border-theme-text-primary/30'
@@ -1232,6 +1247,40 @@ export default function Home() {
                     Save day
                   </button>
                 </div>
+                {/* Copy from another day */}
+                {(() => {
+                  const copyableDates = Object.entries(mealsByDate)
+                    .filter(([d, meals]) => d !== selectedDate && meals.length > 0)
+                    .sort(([a], [b]) => b.localeCompare(a))
+                    .slice(0, 7);
+                  if (copyableDates.length === 0) return null;
+                  const yesterday = (() => { const d = new Date(selectedDate + 'T00:00:00'); d.setDate(d.getDate() - 1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
+                  const fmtDate = (key) => { const d = new Date(key + 'T00:00:00'); return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()] + ' ' + (d.getMonth()+1) + '/' + d.getDate(); };
+                  return (
+                    <div className="mb-3 pb-3 border-b border-theme-text-primary/10">
+                      <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary/60 mb-2">Copy from another day</div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {copyableDates.map(([date, meals]) => (
+                          <button key={date}
+                            onClick={() => {
+                              const existing = mealsByDate[selectedDate] || [];
+                              const newEntries = meals.map(f => ({ ...f, addedAt: Date.now() }));
+                              // Use applyTemplate-style logic directly
+                              applyTemplate({ foods: newEntries }, selectedDate);
+                            }}
+                            className="flex items-center gap-1 px-2 py-1 border border-theme-text-primary/20 text-[10px] hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors"
+                            title={`Copy ${meals.length} meals from this day`}>
+                            <span className={`font-bold ${date === yesterday ? 'text-yellow-500/80' : ''}`}>
+                              {date === yesterday ? 'Yesterday' : fmtDate(date)}
+                            </span>
+                            <span className="text-theme-text-tertiary/50">{meals.length} items</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 {/* Template list */}
                 {!templates || templates.length === 0 ? (
                   <div className="text-xs text-theme-text-tertiary/60 italic py-1">No templates saved yet. Log meals then save them as a template.</div>
@@ -1593,6 +1642,20 @@ export default function Home() {
                                 {food.dining_court && <span className="capitalize">{food.dining_court}</span>}
                                 {food.meal_time && <span className="capitalize">{food.meal_time}</span>}
                                 {(() => { const ss = macros.serving_size || food.serving_size || ''; const skip = !ss || /^(1 serving|serving|unknown)$/i.test(ss.trim()); return !skip ? <span>{ss}</span> : null; })()}
+                                {food.next_available && (() => {
+                                  const d = new Date(food.next_available + 'T00:00:00');
+                                  const today = new Date().toISOString().slice(0, 10);
+                                  const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+                                  const label = food.next_available === today ? 'Available today'
+                                    : food.next_available === tomorrow ? 'Available tomorrow'
+                                    : `Next: ${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()]} ${d.getMonth()+1}/${d.getDate()}`;
+                                  return (
+                                    <span className="flex items-center gap-1 text-green-500/70">
+                                      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>
+                                      {label}
+                                    </span>
+                                  );
+                                })()}
                               </div>
 
                               {/* Actions row */}
@@ -1816,14 +1879,35 @@ export default function Home() {
                   <span className="text-[9px] text-theme-text-tertiary/50">{remaining} left</span>
                 )}
               </div>
-              <div className="flex items-center gap-3 text-[10px] tabular-nums text-theme-text-tertiary">
-                <span><span className="font-bold text-theme-text-secondary">{Math.round(selectedDateTotals.protein)}</span>g P</span>
-                <span><span className="font-bold text-theme-text-secondary">{Math.round(selectedDateTotals.carbs)}</span>g C</span>
-                <span><span className="font-bold text-theme-text-secondary">{Math.round(selectedDateTotals.fat)}</span>g F</span>
+              <div className="flex items-center gap-3 text-[10px] tabular-nums">
+                {[
+                  { label: 'P', val: Math.round(selectedDateTotals.protein), goal: goals?.protein || 150, color: 'bg-blue-400' },
+                  { label: 'C', val: Math.round(selectedDateTotals.carbs), goal: goals?.carbs || 250, color: 'bg-yellow-400' },
+                  { label: 'F', val: Math.round(selectedDateTotals.fat), goal: goals?.fat || 65, color: 'bg-orange-400' },
+                ].map(m => {
+                  const pct = Math.min((m.val / m.goal) * 100, 100);
+                  const over = m.val > m.goal;
+                  return (
+                    <div key={m.label} className="flex flex-col items-end gap-0.5 hidden sm:flex">
+                      <span className="text-theme-text-tertiary">
+                        <span className={`font-bold ${over ? 'text-red-400' : 'text-theme-text-secondary'}`}>{m.val}</span>/{m.goal}g {m.label}
+                      </span>
+                      <div className="w-16 h-0.5 bg-theme-text-primary/10 overflow-hidden">
+                        <div className={`h-full ${over ? 'bg-red-400' : m.color} transition-all`} style={{ width: `${pct}%` }} />
+                      </div>
+                    </div>
+                  );
+                })}
+                {/* Mobile: just numbers */}
+                <div className="flex items-center gap-2 sm:hidden text-theme-text-tertiary">
+                  <span><span className="font-bold text-theme-text-secondary">{Math.round(selectedDateTotals.protein)}</span>g P</span>
+                  <span><span className="font-bold text-theme-text-secondary">{Math.round(selectedDateTotals.carbs)}</span>g C</span>
+                  <span><span className="font-bold text-theme-text-secondary">{Math.round(selectedDateTotals.fat)}</span>g F</span>
+                </div>
                 <button
                   onClick={() => router.push('/profile')}
                   className="hidden sm:block text-[9px] uppercase tracking-widest text-theme-text-tertiary/50 hover:text-theme-text-primary transition-colors border border-theme-text-primary/15 px-1.5 py-0.5">
-                  View Log
+                  Log
                 </button>
               </div>
             </div>
