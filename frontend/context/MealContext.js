@@ -331,7 +331,7 @@ export function MealProvider({ children }) {
   const getCount = useCallback((foodId, dateOverride) => {
     const key = dateOverride || getTodayKey();
     const existing = mealsByDate[key] || [];
-    return existing.filter(m => m.id === foodId).length;
+    return existing.filter(m => m.id === foodId).reduce((sum, m) => sum + (m.servings || 1), 0);
   }, [mealsByDate]);
 
   // ── Export data ──
