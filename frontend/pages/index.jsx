@@ -981,14 +981,6 @@ export default function Home() {
               <button onClick={prevDay} className="border border-theme-text-primary/30 px-1.5 text-sm font-bold text-theme-text-secondary hover:bg-theme-bg-hover hover:text-theme-text-primary transition-colors">&#8249;</button>
               <div className="flex-1 min-w-0"><CalendarPicker value={selectedDate} onChange={setSelectedDate} compact={true} hideIcon={true} /></div>
               <button onClick={nextDay} className="border border-theme-text-primary/30 px-1.5 text-sm font-bold text-theme-text-secondary hover:bg-theme-bg-hover hover:text-theme-text-primary transition-colors">&#8250;</button>
-              {selectedDate !== new Date().toISOString().slice(0, 10) && (
-                <button
-                  onClick={() => setSelectedDate(new Date().toISOString().slice(0, 10))}
-                  className="border border-yellow-500/40 px-1.5 text-[9px] font-bold text-yellow-500/70 hover:bg-yellow-500/10 hover:text-yellow-500 transition-colors uppercase tracking-wide whitespace-nowrap"
-                  title="Jump to today">
-                  Today
-                </button>
-              )}
             </div>
           )}
         </div>
@@ -1001,9 +993,11 @@ export default function Home() {
             <span className="text-theme-text-secondary">Meal Time</span>
             <button
               onClick={() => {
-                const h = new Date().getHours();
+                const now = new Date();
+                const h = now.getHours();
+                const isWeekend = now.getDay() === 0 || now.getDay() === 6;
                 if (h < 10) setMealTime('Breakfast');
-                else if (h < 11) setMealTime('Brunch');
+                else if (h < 11 && isWeekend) setMealTime('Brunch');
                 else if (h < 14) setMealTime('Lunch');
                 else if (h < 15) setMealTime('Late Lunch');
                 else setMealTime('Dinner');
