@@ -1453,16 +1453,16 @@ export default function Home() {
                               </div>
 
                               {/* Actions row */}
-                              <div className="flex items-center gap-2 mt-3 pt-3 border-t border-theme-text-primary/5">
+                              <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-theme-text-primary/5">
                                 <button
                                   onClick={(e) => { e.stopPropagation(); toggleFavorite(food.id); }}
-                                  className={`p-2 border transition-colors shrink-0 ${fav ? 'border-yellow-500/50 text-yellow-500' : 'border-theme-text-primary/20 text-theme-text-tertiary hover:text-yellow-500'}`}
+                                  className={`p-1.5 sm:p-1 border transition-colors shrink-0 ${fav ? 'border-yellow-500/50 text-yellow-500' : 'border-theme-text-primary/20 text-theme-text-tertiary hover:text-yellow-500'}`}
                                   title={fav ? 'Remove from favorites' : 'Add to favorites'}>
-                                  <svg width="14" height="14" viewBox="0 0 24 24" fill={fav ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
+                                  <svg width="13" height="13" viewBox="0 0 24 24" fill={fav ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
                                     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                                   </svg>
                                 </button>
-                                <div className="flex items-center gap-1 border border-theme-text-primary/20 px-2 py-1.5 shrink-0">
+                                <div className="flex items-center gap-1 border border-theme-text-primary/20 px-2 py-1 shrink-0">
                                   <span className="text-[9px] uppercase tracking-wider text-theme-text-tertiary">Srv</span>
                                   <select
                                     value={servingsInput[food.id] || 1}
@@ -1480,21 +1480,21 @@ export default function Home() {
                                 </div>
                                 <button
                                   onClick={(e) => handleAddMeal(food, e)}
-                                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 border border-theme-text-primary text-theme-text-primary text-xs uppercase tracking-wider font-bold hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors"
+                                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1 border border-theme-text-primary text-theme-text-primary text-xs uppercase tracking-wider font-bold hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors"
                                   title="Add to today's log">
-                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
                                   Add
                                 </button>
                                 <button
                                   onClick={(e) => { e.stopPropagation(); removeMeal(food, selectedDate); }}
                                   disabled={count === 0}
-                                  className={`px-3 py-2.5 border text-xs uppercase tracking-wider font-bold transition-colors shrink-0 flex items-center gap-1.5 ${
+                                  className={`px-3 py-2 sm:py-1 border text-xs uppercase tracking-wider font-bold transition-colors shrink-0 flex items-center gap-1.5 ${
                                     count > 0
                                       ? 'border-theme-text-primary/50 text-theme-text-secondary hover:bg-theme-text-primary hover:text-theme-bg-primary'
                                       : 'border-theme-text-primary/10 text-theme-text-tertiary/40 cursor-not-allowed'
                                   }`}
                                   title="Remove from log">
-                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="5" y1="12" x2="19" y2="12" /></svg>
                                   Remove
                                 </button>
                               </div>
