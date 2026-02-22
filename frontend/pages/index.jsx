@@ -357,7 +357,7 @@ function MacroTooltip({ food, pos }) {
 // ══════════════════════════════════════
 export default function Home() {
   const router = useRouter();
-  const { addMeal, removeMeal, getCount, isFavorite, toggleFavorite, dietaryPrefs, getWater, addWater, mealsByDate } = useMeals();
+  const { addMeal, removeMeal, getCount, isFavorite, toggleFavorite, dietaryPrefs, getWater, addWater, mealsByDate, goals, templates, saveTemplate, deleteTemplate, applyTemplate } = useMeals();
   // ── State ──
   const [location, setLocation] = useState({ type: 'all', value: 'All' });
   const [mealTime, setMealTime] = useState('All');
@@ -382,6 +382,8 @@ export default function Home() {
   const [showFavsOnly, setShowFavsOnly] = useState(false);
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
   const [showProfileTooltip, setShowProfileTooltip] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [templateName, setTemplateName] = useState('');
 
   const mealTimes = ['All', 'Breakfast', 'Brunch', 'Lunch', 'Late Lunch', 'Dinner'];
   const isLanding = view === 'landing';
@@ -852,6 +854,28 @@ export default function Home() {
         <title>BoilerFuel - Dining Menu</title>
       </Head>
 
+      {/* ── Calorie progress bar — thin line at very top ── */}
+      {(() => {
+        const pct = Math.min((selectedDateTotals.calories / (goals?.calories || 2000)) * 100, 100);
+        const over = selectedDateTotals.calories > (goals?.calories || 2000);
+        return (
+          <div style={{
+            position: 'fixed', top: 0, left: 0, right: 0, height: 2, zIndex: 100,
+            background: 'rgba(var(--color-text-primary), 0.06)',
+            transition: `opacity 0.4s ${EASE}`,
+            opacity: isLanding ? 0 : 1,
+            pointerEvents: 'none',
+          }}>
+            <div style={{
+              height: '100%',
+              width: `${pct}%`,
+              background: over ? 'rgb(239 68 68)' : selectedDateTotals.calories > 0 ? 'rgb(234 179 8)' : 'transparent',
+              transition: `width 0.6s ${EASE}, background 0.3s`,
+            }} />
+          </div>
+        );
+      })()}
+
       {/* ── Back arrow ── */}
       <button onClick={handleBack}
         className="text-theme-text-tertiary hover:text-theme-text-primary"
@@ -1021,17 +1045,27 @@ export default function Home() {
             <path fillRule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clipRule="evenodd" />
           </svg>
         </div>
-        {showProfileTooltip && selectedDateTotals.calories > 0 && (
+        {showProfileTooltip && (
           <div className="absolute right-0 top-full mt-1.5 w-44 border border-theme-text-primary/20 bg-theme-bg-secondary shadow-lg p-3 font-mono pointer-events-none"
             style={{ animation: `fadeInTooltip 0.15s ${EASE} both` }}>
             <div className="text-[9px] uppercase tracking-widest text-theme-text-tertiary mb-2">{dateLabel}</div>
-            <div className="text-2xl font-bold tabular-nums leading-none">{selectedDateTotals.calories}</div>
-            <div className="text-[9px] text-theme-text-tertiary mb-2">calories</div>
-            <div className="flex gap-2 text-[10px] tabular-nums">
-              <div><span className="font-bold">{Math.round(selectedDateTotals.protein)}</span><span className="text-theme-text-tertiary">g P</span></div>
-              <div><span className="font-bold">{Math.round(selectedDateTotals.carbs)}</span><span className="text-theme-text-tertiary">g C</span></div>
-              <div><span className="font-bold">{Math.round(selectedDateTotals.fat)}</span><span className="text-theme-text-tertiary">g F</span></div>
-            </div>
+            {selectedDateTotals.calories > 0 ? (
+              <>
+                <div className="text-2xl font-bold tabular-nums leading-none">{selectedDateTotals.calories}</div>
+                <div className="text-[9px] text-theme-text-tertiary mb-2">calories</div>
+                <div className="flex gap-2 text-[10px] tabular-nums">
+                  <div><span className="font-bold">{Math.round(selectedDateTotals.protein)}</span><span className="text-theme-text-tertiary">g P</span></div>
+                  <div><span className="font-bold">{Math.round(selectedDateTotals.carbs)}</span><span className="text-theme-text-tertiary">g C</span></div>
+                  <div><span className="font-bold">{Math.round(selectedDateTotals.fat)}</span><span className="text-theme-text-tertiary">g F</span></div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="text-2xl font-bold tabular-nums leading-none text-theme-text-tertiary/40">0</div>
+                <div className="text-[9px] text-theme-text-tertiary/60 mb-1">calories logged</div>
+                <div className="text-[9px] text-theme-text-tertiary/40 italic">No meals tracked yet</div>
+              </>
+            )}
           </div>
         )}
       </div>
@@ -1108,15 +1142,96 @@ export default function Home() {
                 Filters
               </button>
               <button
-                onClick={() => setShowBarcodeScanner(true)}
-                className="px-2 py-1.5 border border-theme-text-primary/20 text-theme-text-tertiary hover:text-theme-text-primary text-xs transition-colors"
-                title="Scan barcode"
+                onClick={() => setShowTemplates(f => !f)}
+                className={`px-2.5 py-1.5 border text-[10px] uppercase tracking-wider font-bold transition-colors flex items-center gap-1 ${showTemplates ? 'border-theme-text-primary text-theme-text-primary' : 'border-theme-text-primary/20 text-theme-text-tertiary hover:text-theme-text-primary'}`}
+                title="Meal templates"
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="2" y="4" width="20" height="16" rx="1" /><line x1="6" y1="8" x2="6" y2="16" /><line x1="9" y1="8" x2="9" y2="16" strokeWidth="1" /><line x1="11" y1="8" x2="11" y2="16" /><line x1="14" y1="8" x2="14" y2="16" strokeWidth="1" /><line x1="16" y1="8" x2="16" y2="16" /><line x1="18" y1="8" x2="18" y2="16" strokeWidth="1" />
-                </svg>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                Tmpl{templates?.length > 0 ? ` (${templates.length})` : ''}
               </button>
+              <div className="relative group/barcode">
+                <button
+                  onClick={() => setShowBarcodeScanner(true)}
+                  className="px-2 py-1.5 border border-theme-text-primary/10 text-theme-text-tertiary/40 text-xs cursor-not-allowed relative"
+                  title="Barcode scanner (coming soon)"
+                  disabled
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="2" y="4" width="20" height="16" rx="1" /><line x1="6" y1="8" x2="6" y2="16" /><line x1="9" y1="8" x2="9" y2="16" strokeWidth="1" /><line x1="11" y1="8" x2="11" y2="16" /><line x1="14" y1="8" x2="14" y2="16" strokeWidth="1" /><line x1="16" y1="8" x2="16" y2="16" /><line x1="18" y1="8" x2="18" y2="16" strokeWidth="1" />
+                  </svg>
+                  <span className="absolute -top-1.5 -right-1.5 text-[7px] font-bold bg-yellow-500/80 text-black px-0.5 leading-tight">WIP</span>
+                </button>
+                <div className="absolute bottom-full right-0 mb-1.5 w-36 bg-theme-bg-secondary border border-theme-text-primary/20 px-2.5 py-2 text-[10px] text-theme-text-tertiary pointer-events-none opacity-0 group-hover/barcode:opacity-100 transition-opacity z-50 font-mono">
+                  <div className="font-bold text-theme-text-secondary mb-0.5">Barcode Scanner</div>
+                  <div>Work in progress — coming soon</div>
+                </div>
+              </div>
             </div>
+
+            {/* Templates panel */}
+            {showTemplates && (
+              <div className="mb-4 p-3 border border-theme-text-primary/15 bg-theme-bg-secondary/30"
+                style={{ animation: `fadeInRow 0.2s ${EASE} both` }}>
+                <div className="text-[10px] font-bold uppercase tracking-widest text-theme-text-tertiary mb-3">Meal Templates</div>
+                {/* Save current day as template */}
+                <div className="flex gap-2 mb-3">
+                  <input
+                    type="text"
+                    value={templateName}
+                    onChange={e => setTemplateName(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        const dayMeals = mealsByDate[selectedDate] || [];
+                        if (!templateName.trim() || dayMeals.length === 0) return;
+                        saveTemplate(templateName.trim(), dayMeals);
+                        setTemplateName('');
+                      }
+                    }}
+                    placeholder="Name for today's meals..."
+                    className="flex-1 min-w-0 border border-theme-text-primary/20 bg-transparent text-theme-text-primary px-2 py-1 text-xs font-mono focus:border-theme-text-primary focus:outline-none"
+                  />
+                  <button
+                    onClick={() => {
+                      const dayMeals = mealsByDate[selectedDate] || [];
+                      if (!templateName.trim() || dayMeals.length === 0) return;
+                      saveTemplate(templateName.trim(), dayMeals);
+                      setTemplateName('');
+                    }}
+                    disabled={!templateName.trim() || (mealsByDate[selectedDate] || []).length === 0}
+                    className="shrink-0 px-3 py-1 border text-[10px] uppercase tracking-wider font-bold transition-colors disabled:opacity-30 disabled:cursor-not-allowed border-theme-text-primary/30 text-theme-text-secondary hover:bg-theme-text-primary hover:text-theme-bg-primary"
+                    title={(mealsByDate[selectedDate] || []).length === 0 ? 'No meals logged for this date' : 'Save as template'}
+                  >
+                    Save day
+                  </button>
+                </div>
+                {/* Template list */}
+                {!templates || templates.length === 0 ? (
+                  <div className="text-xs text-theme-text-tertiary/60 italic py-1">No templates saved yet. Log meals then save them as a template.</div>
+                ) : (
+                  <div className="space-y-1.5">
+                    {templates.map(t => (
+                      <div key={t.id} className="flex items-center gap-2 text-xs border border-theme-text-primary/8 px-2.5 py-2 bg-theme-bg-primary/30">
+                        <div className="flex-1 min-w-0">
+                          <div className="font-bold text-theme-text-primary truncate">{t.name}</div>
+                          <div className="text-[10px] text-theme-text-tertiary tabular-nums">{t.foods.length} item{t.foods.length !== 1 ? 's' : ''} &middot; {t.foods.reduce((s, f) => s + (f.calories || 0), 0)} cal</div>
+                        </div>
+                        <button
+                          onClick={() => applyTemplate(t, selectedDate)}
+                          className="shrink-0 px-2 py-0.5 border border-theme-text-primary/30 text-[10px] uppercase tracking-wider text-theme-text-secondary hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors">
+                          Apply
+                        </button>
+                        <button
+                          onClick={() => deleteTemplate(t.id)}
+                          className="shrink-0 px-1.5 py-0.5 border border-red-500/20 text-red-500/50 hover:border-red-500/60 hover:text-red-500 transition-colors text-sm leading-none"
+                          title="Delete template">
+                          &times;
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Filter panel */}
             {showFilters && (
@@ -1308,10 +1423,10 @@ export default function Home() {
                                     const cm = comp.macros || {};
                                     const compCount = getCount(comp.id, selectedDate);
                                     return (
-                                      <div key={comp.id} className="flex items-center gap-3 px-3 py-2.5 border border-theme-text-primary/5 hover:bg-theme-bg-secondary/50 transition-colors">
+                                      <div key={comp.id} className="flex items-center gap-2 px-2 sm:px-3 py-2 sm:py-2.5 border border-theme-text-primary/5 hover:bg-theme-bg-secondary/50 transition-colors">
                                         <div className="flex-1 min-w-0">
-                                          <div className="flex items-center gap-2">
-                                            <span className="text-sm truncate">{comp.name}</span>
+                                          <div className="flex items-center gap-1.5 flex-wrap">
+                                            <span className="text-xs sm:text-sm truncate">{comp.name}</span>
                                             {cm.is_vegetarian && (
                                               <span className="shrink-0 text-[9px] font-bold border border-green-500/60 text-green-500 px-1 py-0 rounded-sm leading-tight">VG</span>
                                             )}
@@ -1324,24 +1439,24 @@ export default function Home() {
                                           </div>
                                           <div className="text-[10px] text-theme-text-tertiary tabular-nums mt-0.5">
                                             {comp.calories} cal
-                                            {cm.protein != null && <> &middot; {cm.protein}g protein</>}
-                                            {cm.carbs != null && <> &middot; {cm.carbs}g carbs</>}
-                                            {(cm.fats ?? cm.fat) != null && <> &middot; {cm.fats ?? cm.fat}g fat</>}
+                                            {cm.protein != null && <> &middot; {cm.protein}g P</>}
+                                            {cm.carbs != null && <> &middot; {cm.carbs}g C</>}
+                                            {(cm.fats ?? cm.fat) != null && <> &middot; {cm.fats ?? cm.fat}g F</>}
                                           </div>
                                         </div>
-                                        <div className="flex items-center gap-1.5 shrink-0">
+                                        <div className="flex items-center gap-1 shrink-0">
                                           <button
                                             onClick={(e) => handleAddMeal(comp, e)}
-                                            className="p-2.5 border border-theme-text-primary/30 text-theme-text-secondary hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors"
+                                            className="p-1.5 sm:p-2 border border-theme-text-primary/30 text-theme-text-secondary hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors"
                                             title="Add to log">
-                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
                                           </button>
                                           <button
                                             onClick={(e) => { e.stopPropagation(); removeMeal(comp, selectedDate); }}
                                             disabled={compCount === 0}
-                                            className={`p-2.5 border transition-colors ${compCount > 0 ? 'border-theme-text-primary/30 text-theme-text-secondary hover:bg-theme-text-primary hover:text-theme-bg-primary' : 'border-theme-text-primary/10 text-theme-text-tertiary/20 cursor-not-allowed'}`}
+                                            className={`p-1.5 sm:p-2 border transition-colors ${compCount > 0 ? 'border-theme-text-primary/30 text-theme-text-secondary hover:bg-theme-text-primary hover:text-theme-bg-primary' : 'border-theme-text-primary/10 text-theme-text-tertiary/20 cursor-not-allowed'}`}
                                             title="Remove from log">
-                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="5" y1="12" x2="19" y2="12" /></svg>
                                           </button>
                                         </div>
                                       </div>
@@ -1488,14 +1603,14 @@ export default function Home() {
                                 <button
                                   onClick={(e) => { e.stopPropagation(); removeMeal(food, selectedDate); }}
                                   disabled={count === 0}
-                                  className={`px-3 py-2 sm:py-1 border text-xs uppercase tracking-wider font-bold transition-colors shrink-0 flex items-center gap-1.5 ${
+                                  className={`px-2.5 sm:px-3 py-2 sm:py-1 border text-xs uppercase tracking-wider font-bold transition-colors shrink-0 flex items-center gap-1 ${
                                     count > 0
                                       ? 'border-theme-text-primary/50 text-theme-text-secondary hover:bg-theme-text-primary hover:text-theme-bg-primary'
                                       : 'border-theme-text-primary/10 text-theme-text-tertiary/40 cursor-not-allowed'
                                   }`}
                                   title="Remove from log">
                                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="5" y1="12" x2="19" y2="12" /></svg>
-                                  Remove
+                                  <span className="hidden sm:inline">Remove</span>
                                 </button>
                               </div>
                             </div>

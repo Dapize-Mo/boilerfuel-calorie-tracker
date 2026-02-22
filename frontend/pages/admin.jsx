@@ -547,7 +547,13 @@ function StatsTab() {
                     <>
                       <span className="font-mono">{Math.round(d.totalCal / d.calCount)} avg</span>
                       <span className="ml-3 text-theme-text-tertiary/50">{d.minCal}–{d.maxCal} cal</span>
-                      {d.hasEstimates && <span className="ml-1 text-theme-text-tertiary/40 text-[9px]">~est</span>}
+                      {d.hasEstimates && (
+                        <span
+                          className="ml-1 text-theme-text-tertiary/50 text-[9px] border border-theme-text-primary/15 px-1 cursor-help"
+                          title="~est: Some items at this location (e.g. 1bowl Build Your Own) have no direct calorie value — their calories are estimated by summing individual components (base + protein + toppings). These estimates are included in the average.">
+                          ~est
+                        </span>
+                      )}
                     </>
                   ) : (
                     <span className="text-theme-text-tertiary/40">no calorie data</span>

@@ -266,24 +266,41 @@ def scrape_purdue_menu_api(api_location='Wiley', date_str=None, nutrition_cache=
     if nutrition_cache is None:
         nutrition_cache = {}
     
-    # Try the API endpoint
-    location_param = api_location
-    api_url = f"https://api.hfs.purdue.edu/menus/v2/locations/{location_param}/{date_str}"
-    
+    # Try the API endpoint — first with api_name, then with court_code as fallback
+    # (Some locations like Sushi Boss may not respond to their display name)
+    location_candidates = [api_location]
+    if court_code and court_code != api_location:
+        location_candidates.append(court_code)
+
+    raw_data = None
+    for location_param in location_candidates:
+        api_url = f"https://api.hfs.purdue.edu/menus/v2/locations/{location_param}/{date_str}"
+        try:
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                'Accept': 'application/json'
+            }
+            print(f"  Fetching from API: {api_url}")
+            response = requests.get(api_url, headers=headers, timeout=15)
+            response.raise_for_status()
+            candidate_data = response.json()
+            meals = candidate_data.get('Meals', [])
+            if any(len(m.get('Stations', [])) > 0 for m in meals):
+                raw_data = candidate_data
+                break
+            elif raw_data is None:
+                raw_data = candidate_data  # Keep first result even if empty
+        except Exception:
+            pass  # Try next candidate
+
+    if raw_data is None:
+        raw_data = {}
+
     try:
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            'Accept': 'application/json'
-        }
-        
-        print(f"  Fetching from API: {api_url}")
-        response = requests.get(api_url, headers=headers, timeout=15)
-        response.raise_for_status()
-        
-        data = response.json()
+        data = raw_data
         menu_items = []
         items_to_fetch = []
-        
+
         # First pass: collect all items
         if 'Meals' in data:
             for meal in data['Meals']:

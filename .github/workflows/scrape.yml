@@ -2,7 +2,8 @@ name: Scrape Menus and Update DB
 
 on:
   schedule:
-    - cron: '0 8 * * 0' # weekly on Sunday at 08:00 UTC
+    - cron: '0 8 * * 0'  # weekly on Sunday at 08:00 UTC
+    - cron: '0 11 * * 1' # Monday at 11:00 UTC — verify data for the week is present
   workflow_dispatch:
 
 jobs:
@@ -42,8 +43,25 @@ jobs:
           print(f"Scrape forward days: {os.getenv('SCRAPE_FORWARD_DAYS','2')}")
           PY
 
-      - name: Run scraper and save to DB
+      - name: Run scraper and save to DB (attempt 1)
+        id: scrape1
+        run: python scripts/scrape_to_db.py
+        continue-on-error: true
+
+      - name: Retry scraper if first attempt failed (attempt 2)
+        if: steps.scrape1.outcome == 'failure'
+        id: scrape2
         run: |
+          echo "First attempt failed — waiting 60s before retry..."
+          sleep 60
+          python scripts/scrape_to_db.py
+        continue-on-error: true
+
+      - name: Retry scraper (attempt 3)
+        if: steps.scrape1.outcome == 'failure' && steps.scrape2.outcome == 'failure'
+        run: |
+          echo "Second attempt failed — waiting 120s before final retry..."
+          sleep 120
           python scripts/scrape_to_db.py
 
       - name: Verify DB updated
@@ -51,6 +69,7 @@ jobs:
         run: |
           python - <<'PY'
           import os, psycopg2
+          from datetime import date, timedelta
           url=os.getenv('DATABASE_URL')
           if not url:
               raise SystemExit('Missing DATABASE_URL after run')
@@ -58,9 +77,17 @@ jobs:
           cur=conn.cursor()
           cur.execute('SELECT COUNT(*) FROM foods WHERE next_available IS NOT NULL')
           c=cur.fetchone()[0]
+          # Check upcoming week has data in menu_snapshots
+          today = date.today()
+          upcoming = (today + timedelta(days=1)).isoformat()
+          cur.execute('SELECT COUNT(*) FROM menu_snapshots WHERE menu_date >= %s', (upcoming,))
+          snap_count = cur.fetchone()[0]
           cur.close(); conn.close()
           print(f"Foods with next_available: {c}")
-          # Treat 0 as failure so the workflow alerts us
+          print(f"Menu snapshots for upcoming dates: {snap_count}")
+          # Treat both 0 as failure so the workflow alerts us
           if c == 0:
-              raise SystemExit('No rows with next_available; check scraper/API')
+              raise SystemExit('No rows with next_available in foods; check scraper/API')
+          if snap_count == 0:
+              raise SystemExit('No upcoming menu_snapshots found; Purdue API may not have data yet')
           PY

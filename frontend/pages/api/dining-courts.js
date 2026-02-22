@@ -11,18 +11,36 @@ export default async function handler(req, res) {
     const mealTime = (req.query.meal_time || '').trim();
     const date = (req.query.date || '').trim();
 
-    // When a date is provided, pull courts from menu_snapshots (date-specific)
-    const table = date ? 'menu_snapshots' : 'foods';
-    let sql = `SELECT DISTINCT dining_court FROM ${table} WHERE dining_court IS NOT NULL`;
-    const params = [];
+    let sql, params = [];
 
     if (date) {
-      params.push(date);
-      sql += ` AND menu_date = $${params.length}`;
-    }
-    if (mealTime) {
-      params.push(mealTime.toLowerCase());
-      sql += ` AND LOWER(meal_time) = $${params.length}`;
+      // Date-specific: query menu_snapshots only
+      sql = `SELECT DISTINCT dining_court FROM menu_snapshots WHERE dining_court IS NOT NULL AND menu_date = $1`;
+      params = [date];
+      if (mealTime) {
+        params.push(mealTime.toLowerCase());
+        sql += ` AND LOWER(meal_time) = $${params.length}`;
+      }
+    } else {
+      // No date: union foods + menu_snapshots so locations show even if one table is sparse
+      if (mealTime) {
+        params = [mealTime.toLowerCase()];
+        sql = `
+          SELECT DISTINCT dining_court FROM (
+            SELECT dining_court FROM foods WHERE dining_court IS NOT NULL AND LOWER(meal_time) = $1
+            UNION ALL
+            SELECT dining_court FROM menu_snapshots WHERE dining_court IS NOT NULL AND LOWER(meal_time) = $1
+          ) combined
+        `;
+      } else {
+        sql = `
+          SELECT DISTINCT dining_court FROM (
+            SELECT dining_court FROM foods WHERE dining_court IS NOT NULL
+            UNION ALL
+            SELECT dining_court FROM menu_snapshots WHERE dining_court IS NOT NULL
+          ) combined
+        `;
+      }
     }
     sql += ' ORDER BY dining_court';
 
