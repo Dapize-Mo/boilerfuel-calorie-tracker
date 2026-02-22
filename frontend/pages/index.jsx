@@ -972,7 +972,7 @@ export default function Home() {
         gap: isLanding ? (isMobile ? 10 : 16) : (isMobile ? 6 : 10),
         justifyContent: !isLanding && isMobile ? 'space-between' : undefined,
       }}>
-        <div style={{ flex: !isLanding && isMobile ? '1 1 0' : undefined, width: isLanding ? (isMobile ? 220 : 180) : (isMobile ? undefined : 150), transition: `width 0.7s ${EASE}` }}>
+        <div style={{ flex: !isLanding && isMobile ? '1 1 0' : undefined, width: isLanding ? (isMobile ? 220 : 180) : (isMobile ? undefined : 175), transition: `width 0.7s ${EASE}` }}>
           <label style={labelStyle} className="text-theme-text-secondary">Date</label>
           {isLanding ? (
             <CalendarPicker value={selectedDate} onChange={setSelectedDate} compact={false} />
