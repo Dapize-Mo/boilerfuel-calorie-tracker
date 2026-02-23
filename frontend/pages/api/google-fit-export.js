@@ -65,18 +65,17 @@ async function writeMealPoint(accessToken, dataSourceId, meal, dateStr) {
   const startNs = dateToNs(dateStr, meal.meal_time);
   const endNs = (BigInt(startNs) + BigInt(60 * 1_000_000_000)).toString(); // +1 min
 
-  const mapValues = [
-    { key: 'food_item', value: { stringVal: meal.name || 'Unknown' } },
-    { key: 'meal_type', value: { intVal: mealTypeInt(meal.meal_time) } },
-    { key: 'calories', value: { fpVal: meal.calories || 0 } },
-    { key: 'fat_total', value: { fpVal: parseFloat(meal.macros?.fats || meal.macros?.fat) || 0 } },
-    { key: 'protein', value: { fpVal: parseFloat(meal.macros?.protein) || 0 } },
-    { key: 'carbs', value: { fpVal: parseFloat(meal.macros?.carbs) || 0 } },
-    { key: 'sodium', value: { fpVal: parseFloat(meal.macros?.sodium) || 0 } },
-    { key: 'sugar', value: { fpVal: parseFloat(meal.macros?.sugar) || 0 } },
-    { key: 'dietary_fiber', value: { fpVal: parseFloat(meal.macros?.fiber) || 0 } },
-    { key: 'fat_saturated', value: { fpVal: parseFloat(meal.macros?.saturated_fat) || 0 } },
-    { key: 'cholesterol', value: { fpVal: parseFloat(meal.macros?.cholesterol) || 0 } },
+  // com.google.nutrition value[0] = nutrients map, value[1] = meal_type int, value[2] = food_item string
+  const nutrients = [
+    { key: 'calories',       value: { fpVal: meal.calories || 0 } },
+    { key: 'fat.total',      value: { fpVal: parseFloat(meal.macros?.fats || meal.macros?.fat) || 0 } },
+    { key: 'fat.saturated',  value: { fpVal: parseFloat(meal.macros?.saturated_fat) || 0 } },
+    { key: 'protein',        value: { fpVal: parseFloat(meal.macros?.protein) || 0 } },
+    { key: 'carbs.total',    value: { fpVal: parseFloat(meal.macros?.carbs) || 0 } },
+    { key: 'dietary_fiber',  value: { fpVal: parseFloat(meal.macros?.fiber) || 0 } },
+    { key: 'sugar',          value: { fpVal: parseFloat(meal.macros?.sugar) || 0 } },
+    { key: 'sodium',         value: { fpVal: parseFloat(meal.macros?.sodium) || 0 } },
+    { key: 'cholesterol',    value: { fpVal: parseFloat(meal.macros?.cholesterol) || 0 } },
   ];
 
   const datasetId = `${startNs}-${endNs}`;
@@ -94,7 +93,11 @@ async function writeMealPoint(accessToken, dataSourceId, meal, dateStr) {
         startTimeNanos: startNs,
         endTimeNanos: endNs,
         dataTypeName: 'com.google.nutrition',
-        value: [{ mapVal: mapValues }],
+        value: [
+          { mapVal: nutrients },
+          { intVal: mealTypeInt(meal.meal_time) },
+          { stringVal: meal.name || 'Unknown' },
+        ],
       }],
     }),
   });
