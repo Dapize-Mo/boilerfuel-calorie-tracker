@@ -157,6 +157,50 @@ function LineChart({ data, max, height = 120, label = '', color = 'rgb(var(--col
   );
 }
 
+// ── Stacked Bar Chart (for meal-time breakdown) ──
+function StackedBarChart({ data, height = 120 }) {
+  const mealKeys = ['breakfast', 'brunch', 'lunch', 'dinner', 'other'];
+  const colors = { breakfast: '#3b82f6', brunch: '#8b5cf6', lunch: '#f59e0b', dinner: '#f97316', other: 'rgba(128,128,128,0.25)' };
+  const maxVal = Math.max(...data.map(d => mealKeys.reduce((s, k) => s + (d[k] || 0), 0)), 1);
+  const usedKeys = mealKeys.filter(k => data.some(d => (d[k] || 0) > 0));
+  const barH = height - 30;
+  return (
+    <div>
+      <div className="flex items-end gap-1" style={{ height: barH }}>
+        {data.map((d, i) => {
+          const total = mealKeys.reduce((s, k) => s + (d[k] || 0), 0);
+          const filled = Math.round((total / maxVal) * barH);
+          const isToday = d.date === getTodayKey();
+          return (
+            <div key={i} className="flex-1 flex flex-col justify-end" style={{ height: '100%' }} title={`${d.dayLabel}: ${Math.round(total)} cal`}>
+              <div className={`w-full flex flex-col-reverse overflow-hidden ${isToday ? 'ring-1 ring-theme-text-primary/30' : ''}`} style={{ height: filled }}>
+                {mealKeys.filter(k => (d[k] || 0) > 0).map(k => (
+                  <div key={k} style={{ height: `${((d[k] || 0) / total) * 100}%`, minHeight: 2, backgroundColor: colors[k] }} />
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div className="flex justify-between mt-1.5">
+        {data.map((d, i) => (
+          <div key={i} className={`text-[9px] flex-1 text-center ${d.date === getTodayKey() ? 'font-bold text-theme-text-primary' : 'text-theme-text-tertiary'}`}>{d.dayLabel}</div>
+        ))}
+      </div>
+      {usedKeys.length > 1 && (
+        <div className="flex flex-wrap gap-3 mt-2">
+          {usedKeys.map(k => (
+            <div key={k} className="flex items-center gap-1.5 text-[9px] text-theme-text-tertiary capitalize">
+              <div className="w-2.5 h-2.5 shrink-0" style={{ backgroundColor: colors[k] }} />
+              {k}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Multi-Line Chart (for macro trends) ──
 function MultiLineChart({ datasets, data, max, height = 120 }) {
   const actualMax = max || Math.max(...datasets.flatMap(ds => data.map(d => d[ds.key] || 0)), 1);
@@ -325,6 +369,34 @@ export default function StatsPage() {
   const bestDay = daysWithData.length > 0 ? daysWithData.reduce((best, d) => d.totals.calories > best.totals.calories ? d : best) : null;
   const lowestDay = daysWithData.length > 0 ? daysWithData.reduce((low, d) => d.totals.calories < low.totals.calories ? d : low) : null;
 
+  // Calories by meal time per day
+  const mealTimeBreakdown = useMemo(() => {
+    return chartSlice.map(d => {
+      const info = formatShort(d.date);
+      const b = { breakfast: 0, brunch: 0, lunch: 0, dinner: 0, other: 0 };
+      for (const m of d.meals) {
+        const mt = (m.meal_time || '').toLowerCase();
+        if (mt.includes('breakfast')) b.breakfast += m.calories || 0;
+        else if (mt.includes('brunch')) b.brunch += m.calories || 0;
+        else if (mt.includes('lunch')) b.lunch += m.calories || 0;
+        else if (mt.includes('dinner')) b.dinner += m.calories || 0;
+        else b.other += m.calories || 0;
+      }
+      return { ...b, dayLabel: info.day, date: d.date };
+    });
+  }, [chartSlice]);
+
+  // Goal hit rate — how many active days each goal was met
+  const goalHitRate = useMemo(() => {
+    if (activeDays === 0) return [];
+    return [
+      { label: 'Calories', color: '#f59e0b', daysHit: daysWithData.filter(d => d.totals.calories >= goals.calories * 0.85 && d.totals.calories <= goals.calories * 1.15).length },
+      { label: 'Protein',  color: '#3b82f6', daysHit: daysWithData.filter(d => d.totals.protein  >= goals.protein  * 0.9).length },
+      { label: 'Carbs',    color: '#f59e0b', daysHit: daysWithData.filter(d => d.totals.carbs    <= goals.carbs    * 1.1).length },
+      { label: 'Fat',      color: '#ef4444', daysHit: daysWithData.filter(d => d.totals.fat      <= goals.fat      * 1.1).length },
+    ];
+  }, [daysWithData, goals, activeDays]);
+
   return (
     <>
       <Head>
@@ -441,6 +513,18 @@ export default function StatsPage() {
             </div>
           </section>
 
+          {/* ═══ MEAL TIME BREAKDOWN ═══ */}
+          {daysWithData.length > 0 && (
+            <section className="space-y-4">
+              <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
+                Calories by Meal Time
+              </h2>
+              <div className="border border-theme-text-primary/10 p-4">
+                <StackedBarChart data={mealTimeBreakdown} height={140} />
+              </div>
+            </section>
+          )}
+
           {/* ═══ MACRO TRENDS ═══ */}
           <section className="space-y-4">
             <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
@@ -481,6 +565,30 @@ export default function StatsPage() {
               ))}
             </div>
           </section>
+
+          {/* ═══ GOAL HIT RATE ═══ */}
+          {goalHitRate.length > 0 && activeDays > 0 && (
+            <section className="space-y-4">
+              <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
+                Goal Hit Rate <span className="font-normal text-theme-text-tertiary/50 normal-case tracking-normal">({activeDays} active day{activeDays !== 1 ? 's' : ''})</span>
+              </h2>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-theme-text-primary/10 border border-theme-text-primary/10">
+                {goalHitRate.map(g => {
+                  const pct = activeDays > 0 ? g.daysHit / activeDays : 0;
+                  return (
+                    <div key={g.label} className="bg-theme-bg-primary px-4 py-3">
+                      <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary">{g.label}</div>
+                      <div className="text-lg font-bold tabular-nums mt-1">{g.daysHit}<span className="text-xs text-theme-text-tertiary ml-0.5">/{activeDays}</span></div>
+                      <div className="h-1.5 w-full bg-theme-text-primary/10 mt-2 overflow-hidden">
+                        <div className="h-full transition-all duration-300" style={{ width: `${pct * 100}%`, backgroundColor: pct >= 0.8 ? '#22c55e' : pct >= 0.5 ? g.color : '#ef4444' }} />
+                      </div>
+                      <div className="text-[9px] text-theme-text-tertiary mt-1">{Math.round(pct * 100)}% on track</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          )}
 
           {/* ═══ TOP FOODS ═══ */}
           {foodFrequency.length > 0 && (

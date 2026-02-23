@@ -433,6 +433,7 @@ export default function Home() {
   const scrollDeltaRef = useRef(0);
   const scrollTimeoutRef = useRef(null);
   const touchStartY = useRef(null);
+  const touchStartX = useRef(null);
 
   // ── Keyboard shortcuts ──
   useEffect(() => {
@@ -581,6 +582,7 @@ export default function Home() {
     // Touch events
     function onTouchStart(e) {
       touchStartY.current = e.touches[0].clientY;
+      touchStartX.current = e.touches[0].clientX;
     }
     function onTouchMove(e) {
       if (transitioning.current || touchStartY.current === null) return;
@@ -590,14 +592,26 @@ export default function Home() {
         handleViewMenu();
       }
     }
+    function onTouchEnd(e) {
+      if (view !== 'results' || touchStartX.current === null) { touchStartX.current = null; return; }
+      const dx = e.changedTouches[0].clientX - touchStartX.current;
+      const dy = Math.abs(e.changedTouches[0].clientY - (touchStartY.current || 0));
+      touchStartX.current = null;
+      // Only swipe if horizontal movement dominates and is large enough
+      if (Math.abs(dx) > 60 && Math.abs(dx) > dy * 1.5) {
+        if (dx < 0) nextDay(); else prevDay();
+      }
+    }
 
     window.addEventListener('wheel', onWheel, { passive: false });
     window.addEventListener('touchstart', onTouchStart, { passive: true });
     window.addEventListener('touchmove', onTouchMove, { passive: true });
+    window.addEventListener('touchend', onTouchEnd, { passive: true });
     return () => {
       window.removeEventListener('wheel', onWheel);
       window.removeEventListener('touchstart', onTouchStart);
       window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchend', onTouchEnd);
       clearTimeout(scrollTimeoutRef.current);
     };
   }, [view]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -685,6 +699,22 @@ export default function Home() {
     }
     return { regularFoods: regular, beverageFoods: bevs };
   }, [foods, searchText, showFavsOnly, isFavorite, nutritionFilter, dietaryPrefs]);
+
+  // ── Frequently logged non-beverage foods (for quick-add panel) ──
+  const frequentFoods = useMemo(() => {
+    const freq = {};
+    const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 30);
+    for (const [dateKey, dayMeals] of Object.entries(mealsByDate)) {
+      if (new Date(dateKey + 'T00:00:00') < cutoff) continue;
+      for (const m of dayMeals) {
+        if ((m.station || '').toLowerCase() === 'beverages') continue;
+        if (!m.id || !m.name || !m.calories) continue;
+        if (!freq[m.id]) freq[m.id] = { ...m, count: 0 };
+        freq[m.id].count++;
+      }
+    }
+    return Object.values(freq).sort((a, b) => b.count - a.count).slice(0, 8);
+  }, [mealsByDate]);
 
   // ── Recent beverages (logged before, across all dates) ──
   const recentBeverageIds = useMemo(() => {
@@ -1308,7 +1338,7 @@ export default function Home() {
             {showFilters && (
               <div className="mb-4 p-3 border border-theme-text-primary/15 bg-theme-bg-secondary/30 space-y-3"
                 style={{ animation: `fadeInRow 0.2s ${EASE} both` }}>
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap gap-2">
                   <label className="flex items-center gap-1.5 text-xs cursor-pointer">
                     <input type="checkbox" checked={nutritionFilter.vegetarian}
                       onChange={e => setNutritionFilter(p => ({ ...p, vegetarian: e.target.checked }))}
@@ -1321,6 +1351,25 @@ export default function Home() {
                       className="accent-emerald-400" />
                     <span className="text-emerald-400 font-bold">V</span> Vegan
                   </label>
+                </div>
+                {/* Allergen quick chips */}
+                <div>
+                  <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary mb-1.5">Exclude allergen</div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {['Gluten', 'Dairy', 'Eggs', 'Tree Nuts', 'Peanuts', 'Soy', 'Shellfish'].map(a => {
+                      const active = nutritionFilter.allergenFree.toLowerCase().split(',').map(s => s.trim()).includes(a.toLowerCase());
+                      return (
+                        <button key={a} onClick={() => {
+                          const current = nutritionFilter.allergenFree.split(',').map(s => s.trim()).filter(Boolean);
+                          const next = active ? current.filter(s => s.toLowerCase() !== a.toLowerCase()) : [...current, a];
+                          setNutritionFilter(p => ({ ...p, allergenFree: next.join(', ') }));
+                        }}
+                          className={`px-2 py-0.5 text-[10px] font-bold border transition-colors ${active ? 'border-red-500/60 bg-red-500/10 text-red-500' : 'border-theme-text-primary/20 text-theme-text-tertiary hover:border-theme-text-primary/40 hover:text-theme-text-primary'}`}>
+                          {a}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
                 <div className="flex flex-wrap gap-3">
                   <div className="flex items-center gap-1.5">
@@ -1355,6 +1404,24 @@ export default function Home() {
               </div>
             )}
             </>
+          )}
+
+          {/* ── Recent / frequent foods quick-add ── */}
+          {frequentFoods.length > 0 && !searchText && (
+            <div className="mb-4">
+              <div className="text-[9px] uppercase tracking-widest text-theme-text-tertiary mb-2">Quick Add — Recent</div>
+              <div className="flex flex-wrap gap-1.5">
+                {frequentFoods.map(food => (
+                  <button key={food.id}
+                    onClick={() => handleAddMeal(food, null)}
+                    className="flex items-center gap-1.5 px-2.5 py-1 border border-theme-text-primary/20 text-theme-text-tertiary hover:border-theme-text-primary/50 hover:text-theme-text-primary transition-colors text-xs font-mono"
+                    title={`${food.calories} cal — click to add`}>
+                    <span className="truncate max-w-[140px]">{food.name}</span>
+                    <span className="text-[9px] text-theme-text-tertiary/50 shrink-0">{food.calories}c</span>
+                  </button>
+                ))}
+              </div>
+            </div>
           )}
 
           <div className={`${beverageFoods.length > 0 ? 'xl:flex xl:gap-6' : ''}`}>

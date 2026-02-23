@@ -49,7 +49,7 @@ function shiftDate(dateKey, delta) {
 
 export default function ProfilePage() {
   const { theme, setTheme } = useTheme();
-  const { meals, goals, setGoals, totals, clearMeals, mealsByDate, getWeight, setWeight, weightByDate, exportData, templates, saveTemplate, deleteTemplate, applyTemplate, dietaryPrefs, setDietaryPrefs, waterByDate, getWater, addWater, syncNow, reloadFromStorage } = useMeals();
+  const { meals, goals, setGoals, totals, clearMeals, removeMeal, mealsByDate, getWeight, setWeight, weightByDate, exportData, templates, saveTemplate, deleteTemplate, applyTemplate, dietaryPrefs, setDietaryPrefs, waterByDate, getWater, addWater, syncNow, reloadFromStorage } = useMeals();
   const [editingGoals, setEditingGoals] = useState(false);
   const [draft, setDraft] = useState(goals);
   const [weightInput, setWeightInput] = useState('');
@@ -430,7 +430,7 @@ export default function ProfilePage() {
                         </div>
                         {grouped.map((m, i) => (
                           <div key={`${m.id}-${i}`} className="flex items-center justify-between px-4 py-2 text-sm border-b border-theme-text-primary/5 last:border-b-0">
-                            <div className="flex-1 min-w-0 mr-4">
+                            <div className="flex-1 min-w-0 mr-3">
                               <div className="flex items-center gap-2">
                                 <span className="truncate">{m.name}</span>
                                 {m.count > 1 && (
@@ -443,7 +443,14 @@ export default function ProfilePage() {
                                 </span>
                               )}
                             </div>
-                            <span className="text-xs font-mono tabular-nums text-theme-text-secondary shrink-0">{Math.round(m.totalCal)} cal</span>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <span className="text-xs font-mono tabular-nums text-theme-text-secondary">{Math.round(m.totalCal)} cal</span>
+                              <button onClick={() => removeMeal(m, selectedDate)}
+                                className="w-5 h-5 flex items-center justify-center border border-theme-text-primary/20 text-theme-text-tertiary hover:border-red-500/50 hover:text-red-500 transition-colors"
+                                title="Remove one serving">
+                                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                              </button>
+                            </div>
                           </div>
                         ))}
                       </div>
