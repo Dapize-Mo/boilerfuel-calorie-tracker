@@ -400,10 +400,14 @@ export function MealProvider({ children }) {
 
       const points = [];
       for (const [date, dateMeals] of Object.entries(mealsByDate).sort(([a], [b]) => a.localeCompare(b))) {
+        const mealTypeIndex = {};
         for (const m of dateMeals) {
           const mt = mealTypeInt(m.meal_time);
+          const mealKey = m.meal_time || 'snack';
+          mealTypeIndex[mealKey] = (mealTypeIndex[mealKey] || 0);
           const d = new Date(`${date}T12:00:00`);
-          d.setHours(mealTypeToHour[mt], 0, 0, 0);
+          d.setHours(mealTypeToHour[mt], mealTypeIndex[mealKey], 0, 0);
+          mealTypeIndex[mealKey]++;
           const startNs = (d.getTime() * 1_000_000).toString();
           const endNs = (BigInt(startNs) + BigInt(60 * 1_000_000_000)).toString();
           points.push({

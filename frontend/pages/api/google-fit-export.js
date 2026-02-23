@@ -17,11 +17,11 @@ function mealTypeInt(mealTime) {
   return MEAL_TYPE_MAP[key] || 4; // default snack/other
 }
 
-// Nanoseconds for a meal: use noon local time of that date
-function dateToNs(dateStr, mealTime) {
+// Nanoseconds for a meal: use meal-time hour + index offset so every data point is unique
+function dateToNs(dateStr, mealTime, indexOffset = 0) {
   const d = new Date(dateStr + 'T12:00:00');
   const hour = mealTypeInt(mealTime) === 1 ? 8 : mealTypeInt(mealTime) === 2 ? 12 : mealTypeInt(mealTime) === 3 ? 18 : 15;
-  d.setHours(hour, 0, 0, 0);
+  d.setHours(hour, indexOffset, 0, 0); // each meal gets a unique minute within the hour
   return (d.getTime() * 1_000_000).toString();
 }
 
@@ -61,8 +61,8 @@ async function ensureDataSource(accessToken) {
   return data.dataStreamId;
 }
 
-async function writeMealPoint(accessToken, dataSourceId, meal, dateStr) {
-  const startNs = dateToNs(dateStr, meal.meal_time);
+async function writeMealPoint(accessToken, dataSourceId, meal, dateStr, indexOffset = 0) {
+  const startNs = dateToNs(dateStr, meal.meal_time, indexOffset);
   const endNs = (BigInt(startNs) + BigInt(60 * 1_000_000_000)).toString(); // +1 min
 
   // com.google.nutrition value[0] = nutrients map, value[1] = meal_type int, value[2] = food_item string
@@ -136,8 +136,13 @@ export default async function handler(req, res) {
     let exported = 0;
     for (const date of dates) {
       const meals = mealsByDate[date] || [];
+      // Track per-mealType index so each meal gets a unique minute offset within its hour
+      const mealTypeIndex = {};
       for (const meal of meals) {
-        await writeMealPoint(session.accessToken, dataSourceId, meal, date);
+        const mt = meal.meal_time || 'snack';
+        mealTypeIndex[mt] = (mealTypeIndex[mt] || 0);
+        await writeMealPoint(session.accessToken, dataSourceId, meal, date, mealTypeIndex[mt]);
+        mealTypeIndex[mt]++;
         exported++;
       }
     }
