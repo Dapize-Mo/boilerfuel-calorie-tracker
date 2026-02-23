@@ -123,6 +123,7 @@ function CalendarPicker({ value, onChange, compact = false, hideIcon = false }) 
 function LocationDropdown({ value, onChange, availableLocations, retailLocations, compact = false }) {
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState(null); // 'purdue' | 'foodco' | null
+  const [dropdownMaxH, setDropdownMaxH] = useState('24rem');
   const ref = useRef(null);
 
   useEffect(() => {
@@ -132,6 +133,15 @@ function LocationDropdown({ value, onChange, availableLocations, retailLocations
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
+
+  function handleToggle() {
+    if (!open && ref.current) {
+      const rect = ref.current.getBoundingClientRect();
+      const available = window.innerHeight - rect.bottom - 8;
+      setDropdownMaxH(`${Math.max(180, available)}px`);
+    }
+    setOpen(o => !o);
+  }
 
   // Filter HFS categories to only show locations that exist in DB
   const availSet = new Set((availableLocations || []).map(l => l.toLowerCase()));
@@ -165,7 +175,7 @@ function LocationDropdown({ value, onChange, availableLocations, retailLocations
 
   return (
     <div ref={ref} className="relative" data-location-dropdown>
-      <button type="button" onClick={() => setOpen(o => !o)}
+      <button type="button" onClick={handleToggle}
         className={`w-full border bg-theme-bg-secondary text-theme-text-primary text-left font-mono flex items-center justify-between hover:bg-theme-bg-hover transition-all ${
           compact ? 'px-2 py-1.5 border-theme-text-primary/30 text-sm gap-2' : 'p-2 border-theme-text-primary gap-3'
         }`}>
@@ -177,10 +187,8 @@ function LocationDropdown({ value, onChange, availableLocations, retailLocations
       </button>
 
       {open && (
-        <div className={`absolute z-50 left-0 w-72 max-w-[calc(100vw-2rem)] overflow-y-auto border border-theme-text-primary bg-theme-bg-primary shadow-lg ${
-          compact ? 'mt-1 max-h-96' : 'bottom-full mb-1 max-h-[min(32rem,60vh)]'
-        }`}
-          style={{ animation: `fadeInTooltip 0.15s ${EASE} both` }}>
+        <div className="absolute z-50 mt-1 left-0 w-72 max-w-[calc(100vw-2rem)] overflow-y-auto border border-theme-text-primary bg-theme-bg-primary shadow-lg"
+          style={{ animation: `fadeInTooltip 0.15s ${EASE} both`, maxHeight: dropdownMaxH }}>
           {/* All Locations */}
           <button type="button" onClick={() => select({ type: 'all', value: 'All' })}
             className={`w-full text-left px-3 py-2 text-sm font-bold uppercase tracking-wider transition-colors ${
