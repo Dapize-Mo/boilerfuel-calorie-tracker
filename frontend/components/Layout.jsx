@@ -3,6 +3,28 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import ThemeToggleButton from './ThemeToggleButton';
 import SkipToContent from './SkipToContent';
+import { useMeals } from '../context/MealContext';
+
+function SyncIndicator() {
+  const { syncStatus } = useMeals();
+  if (syncStatus === 'idle') return null;
+
+  const label = syncStatus === 'syncing' ? 'Syncing…' : syncStatus === 'success' ? 'Synced' : 'Sync error';
+  const dotClass =
+    syncStatus === 'syncing' ? 'bg-yellow-400 animate-pulse' :
+    syncStatus === 'success' ? 'bg-green-400' :
+    'bg-red-400';
+
+  return (
+    <div
+      title={label}
+      className="flex items-center gap-1.5 text-xs text-theme-text-tertiary px-2"
+    >
+      <span className={`w-2 h-2 rounded-full ${dotClass}`} />
+      <span className="hidden sm:inline">{label}</span>
+    </div>
+  );
+}
 
 export default function Layout({ children }) {
   return (
@@ -66,6 +88,8 @@ const TopNav = memo(function TopNav() {
                 </Link>
               ))}
             </nav>
+
+            <SyncIndicator />
 
             {/* Profile button */}
             <Link

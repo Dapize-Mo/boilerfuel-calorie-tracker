@@ -177,7 +177,9 @@ function LocationDropdown({ value, onChange, availableLocations, retailLocations
       </button>
 
       {open && (
-        <div className="absolute z-50 mt-1 left-0 w-72 max-w-[calc(100vw-2rem)] max-h-96 overflow-y-auto border border-theme-text-primary bg-theme-bg-primary shadow-lg"
+        <div className={`absolute z-50 left-0 w-72 max-w-[calc(100vw-2rem)] overflow-y-auto border border-theme-text-primary bg-theme-bg-primary shadow-lg ${
+          compact ? 'mt-1 max-h-96' : 'bottom-full mb-1 max-h-[min(32rem,60vh)]'
+        }`}
           style={{ animation: `fadeInTooltip 0.15s ${EASE} both` }}>
           {/* All Locations */}
           <button type="button" onClick={() => select({ type: 'all', value: 'All' })}
@@ -1175,6 +1177,20 @@ export default function Home() {
 
           {!loading && !isLanding && (
             <>
+            {/* Past-date logging banner */}
+            {selectedDate !== localDateStr() && (
+              <div className="flex items-center justify-between gap-3 mb-4 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/40 text-amber-400 text-xs">
+                <span>
+                  📅 Logging meals to <strong>{new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</strong>
+                </span>
+                <button
+                  onClick={() => setSelectedDate(localDateStr())}
+                  className="shrink-0 underline hover:text-amber-300 transition-colors"
+                >
+                  Return to today
+                </button>
+              </div>
+            )}
             <div className="flex items-center justify-between mb-3 pb-3 border-b border-theme-text-primary/10">
               <span className="text-xs uppercase tracking-widest text-theme-text-tertiary">
                 <span className="text-yellow-500/80 font-bold">{regularFoods.length + beverageFoods.length}</span> item{regularFoods.length + beverageFoods.length !== 1 ? 's' : ''}

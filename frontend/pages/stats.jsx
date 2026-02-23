@@ -266,11 +266,15 @@ function ProgressRing({ value, goal, label, unit = '', size = 80, color = 'rgb(v
   );
 }
 
+const HISTORY_PER_PAGE = 20;
+
 export default function StatsPage() {
   const { theme } = useTheme();
   const { goals, mealsByDate, waterByDate, weightByDate, getDateRange } = useMeals();
   const [period, setPeriod] = useState('week'); // week | month
   const [chartType, setChartType] = useState('bar'); // bar | line
+  const [historySearch, setHistorySearch] = useState('');
+  const [historyPage, setHistoryPage] = useState(1);
   const today = getTodayKey();
 
   // Compute date ranges
@@ -279,6 +283,22 @@ export default function StatsPage() {
   const rangeStart = period === 'week' ? weekStart : monthStart;
 
   const rangeData = useMemo(() => getDateRange(rangeStart, today), [getDateRange, rangeStart, today]);
+
+  // Flatten all meals across all dates for history search
+  const allMealsFlat = useMemo(() => {
+    return Object.entries(mealsByDate)
+      .sort(([a], [b]) => b.localeCompare(a)) // newest first
+      .flatMap(([date, meals]) => meals.map(m => ({ ...m, date })));
+  }, [mealsByDate]);
+
+  const filteredHistory = useMemo(() => {
+    if (!historySearch.trim()) return allMealsFlat;
+    const q = historySearch.toLowerCase();
+    return allMealsFlat.filter(m => m.name?.toLowerCase().includes(q));
+  }, [allMealsFlat, historySearch]);
+
+  const historyTotalPages = Math.ceil(filteredHistory.length / HISTORY_PER_PAGE);
+  const pagedHistory = filteredHistory.slice((historyPage - 1) * HISTORY_PER_PAGE, historyPage * HISTORY_PER_PAGE);
 
   const daysWithData = rangeData.filter(d => d.meals.length > 0);
   const totalDays = rangeData.length;
@@ -678,6 +698,63 @@ export default function StatsPage() {
                 );
               })}
             </div>
+          </section>
+
+          {/* Meal History Search */}
+          <section className="space-y-4">
+            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
+              Meal History
+            </h2>
+            <div className="relative">
+              <input
+                type="text"
+                value={historySearch}
+                onChange={e => { setHistorySearch(e.target.value); setHistoryPage(1); }}
+                placeholder="Search all logged meals by name…"
+                className="w-full border border-theme-text-primary/20 bg-transparent text-theme-text-primary px-3 py-2 text-sm font-mono placeholder:text-theme-text-tertiary/50 focus:outline-none focus:border-theme-text-primary/50 transition-colors pl-8"
+              />
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="absolute left-2.5 top-1/2 -translate-y-1/2 text-theme-text-tertiary">
+                <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              {historySearch && (
+                <button onClick={() => { setHistorySearch(''); setHistoryPage(1); }} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-theme-text-tertiary hover:text-theme-text-primary text-sm">&times;</button>
+              )}
+            </div>
+
+            {filteredHistory.length === 0 ? (
+              <p className="text-xs text-theme-text-tertiary text-center py-6">
+                {historySearch ? `No meals found matching "${historySearch}"` : 'No meals logged yet'}
+              </p>
+            ) : (
+              <>
+                <div className="text-[10px] text-theme-text-tertiary">{filteredHistory.length} result{filteredHistory.length !== 1 ? 's' : ''}</div>
+                <div className="border border-theme-text-primary/20 divide-y divide-theme-text-primary/10">
+                  {pagedHistory.map((m, i) => (
+                    <div key={i} className="flex items-center justify-between gap-4 px-4 py-3 hover:bg-theme-bg-secondary transition-colors">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-bold truncate">{m.name}</p>
+                        <p className="text-xs text-theme-text-tertiary">
+                          {formatDate(m.date)} · {m.meal_time || 'other'}{m.dining_court ? ` · ${m.dining_court}` : ''}
+                        </p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-sm font-mono tabular-nums">{m.calories} cal</p>
+                        <p className="text-[10px] text-theme-text-tertiary">P {Math.round(m.macros?.protein || 0)}g · C {Math.round(m.macros?.carbs || 0)}g · F {Math.round(m.macros?.fats || m.macros?.fat || 0)}g</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {historyTotalPages > 1 && (
+                  <div className="flex items-center justify-center gap-4 text-xs uppercase tracking-wider">
+                    <button onClick={() => setHistoryPage(p => Math.max(1, p - 1))} disabled={historyPage === 1}
+                      className="text-theme-text-tertiary hover:text-theme-text-primary disabled:opacity-30 transition-colors">&larr; Prev</button>
+                    <span className="text-theme-text-tertiary">{historyPage} / {historyTotalPages}</span>
+                    <button onClick={() => setHistoryPage(p => Math.min(historyTotalPages, p + 1))} disabled={historyPage === historyTotalPages}
+                      className="text-theme-text-tertiary hover:text-theme-text-primary disabled:opacity-30 transition-colors">Next &rarr;</button>
+                  </div>
+                )}
+              </>
+            )}
           </section>
 
           {/* Footer */}

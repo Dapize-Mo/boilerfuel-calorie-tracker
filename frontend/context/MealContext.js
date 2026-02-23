@@ -118,6 +118,18 @@ export function MealProvider({ children }) {
     localStorage.setItem(DIETARY_KEY, JSON.stringify(dietaryPrefs));
   }, [dietaryPrefs]);
 
+  // ── Sync status: 'idle' | 'syncing' | 'success' | 'error' ──
+  const [syncStatus, setSyncStatus] = useState('idle');
+  const syncStatusTimer = useRef(null);
+
+  const setSyncStatusTransient = useCallback((status) => {
+    setSyncStatus(status);
+    if (status === 'success') {
+      if (syncStatusTimer.current) clearTimeout(syncStatusTimer.current);
+      syncStatusTimer.current = setTimeout(() => setSyncStatus('idle'), 3000);
+    }
+  }, []);
+
   // ── Auto-sync: pull on mount, debounced push on changes ──
   const syncPushTimer = useRef(null);
   const mountedRef = useRef(false);
@@ -128,12 +140,16 @@ export function MealProvider({ children }) {
       try {
         const { isSynced, pullData } = await import('../utils/sync');
         if (!isSynced()) return;
+        setSyncStatus('syncing');
         const updated = await pullData();
         if (updated) {
           // Reload state from localStorage after pull merged new data
           reloadFromStorage();
         }
-      } catch {}
+        setSyncStatusTransient('success');
+      } catch {
+        setSyncStatusTransient('error');
+      }
       mountedRef.current = true;
     })();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -145,11 +161,16 @@ export function MealProvider({ children }) {
     syncPushTimer.current = setTimeout(async () => {
       try {
         const { isSynced, pushData } = await import('../utils/sync');
-        if (isSynced()) await pushData();
-      } catch {}
+        if (!isSynced()) return;
+        setSyncStatus('syncing');
+        await pushData();
+        setSyncStatusTransient('success');
+      } catch {
+        setSyncStatusTransient('error');
+      }
     }, 3000); // 3 second debounce
     return () => { if (syncPushTimer.current) clearTimeout(syncPushTimer.current); };
-  }, [mealsByDate, goals, favorites, waterByDate, weightByDate, templates, dietaryPrefs]);
+  }, [mealsByDate, goals, favorites, waterByDate, weightByDate, templates, dietaryPrefs, setSyncStatusTransient]);
 
   // Reload all state from localStorage (after sync pull)
   const reloadFromStorage = useCallback(() => {
@@ -166,11 +187,17 @@ export function MealProvider({ children }) {
   const syncNow = useCallback(async () => {
     const { isSynced, pushData, pullData } = await import('../utils/sync');
     if (!isSynced()) return false;
-    await pushData();
-    const updated = await pullData();
-    if (updated) reloadFromStorage();
+    setSyncStatus('syncing');
+    try {
+      await pushData();
+      const updated = await pullData();
+      if (updated) reloadFromStorage();
+      setSyncStatusTransient('success');
+    } catch {
+      setSyncStatusTransient('error');
+    }
     return true;
-  }, [reloadFromStorage]);
+  }, [reloadFromStorage, setSyncStatusTransient]);
 
   const todayKey = getTodayKey();
   const meals = mealsByDate[todayKey] || [];
@@ -365,6 +392,38 @@ export function MealProvider({ children }) {
       return rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
     }
 
+    if (format === 'cronometer') {
+      // Cronometer food diary import format
+      const mealTimeToHour = { breakfast: '08', brunch: '10', lunch: '12', dinner: '18' };
+      const rows = [[
+        'Date', 'Time', 'Food Name', 'Amount', 'Unit',
+        'Energy (kcal)', 'Protein (g)', 'Carbohydrates (g)', 'Fat (g)',
+        'Fiber (g)', 'Sodium (mg)', 'Sugar (g)', 'Saturated Fat (g)', 'Cholesterol (mg)',
+      ]];
+      for (const [date, dateMeals] of Object.entries(mealsByDate).sort(([a], [b]) => a.localeCompare(b))) {
+        for (const m of dateMeals) {
+          const hour = mealTimeToHour[(m.meal_time || '').toLowerCase().split('/')[0].trim()] || '15';
+          rows.push([
+            date,
+            `${hour}:00:00`,
+            m.name || '',
+            m.servings || 1,
+            'serving',
+            m.calories || 0,
+            parseFloat(m.macros?.protein) || 0,
+            parseFloat(m.macros?.carbs) || 0,
+            parseFloat(m.macros?.fats || m.macros?.fat) || 0,
+            parseFloat(m.macros?.fiber) || 0,
+            parseFloat(m.macros?.sodium) || 0,
+            parseFloat(m.macros?.sugar) || 0,
+            parseFloat(m.macros?.saturated_fat) || 0,
+            parseFloat(m.macros?.cholesterol) || 0,
+          ]);
+        }
+      }
+      return rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+    }
+
     return JSON.stringify(data, null, 2);
   }, [mealsByDate, goals, waterByDate, weightByDate, favorites, templates]);
 
@@ -414,7 +473,7 @@ export function MealProvider({ children }) {
       // Analytics
       getDateRange,
       // Sync
-      syncNow, reloadFromStorage,
+      syncNow, reloadFromStorage, syncStatus,
     }}>
       {children}
     </MealContext.Provider>
