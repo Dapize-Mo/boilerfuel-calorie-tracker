@@ -10,6 +10,11 @@ const BarcodeScanner = dynamic(() => import('../components/BarcodeScanner'), { s
 
 const CHUNK_SIZE = 60; // items per render batch
 
+// Returns YYYY-MM-DD in local time (avoids UTC-offset bugs with toISOString)
+function localDateStr(d = new Date()) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 // ── Smoother easing ──
 const EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
 const TRANSITION_MS = 900; // cooldown for scroll-triggered transitions
@@ -36,7 +41,7 @@ function CalendarPicker({ value, onChange, compact = false, hideIcon = false }) 
   const dayNames = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
   const selectedDay = current.getFullYear() === viewYear && current.getMonth() === viewMonth ? current.getDate() : null;
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayStr = localDateStr();
 
   function pick(day) {
     const m = String(viewMonth + 1).padStart(2, '0');
@@ -54,7 +59,7 @@ function CalendarPicker({ value, onChange, compact = false, hideIcon = false }) 
   }
 
   const dayNames7 = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  const isToday = value === new Date().toISOString().slice(0, 10);
+  const isToday = value === localDateStr();
   const displayDate = value
     ? compact
       ? (isToday ? 'Today' : `${dayNames7[current.getDay()]} · ${monthNames[current.getMonth()]} ${current.getDate()}`)
@@ -365,7 +370,7 @@ export default function Home() {
   // ── State ──
   const [location, setLocation] = useState({ type: 'all', value: 'All' });
   const [mealTime, setMealTime] = useState('All');
-  const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [selectedDate, setSelectedDate] = useState(() => localDateStr());
   const [foods, setFoods] = useState([]);
   const [availableLocations, setAvailableLocations] = useState([]);
   const [retailLocations, setRetailLocations] = useState([]);
@@ -396,12 +401,12 @@ export default function Home() {
   function prevDay() {
     const d = new Date(selectedDate + 'T00:00:00');
     d.setDate(d.getDate() - 1);
-    setSelectedDate(d.toISOString().slice(0, 10));
+    setSelectedDate(localDateStr(d));
   }
   function nextDay() {
     const d = new Date(selectedDate + 'T00:00:00');
     d.setDate(d.getDate() + 1);
-    setSelectedDate(d.toISOString().slice(0, 10));
+    setSelectedDate(localDateStr(d));
   }
 
   // ── Add meal handler (shows picker if mealTime is All) ──
@@ -1706,8 +1711,9 @@ export default function Home() {
                                 {(() => { const ss = macros.serving_size || food.serving_size || ''; const skip = !ss || /^(1 serving|serving|unknown)$/i.test(ss.trim()); return !skip ? <span>{ss}</span> : null; })()}
                                 {food.next_available && (() => {
                                   const d = new Date(food.next_available + 'T00:00:00');
-                                  const today = new Date().toISOString().slice(0, 10);
-                                  const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+                                  const today = localDateStr();
+                                  const tmrw = new Date(); tmrw.setDate(tmrw.getDate() + 1);
+                                  const tomorrow = localDateStr(tmrw);
                                   const label = food.next_available === today ? 'Available today'
                                     : food.next_available === tomorrow ? 'Available tomorrow'
                                     : `Next: ${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()]} ${d.getMonth()+1}/${d.getDate()}`;
