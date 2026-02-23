@@ -2,6 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Strip html5-qrcode's default UI — we provide our own */
+#bf-barcode-reader > img,
+#bf-barcode-reader__header_message,
+#bf-barcode-reader__status_span,
+#bf-barcode-reader__dashboard,
+#bf-barcode-reader__dashboard_section_csr,
+#bf-barcode-reader__camera_selection,
+#bf-barcode-reader__filescan_input {
+  display: none !important;
+}
+#bf-barcode-reader video {
+  width: 100% !important;
+  border-radius: 0 !important;
+}
+
 @layer base {
 
   html {

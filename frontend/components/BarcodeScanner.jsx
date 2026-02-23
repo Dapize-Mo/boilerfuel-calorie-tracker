@@ -2,7 +2,6 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 
 const EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
 
-// Barcode Scanner component using native BarcodeDetector API + OpenFoodFacts
 export default function BarcodeScanner({ onFoodFound, onClose }) {
   const [status, setStatus] = useState('idle'); // idle | scanning | loading | found | error | manual
   const [error, setError] = useState('');
@@ -10,16 +9,19 @@ export default function BarcodeScanner({ onFoodFound, onClose }) {
   const [manualCode, setManualCode] = useState('');
   const [scannedCode, setScannedCode] = useState('');
   const [savedAsCustom, setSavedAsCustom] = useState(false);
-  const videoRef = useRef(null);
-  const streamRef = useRef(null);
-  const scanningRef = useRef(false);
+  const scannerRef = useRef(null); // Html5Qrcode instance
   const manualRef = useRef(null);
 
-  const stopCamera = useCallback(() => {
-    scanningRef.current = false;
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(t => t.stop());
-      streamRef.current = null;
+  const stopCamera = useCallback(async () => {
+    if (scannerRef.current) {
+      try {
+        const state = scannerRef.current.getState?.();
+        // state 2 = SCANNING, state 3 = PAUSED
+        if (state === 2 || state === 3) {
+          await scannerRef.current.stop();
+        }
+      } catch {}
+      scannerRef.current = null;
     }
   }, []);
 
@@ -27,7 +29,6 @@ export default function BarcodeScanner({ onFoodFound, onClose }) {
     setScannedCode(code);
     setStatus('loading');
     try {
-      // Try Open Food Facts first
       const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${code}.json`);
       if (!res.ok) throw new Error('Not found');
       const data = await res.json();
@@ -36,8 +37,6 @@ export default function BarcodeScanner({ onFoodFound, onClose }) {
       }
       const p = data.product;
       const n = p.nutriments || {};
-
-      // Prefer per-serving values; fall back to per-100g
       const cal = Math.round(n['energy-kcal_serving'] ?? n['energy-kcal_100g'] ?? 0);
       const food = {
         id: `barcode-${code}`,
@@ -69,46 +68,47 @@ export default function BarcodeScanner({ onFoodFound, onClose }) {
   }, []);
 
   const startScanning = useCallback(async () => {
+    await stopCamera();
     setStatus('scanning');
     setError('');
 
-    if (!('BarcodeDetector' in window)) {
-      setStatus('manual');
-      setError('Your browser does not support camera barcode scanning. Try Chrome on Android/desktop, or enter the barcode manually.');
-      return;
-    }
-
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
-      });
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-      }
+      // Dynamically import to avoid SSR issues
+      const { Html5Qrcode } = await import('html5-qrcode');
 
-      const detector = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39'] });
-      scanningRef.current = true;
+      const qrCode = new Html5Qrcode('bf-barcode-reader', { verbose: false });
+      scannerRef.current = qrCode;
 
-      const scan = async () => {
-        if (!scanningRef.current || !videoRef.current) return;
-        try {
-          const barcodes = await detector.detect(videoRef.current);
-          if (barcodes.length > 0) {
-            const code = barcodes[0].rawValue;
-            stopCamera();
-            await lookupBarcode(code);
-            return;
-          }
-        } catch {}
-        if (scanningRef.current) requestAnimationFrame(scan);
-      };
-      requestAnimationFrame(scan);
+      await qrCode.start(
+        { facingMode: 'environment' },
+        {
+          fps: 15,
+          qrbox: { width: 280, height: 120 },
+          aspectRatio: 1.333,
+          formatsToSupport: [
+            0,  // QR_CODE
+            4,  // EAN_13
+            5,  // EAN_8
+            6,  // CODE_128
+            7,  // CODE_39
+            11, // UPC_A
+            12, // UPC_E
+          ],
+        },
+        async (decodedText) => {
+          await stopCamera();
+          await lookupBarcode(decodedText);
+        },
+        () => {} // per-frame error — ignore
+      );
     } catch (err) {
-      if (err.name === 'NotAllowedError') {
+      const msg = err?.message || '';
+      if (msg.includes('permission') || msg.includes('Permission') || msg.includes('NotAllowed')) {
         setStatus('manual');
         setError('Camera permission denied. Enter the barcode manually.');
+      } else if (msg.includes('No cameras') || msg.includes('no camera')) {
+        setStatus('manual');
+        setError('No camera found on this device. Enter the barcode manually.');
       } else {
         setStatus('manual');
         setError('Could not start camera. Enter the barcode manually.');
@@ -116,13 +116,11 @@ export default function BarcodeScanner({ onFoodFound, onClose }) {
     }
   }, [stopCamera, lookupBarcode]);
 
-  // Auto-start scanning on mount
   useEffect(() => {
     startScanning();
-    return () => stopCamera();
+    return () => { stopCamera(); };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Focus manual input when switching to manual mode
   useEffect(() => {
     if (status === 'manual') {
       setTimeout(() => manualRef.current?.focus(), 100);
@@ -139,16 +137,16 @@ export default function BarcodeScanner({ onFoodFound, onClose }) {
     if (foundFood && onFoodFound) onFoodFound(foundFood);
   };
 
-  const reset = () => {
+  const reset = async () => {
     setFoundFood(null);
     setScannedCode('');
     setManualCode('');
     setError('');
     setSavedAsCustom(false);
-    startScanning();
+    await startScanning();
   };
 
-  const saveAsCustomFood = async () => {
+  const saveAsCustomFood = () => {
     if (!foundFood) return;
     try {
       const body = {
@@ -160,7 +158,6 @@ export default function BarcodeScanner({ onFoodFound, onClose }) {
         serving_size: foundFood.serving_size || '',
         notes: `Barcode: ${scannedCode}`,
       };
-      // Save to localStorage via custom foods format (no auth needed for local storage approach)
       const key = 'boilerfuel_custom_foods';
       const existing = JSON.parse(localStorage.getItem(key) || '[]');
       existing.push({ ...body, id: `custom-${Date.now()}`, createdAt: Date.now() });
@@ -186,7 +183,7 @@ export default function BarcodeScanner({ onFoodFound, onClose }) {
             </svg>
             <span className="text-sm font-bold tracking-wide">Barcode Scanner</span>
           </div>
-          <button onClick={onClose} className="p-1 text-theme-text-tertiary hover:text-theme-text-primary transition-colors" title="Close">
+          <button onClick={onClose} className="p-1 text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
             </svg>
@@ -195,32 +192,19 @@ export default function BarcodeScanner({ onFoodFound, onClose }) {
 
         <div className="p-4">
 
-          {/* Scanning state — camera view */}
+          {/* Camera region — always mounted so html5-qrcode can attach to the DOM node */}
+          <div
+            id="bf-barcode-reader"
+            className={status === 'scanning' ? 'block' : 'hidden'}
+            style={{ width: '100%' }}
+          />
+
+          {/* Manual hint shown under the camera */}
           {status === 'scanning' && (
-            <div className="space-y-3">
-              <div className="relative bg-black overflow-hidden" style={{ aspectRatio: '4/3' }}>
-                <video ref={videoRef} className="w-full h-full object-cover" playsInline muted />
-                {/* Scanning overlay */}
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="relative w-52 h-36">
-                    {/* Corner marks */}
-                    {[['top-0 left-0', 'border-t-2 border-l-2'], ['top-0 right-0', 'border-t-2 border-r-2'], ['bottom-0 left-0', 'border-b-2 border-l-2'], ['bottom-0 right-0', 'border-b-2 border-r-2']].map(([pos, border], i) => (
-                      <div key={i} className={`absolute ${pos} ${border} border-white w-5 h-5`} />
-                    ))}
-                    {/* Scan line */}
-                    <div className="absolute left-0 right-0 h-0.5 bg-yellow-400/70"
-                      style={{ top: '50%', animation: 'scanLine 2s ease-in-out infinite' }} />
-                  </div>
-                </div>
-                <div className="absolute bottom-2 left-0 right-0 text-center">
-                  <span className="text-[11px] text-white/60">Point camera at barcode</span>
-                </div>
-              </div>
-              <button onClick={() => { stopCamera(); setStatus('manual'); }}
-                className="w-full text-xs text-theme-text-tertiary hover:text-theme-text-primary transition-colors py-1 underline underline-offset-2">
-                Enter barcode manually instead
-              </button>
-            </div>
+            <button onClick={() => { stopCamera(); setStatus('manual'); }}
+              className="w-full text-xs text-theme-text-tertiary hover:text-theme-text-primary transition-colors py-2 underline underline-offset-2 mt-2">
+              Enter barcode manually instead
+            </button>
           )}
 
           {/* Manual entry */}
@@ -247,12 +231,10 @@ export default function BarcodeScanner({ onFoodFound, onClose }) {
                   Look Up
                 </button>
               </form>
-              {'BarcodeDetector' in (typeof window !== 'undefined' ? window : {}) && (
-                <button onClick={startScanning}
-                  className="text-xs text-theme-text-tertiary hover:text-theme-text-primary transition-colors underline underline-offset-2">
-                  Try camera again
-                </button>
-              )}
+              <button onClick={startScanning}
+                className="text-xs text-theme-text-tertiary hover:text-theme-text-primary transition-colors underline underline-offset-2">
+                Try camera instead
+              </button>
             </div>
           )}
 
@@ -267,14 +249,13 @@ export default function BarcodeScanner({ onFoodFound, onClose }) {
           {/* Found */}
           {status === 'found' && foundFood && (
             <div className="space-y-4" style={{ animation: `fadeInTooltip 0.2s ${EASE} both` }}>
-              {/* Product header */}
               <div className="flex gap-3 items-start">
                 {foundFood.image ? (
                   <img src={foundFood.image} alt="" className="w-16 h-16 object-contain border border-theme-text-primary/10 shrink-0 bg-white" />
                 ) : (
                   <div className="w-16 h-16 border border-theme-text-primary/10 shrink-0 flex items-center justify-center bg-theme-bg-secondary">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-theme-text-tertiary/30">
-                      <rect x="2" y="4" width="20" height="16" rx="1" /><line x1="6" y1="8" x2="6" y2="16" /><line x1="9" y1="8" x2="9" y2="16" strokeWidth="1" /><line x1="11" y1="8" x2="11" y2="16" /><line x1="14" y1="8" x2="14" y2="16" strokeWidth="1" /><line x1="16" y1="8" x2="16" y2="16" /><line x1="18" y1="8" x2="18" y2="16" strokeWidth="1" />
+                      <rect x="2" y="4" width="20" height="16" rx="1" />
                     </svg>
                   </div>
                 )}
@@ -285,7 +266,6 @@ export default function BarcodeScanner({ onFoodFound, onClose }) {
                 </div>
               </div>
 
-              {/* Macro grid */}
               <div className="grid grid-cols-4 gap-1.5 text-center">
                 {[
                   { label: 'Cal', val: foundFood.calories, unit: '' },
@@ -300,7 +280,6 @@ export default function BarcodeScanner({ onFoodFound, onClose }) {
                 ))}
               </div>
 
-              {/* Secondary macros */}
               {(foundFood.macros.fiber > 0 || foundFood.macros.sugar > 0 || foundFood.macros.sodium > 0) && (
                 <div className="flex gap-3 text-[10px] text-theme-text-tertiary tabular-nums">
                   {foundFood.macros.fiber > 0 && <span>Fiber: <b>{foundFood.macros.fiber}g</b></span>}
@@ -313,7 +292,6 @@ export default function BarcodeScanner({ onFoodFound, onClose }) {
                 <div className="text-[9px] font-mono text-theme-text-tertiary/40">Barcode: {scannedCode}</div>
               )}
 
-              {/* Actions */}
               <div className="flex gap-2 pt-1">
                 <button onClick={handleAddFood}
                   className="flex-1 px-3 py-2.5 border border-theme-text-primary bg-theme-text-primary text-theme-bg-primary text-xs font-bold uppercase tracking-wider hover:opacity-90 transition-opacity">
@@ -367,13 +345,6 @@ export default function BarcodeScanner({ onFoodFound, onClose }) {
           )}
         </div>
       </div>
-
-      <style>{`
-        @keyframes scanLine {
-          0%, 100% { transform: translateY(-28px); opacity: 0.4; }
-          50% { transform: translateY(28px); opacity: 1; }
-        }
-      `}</style>
     </div>
   );
 }
