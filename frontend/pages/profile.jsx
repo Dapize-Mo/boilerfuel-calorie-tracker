@@ -64,6 +64,7 @@ export default function ProfilePage() {
   const [weightImportStatus, setWeightImportStatus] = useState(''); // '' | 'success' | 'error'
   const [weightImportMsg, setWeightImportMsg] = useState('');
   const weightFileRef = useRef(null);
+  const [logFilter, setLogFilter] = useState(null); // null | meal-time string
 
   // Check if already paired on mount
   useEffect(() => {
@@ -395,8 +396,23 @@ export default function ProfilePage() {
                     </button>
                   )}
                 </div>
+                {mealGroups.length > 1 && (
+                  <div className="flex gap-1 px-4 py-2 border-b border-theme-text-primary/10 flex-wrap">
+                    {mealGroups.map(g => (
+                      <button key={g.label}
+                        onClick={() => setLogFilter(f => f === g.label ? null : g.label)}
+                        className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider border transition-colors ${
+                          logFilter === g.label
+                            ? 'border-theme-text-primary bg-theme-text-primary text-theme-bg-primary'
+                            : 'border-theme-text-primary/20 text-theme-text-tertiary hover:border-theme-text-primary/50 hover:text-theme-text-primary'
+                        }`}>
+                        {g.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
                 <div className="max-h-72 overflow-y-auto">
-                  {mealGroups.map(group => {
+                  {mealGroups.filter(g => !logFilter || g.label === logFilter).map(group => {
                     const groupCals = group.meals.reduce((s, m) => s + (m.calories || 0), 0);
                     // Group meals by food id
                     const grouped = [];
