@@ -293,7 +293,7 @@ export default function ProfilePage() {
       </Head>
 
       <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary font-mono">
-        <div className="max-w-6xl mx-auto px-6 sm:px-10 py-16 sm:py-24 space-y-16">
+        <div className="max-w-7xl mx-auto px-6 sm:px-10 py-16 sm:py-24 space-y-12">
 
           {/* Header */}
           <header className="space-y-4">
@@ -307,7 +307,7 @@ export default function ProfilePage() {
             </p>
           </header>
 
-          <div className="lg:grid lg:grid-cols-2 lg:gap-16 space-y-16 lg:space-y-0">
+          <div className="lg:grid lg:grid-cols-[5fr_4fr_4fr] lg:gap-10 space-y-16 lg:space-y-0">
           {/* ── Left column: Nutrition ── */}
           <div>
           {/* ═══ NUTRITION ═══ */}
@@ -505,8 +505,8 @@ export default function ProfilePage() {
           </section>
           </div>{/* end left column */}
 
-          {/* ── Right column: Settings & more ── */}
-          <div className="space-y-16">
+          {/* ── Col 2: Core Settings ── */}
+          <div className="space-y-10">
           {/* ═══ SETTINGS ═══ */}
           <section className="space-y-6">
             <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-yellow-500/20 pb-2">
@@ -763,7 +763,10 @@ export default function ProfilePage() {
               </div>
             </div>
           </section>
+          </div>{/* end col 2 */}
 
+          {/* ── Col 3: Data & Sync ── */}
+          <div className="space-y-10">
           {/* ═══ MEAL TEMPLATES (BETA) ═══ */}
           <section className="space-y-6">
             <div className="flex items-center gap-2 border-b border-theme-text-primary/10 pb-2">
@@ -816,7 +819,7 @@ export default function ProfilePage() {
               Export Data
             </h2>
             <p className="text-xs text-theme-text-tertiary">Download your meal history. All data is stored locally in your browser.</p>
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => {
                   const csv = exportData('csv');
@@ -1141,8 +1144,8 @@ export default function ProfilePage() {
               </div>
             )}
           </section>
-          </div>{/* end right column */}
-          </div>{/* end two-column grid */}
+          </div>{/* end col 3 */}
+          </div>{/* end three-column grid */}
 
           {/* Footer */}
           <footer className="border-t border-theme-text-primary/10 pt-8 flex flex-wrap items-center justify-between gap-4">
