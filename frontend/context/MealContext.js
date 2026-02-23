@@ -392,6 +392,52 @@ export function MealProvider({ children }) {
       return rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
     }
 
+    if (format === 'gdata') {
+      // Google Fit REST API payload format (com.google.nutrition data points)
+      const MEAL_TYPE_MAP = { breakfast: 1, brunch: 1, lunch: 2, dinner: 3, snack: 4 };
+      const mealTypeInt = (t) => MEAL_TYPE_MAP[(t || '').toLowerCase().split('/')[0].trim()] || 4;
+      const mealTypeToHour = { 1: 8, 2: 12, 3: 18, 4: 15 };
+
+      const points = [];
+      for (const [date, dateMeals] of Object.entries(mealsByDate).sort(([a], [b]) => a.localeCompare(b))) {
+        for (const m of dateMeals) {
+          const mt = mealTypeInt(m.meal_time);
+          const d = new Date(`${date}T12:00:00`);
+          d.setHours(mealTypeToHour[mt], 0, 0, 0);
+          const startNs = (d.getTime() * 1_000_000).toString();
+          const endNs = (BigInt(startNs) + BigInt(60 * 1_000_000_000)).toString();
+          points.push({
+            startTimeNanos: startNs,
+            endTimeNanos: endNs,
+            dataTypeName: 'com.google.nutrition',
+            value: [
+              {
+                mapVal: [
+                  { key: 'calories',      value: { fpVal: m.calories || 0 } },
+                  { key: 'fat.total',     value: { fpVal: parseFloat(m.macros?.fats || m.macros?.fat) || 0 } },
+                  { key: 'fat.saturated', value: { fpVal: parseFloat(m.macros?.saturated_fat) || 0 } },
+                  { key: 'protein',       value: { fpVal: parseFloat(m.macros?.protein) || 0 } },
+                  { key: 'carbs.total',   value: { fpVal: parseFloat(m.macros?.carbs) || 0 } },
+                  { key: 'dietary_fiber', value: { fpVal: parseFloat(m.macros?.fiber) || 0 } },
+                  { key: 'sugar',         value: { fpVal: parseFloat(m.macros?.sugar) || 0 } },
+                  { key: 'sodium',        value: { fpVal: parseFloat(m.macros?.sodium) || 0 } },
+                  { key: 'cholesterol',   value: { fpVal: parseFloat(m.macros?.cholesterol) || 0 } },
+                ],
+              },
+              { intVal: mt },
+              { stringVal: m.name || 'Unknown' },
+            ],
+          });
+        }
+      }
+      return JSON.stringify({
+        exportedAt: new Date().toISOString(),
+        app: 'BoilerFuel',
+        dataTypeName: 'com.google.nutrition',
+        point: points,
+      }, null, 2);
+    }
+
     if (format === 'cronometer') {
       // Cronometer food diary import format
       const mealTimeToHour = { breakfast: '08', brunch: '10', lunch: '12', dinner: '18' };

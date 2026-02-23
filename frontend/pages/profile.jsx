@@ -851,9 +851,21 @@ export default function ProfilePage() {
                 className="px-4 py-2 border border-theme-text-primary/30 text-theme-text-tertiary text-xs uppercase tracking-wider hover:text-theme-text-primary hover:border-theme-text-primary transition-colors">
                 Export for Cronometer
               </button>
+              <button
+                onClick={() => {
+                  const json = exportData('gdata');
+                  const blob = new Blob([json], { type: 'application/json' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a'); a.href = url; a.download = `boilerfuel-gdata-${new Date().toISOString().slice(0, 10)}.json`; a.click();
+                  URL.revokeObjectURL(url);
+                }}
+                title="Google Fit API format — com.google.nutrition data points"
+                className="px-4 py-2 border border-theme-text-primary/30 text-theme-text-tertiary text-xs uppercase tracking-wider hover:text-theme-text-primary hover:border-theme-text-primary transition-colors">
+                Export GData
+              </button>
             </div>
             <p className="text-[10px] text-theme-text-tertiary">
-              The Cronometer CSV can be imported into <a href="https://cronometer.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-theme-text-primary">Cronometer</a> (free), which syncs with Google Fit — no Google sign-in required here.
+              <strong className="text-theme-text-secondary">GData</strong> exports the exact <code>com.google.nutrition</code> payload used by the Google Fit REST API — useful for inspection or external tools. <strong className="text-theme-text-secondary">Cronometer CSV</strong> can be imported into <a href="https://cronometer.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-theme-text-primary">Cronometer</a> (free), which syncs with Google Fit.
             </p>
           </section>
 
