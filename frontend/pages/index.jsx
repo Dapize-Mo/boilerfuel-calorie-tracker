@@ -1513,6 +1513,7 @@ export default function Home() {
                                             {cm.protein != null && <> &middot; {cm.protein}g P</>}
                                             {cm.carbs != null && <> &middot; {cm.carbs}g C</>}
                                             {(cm.fats ?? cm.fat) != null && <> &middot; {cm.fats ?? cm.fat}g F</>}
+                                            {(() => { const ss = cm.serving_size || comp.serving_size || ''; const skip = !ss || /^(1 serving|serving|unknown)$/i.test(ss.trim()); return !skip ? <> &middot; {ss}</> : null; })()}
                                           </div>
                                         </div>
                                         <div className="flex items-center gap-1 shrink-0">
