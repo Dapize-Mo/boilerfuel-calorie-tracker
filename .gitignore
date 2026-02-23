@@ -74,6 +74,9 @@ Users/
 # VS Code extensions
 .vscode/extensions/
 
+# Claude Code local settings
+.claude/settings.local.json
+
 # Git
 .git/
 .vercel
