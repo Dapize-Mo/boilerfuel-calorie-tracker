@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import { ThemeProvider } from '../context/ThemeContext';
 import { MealProvider } from '../context/MealContext';
 import { SessionProvider } from "next-auth/react";
+import InstallPrompt from '../components/InstallPrompt';
 
 const EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
 
@@ -83,6 +84,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
         }}>
           {getLayout(<Component {...pageProps} />)}
         </div>
+        <InstallPrompt />
         {/* Transition overlay */}
         <div
           aria-hidden="true"

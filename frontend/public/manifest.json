@@ -12,63 +12,61 @@
       "src": "/icons/icon-72x72.png",
       "sizes": "72x72",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/icons/icon-96x96.png",
       "sizes": "96x96",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/icons/icon-128x128.png",
       "sizes": "128x128",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/icons/icon-144x144.png",
       "sizes": "144x144",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/icons/icon-152x152.png",
       "sizes": "152x152",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/icons/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "/icons/icon-384x384.png",
       "sizes": "384x384",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/icons/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "/screenshots/desktop-home.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "form_factor": "wide"
+      "purpose": "any"
     },
     {
-      "src": "/screenshots/mobile-home.png",
-      "sizes": "750x1334",
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
       "type": "image/png",
-      "form_factor": "narrow"
+      "purpose": "maskable"
     }
   ],
   "categories": ["health", "fitness", "lifestyle"],
@@ -77,22 +75,19 @@
       "name": "Log Food",
       "short_name": "Log Food",
       "description": "Quick log a meal",
-      "url": "/?tab=nutrition",
-      "icons": [{ "src": "/icons/shortcut-food.png", "sizes": "96x96" }]
+      "url": "/?tab=nutrition"
     },
     {
       "name": "View Menu",
       "short_name": "Menu",
       "description": "Browse dining hall menus",
-      "url": "/?tab=menu",
-      "icons": [{ "src": "/icons/shortcut-menu.png", "sizes": "96x96" }]
+      "url": "/?tab=menu"
     },
     {
       "name": "Log Activity",
       "short_name": "Activity",
       "description": "Log an exercise",
-      "url": "/?tab=activity",
-      "icons": [{ "src": "/icons/shortcut-activity.png", "sizes": "96x96" }]
+      "url": "/?tab=activity"
     }
   ]
 }
