@@ -199,7 +199,7 @@ export default function Onboarding() {
                 </li>
                 <li className="flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 shrink-0" />
-                  Tap + to log a food item to today's log
+                  Tap + to log a food item to today&apos;s log
                 </li>
                 <li className="flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 shrink-0" />

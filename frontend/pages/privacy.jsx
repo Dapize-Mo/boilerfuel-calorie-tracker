@@ -22,7 +22,7 @@ export default function PrivacyPage() {
         <section className="space-y-3">
           <h2 className="text-sm font-bold uppercase tracking-widest text-theme-text-tertiary border-b border-theme-border-secondary pb-2">Summary</h2>
           <p className="text-sm text-theme-text-secondary leading-relaxed">
-            BoilerFuel is designed with privacy first. <strong className="text-theme-text-primary">Your meal logs, goals, and personal data are stored only on your own device</strong> — in your browser's local storage. We do not have a user account system, and we do not collect or store personal information on our servers.
+            BoilerFuel is designed with privacy first. <strong className="text-theme-text-primary">Your meal logs, goals, and personal data are stored only on your own device</strong> — in your browser&apos;s local storage. We do not have a user account system, and we do not collect or store personal information on our servers.
           </p>
         </section>
 
@@ -31,7 +31,7 @@ export default function PrivacyPage() {
           <div className="space-y-4 text-sm text-theme-text-secondary leading-relaxed">
             <div>
               <p className="font-semibold text-theme-text-primary mb-1">Nothing — by default</p>
-              <p>All data you enter (meals, goals, weight, water intake, dietary preferences, templates) is stored in your browser's <code className="text-xs bg-theme-bg-secondary px-1 py-0.5 rounded">localStorage</code>. It never leaves your device unless you explicitly use one of the optional features below.</p>
+              <p>All data you enter (meals, goals, weight, water intake, dietary preferences, templates) is stored in your browser&apos;s <code className="text-xs bg-theme-bg-secondary px-1 py-0.5 rounded">localStorage</code>. It never leaves your device unless you explicitly use one of the optional features below.</p>
             </div>
 
             <div>
@@ -66,21 +66,21 @@ export default function PrivacyPage() {
           <div className="space-y-2 text-sm text-theme-text-secondary leading-relaxed">
             <p>We do not use any advertising, analytics, or tracking services. There are no third-party cookies.</p>
             <p>The app is hosted on <strong className="text-theme-text-primary">Vercel</strong> — their <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" className="underline hover:text-theme-text-primary">privacy policy</a> applies to infrastructure-level hosting.</p>
-            <p>Google Fit integration uses <strong className="text-theme-text-primary">Google's OAuth 2.0</strong> and is governed by <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-theme-text-primary">Google's Privacy Policy</a>.</p>
+            <p>Google Fit integration uses <strong className="text-theme-text-primary">Google&apos;s OAuth 2.0</strong> and is governed by <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-theme-text-primary">Google&apos;s Privacy Policy</a>.</p>
           </div>
         </section>
 
         <section className="space-y-3">
           <h2 className="text-sm font-bold uppercase tracking-widest text-theme-text-tertiary border-b border-theme-border-secondary pb-2">Your Data Rights</h2>
           <div className="space-y-2 text-sm text-theme-text-secondary leading-relaxed">
-            <p><strong className="text-theme-text-primary">Access:</strong> All your data is already accessible to you — it lives in your browser's local storage.</p>
-            <p><strong className="text-theme-text-primary">Deletion:</strong> Clear your browser's site data for this domain to delete all local data. If you used Device Sync, unpair from Profile → Device Sync to delete the server copy.</p>
+            <p><strong className="text-theme-text-primary">Access:</strong> All your data is already accessible to you — it lives in your browser&apos;s local storage.</p>
+            <p><strong className="text-theme-text-primary">Deletion:</strong> Clear your browser&apos;s site data for this domain to delete all local data. If you used Device Sync, unpair from Profile → Device Sync to delete the server copy.</p>
             <p><strong className="text-theme-text-primary">Portability:</strong> You can export all your data as CSV or JSON from Profile → Export Data at any time.</p>
           </div>
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-sm font-bold uppercase tracking-widest text-theme-text-tertiary border-b border-theme-border-secondary pb-2">Children's Privacy</h2>
+          <h2 className="text-sm font-bold uppercase tracking-widest text-theme-text-tertiary border-b border-theme-border-secondary pb-2">Children&apos;s Privacy</h2>
           <p className="text-sm text-theme-text-secondary leading-relaxed">
             BoilerFuel is intended for use by Purdue University students and does not knowingly collect information from children under 13. The app does not collect personal information from any user by default.
           </p>
