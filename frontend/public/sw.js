@@ -1,7 +1,8 @@
 // BoilerFuel Service Worker — offline caching
-const CACHE_NAME = 'boilerfuel-v1';
-const STATIC_CACHE = 'boilerfuel-static-v1';
-const API_CACHE = 'boilerfuel-api-v1';
+// Bump CACHE_VERSION when deploying significant changes to force a fresh cache
+const CACHE_VERSION = 'v2';
+const STATIC_CACHE = `boilerfuel-static-${CACHE_VERSION}`;
+const API_CACHE = `boilerfuel-api-${CACHE_VERSION}`;
 
 // App shell files to precache
 const PRECACHE_URLS = [
@@ -27,11 +28,18 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
-        keys.filter((k) => k !== STATIC_CACHE && k !== API_CACHE && k !== CACHE_NAME)
+        keys.filter((k) => k !== STATIC_CACHE && k !== API_CACHE)
           .map((k) => caches.delete(k))
       );
     }).then(() => self.clients.claim())
   );
+});
+
+// Message: allow pages to trigger skipWaiting for seamless updates
+self.addEventListener('message', (event) => {
+  if (event.data === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 // Fetch: network-first for API, cache-first for static assets

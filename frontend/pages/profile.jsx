@@ -69,6 +69,10 @@ export default function ProfilePage() {
   const weightFileRef = useRef(null);
   const [logFilter, setLogFilter] = useState(null); // null | meal-time string
 
+  // Notification settings
+  const [notifPermission, setNotifPermission] = useState('default');
+  const [mealReminder, setMealReminder] = useState(false);
+
   // Google Fit export state
   const [fitExporting, setFitExporting] = useState(false);
   const [fitMsg, setFitMsg] = useState('');
@@ -77,6 +81,25 @@ export default function ProfilePage() {
   const thirtyDaysAgo = (() => { const d = new Date(todayStr + 'T00:00:00'); d.setDate(d.getDate() - 30); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
   const [fitStartDate, setFitStartDate] = useState(thirtyDaysAgo);
   const [fitEndDate, setFitEndDate] = useState(todayStr);
+
+  // Load notification state
+  useEffect(() => {
+    if ('Notification' in window) {
+      setNotifPermission(Notification.permission);
+      setMealReminder(localStorage.getItem('boilerfuel_notif_meal') === '1');
+    }
+  }, []);
+
+  async function requestNotificationPermission() {
+    if (!('Notification' in window)) return;
+    const permission = await Notification.requestPermission();
+    setNotifPermission(permission);
+  }
+
+  function toggleMealReminder(enabled) {
+    setMealReminder(enabled);
+    localStorage.setItem('boilerfuel_notif_meal', enabled ? '1' : '0');
+  }
 
   // Check if already paired on mount
   useEffect(() => {
@@ -763,6 +786,66 @@ export default function ProfilePage() {
               </div>
             </div>
           </section>
+
+          {/* ═══ REMINDERS ═══ */}
+          {'Notification' in (typeof window !== 'undefined' ? window : {}) && (
+            <section className="space-y-6">
+              <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-yellow-500/20 pb-2">
+                Reminders
+              </h2>
+
+              {notifPermission === 'denied' && (
+                <div className="border border-red-500/30 px-4 py-3 text-xs text-red-400">
+                  Notifications are blocked for this site. Enable them in your browser settings to use reminders.
+                </div>
+              )}
+
+              {notifPermission === 'default' && (
+                <div className="space-y-3">
+                  <p className="text-xs text-theme-text-tertiary">
+                    Allow notifications so BoilerFuel can remind you to log meals and warn you when your streak is at risk.
+                  </p>
+                  <button
+                    onClick={requestNotificationPermission}
+                    className="px-4 py-2 border border-theme-text-primary text-theme-text-primary text-xs font-bold uppercase tracking-wider hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors"
+                  >
+                    Enable Notifications
+                  </button>
+                </div>
+              )}
+
+              {notifPermission === 'granted' && (
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3 px-4 py-3 border border-green-500/20 bg-green-500/5">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-green-500 shrink-0 mt-0.5">
+                      <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
+                    </svg>
+                    <div>
+                      <p className="text-xs font-bold text-green-500">Notifications enabled</p>
+                      <p className="text-[10px] text-theme-text-tertiary mt-0.5">
+                        Streak reminders fire automatically at 8&nbsp;pm if you haven&rsquo;t logged today.
+                      </p>
+                    </div>
+                  </div>
+
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={mealReminder}
+                      onChange={e => toggleMealReminder(e.target.checked)}
+                      className="accent-yellow-500 w-4 h-4 mt-0.5"
+                    />
+                    <div>
+                      <span className="text-sm font-bold">Meal reminders</span>
+                      <p className="text-[10px] text-theme-text-tertiary mt-0.5">
+                        Remind me to log lunch (noon) and dinner (6&nbsp;pm) if I haven&rsquo;t already.
+                      </p>
+                    </div>
+                  </label>
+                </div>
+              )}
+            </section>
+          )}
           </div>{/* end col 2 */}
 
           {/* ── Col 3: Data & Sync ── */}
@@ -1154,6 +1237,7 @@ export default function ProfilePage() {
               <Link href="/stats" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Stats</Link>
               <Link href="/about" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">About</Link>
               <Link href="/changelog" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Changelog</Link>
+              <Link href="/privacy" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Privacy</Link>
               <Link href="/admin" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Admin</Link>
             </div>
             <span className="text-xs text-theme-text-tertiary/40">{new Date().getFullYear()}</span>

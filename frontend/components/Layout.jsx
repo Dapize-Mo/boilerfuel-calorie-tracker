@@ -122,6 +122,7 @@ const Footer = memo(function Footer() {
         <div className="flex items-center gap-4">
           <Link href="/about" className="hover:text-yellow-400 transition-colors">About</Link>
           <Link href="/changelog" className="hover:text-yellow-400 transition-colors">Changelog</Link>
+          <Link href="/privacy" className="hover:text-yellow-400 transition-colors">Privacy</Link>
           <Link href="/admin" className="hover:text-yellow-400 transition-colors">Admin</Link>
         </div>
       </div>
