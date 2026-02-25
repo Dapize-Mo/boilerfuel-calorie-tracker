@@ -31,7 +31,7 @@ export async function initSentry() {
   }
 
   try {
-    const Sentry = await import('@sentry/nextjs');
+    const Sentry = await import(/* webpackIgnore: true */ '@sentry/nextjs');
     Sentry.init({
       dsn,
       environment: process.env.NODE_ENV || 'production',
