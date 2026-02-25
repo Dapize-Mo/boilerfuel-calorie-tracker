@@ -10,6 +10,7 @@ import OfflineIndicator from '../components/OfflineIndicator';
 import Onboarding from '../components/Onboarding';
 import NotificationManager from '../components/NotificationManager';
 import ErrorBoundary from '../components/ErrorBoundary';
+import MobileBottomNav from '../components/MobileBottomNav';
 import KeyboardShortcutsHelp from '../components/KeyboardShortcutsHelp';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { initSentry } from '../utils/sentry';
@@ -100,7 +101,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
   return (
     <SessionProvider session={session}>
       <Head>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -137,10 +138,11 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
           <Onboarding />
           <NotificationManager />
           <KeyboardShortcutsHelp show={showHelp} onClose={toggleHelp} />
+          <MobileBottomNav />
 
           {/* App update toast */}
           {updateAvailable && (
-            <div className="fixed bottom-20 inset-x-0 z-50 flex justify-center px-4 pointer-events-none">
+            <div className="fixed bottom-20 sm:bottom-20 inset-x-0 z-50 flex justify-center px-4 pointer-events-none" style={{ bottom: 'max(5rem, calc(env(safe-area-inset-bottom, 0px) + 72px))' }}>
               <div className="flex items-center gap-3 bg-theme-bg-secondary border border-theme-border-secondary rounded-xl shadow-2xl px-4 py-3 pointer-events-auto max-w-sm w-full">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-theme-text-primary">Update available</p>

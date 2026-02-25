@@ -439,6 +439,20 @@ html {
   background: rgb(var(--color-bg-hover));
 }
 
+/* Mobile bottom nav padding — prevent content from being hidden behind fixed nav */
+@media (max-width: 639px) {
+  body {
+    padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* Prevent iOS zoom on input focus */
+  input[type="text"], input[type="search"], input[type="date"],
+  input[type="email"], input[type="number"], input[type="password"],
+  textarea, select {
+    font-size: 16px !important;
+  }
+}
+
 /* Motion safety for users preferring reduced motion */
 @media (prefers-reduced-motion: reduce) {
 

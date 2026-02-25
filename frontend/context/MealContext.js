@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
+import { hapticLight, hapticMedium } from '../utils/haptics';
 
 const MealContext = createContext({
   meals: [],
@@ -232,6 +233,7 @@ export function MealProvider({ children }) {
       const existing = prev[key] || [];
       return { ...prev, [key]: [...existing, entry] };
     });
+    hapticLight();
   }, []);
 
   const removeMeal = useCallback((food, dateOverride) => {
@@ -250,6 +252,7 @@ export function MealProvider({ children }) {
       }
       return updated;
     });
+    hapticMedium();
   }, []);
 
   const clearMeals = useCallback(() => {

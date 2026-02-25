@@ -1,10 +1,11 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useSession, signIn } from 'next-auth/react';
 import { useTheme } from '../context/ThemeContext';
 import { useMeals } from '../context/MealContext';
+import { useSwipeGesture } from '../hooks/useSwipeGesture';
 import { downloadAppleHealthExport } from '../utils/appleHealth';
 import { generatePDFReport } from '../utils/pdfExport';
 
@@ -85,6 +86,12 @@ export default function ProfilePage() {
   const thirtyDaysAgo = (() => { const d = new Date(todayStr + 'T00:00:00'); d.setDate(d.getDate() - 30); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
   const [fitStartDate, setFitStartDate] = useState(thirtyDaysAgo);
   const [fitEndDate, setFitEndDate] = useState(todayStr);
+
+  // Swipe left/right to change date
+  const swipeHandlers = useSwipeGesture({
+    onSwipeLeft: useCallback(() => setSelectedDate(d => shiftDate(d, 1)), []),
+    onSwipeRight: useCallback(() => setSelectedDate(d => shiftDate(d, -1)), []),
+  });
 
   // Load notification state
   useEffect(() => {
@@ -319,8 +326,8 @@ export default function ProfilePage() {
         <meta name="description" content="BoilerFuel preferences and nutrition tracking" />
       </Head>
 
-      <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary font-mono">
-        <div className="max-w-7xl mx-auto px-6 sm:px-10 py-16 sm:py-24 space-y-12">
+      <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary font-mono" {...swipeHandlers}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-10 py-10 sm:py-24 space-y-8 sm:space-y-12">
 
           {/* Header */}
           <header className="space-y-4">
@@ -906,7 +913,7 @@ export default function ProfilePage() {
               Export Data
             </h2>
             <p className="text-xs text-theme-text-tertiary">Download your meal history. All data is stored locally in your browser.</p>
-            <div className="flex flex-wrap gap-2">
+            <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
               <button
                 onClick={() => {
                   const csv = exportData('csv');
