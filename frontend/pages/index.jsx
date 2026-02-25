@@ -24,6 +24,40 @@ function localDateStr(d = new Date()) {
 const EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
 const TRANSITION_MS = 900; // cooldown for scroll-triggered transitions
 
+// ── Compact beverage row for sidebar ──
+function BeverageRow({ food, getCount, selectedDate, handleAddMeal, removeMeal, highlight }) {
+  const count = getCount(food.id, selectedDate);
+  return (
+    <div className={`flex items-center justify-between px-3 py-2 border-b border-theme-text-primary/5 hover:bg-theme-bg-secondary/50 transition-colors ${highlight ? 'bg-yellow-500/[0.03]' : ''}`}>
+      <div className="flex-1 min-w-0 mr-2">
+        <span className="text-xs text-theme-text-primary truncate block">{food.name}</span>
+        <span className="text-[10px] text-theme-text-tertiary font-mono">{food.calories || 0} cal</span>
+      </div>
+      <div className="flex items-center gap-1 shrink-0">
+        {count > 0 && (
+          <button
+            onClick={() => removeMeal(food.id, selectedDate)}
+            className="p-1 border border-theme-text-primary/20 text-theme-text-tertiary hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors"
+          >
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="5" y1="12" x2="19" y2="12" /></svg>
+          </button>
+        )}
+        {count > 0 && (
+          <span className="text-[10px] font-bold bg-theme-text-primary text-theme-bg-primary px-1.5 py-0.5 tabular-nums font-mono min-w-[18px] text-center">
+            {count}
+          </span>
+        )}
+        <button
+          onClick={() => handleAddMeal(food)}
+          className="p-1 border border-theme-text-primary/20 text-theme-text-tertiary hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors"
+        >
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ══════════════════════════════════════
 // ── Main Home component ──
 // ══════════════════════════════════════

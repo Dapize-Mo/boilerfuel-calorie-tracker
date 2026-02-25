@@ -3,6 +3,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useTheme } from '../context/ThemeContext';
 import { useMeals } from '../context/MealContext';
+import AnimatedSection from '../components/AnimatedSection';
 
 function getTodayKey() {
   const d = new Date();
@@ -452,6 +453,7 @@ export default function StatsPage() {
           </div>
 
           {/* Quick stats row */}
+          <AnimatedSection delay={0.1}>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-theme-text-primary/10 border border-theme-text-primary/10">
             <div className="bg-theme-bg-primary px-4 py-4 text-center">
               <div className="text-2xl font-bold tabular-nums">{streak}</div>
@@ -470,6 +472,7 @@ export default function StatsPage() {
               <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary mt-1">Avg Water/Day</div>
             </div>
           </div>
+          </AnimatedSection>
 
           {/* ═══ TODAY'S SNAPSHOT ═══ */}
           <section className="space-y-4">

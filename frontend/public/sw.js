@@ -1,8 +1,10 @@
 // BoilerFuel Service Worker — offline caching
 // Bump CACHE_VERSION when deploying significant changes to force a fresh cache
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const STATIC_CACHE = `boilerfuel-static-${CACHE_VERSION}`;
 const API_CACHE = `boilerfuel-api-${CACHE_VERSION}`;
+
+const OFFLINE_PAGE = '/offline.html';
 
 // App shell files to precache
 const PRECACHE_URLS = [
@@ -10,6 +12,7 @@ const PRECACHE_URLS = [
   '/profile',
   '/stats',
   '/about',
+  OFFLINE_PAGE,
   '/manifest.json',
   '/favicon.svg',
 ];
@@ -42,7 +45,7 @@ self.addEventListener('message', (event) => {
   }
 });
 
-// Fetch: network-first for API, cache-first for static assets
+// Fetch: network-first for API, cache-first for static assets, offline fallback for navigation
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
@@ -50,7 +53,7 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
   // API requests: network-first with cache fallback
-  if (url.pathname.startsWith('/api/foods') || url.pathname.startsWith('/api/dining-courts')) {
+  if (url.pathname.startsWith('/api/foods') || url.pathname.startsWith('/api/dining-courts') || url.pathname.startsWith('/api/retail')) {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
@@ -64,6 +67,28 @@ self.addEventListener('fetch', (event) => {
         .catch(() => {
           // Network failed — serve from cache
           return caches.match(event.request);
+        })
+    );
+    return;
+  }
+
+  // Navigation requests (HTML pages): network-first with offline fallback
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          // Cache the page for offline use
+          const clone = response.clone();
+          caches.open(STATIC_CACHE).then((cache) => {
+            cache.put(event.request, clone);
+          });
+          return response;
+        })
+        .catch(() => {
+          // Try cache first, then offline fallback
+          return caches.match(event.request).then((cached) => {
+            return cached || caches.match(OFFLINE_PAGE);
+          });
         })
     );
     return;
@@ -92,6 +117,8 @@ self.addEventListener('fetch', (event) => {
             });
           }
           return response;
+        }).catch(() => {
+          // Return undefined — browser handles the error
         });
       })
     );
