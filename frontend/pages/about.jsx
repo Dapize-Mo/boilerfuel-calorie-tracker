@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Head from 'next/head';
+import { getBreadcrumbSchema } from '../utils/structuredData';
 
 export default function About() {
   const [fbType, setFbType] = useState('idea');
@@ -50,6 +51,15 @@ export default function About() {
       <Head>
         <title>About - BoilerFuel</title>
         <meta name="description" content="Learn about BoilerFuel Calorie Tracker" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(getBreadcrumbSchema([
+              { name: 'Home', url: '/' },
+              { name: 'About', url: '/about' },
+            ])),
+          }}
+        />
       </Head>
 
       <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary font-mono">

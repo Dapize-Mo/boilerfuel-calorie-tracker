@@ -1,4 +1,5 @@
 import { Html, Head, Main, NextScript } from 'next/document';
+import { getWebAppSchema } from '../utils/structuredData';
 
 export default function Document() {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
@@ -6,6 +7,12 @@ export default function Document() {
   return (
     <Html lang="en">
       <Head>
+        {/* JSON-LD Structured Data */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(getWebAppSchema()) }}
+        />
+
         {/* Performance optimizations */}
         <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.googleapis.com" crossOrigin="anonymous" />

@@ -5,6 +5,8 @@ import dynamic from 'next/dynamic';
 import { useSession, signIn } from 'next-auth/react';
 import { useTheme } from '../context/ThemeContext';
 import { useMeals } from '../context/MealContext';
+import { downloadAppleHealthExport } from '../utils/appleHealth';
+import { generatePDFReport } from '../utils/pdfExport';
 
 const QRCode = dynamic(() => import('../components/QRCode'), { ssr: false });
 
@@ -949,9 +951,28 @@ export default function ProfilePage() {
                 className="px-4 py-2 border border-theme-text-primary/30 text-theme-text-tertiary text-xs uppercase tracking-wider hover:text-theme-text-primary hover:border-theme-text-primary transition-colors">
                 Export GData
               </button>
+              <button
+                onClick={() => {
+                  const result = downloadAppleHealthExport(mealsByDate);
+                  if (result.success) {
+                    alert(`Exported ${result.recordCount} records to ${result.filename}`);
+                  } else {
+                    alert('Apple Health export failed: ' + (result.error || 'Unknown error'));
+                  }
+                }}
+                title="Apple Health XML export — import on iPhone via Health app"
+                className="px-4 py-2 border border-theme-text-primary/30 text-theme-text-tertiary text-xs uppercase tracking-wider hover:text-theme-text-primary hover:border-theme-text-primary transition-colors">
+                Apple Health XML
+              </button>
+              <button
+                onClick={() => generatePDFReport(mealsByDate, goals, weightByDate)}
+                title="Generate a printable PDF summary of your nutrition data"
+                className="px-4 py-2 border border-theme-text-primary/30 text-theme-text-tertiary text-xs uppercase tracking-wider hover:text-theme-text-primary hover:border-theme-text-primary transition-colors">
+                Export PDF
+              </button>
             </div>
             <p className="text-[10px] text-theme-text-tertiary">
-              <strong className="text-theme-text-secondary">GData</strong> exports the exact <code>com.google.nutrition</code> payload used by the Google Fit REST API — useful for inspection or external tools. <strong className="text-theme-text-secondary">Cronometer CSV</strong> can be imported into <a href="https://cronometer.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-theme-text-primary">Cronometer</a> (free), which syncs with Google Fit.
+              <strong className="text-theme-text-secondary">GData</strong> exports the exact <code>com.google.nutrition</code> payload used by the Google Fit REST API — useful for inspection or external tools. <strong className="text-theme-text-secondary">Cronometer CSV</strong> can be imported into <a href="https://cronometer.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-theme-text-primary">Cronometer</a> (free), which syncs with Google Fit. <strong className="text-theme-text-secondary">Apple Health XML</strong> generates an import file for the iOS Health app. <strong className="text-theme-text-secondary">PDF</strong> creates a printable nutrition summary.
             </p>
           </section>
 
