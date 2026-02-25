@@ -9,6 +9,8 @@ import InstallPrompt from '../components/InstallPrompt';
 import OfflineIndicator from '../components/OfflineIndicator';
 import Onboarding from '../components/Onboarding';
 import NotificationManager from '../components/NotificationManager';
+import ErrorBoundary from '../components/ErrorBoundary';
+import { initSentry } from '../utils/sentry';
 
 const EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
 
@@ -19,6 +21,8 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
   const [updateAvailable, setUpdateAvailable] = useState(false);
 
   useEffect(() => {
+    // Initialize Sentry error tracking (no-op if DSN not configured)
+    initSentry();
     // Fade in on initial mount
     requestAnimationFrame(() => setDisplayChildren(true));
 
@@ -112,6 +116,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
       </Head>
       <ThemeProvider>
         <MealProvider>
+          <ErrorBoundary>
           {/* Page content with fade */}
           <div style={{
             opacity: displayChildren && !transitioning ? 1 : 0,
@@ -151,6 +156,8 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
               </div>
             </div>
           )}
+
+          </ErrorBoundary>
 
           {/* Transition overlay */}
           <div
