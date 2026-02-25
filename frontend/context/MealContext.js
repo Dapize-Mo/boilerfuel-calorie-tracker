@@ -477,6 +477,115 @@ export function MealProvider({ children }) {
     return JSON.stringify(data, null, 2);
   }, [mealsByDate, goals, waterByDate, weightByDate, favorites, templates]);
 
+  // ── Import data (restore from JSON backup) ──
+  const importData = useCallback((jsonString) => {
+    try {
+      const data = JSON.parse(jsonString);
+      if (!data || typeof data !== 'object') throw new Error('Invalid format');
+
+      let imported = 0;
+
+      if (data.meals && typeof data.meals === 'object') {
+        setMealsByDate((prev) => {
+          const merged = { ...prev };
+          for (const [dateKey, dayMeals] of Object.entries(data.meals)) {
+            if (!Array.isArray(dayMeals)) continue;
+            const existing = merged[dateKey] || [];
+            const existingIds = new Set(existing.map((m) => m.id || m.addedAt));
+            const newMeals = dayMeals.filter((m) => !existingIds.has(m.id || m.addedAt));
+            if (newMeals.length > 0) {
+              merged[dateKey] = [...existing, ...newMeals];
+              imported += newMeals.length;
+            }
+          }
+          return merged;
+        });
+      }
+
+      if (data.goals && typeof data.goals === 'object') {
+        setGoalsState((prev) => ({ ...prev, ...data.goals }));
+      }
+
+      if (data.water && typeof data.water === 'object') {
+        setWaterByDate((prev) => ({ ...prev, ...data.water }));
+      }
+
+      if (data.weight && typeof data.weight === 'object') {
+        setWeightByDate((prev) => ({ ...prev, ...data.weight }));
+      }
+
+      if (Array.isArray(data.favorites)) {
+        setFavoritesState((prev) => new Set([...prev, ...data.favorites]));
+      }
+
+      if (Array.isArray(data.templates)) {
+        setTemplatesState((prev) => {
+          const existingNames = new Set(prev.map((t) => t.name));
+          const newTemplates = data.templates.filter((t) => !existingNames.has(t.name));
+          return [...prev, ...newTemplates];
+        });
+      }
+
+      return { success: true, imported };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  }, []);
+
+  // ── Streak tracking ──
+  const getStreak = useCallback(() => {
+    const today = getTodayKey();
+    let currentStreak = 0;
+    let longestStreak = 0;
+    let streak = 0;
+
+    // Get all dates sorted descending
+    const dates = Object.keys(mealsByDate)
+      .filter((d) => (mealsByDate[d] || []).length > 0)
+      .sort((a, b) => b.localeCompare(a));
+
+    if (dates.length === 0) return { currentStreak: 0, longestStreak: 0, totalDays: 0 };
+
+    // Calculate current streak (consecutive days ending today or yesterday)
+    let checkDate = today;
+    // If today has no meals, start from yesterday
+    if (!dates.includes(today)) {
+      const yesterday = new Date(today + 'T00:00:00');
+      yesterday.setDate(yesterday.getDate() - 1);
+      checkDate = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+    }
+
+    const dateSet = new Set(dates);
+    let d = new Date(checkDate + 'T00:00:00');
+    while (true) {
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      if (dateSet.has(key)) {
+        currentStreak++;
+        d.setDate(d.getDate() - 1);
+      } else {
+        break;
+      }
+    }
+
+    // Calculate longest streak from all dates
+    const allDatesAsc = [...dates].sort();
+    streak = 1;
+    longestStreak = 1;
+    for (let i = 1; i < allDatesAsc.length; i++) {
+      const prev = new Date(allDatesAsc[i - 1] + 'T00:00:00');
+      const curr = new Date(allDatesAsc[i] + 'T00:00:00');
+      const diffDays = Math.round((curr - prev) / (1000 * 60 * 60 * 24));
+      if (diffDays === 1) {
+        streak++;
+        longestStreak = Math.max(longestStreak, streak);
+      } else {
+        streak = 1;
+      }
+    }
+
+    return { currentStreak, longestStreak, totalDays: dates.length };
+  }, [mealsByDate]);
+
   // ── Weekly/monthly analytics helpers ──
   const getDateRange = useCallback((startDate, endDate) => {
     const result = [];
@@ -518,10 +627,10 @@ export function MealProvider({ children }) {
       templates, saveTemplate, deleteTemplate, applyTemplate,
       // Dietary
       dietaryPrefs, setDietaryPrefs,
-      // Export
-      exportData,
+      // Export / Import
+      exportData, importData,
       // Analytics
-      getDateRange,
+      getDateRange, getStreak,
       // Sync
       syncNow, reloadFromStorage, syncStatus,
     }}>

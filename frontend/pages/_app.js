@@ -10,15 +10,22 @@ import OfflineIndicator from '../components/OfflineIndicator';
 import Onboarding from '../components/Onboarding';
 import NotificationManager from '../components/NotificationManager';
 import ErrorBoundary from '../components/ErrorBoundary';
+import KeyboardShortcutsHelp from '../components/KeyboardShortcutsHelp';
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { initSentry } from '../utils/sentry';
+import { reportWebVitals } from '../utils/webVitals';
 
 const EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
+
+// Export reportWebVitals for Next.js automatic Web Vitals collection
+export { reportWebVitals };
 
 function MyApp({ Component, pageProps: { session, ...pageProps } }) {
   const router = useRouter();
   const [transitioning, setTransitioning] = useState(false);
   const [displayChildren, setDisplayChildren] = useState(false);
   const [updateAvailable, setUpdateAvailable] = useState(false);
+  const { showHelp, toggleHelp } = useKeyboardShortcuts();
 
   useEffect(() => {
     // Initialize Sentry error tracking (no-op if DSN not configured)
@@ -129,6 +136,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
           <OfflineIndicator />
           <Onboarding />
           <NotificationManager />
+          <KeyboardShortcutsHelp show={showHelp} onClose={toggleHelp} />
 
           {/* App update toast */}
           {updateAvailable && (

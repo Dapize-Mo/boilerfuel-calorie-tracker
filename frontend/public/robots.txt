@@ -1,0 +1,7 @@
+# BoilerFuel — Nutrition Tracker for Purdue
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin
+
+Sitemap: https://boilerfuel.app/sitemap.xml

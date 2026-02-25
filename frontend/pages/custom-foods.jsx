@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import Head from 'next/head';
 import { useSession } from 'next-auth/react';
 import Layout from '../components/Layout';
 
@@ -185,6 +186,10 @@ export default function CustomFoods() {
 
   return (
     <Layout>
+      <Head>
+        <title>Custom Foods - BoilerFuel</title>
+        <meta name="description" content="Create and manage your own custom food entries in BoilerFuel" />
+      </Head>
       <div className="max-w-4xl mx-auto py-8 px-4">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">My Custom Foods</h1>

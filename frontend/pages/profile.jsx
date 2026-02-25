@@ -53,7 +53,7 @@ function shiftDate(dateKey, delta) {
 export default function ProfilePage() {
   const { theme, setTheme } = useTheme();
   const { data: googleSession } = useSession();
-  const { meals, goals, setGoals, totals, clearMeals, removeMeal, mealsByDate, getWeight, setWeight, weightByDate, exportData, templates, saveTemplate, deleteTemplate, applyTemplate, dietaryPrefs, setDietaryPrefs, waterByDate, getWater, addWater, syncNow, reloadFromStorage } = useMeals();
+  const { meals, goals, setGoals, totals, clearMeals, removeMeal, mealsByDate, getWeight, setWeight, weightByDate, exportData, importData, templates, saveTemplate, deleteTemplate, applyTemplate, dietaryPrefs, setDietaryPrefs, waterByDate, getWater, addWater, syncNow, reloadFromStorage, getStreak } = useMeals();
   const [editingGoals, setEditingGoals] = useState(false);
   const [draft, setDraft] = useState(goals);
   const [goalWarnings, setGoalWarnings] = useState([]);
@@ -69,6 +69,8 @@ export default function ProfilePage() {
   const [weightImportStatus, setWeightImportStatus] = useState(''); // '' | 'success' | 'error'
   const [weightImportMsg, setWeightImportMsg] = useState('');
   const weightFileRef = useRef(null);
+  const importFileRef = useRef(null);
+  const [importMsg, setImportMsg] = useState('');
   const [logFilter, setLogFilter] = useState(null); // null | meal-time string
 
   // Notification settings
@@ -974,7 +976,73 @@ export default function ProfilePage() {
             <p className="text-[10px] text-theme-text-tertiary">
               <strong className="text-theme-text-secondary">GData</strong> exports the exact <code>com.google.nutrition</code> payload used by the Google Fit REST API — useful for inspection or external tools. <strong className="text-theme-text-secondary">Cronometer CSV</strong> can be imported into <a href="https://cronometer.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-theme-text-primary">Cronometer</a> (free), which syncs with Google Fit. <strong className="text-theme-text-secondary">Apple Health XML</strong> generates an import file for the iOS Health app. <strong className="text-theme-text-secondary">PDF</strong> creates a printable nutrition summary.
             </p>
+
+            {/* Import Data */}
+            <div className="mt-4 pt-4 border-t border-theme-text-primary/10">
+              <p className="text-xs text-theme-text-tertiary mb-2">Restore from a previous JSON export.</p>
+              <input
+                ref={importFileRef}
+                type="file"
+                accept=".json"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  const reader = new FileReader();
+                  reader.onload = (ev) => {
+                    const result = importData(ev.target.result);
+                    if (result.success) {
+                      setImportMsg(`Imported ${result.imported} new meal${result.imported !== 1 ? 's' : ''}. Goals, water, and weight data merged.`);
+                    } else {
+                      setImportMsg('Import failed: ' + (result.error || 'Unknown error'));
+                    }
+                    setTimeout(() => setImportMsg(''), 5000);
+                  };
+                  reader.readAsText(file);
+                  e.target.value = '';
+                }}
+              />
+              <button
+                onClick={() => importFileRef.current?.click()}
+                className="px-4 py-2 border border-dashed border-theme-text-primary/30 text-theme-text-tertiary text-xs uppercase tracking-wider hover:text-theme-text-primary hover:border-theme-text-primary transition-colors">
+                Import JSON Backup
+              </button>
+              {importMsg && (
+                <p className={`mt-2 text-xs ${importMsg.startsWith('Import failed') ? 'text-red-400' : 'text-green-400'}`}>{importMsg}</p>
+              )}
+            </div>
           </section>
+
+          {/* ═══ LOGGING STREAK ═══ */}
+          {(() => {
+            const streak = getStreak();
+            return (
+              <section className="space-y-4">
+                <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-yellow-500/20 pb-2">
+                  Logging Streak
+                </h2>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="text-center p-3 border border-theme-text-primary/10">
+                    <div className="text-2xl font-bold text-theme-text-primary font-mono">{streak.currentStreak}</div>
+                    <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary mt-1">Current Streak</div>
+                  </div>
+                  <div className="text-center p-3 border border-theme-text-primary/10">
+                    <div className="text-2xl font-bold text-theme-text-primary font-mono">{streak.longestStreak}</div>
+                    <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary mt-1">Best Streak</div>
+                  </div>
+                  <div className="text-center p-3 border border-theme-text-primary/10">
+                    <div className="text-2xl font-bold text-theme-text-primary font-mono">{streak.totalDays}</div>
+                    <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary mt-1">Total Days</div>
+                  </div>
+                </div>
+                {streak.currentStreak >= 7 && (
+                  <p className="text-xs text-yellow-500 font-bold text-center">
+                    {streak.currentStreak >= 30 ? 'Incredible! 30+ day streak!' : streak.currentStreak >= 14 ? 'Amazing! Two weeks strong!' : 'Great job! One week streak!'}
+                  </p>
+                )}
+              </section>
+            );
+          })()}
 
           {/* ═══ GOOGLE FIT EXPORT ═══ */}
           <section className="space-y-4">
