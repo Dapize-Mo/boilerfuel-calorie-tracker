@@ -24,6 +24,80 @@ function getTodayKey() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
+/**
+ * Safe localStorage.setItem that handles QuotaExceededError.
+ * If storage is full, prunes meal data older than 90 days and retries.
+ * Returns true if save succeeded, false otherwise.
+ */
+let _storageWarningShown = false;
+function safePersist(key, value) {
+  try {
+    localStorage.setItem(key, value);
+    return true;
+  } catch (e) {
+    if (e?.name === 'QuotaExceededError' || e?.code === 22 || e?.code === 1014) {
+      // Try to free space by pruning old meal data
+      const freed = pruneOldMealData(90);
+      if (freed) {
+        try {
+          localStorage.setItem(key, value);
+          return true;
+        } catch {
+          // Second prune — more aggressive (30 days)
+          pruneOldMealData(30);
+          try {
+            localStorage.setItem(key, value);
+            return true;
+          } catch { /* give up */ }
+        }
+      }
+      if (!_storageWarningShown) {
+        _storageWarningShown = true;
+        if (typeof window !== 'undefined') {
+          // Show non-blocking warning
+          setTimeout(() => {
+            alert(
+              'Storage is full. Your oldest meal data has been pruned to make room. ' +
+              'Consider exporting a backup from your Profile page.'
+            );
+          }, 100);
+        }
+      }
+      return false;
+    }
+    // Non-quota error — just swallow
+    return false;
+  }
+}
+
+/**
+ * Remove meal entries older than `daysToKeep` from localStorage to free space.
+ * Returns true if any data was pruned.
+ */
+function pruneOldMealData(daysToKeep) {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const meals = JSON.parse(raw);
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - daysToKeep);
+    const cutoffKey = `${cutoff.getFullYear()}-${String(cutoff.getMonth() + 1).padStart(2, '0')}-${String(cutoff.getDate()).padStart(2, '0')}`;
+    let pruned = false;
+    for (const dateKey of Object.keys(meals)) {
+      if (dateKey < cutoffKey) {
+        delete meals[dateKey];
+        pruned = true;
+      }
+    }
+    if (pruned) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(meals));
+    }
+    return pruned;
+  } catch {
+    return false;
+  }
+}
+
 const DEFAULT_GOALS = { calories: 2000, protein: 150, carbs: 250, fat: 65, saturated_fat: 20, fiber: 28, sugar: 50, sodium: 2300, cholesterol: 300, added_sugar: 25 };
 
 export function MealProvider({ children }) {
@@ -81,42 +155,42 @@ export function MealProvider({ children }) {
   // Persist meals
   useEffect(() => {
     if (Object.keys(mealsByDate).length > 0) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(mealsByDate));
+      safePersist(STORAGE_KEY, JSON.stringify(mealsByDate));
     }
   }, [mealsByDate]);
 
   // Persist goals
   useEffect(() => {
-    localStorage.setItem(GOALS_KEY, JSON.stringify(goals));
+    safePersist(GOALS_KEY, JSON.stringify(goals));
   }, [goals]);
 
   // Persist favorites
   useEffect(() => {
-    localStorage.setItem(FAVORITES_KEY, JSON.stringify([...favorites]));
+    safePersist(FAVORITES_KEY, JSON.stringify([...favorites]));
   }, [favorites]);
 
   // Persist water
   useEffect(() => {
     if (Object.keys(waterByDate).length > 0) {
-      localStorage.setItem(WATER_KEY, JSON.stringify(waterByDate));
+      safePersist(WATER_KEY, JSON.stringify(waterByDate));
     }
   }, [waterByDate]);
 
   // Persist weight
   useEffect(() => {
     if (Object.keys(weightByDate).length > 0) {
-      localStorage.setItem(WEIGHT_KEY, JSON.stringify(weightByDate));
+      safePersist(WEIGHT_KEY, JSON.stringify(weightByDate));
     }
   }, [weightByDate]);
 
   // Persist templates
   useEffect(() => {
-    localStorage.setItem(TEMPLATES_KEY, JSON.stringify(templates));
+    safePersist(TEMPLATES_KEY, JSON.stringify(templates));
   }, [templates]);
 
   // Persist dietary prefs
   useEffect(() => {
-    localStorage.setItem(DIETARY_KEY, JSON.stringify(dietaryPrefs));
+    safePersist(DIETARY_KEY, JSON.stringify(dietaryPrefs));
   }, [dietaryPrefs]);
 
   // ── Sync status: 'idle' | 'syncing' | 'success' | 'error' ──
@@ -248,7 +322,7 @@ export function MealProvider({ children }) {
       const updated = { ...prev, [key]: next };
       if (next.length === 0) {
         delete updated[key];
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+        safePersist(STORAGE_KEY, JSON.stringify(updated));
       }
       return updated;
     });
@@ -260,7 +334,7 @@ export function MealProvider({ children }) {
       const key = getTodayKey();
       const updated = { ...prev };
       delete updated[key];
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      safePersist(STORAGE_KEY, JSON.stringify(updated));
       return updated;
     });
   }, []);
