@@ -477,36 +477,36 @@ export default function StatsPage() {
             </div>
           </div>
 
-          {/* ═══ TODAY'S SNAPSHOT ═══ */}
-          <section className="space-y-4">
-            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
-              Today&rsquo;s Overview
-            </h2>
-
-            <div className="flex flex-wrap justify-center gap-4 py-4">
-              <ProgressRing value={todayData.totals.calories} goal={goals.calories} label="Calories" unit="kcal" size={90} />
-              <ProgressRing value={todayData.totals.protein} goal={goals.protein} label="Protein" unit="g" size={90} color={macroColors.protein} />
-              <ProgressRing value={todayData.totals.carbs} goal={goals.carbs} label="Carbs" unit="g" size={90} color={macroColors.carbs} />
-              <ProgressRing value={todayData.totals.fat} goal={goals.fat} label="Fat" unit="g" size={90} color={macroColors.fat} />
-            </div>
-          </section>
-
-          {/* ═══ MACRO BREAKDOWN ═══ */}
-          <section className="space-y-4">
-            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
-              Macro Breakdown (Today)
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 py-2">
-              <div>
-                <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary mb-3">By Weight</div>
-                <PieChart data={pieMacros} size={140} />
+          {/* ═══ TODAY'S SNAPSHOT + MACRO BREAKDOWN ═══ */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <section className="space-y-4">
+              <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
+                Today&rsquo;s Overview
+              </h2>
+              <div className="flex flex-wrap justify-center gap-4 py-4">
+                <ProgressRing value={todayData.totals.calories} goal={goals.calories} label="Calories" unit="kcal" size={90} />
+                <ProgressRing value={todayData.totals.protein} goal={goals.protein} label="Protein" unit="g" size={90} color={macroColors.protein} />
+                <ProgressRing value={todayData.totals.carbs} goal={goals.carbs} label="Carbs" unit="g" size={90} color={macroColors.carbs} />
+                <ProgressRing value={todayData.totals.fat} goal={goals.fat} label="Fat" unit="g" size={90} color={macroColors.fat} />
               </div>
-              <div>
-                <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary mb-3">By Calories</div>
-                <PieChart data={calPie} size={140} />
+            </section>
+
+            <section className="space-y-4">
+              <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
+                Macro Breakdown (Today)
+              </h2>
+              <div className="grid grid-cols-2 gap-4 py-2">
+                <div>
+                  <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary mb-3">By Weight</div>
+                  <PieChart data={pieMacros} size={120} />
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary mb-3">By Calories</div>
+                  <PieChart data={calPie} size={120} />
+                </div>
               </div>
-            </div>
-          </section>
+            </section>
+          </div>
 
           {/* ═══ DAILY CALORIES CHART ═══ */}
           <section className="space-y-4">
@@ -539,37 +539,38 @@ export default function StatsPage() {
             </div>
           </section>
 
-          {/* ═══ MEAL TIME BREAKDOWN ═══ */}
-          <section className="space-y-4">
-            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
-              Calories by Meal Time
-            </h2>
-            <div className="border border-theme-text-primary/10 p-4">
-              {daysWithData.length > 0 ? (
-                <StackedBarChart data={mealTimeBreakdown} height={140} />
-              ) : (
-                <div className="text-xs text-theme-text-tertiary uppercase tracking-widest py-6 text-center">No data</div>
-              )}
-            </div>
-          </section>
+          {/* ═══ MEAL TIME BREAKDOWN + MACRO TRENDS ═══ */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <section className="space-y-4">
+              <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
+                Calories by Meal Time
+              </h2>
+              <div className="border border-theme-text-primary/10 p-4">
+                {daysWithData.length > 0 ? (
+                  <StackedBarChart data={mealTimeBreakdown} height={140} />
+                ) : (
+                  <div className="text-xs text-theme-text-tertiary uppercase tracking-widest py-6 text-center">No data</div>
+                )}
+              </div>
+            </section>
 
-          {/* ═══ MACRO TRENDS ═══ */}
-          <section className="space-y-4">
-            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
-              Macro Trends
-            </h2>
-            <div className="border border-theme-text-primary/10 p-4">
-              <MultiLineChart
-                data={macroTrendData}
-                datasets={[
-                  { key: 'protein', label: 'Protein', color: macroColors.protein },
-                  { key: 'carbs', label: 'Carbs', color: macroColors.carbs },
-                  { key: 'fat', label: 'Fat', color: macroColors.fat },
-                ]}
-                height={140}
-              />
-            </div>
-          </section>
+            <section className="space-y-4">
+              <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
+                Macro Trends
+              </h2>
+              <div className="border border-theme-text-primary/10 p-4">
+                <MultiLineChart
+                  data={macroTrendData}
+                  datasets={[
+                    { key: 'protein', label: 'Protein', color: macroColors.protein },
+                    { key: 'carbs', label: 'Carbs', color: macroColors.carbs },
+                    { key: 'fat', label: 'Fat', color: macroColors.fat },
+                  ]}
+                  height={140}
+                />
+              </div>
+            </section>
+          </div>
 
           {/* ═══ AVERAGES ═══ */}
           <section className="space-y-4">
@@ -625,63 +626,68 @@ export default function StatsPage() {
             </section>
           )}
 
-          {/* ═══ TOP FOODS ═══ */}
-          {foodFrequency.length > 0 && (
+          {/* ═══ TOP FOODS + WEIGHT TREND ═══ */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <section className="space-y-4">
               <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
                 Most Eaten Foods
               </h2>
-              <div className="border border-theme-text-primary/10 divide-y divide-theme-text-primary/5">
-                {foodFrequency.map((f, i) => (
-                  <div key={i} className="flex items-center gap-3 px-4 py-2.5">
-                    <span className="text-xs font-bold text-theme-text-tertiary w-5 tabular-nums">{i + 1}</span>
-                    <div className="flex-1 min-w-0 truncate text-sm">{f.name}</div>
-                    <span className="text-xs text-theme-text-tertiary tabular-nums">{f.count}x</span>
-                    <span className="text-xs text-theme-text-secondary tabular-nums w-16 text-right">{Math.round(f.totalCal)} cal</span>
-                  </div>
-                ))}
-              </div>
+              {foodFrequency.length > 0 ? (
+                <div className="border border-theme-text-primary/10 divide-y divide-theme-text-primary/5">
+                  {foodFrequency.map((f, i) => (
+                    <div key={i} className="flex items-center gap-3 px-4 py-2.5">
+                      <span className="text-xs font-bold text-theme-text-tertiary w-5 tabular-nums">{i + 1}</span>
+                      <div className="flex-1 min-w-0 truncate text-sm">{f.name}</div>
+                      <span className="text-xs text-theme-text-tertiary tabular-nums">{f.count}x</span>
+                      <span className="text-xs text-theme-text-secondary tabular-nums w-16 text-right">{Math.round(f.totalCal)} cal</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="border border-theme-text-primary/10 p-4 text-xs text-theme-text-tertiary uppercase tracking-widest text-center">No data</div>
+              )}
             </section>
-          )}
 
-          {/* ═══ WEIGHT TREND ═══ */}
-          {weightEntries.length > 0 && (
             <section className="space-y-4">
               <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
                 Weight Trend
               </h2>
-              <div className="border border-theme-text-primary/10 p-4">
-                <div className="flex items-end gap-1" style={{ height: 100 }}>
-                  {(() => {
-                    const weights = weightEntries.map(e => e.weight);
-                    const min = Math.min(...weights) - 2;
-                    const max = Math.max(...weights) + 2;
-                    const range = max - min || 1;
-                    return weightEntries.map((e, i) => {
-                      const pct = ((e.weight - min) / range) * 100;
-                      return (
-                        <div key={i} className="flex-1 flex flex-col items-center gap-1" title={`${formatDate(e.date)}: ${e.weight} lbs`}>
-                          <div className="text-[9px] font-mono tabular-nums text-theme-text-tertiary/60">{e.weight}</div>
-                          <div className="w-full relative" style={{ height: 60 }}>
-                            <div className="absolute bottom-0 w-full bg-theme-text-primary/50" style={{ height: `${pct}%`, minHeight: 2 }} />
+              {weightEntries.length > 0 ? (
+                <div className="border border-theme-text-primary/10 p-4">
+                  <div className="flex items-end gap-1" style={{ height: 100 }}>
+                    {(() => {
+                      const weights = weightEntries.map(e => e.weight);
+                      const min = Math.min(...weights) - 2;
+                      const max = Math.max(...weights) + 2;
+                      const range = max - min || 1;
+                      return weightEntries.map((e, i) => {
+                        const pct = ((e.weight - min) / range) * 100;
+                        return (
+                          <div key={i} className="flex-1 flex flex-col items-center gap-1" title={`${formatDate(e.date)}: ${e.weight} lbs`}>
+                            <div className="text-[9px] font-mono tabular-nums text-theme-text-tertiary/60">{e.weight}</div>
+                            <div className="w-full relative" style={{ height: 60 }}>
+                              <div className="absolute bottom-0 w-full bg-theme-text-primary/50" style={{ height: `${pct}%`, minHeight: 2 }} />
+                            </div>
+                            <div className="text-[8px] text-theme-text-tertiary">{formatShort(e.date).day}</div>
                           </div>
-                          <div className="text-[8px] text-theme-text-tertiary">{formatShort(e.date).day}</div>
-                        </div>
-                      );
-                    });
-                  })()}
+                        );
+                      });
+                    })()}
+                  </div>
+                  <div className="flex gap-4 mt-3 text-[10px] text-theme-text-tertiary">
+                    <span>Latest: <span className="font-bold text-theme-text-secondary">{weightEntries[weightEntries.length - 1].weight} lbs</span></span>
+                    {weightEntries.length >= 2 && (
+                      <span>Change: <span className={`font-bold ${weightEntries[weightEntries.length - 1].weight < weightEntries[0].weight ? 'text-green-500' : 'text-red-500'}`}>
+                        {(weightEntries[weightEntries.length - 1].weight - weightEntries[0].weight).toFixed(1)} lbs
+                      </span></span>
+                    )}
+                  </div>
                 </div>
-                <div className="flex gap-4 mt-3 text-[10px] text-theme-text-tertiary">
-                  <span>Latest: <span className="font-bold text-theme-text-secondary">{weightEntries[weightEntries.length - 1].weight} lbs</span></span>
-                  {weightEntries.length >= 2 && (
-                    <span>Change: <span className={`font-bold ${weightEntries[weightEntries.length - 1].weight < weightEntries[0].weight ? 'text-green-500' : 'text-red-500'}`}>
-                      {(weightEntries[weightEntries.length - 1].weight - weightEntries[0].weight).toFixed(1)} lbs
-                    </span></span>
-                  )}
-                </div>
-              </div>
+              ) : (
+                <div className="border border-theme-text-primary/10 p-4 text-xs text-theme-text-tertiary uppercase tracking-widest text-center">No data</div>
+              )}
             </section>
-          )}
+          </div>
 
           {/* ═══ DETAILED MACROS ═══ */}
           <section className="space-y-4">

@@ -619,7 +619,7 @@ export default function Changelog() {
                 ))}
 
                 <div className="pt-6 mt-6 border-t border-theme-text-primary/10 flex flex-col gap-2">
-                  {[['/', 'Home'], ['/about', 'About'], ['/admin', 'Admin'], ['/profile', 'Profile']].map(([href, label]) => (
+                  {[['/', 'Home'], ['/about', 'About'], ['/stats', 'Stats'], ['/admin', 'Admin'], ['/profile', 'Profile']].map(([href, label]) => (
                     <Link key={href} href={href} className="text-[10px] uppercase tracking-widest text-theme-text-secondary hover:text-theme-text-primary transition-colors">
                       {label}
                     </Link>

@@ -74,6 +74,8 @@ export default function ProfilePage() {
   const [notifPermission, setNotifPermission] = useState('default');
   const [mealReminder, setMealReminder] = useState(false);
   const [streakHour, setStreakHour] = useState(20);
+  const [breakfastHour, setBreakfastHour] = useState(8);
+  const [brunchHour, setBrunchHour] = useState(11);
   const [lunchHour, setLunchHour] = useState(12);
   const [dinnerHour, setDinnerHour] = useState(18);
 
@@ -93,6 +95,8 @@ export default function ProfilePage() {
       setNotifPermission(Notification.permission);
       setMealReminder(localStorage.getItem('boilerfuel_notif_meal') === '1');
       setStreakHour(parseInt(localStorage.getItem('boilerfuel_notif_streak_hour') || '20', 10));
+      setBreakfastHour(parseInt(localStorage.getItem('boilerfuel_notif_breakfast_hour') || '8', 10));
+      setBrunchHour(parseInt(localStorage.getItem('boilerfuel_notif_brunch_hour') || '11', 10));
       setLunchHour(parseInt(localStorage.getItem('boilerfuel_notif_lunch_hour') || '12', 10));
       setDinnerHour(parseInt(localStorage.getItem('boilerfuel_notif_dinner_hour') || '18', 10));
     }
@@ -112,6 +116,16 @@ export default function ProfilePage() {
   function updateStreakHour(h) {
     setStreakHour(h);
     localStorage.setItem('boilerfuel_notif_streak_hour', String(h));
+  }
+
+  function updateBreakfastHour(h) {
+    setBreakfastHour(h);
+    localStorage.setItem('boilerfuel_notif_breakfast_hour', String(h));
+  }
+
+  function updateBrunchHour(h) {
+    setBrunchHour(h);
+    localStorage.setItem('boilerfuel_notif_brunch_hour', String(h));
   }
 
   function updateLunchHour(h) {
@@ -875,7 +889,7 @@ export default function ProfilePage() {
                         <div>
                           <span className="text-xs font-bold text-theme-text-primary">Meal reminders</span>
                           <p className="text-[10px] text-theme-text-tertiary mt-0.5">
-                            Remind me to log lunch and dinner if I haven&rsquo;t already
+                            Remind me to log meals if I haven&rsquo;t already
                           </p>
                         </div>
                       </div>
@@ -883,6 +897,30 @@ export default function ProfilePage() {
 
                     {mealReminder && (
                       <>
+                        <div className="flex items-center justify-between px-4 py-3 gap-4">
+                          <p className="text-[10px] text-theme-text-tertiary uppercase tracking-wider">Breakfast</p>
+                          <select
+                            value={breakfastHour}
+                            onChange={e => updateBreakfastHour(Number(e.target.value))}
+                            className="border border-theme-text-primary/30 bg-theme-bg-secondary text-theme-text-primary font-mono text-xs px-2 py-1.5 focus:outline-none focus:border-theme-text-primary transition-colors"
+                          >
+                            {Array.from({ length: 6 }, (_, i) => i + 6).map(h => (
+                              <option key={h} value={h}>{h < 12 ? `${h} AM` : '12 PM'}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="flex items-center justify-between px-4 py-3 gap-4">
+                          <p className="text-[10px] text-theme-text-tertiary uppercase tracking-wider">Brunch</p>
+                          <select
+                            value={brunchHour}
+                            onChange={e => updateBrunchHour(Number(e.target.value))}
+                            className="border border-theme-text-primary/30 bg-theme-bg-secondary text-theme-text-primary font-mono text-xs px-2 py-1.5 focus:outline-none focus:border-theme-text-primary transition-colors"
+                          >
+                            {Array.from({ length: 4 }, (_, i) => i + 9).map(h => (
+                              <option key={h} value={h}>{h < 12 ? `${h} AM` : '12 PM'}</option>
+                            ))}
+                          </select>
+                        </div>
                         <div className="flex items-center justify-between px-4 py-3 gap-4">
                           <p className="text-[10px] text-theme-text-tertiary uppercase tracking-wider">Lunch</p>
                           <select

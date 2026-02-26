@@ -219,6 +219,7 @@ export default function About() {
                   {[
                     { href: '/', label: 'Home' },
                     { href: '/stats', label: 'Stats' },
+                    { href: '/about', label: 'About' },
                     { href: '/profile', label: 'Profile' },
                     { href: '/changelog', label: 'Changelog' },
                   ].map(link => (

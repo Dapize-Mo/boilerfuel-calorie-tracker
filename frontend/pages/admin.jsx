@@ -5,7 +5,6 @@ import { signIn, signOut, useSession } from "next-auth/react";
 import {
   adminLogin,
   apiCall,
-  deleteActivity,
   deleteFood,
   getAdminToken,
   logoutAdmin,
@@ -28,16 +27,14 @@ export default function AdminPanel() {
       if (session?.user) {
         setAuthenticated(true);
         // Exchange Google session for admin JWT so API calls work
-        if (!getAdminToken()) {
-          try {
-            const res = await fetch('/api/admin/google-token', { method: 'POST' });
-            if (res.ok) {
-              const { token } = await res.json();
-              if (token) setAdminToken(token);
-            }
-          } catch {
-            // User is still authenticated via Google session
+        try {
+          const res = await fetch('/api/admin/google-token', { method: 'POST' });
+          if (res.ok) {
+            const { token } = await res.json();
+            if (token) setAdminToken(token);
           }
+        } catch {
+          // User is still authenticated via Google session
         }
         setLoading(false);
         return;
@@ -196,7 +193,6 @@ export default function AdminPanel() {
             { key: 'stats', label: 'Stats' },
             { key: 'accuracy', label: 'Accuracy' },
             { key: 'foods', label: 'Foods' },
-            { key: 'exercises', label: 'Exercises' },
           ].map(tab => (
             <button
               key={tab.key}
@@ -217,7 +213,6 @@ export default function AdminPanel() {
           {activeTab === 'stats' && <StatsTab />}
           {activeTab === 'accuracy' && <MenuAccuracyTab />}
           {activeTab === 'foods' && <FoodsTab />}
-          {activeTab === 'exercises' && <ExercisesTab />}
         </div>
 
         {/* Footer */}
@@ -714,153 +709,3 @@ function FoodsTab() {
   );
 }
 
-// ── Exercises Tab ──
-function ExercisesTab() {
-  const [activities, setActivities] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [filterCategory, setFilterCategory] = useState('all');
-  const [error, setError] = useState('');
-
-  useEffect(() => { loadActivities(); }, []);
-
-  async function loadActivities() {
-    try {
-      setLoading(true);
-      const data = await apiCall('/api/activities');
-      setActivities(data || []);
-      setError('');
-    } catch (err) {
-      setError(err.message || 'Failed to load exercises');
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleDelete(id, name) {
-    if (!window.confirm(`Delete "${name}"?`)) return;
-    try {
-      await deleteActivity(id);
-      await loadActivities();
-    } catch (err) {
-      setError(err.message || 'Failed to delete exercise');
-    }
-  }
-
-  const filteredActivities = useMemo(() => activities.filter(a => {
-    const matchesSearch = a.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = filterCategory === 'all' || a.category === filterCategory;
-    return matchesSearch && matchesCategory;
-  }), [activities, searchTerm, filterCategory]);
-
-  const totalPages = Math.ceil(filteredActivities.length / ITEMS_PER_PAGE);
-  const paginatedActivities = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredActivities.slice(start, start + ITEMS_PER_PAGE);
-  }, [filteredActivities, currentPage]);
-
-  if (loading) {
-    return <div className="text-xs uppercase tracking-widest text-theme-text-tertiary py-12">Loading...</div>;
-  }
-
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between border-b border-theme-text-primary/10 pb-4">
-        <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary">
-          Exercise Database <span className="font-normal">({filteredActivities.length})</span>
-        </h2>
-        <Link
-          href="/admin-exercises"
-          className="text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors border-b border-theme-text-primary/20"
-        >
-          + Add Exercise
-        </Link>
-      </div>
-
-      {error && (
-        <div className="border border-theme-text-primary/30 px-4 py-3 text-xs text-theme-text-secondary">
-          {error}
-        </div>
-      )}
-
-      {/* Filters */}
-      <div className="flex gap-3">
-        <div className="relative flex-1">
-          <input
-            type="text"
-            placeholder="Search exercises..."
-            value={searchTerm}
-            onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-            className="w-full border border-theme-text-primary/20 bg-transparent text-theme-text-primary px-3 py-2 text-sm font-mono placeholder:text-theme-text-tertiary/50 focus:outline-none focus:border-theme-text-primary/50 transition-colors pl-8"
-          />
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="absolute left-2.5 top-1/2 -translate-y-1/2 text-theme-text-tertiary">
-            <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
-        </div>
-        <select
-          value={filterCategory}
-          onChange={(e) => { setFilterCategory(e.target.value); setCurrentPage(1); }}
-          className="border border-theme-text-primary/20 bg-theme-bg-primary text-theme-text-primary px-3 py-2 text-xs font-mono focus:outline-none focus:border-theme-text-primary/50 transition-colors"
-        >
-          <option value="all">All</option>
-          <option value="cardio">Cardio</option>
-          <option value="strength">Strength</option>
-          <option value="flexibility">Flexibility</option>
-          <option value="sports">Sports</option>
-          <option value="other">Other</option>
-        </select>
-      </div>
-
-      {/* Exercises list */}
-      <div className="border border-theme-text-primary/10 divide-y divide-theme-text-primary/5">
-        {paginatedActivities.length === 0 ? (
-          <div className="px-4 py-6 text-xs text-theme-text-tertiary text-center">
-            {searchTerm ? `No exercises matching "${searchTerm}"` : 'No exercises found'}
-          </div>
-        ) : paginatedActivities.map(activity => (
-          <div key={activity.id} className="px-4 py-3 hover:bg-theme-bg-secondary transition-colors">
-            <div className="flex items-start justify-between gap-4">
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-bold truncate">{activity.name}</p>
-                <p className="text-[10px] text-theme-text-tertiary mt-0.5">
-                  {activity.calories_per_hour} cal/hr &middot; {activity.category || 'other'} &middot; {activity.intensity || 'moderate'}
-                </p>
-                {activity.description && (
-                  <p className="text-[10px] text-theme-text-tertiary/60 mt-0.5 truncate">{activity.description}</p>
-                )}
-              </div>
-              <button
-                onClick={() => handleDelete(activity.id, activity.name)}
-                className="text-[10px] uppercase tracking-wider text-theme-text-tertiary/40 hover:text-theme-text-primary transition-colors shrink-0 pt-0.5"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-6 text-xs uppercase tracking-wider">
-          <button
-            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
-            className="text-theme-text-tertiary hover:text-theme-text-primary disabled:opacity-30 transition-colors"
-          >
-            &larr; Prev
-          </button>
-          <span className="text-theme-text-tertiary">{currentPage} / {totalPages}</span>
-          <button
-            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-            disabled={currentPage === totalPages}
-            className="text-theme-text-tertiary hover:text-theme-text-primary disabled:opacity-30 transition-colors"
-          >
-            Next &rarr;
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
