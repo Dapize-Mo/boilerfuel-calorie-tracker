@@ -621,13 +621,13 @@ export default function ProfilePage() {
                     ))}
                   </div>
                   {goalWarnings.length > 0 && (
-                    <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/50 space-y-1">
+                    <div className="p-3 bg-yellow-500/10 border border-yellow-500/50 space-y-1">
                       {goalWarnings.map((w, i) => (
                         <p key={i} className="text-xs text-yellow-400">⚠️ {w}</p>
                       ))}
                       <div className="flex gap-2 mt-2">
                         <button onClick={() => saveGoals(true)}
-                          className="px-3 py-1.5 bg-yellow-500 text-slate-900 text-xs font-bold rounded hover:bg-yellow-600 transition-colors">
+                          className="px-3 py-1.5 bg-yellow-500 text-slate-900 text-xs font-bold hover:bg-yellow-600 transition-colors">
                           Save Anyway
                         </button>
                         <button onClick={() => setGoalWarnings([])}
@@ -1320,7 +1320,7 @@ export default function ProfilePage() {
                   Share with your other device
                 </div>
                 <div className="flex flex-col sm:flex-row gap-6 items-center">
-                  <div className="border border-theme-text-primary/10 p-2 bg-white">
+                  <div className="border border-theme-text-primary/10 p-2 bg-theme-bg-primary">
                     <QRCode text={`BF:${syncCode}:${syncSecret}`} size={160} />
                   </div>
                   <div className="space-y-3 flex-1">

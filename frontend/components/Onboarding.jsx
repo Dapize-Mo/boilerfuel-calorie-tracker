@@ -64,7 +64,7 @@ export default function Onboarding() {
       aria-modal="true"
       aria-label="Welcome to BoilerFuel"
     >
-      <div className="w-full max-w-sm bg-theme-bg-primary border border-theme-border-secondary shadow-2xl">
+      <div className="w-full max-w-sm bg-theme-bg-primary border border-theme-text-primary/20">
         {/* Amber top strip */}
         <div className="h-1 bg-gradient-to-r from-yellow-400 to-yellow-500" />
 
@@ -85,8 +85,8 @@ export default function Onboarding() {
           {step === 0 && (
             <>
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center shadow-lg shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8 text-slate-900">
+                <div className="w-14 h-14 bg-yellow-500/10 border border-yellow-500/30 flex items-center justify-center shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8 text-yellow-500/80">
                     <path fillRule="evenodd" d="M12.963 2.286a.75.75 0 00-1.071-.136 9.742 9.742 0 00-3.539 6.177A7.547 7.547 0 016.648 6.61a.75.75 0 00-1.152.082A9 9 0 1015.68 4.534a7.46 7.46 0 01-2.717-2.248zM15.75 14.25a3.75 3.75 0 11-7.313-1.172c.628.465 1.35.81 2.133 1.001a3.75 3.75 0 011.89-3.334 3.75 3.75 0 013.29 3.505z" clipRule="evenodd" />
                   </svg>
                 </div>
@@ -193,15 +193,15 @@ export default function Onboarding() {
 
               <ul className="space-y-2 text-xs text-theme-text-secondary border border-theme-text-primary/10 p-4">
                 <li className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 shrink-0" />
+                  <span className="w-1.5 h-1.5 bg-yellow-400/70 shrink-0" />
                   Search foods in the main menu by dining hall
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 shrink-0" />
+                  <span className="w-1.5 h-1.5 bg-yellow-400/70 shrink-0" />
                   Tap + to log a food item to today&apos;s log
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 shrink-0" />
+                  <span className="w-1.5 h-1.5 bg-yellow-400/70 shrink-0" />
                   Visit Profile to adjust goals & export data
                 </li>
               </ul>
