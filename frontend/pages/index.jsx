@@ -1528,10 +1528,10 @@ export default function Home() {
                               <span className="group-hover:text-theme-text-primary transition-colors truncate">{food.name}</span>
                               {/* Dietary tag icons */}
                               {macros.is_vegetarian && (
-                                <span className="shrink-0 text-[9px] font-bold border border-green-500/60 text-green-500 px-1 py-0 rounded-sm leading-tight" title="Vegetarian">VG</span>
+                                <span className="shrink-0 text-[9px] font-bold border border-green-500/60 text-green-500 px-1 py-0 leading-tight" title="Vegetarian">VG</span>
                               )}
                               {macros.is_vegan && (
-                                <span className="shrink-0 text-[9px] font-bold border border-emerald-400/60 text-emerald-400 px-1 py-0 rounded-sm leading-tight" title="Vegan">V</span>
+                                <span className="shrink-0 text-[9px] font-bold border border-emerald-400/60 text-emerald-400 px-1 py-0 leading-tight" title="Vegan">V</span>
                               )}
                               {macros.allergens && macros.allergens.length > 0 && (
                                 <span className="shrink-0 text-[9px] text-theme-text-tertiary/60 hidden sm:inline" title={macros.allergens.join(', ')}>
@@ -1539,10 +1539,10 @@ export default function Home() {
                                 </span>
                               )}
                               {noNutrition && getCollectionComponents(food).length > 0 && (
-                                <span className="shrink-0 text-[9px] font-bold border border-theme-text-primary/40 text-theme-text-secondary px-1 py-0 rounded-sm leading-tight" title="Click to see components">Build Your Own</span>
+                                <span className="shrink-0 text-[9px] font-bold border border-theme-text-primary/40 text-theme-text-secondary px-1 py-0 leading-tight" title="Click to see components">Build Your Own</span>
                               )}
                               {noNutrition && getCollectionComponents(food).length === 0 && (
-                                <span className="shrink-0 text-[9px] font-bold border border-amber-500/50 text-amber-500/80 px-1 py-0 rounded-sm leading-tight" title="Nutrition data not available from Purdue">N/A</span>
+                                <span className="shrink-0 text-[9px] font-bold border border-amber-500/50 text-amber-500/80 px-1 py-0 leading-tight" title="Nutrition data not available from Purdue">N/A</span>
                               )}
                               {count > 0 && (
                                 <span className="shrink-0 text-[10px] font-bold bg-theme-text-primary text-theme-bg-primary px-1.5 py-0.5 tabular-nums">
@@ -1583,10 +1583,10 @@ export default function Home() {
                                           <div className="flex items-center gap-1.5 flex-wrap">
                                             <span className="text-xs sm:text-sm truncate">{comp.name}</span>
                                             {cm.is_vegetarian && (
-                                              <span className="shrink-0 text-[9px] font-bold border border-green-500/60 text-green-500 px-1 py-0 rounded-sm leading-tight">VG</span>
+                                              <span className="shrink-0 text-[9px] font-bold border border-green-500/60 text-green-500 px-1 py-0 leading-tight">VG</span>
                                             )}
                                             {cm.is_vegan && (
-                                              <span className="shrink-0 text-[9px] font-bold border border-emerald-400/60 text-emerald-400 px-1 py-0 rounded-sm leading-tight">V</span>
+                                              <span className="shrink-0 text-[9px] font-bold border border-emerald-400/60 text-emerald-400 px-1 py-0 leading-tight">V</span>
                                             )}
                                             {compCount > 0 && (
                                               <span className="shrink-0 text-[10px] font-bold bg-theme-text-primary text-theme-bg-primary px-1.5 py-0.5 tabular-nums">{compCount}</span>
@@ -1696,17 +1696,17 @@ export default function Home() {
                               {/* Tags + Info row */}
                               <div className="flex items-center flex-wrap gap-1.5 mt-3">
                                 {macros.is_vegan && (
-                                  <span className="text-[10px] font-bold border border-emerald-400/50 text-emerald-400 px-2 py-0.5 rounded-sm">Vegan</span>
+                                  <span className="text-[10px] font-bold border border-emerald-400/50 text-emerald-400 px-2 py-0.5">Vegan</span>
                                 )}
                                 {macros.is_vegetarian && !macros.is_vegan && (
-                                  <span className="text-[10px] font-bold border border-green-500/50 text-green-500 px-2 py-0.5 rounded-sm">Vegetarian</span>
+                                  <span className="text-[10px] font-bold border border-green-500/50 text-green-500 px-2 py-0.5">Vegetarian</span>
                                 )}
                                 {macros.allergens && macros.allergens.map(a => (
-                                  <span key={a} className="text-[10px] border border-theme-text-tertiary/20 text-theme-text-tertiary px-2 py-0.5 rounded-sm">{a}</span>
+                                  <span key={a} className="text-[10px] border border-theme-text-tertiary/20 text-theme-text-tertiary px-2 py-0.5">{a}</span>
                                 ))}
                                 <button
                                   onClick={(e) => { e.stopPropagation(); setInfoFood(food); }}
-                                  className="text-[10px] border border-theme-text-tertiary/20 text-theme-text-tertiary px-2 py-0.5 rounded-sm hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors cursor-pointer inline-flex items-center gap-1"
+                                  className="text-[10px] border border-theme-text-tertiary/20 text-theme-text-tertiary px-2 py-0.5 hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors cursor-pointer inline-flex items-center gap-1"
                                   title="View ingredients & details">
                                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                                     <circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" />
@@ -2092,13 +2092,13 @@ export default function Home() {
                     <div className="text-xs uppercase tracking-widest text-theme-text-tertiary mb-2">Dietary Tags</div>
                     <div className="flex flex-wrap gap-1.5">
                       {im.is_vegan && (
-                        <span className="text-[11px] font-bold border border-emerald-400/50 text-emerald-400 px-2 py-0.5 rounded-sm">Vegan</span>
+                        <span className="text-[11px] font-bold border border-emerald-400/50 text-emerald-400 px-2 py-0.5">Vegan</span>
                       )}
                       {im.is_vegetarian && (
-                        <span className="text-[11px] font-bold border border-green-500/50 text-green-500 px-2 py-0.5 rounded-sm">Vegetarian</span>
+                        <span className="text-[11px] font-bold border border-green-500/50 text-green-500 px-2 py-0.5">Vegetarian</span>
                       )}
                       {im.allergens && im.allergens.map(a => (
-                        <span key={a} className="text-[11px] border border-amber-500/30 text-amber-500/80 px-2 py-0.5 rounded-sm">{a}</span>
+                        <span key={a} className="text-[11px] border border-amber-500/30 text-amber-500/80 px-2 py-0.5">{a}</span>
                       ))}
                     </div>
                   </div>
