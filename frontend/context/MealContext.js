@@ -77,45 +77,50 @@ export function MealProvider({ children }) {
     } catch {}
   }, []);
 
-  // Persist meals
+  // Persist meals (with quota-exceeded fallback: trim to last 90 days)
   useEffect(() => {
-    if (Object.keys(mealsByDate).length > 0) {
+    if (Object.keys(mealsByDate).length === 0) return;
+    try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(mealsByDate));
+    } catch (e) {
+      if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+        const keys = Object.keys(mealsByDate).sort();
+        const trimmed = Object.fromEntries(keys.slice(-90).map(k => [k, mealsByDate[k]]));
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed)); } catch {}
+      }
     }
   }, [mealsByDate]);
 
   // Persist goals
   useEffect(() => {
-    localStorage.setItem(GOALS_KEY, JSON.stringify(goals));
+    try { localStorage.setItem(GOALS_KEY, JSON.stringify(goals)); } catch {}
   }, [goals]);
 
   // Persist favorites
   useEffect(() => {
-    localStorage.setItem(FAVORITES_KEY, JSON.stringify([...favorites]));
+    try { localStorage.setItem(FAVORITES_KEY, JSON.stringify([...favorites])); } catch {}
   }, [favorites]);
 
   // Persist water
   useEffect(() => {
-    if (Object.keys(waterByDate).length > 0) {
-      localStorage.setItem(WATER_KEY, JSON.stringify(waterByDate));
-    }
+    if (Object.keys(waterByDate).length === 0) return;
+    try { localStorage.setItem(WATER_KEY, JSON.stringify(waterByDate)); } catch {}
   }, [waterByDate]);
 
   // Persist weight
   useEffect(() => {
-    if (Object.keys(weightByDate).length > 0) {
-      localStorage.setItem(WEIGHT_KEY, JSON.stringify(weightByDate));
-    }
+    if (Object.keys(weightByDate).length === 0) return;
+    try { localStorage.setItem(WEIGHT_KEY, JSON.stringify(weightByDate)); } catch {}
   }, [weightByDate]);
 
   // Persist templates
   useEffect(() => {
-    localStorage.setItem(TEMPLATES_KEY, JSON.stringify(templates));
+    try { localStorage.setItem(TEMPLATES_KEY, JSON.stringify(templates)); } catch {}
   }, [templates]);
 
   // Persist dietary prefs
   useEffect(() => {
-    localStorage.setItem(DIETARY_KEY, JSON.stringify(dietaryPrefs));
+    try { localStorage.setItem(DIETARY_KEY, JSON.stringify(dietaryPrefs)); } catch {}
   }, [dietaryPrefs]);
 
   // ── Sync status: 'idle' | 'syncing' | 'success' | 'error' ──
