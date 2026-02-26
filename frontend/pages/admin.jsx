@@ -193,6 +193,7 @@ export default function AdminPanel() {
             { key: 'stats', label: 'Stats' },
             { key: 'accuracy', label: 'Accuracy' },
             { key: 'foods', label: 'Foods' },
+            { key: 'docs', label: 'Docs' },
           ].map(tab => (
             <button
               key={tab.key}
@@ -213,6 +214,7 @@ export default function AdminPanel() {
           {activeTab === 'stats' && <StatsTab />}
           {activeTab === 'accuracy' && <MenuAccuracyTab />}
           {activeTab === 'foods' && <FoodsTab />}
+          {activeTab === 'docs' && <DocsTab />}
         </div>
 
         {/* Footer */}
@@ -221,6 +223,220 @@ export default function AdminPanel() {
           <span className="text-[10px] text-theme-text-tertiary/40">{new Date().getFullYear()}</span>
         </footer>
       </div>
+    </div>
+  );
+}
+
+// ── Docs Tab ──
+function DocsTab() {
+  const [open, setOpen] = useState({});
+  const toggle = (k) => setOpen(prev => ({ ...prev, [k]: !prev[k] }));
+
+  const Section = ({ id, title, children }) => (
+    <div className="border border-theme-text-primary/10">
+      <button
+        onClick={() => toggle(id)}
+        className="w-full flex items-center justify-between px-5 py-4 hover:bg-theme-bg-secondary transition-colors text-left"
+      >
+        <span className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-primary">{title}</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+          className="text-theme-text-tertiary shrink-0"
+          style={{ transform: open[id] ? 'rotate(90deg)' : 'rotate(0)', transition: 'transform 0.15s' }}>
+          <polyline points="9 18 15 12 9 6" />
+        </svg>
+      </button>
+      {open[id] && <div className="px-5 pb-5 space-y-4 border-t border-theme-text-primary/10">{children}</div>}
+    </div>
+  );
+
+  const kv = (label, value) => (
+    <div className="flex gap-4 text-xs">
+      <span className="shrink-0 w-44 text-theme-text-tertiary font-mono">{label}</span>
+      <span className="text-theme-text-secondary">{value}</span>
+    </div>
+  );
+
+  const code = (txt) => (
+    <code className="block bg-theme-bg-secondary border border-theme-text-primary/10 px-3 py-2 text-[11px] font-mono text-theme-text-secondary whitespace-pre-wrap break-all">{txt}</code>
+  );
+
+  return (
+    <div className="space-y-6">
+      <div className="border-b border-theme-text-primary/10 pb-4">
+        <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary">System Documentation</h2>
+        <p className="text-[10px] text-theme-text-tertiary/60 mt-1">Architecture, database schema, and API reference for BoilerFuel.</p>
+      </div>
+
+      <Section id="arch" title="Frontend Architecture">
+        <div className="space-y-3 text-xs text-theme-text-secondary leading-relaxed">
+          <p><strong className="text-theme-text-primary">Framework:</strong> Next.js (pages router, no App Router). All pages in <code className="font-mono bg-theme-bg-secondary px-1">frontend/pages/</code>. Every page uses <code className="font-mono bg-theme-bg-secondary px-1">Page.getLayout = (page) =&gt; page</code> to bypass the Layout component (currently unused).</p>
+          <p><strong className="text-theme-text-primary">State:</strong> MealContext (<code className="font-mono bg-theme-bg-secondary px-1">context/MealContext.js</code>) holds all user data — meals by date, goals, water, weight, favorites, templates, dietary prefs. All persisted to localStorage. Synced to server when Device Sync is enabled (encrypted blob).</p>
+          <p><strong className="text-theme-text-primary">Theming:</strong> CSS variables defined in <code className="font-mono bg-theme-bg-secondary px-1">styles/globals.css</code> under <code className="font-mono bg-theme-bg-secondary px-1">:root</code> (light) and <code className="font-mono bg-theme-bg-secondary px-1">.dark</code>. Tailwind classes map to these via <code className="font-mono bg-theme-bg-secondary px-1">tailwind.config.js</code> theme extension (e.g. <code className="font-mono bg-theme-bg-secondary px-1">bg-theme-bg-primary</code>).</p>
+          <p><strong className="text-theme-text-primary">PWA:</strong> Service worker (<code className="font-mono bg-theme-bg-secondary px-1">public/sw.js</code>) handles offline caching. <code className="font-mono bg-theme-bg-secondary px-1">manifest.json</code> in public/. iOS install prompt uses <code className="font-mono bg-theme-bg-secondary px-1">beforeinstallprompt</code> (Android) or manual Safari share flow (iOS).</p>
+          <p><strong className="text-theme-text-primary">Auth:</strong> NextAuth.js with Google OAuth for admin access. Admin JWT (<code className="font-mono bg-theme-bg-secondary px-1">boilerfuel_admin_token</code>) stored in localStorage, exchanged via <code className="font-mono bg-theme-bg-secondary px-1">/api/admin/google-token</code> on each admin page load.</p>
+        </div>
+      </Section>
+
+      <Section id="db" title="Database Schema">
+        <div className="space-y-4 text-xs text-theme-text-secondary">
+          <p className="leading-relaxed">PostgreSQL (Neon serverless). Schema auto-created via <code className="font-mono bg-theme-bg-secondary px-1">utils/db.js:ensureSchema()</code> on first API call.</p>
+          <div className="space-y-3">
+            <div>
+              <p className="font-bold text-theme-text-primary mb-1">foods</p>
+              {code(`id            SERIAL PRIMARY KEY
+name          TEXT NOT NULL
+calories      INTEGER
+dining_court  TEXT          -- location name (e.g. "Ford", "Wiley")
+station       TEXT          -- station within dining court
+meal_time     TEXT          -- "Breakfast", "Lunch", "Dinner", etc.
+macros        JSONB         -- { protein, carbs, fats, fiber, sugar, sodium, ... }
+allergens     TEXT[]        -- e.g. ["Wheat", "Milk"]
+dietary_flags TEXT[]        -- e.g. ["Vegetarian", "Vegan"]
+source        TEXT          -- "hfs" | "retail" | "custom"
+created_at    TIMESTAMPTZ`)}
+            </div>
+            <div>
+              <p className="font-bold text-theme-text-primary mb-1">menu_snapshots</p>
+              {code(`id            SERIAL PRIMARY KEY
+menu_date     DATE NOT NULL  -- date the menu is valid for
+name          TEXT NOT NULL
+calories      INTEGER
+dining_court  TEXT
+station       TEXT
+meal_time     TEXT
+macros        JSONB
+allergens     TEXT[]
+dietary_flags TEXT[]
+source        TEXT
+created_at    TIMESTAMPTZ
+UNIQUE(menu_date, name, dining_court, meal_time)`)}
+              <p className="text-[10px] text-theme-text-tertiary mt-1">Date-specific menus scraped from HFS API. Queried when a date param is passed to <code className="font-mono bg-theme-bg-secondary px-0.5">/api/foods</code>.</p>
+            </div>
+            <div>
+              <p className="font-bold text-theme-text-primary mb-1">sync_data</p>
+              {code(`device_id     TEXT PRIMARY KEY
+encrypted_data TEXT NOT NULL  -- AES-GCM encrypted JSON blob
+iv            TEXT NOT NULL   -- base64 IV
+created_at    TIMESTAMPTZ
+updated_at    TIMESTAMPTZ`)}
+              <p className="text-[10px] text-theme-text-tertiary mt-1">Encrypted sync blobs. Server cannot read contents. Key never leaves device.</p>
+            </div>
+            <div>
+              <p className="font-bold text-theme-text-primary mb-1">custom_foods</p>
+              {code(`id            SERIAL PRIMARY KEY
+user_id       TEXT NOT NULL   -- from JWT sub claim
+name          TEXT NOT NULL
+calories      INTEGER
+macros        JSONB
+serving_size  TEXT
+notes         TEXT
+created_at    TIMESTAMPTZ`)}
+            </div>
+            <div>
+              <p className="font-bold text-theme-text-primary mb-1">feedback</p>
+              {code(`id            SERIAL PRIMARY KEY
+food_id       INTEGER REFERENCES foods(id)
+issue         TEXT NOT NULL   -- "wrong_calories" | "wrong_macros" | "missing_allergen" | etc.
+note          TEXT
+created_at    TIMESTAMPTZ`)}
+            </div>
+          </div>
+        </div>
+      </Section>
+
+      <Section id="api" title="API Reference">
+        <div className="space-y-4 text-xs">
+          {[
+            { method: 'GET', path: '/api/foods', desc: 'Query food catalog or menu snapshots. Params: q (search), dining_court (comma-sep), meal_time, station, date (YYYY-MM-DD). Returns array of food objects.' },
+            { method: 'GET', path: '/api/foods/[id]', desc: 'Get single food by ID.' },
+            { method: 'GET', path: '/api/dining-courts', desc: 'Returns array of distinct dining_court strings present in foods table.' },
+            { method: 'GET', path: '/api/retail-locations', desc: 'Returns Purdue Food Co retail restaurant list.' },
+            { method: 'POST', path: '/api/feedback', desc: 'Submit accuracy feedback for a food item. Body: { food_id, issue, note }.' },
+            { method: 'GET/POST/PUT/DELETE', path: '/api/custom-foods', desc: 'CRUD for user custom foods. Requires Bearer JWT (Google session). GET returns user\'s foods; POST creates; PUT /[id] updates; DELETE /[id] removes.' },
+            { method: 'GET/POST', path: '/api/sync', desc: 'Device sync. POST stores encrypted blob; GET retrieves it. Requires device_id + passphrase-derived key (never sent to server).' },
+            { method: 'POST', path: '/api/google-fit-export', desc: 'Export selected meals to Google Fit. Requires google_token in body. Writes com.google.nutrition data points.' },
+            { method: 'GET', path: '/api/admin/stats', desc: 'Admin stats (food count, dining courts, avg calories). Requires admin JWT.' },
+            { method: 'POST', path: '/api/admin/google-token', desc: 'Exchange NextAuth Google session for admin JWT. Returns { token }.' },
+            { method: 'POST', path: '/api/admin/login', desc: 'Legacy password-based admin login. Returns JWT.' },
+          ].map(e => (
+            <div key={e.path} className="border border-theme-text-primary/10 p-4 space-y-1.5">
+              <div className="flex items-baseline gap-3">
+                <span className="text-[9px] font-bold uppercase tracking-wider text-theme-text-tertiary">{e.method}</span>
+                <code className="font-mono text-theme-text-primary text-[11px]">{e.path}</code>
+              </div>
+              <p className="text-[10px] text-theme-text-tertiary leading-relaxed">{e.desc}</p>
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      <Section id="storage" title="localStorage Keys">
+        <div className="border border-theme-text-primary/10 divide-y divide-theme-text-primary/5 text-xs">
+          {[
+            ['boilerfuel_meals', 'Object: { [YYYY-MM-DD]: meal[] }. Each meal has id, name, calories, macros, dining_court, station, meal_time, servings, addedAt.'],
+            ['boilerfuel_goals', 'Object: calories, protein, carbs, fat, saturated_fat, fiber, sugar, sodium, cholesterol, added_sugar.'],
+            ['boilerfuel_water', 'Object: { [YYYY-MM-DD]: number } — glasses per day.'],
+            ['boilerfuel_weight', 'Object: { [YYYY-MM-DD]: number } — lbs/kg per day.'],
+            ['boilerfuel_favorites', 'JSON array of food IDs.'],
+            ['boilerfuel_templates', 'Array of { id, name, foods[], createdAt }.'],
+            ['boilerfuel_dietary', 'Object: { vegetarian, vegan, excludeAllergens[] }.'],
+            ['boilerfuel_sync_device_id', 'UUID for cross-device sync pairing.'],
+            ['boilerfuel_sync_paired', '"1" if sync is active.'],
+            ['boilerfuel_notif_meal', '"1" if meal reminders enabled.'],
+            ['boilerfuel_notif_streak_hour', 'Hour (0–23) for streak reminder.'],
+            ['boilerfuel_notif_breakfast_hour', 'Hour for breakfast reminder.'],
+            ['boilerfuel_install-dismissed', '"1" if install PWA prompt dismissed.'],
+            ['boilerfuel_admin_token', 'Admin JWT (short-lived). Auto-refreshed on admin page load.'],
+          ].map(([key, desc]) => (
+            <div key={key} className="px-4 py-3 space-y-0.5">
+              <code className="text-[10px] font-mono text-theme-text-primary">{key}</code>
+              <p className="text-[10px] text-theme-text-tertiary leading-relaxed">{desc}</p>
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      <Section id="dataflow" title="Data Flow">
+        <div className="space-y-3 text-xs text-theme-text-secondary leading-relaxed">
+          <div className="border border-theme-text-primary/10 p-4 space-y-2">
+            <p className="font-bold text-theme-text-primary uppercase tracking-wider text-[10px]">Menu Display</p>
+            <p>User selects location + date → <code className="font-mono bg-theme-bg-secondary px-1">GET /api/foods?dining_court=Ford&date=2026-02-26</code> → server queries <code className="font-mono bg-theme-bg-secondary px-1">menu_snapshots</code> (date-specific) or <code className="font-mono bg-theme-bg-secondary px-1">foods</code> (general catalog) → response cached in localStorage under <code className="font-mono bg-theme-bg-secondary px-1">bf_menu_...</code> key for offline use.</p>
+          </div>
+          <div className="border border-theme-text-primary/10 p-4 space-y-2">
+            <p className="font-bold text-theme-text-primary uppercase tracking-wider text-[10px]">Meal Logging</p>
+            <p>User taps + on a food → <code className="font-mono bg-theme-bg-secondary px-1">MealContext.addMeal()</code> → appends to <code className="font-mono bg-theme-bg-secondary px-1">mealsByDate[today]</code> in React state → <code className="font-mono bg-theme-bg-secondary px-1">useEffect</code> persists to localStorage → if sync enabled, debounced push (3s) to <code className="font-mono bg-theme-bg-secondary px-1">POST /api/sync</code> with encrypted payload.</p>
+          </div>
+          <div className="border border-theme-text-primary/10 p-4 space-y-2">
+            <p className="font-bold text-theme-text-primary uppercase tracking-wider text-[10px]">Device Sync Encryption</p>
+            <p>User enters a passphrase → PBKDF2 (100k iterations, SHA-256) derives a 256-bit AES-GCM key in-browser → all localStorage data serialized to JSON → encrypted with random IV → only ciphertext + IV sent to server. Server stores opaque blob, cannot decrypt.</p>
+          </div>
+          <div className="border border-theme-text-primary/10 p-4 space-y-2">
+            <p className="font-bold text-theme-text-primary uppercase tracking-wider text-[10px]">Menu Scraping</p>
+            <p>HFS (Purdue Dining) menus are scraped via a scheduled job that calls the Purdue API and upserts into <code className="font-mono bg-theme-bg-secondary px-1">menu_snapshots</code>. Retail (Purdue Food Co) items are stored in the <code className="font-mono bg-theme-bg-secondary px-1">foods</code> table with <code className="font-mono bg-theme-bg-secondary px-1">source = &apos;retail&apos;</code> and always appear regardless of date filter.</p>
+          </div>
+        </div>
+      </Section>
+
+      <Section id="env" title="Environment Variables">
+        <div className="border border-theme-text-primary/10 divide-y divide-theme-text-primary/5">
+          {[
+            ['DATABASE_URL', 'PostgreSQL connection string (Neon). Required for all API routes.'],
+            ['ADMIN_PASSWORD_HASH', 'bcrypt hash of admin panel password (legacy login).'],
+            ['JWT_SECRET', 'Secret for signing admin JWTs. Min 32 chars.'],
+            ['NEXTAUTH_URL', 'Full URL of the site (e.g. https://boilerfuel.vercel.app). Required for NextAuth.'],
+            ['NEXTAUTH_SECRET', 'Random secret for NextAuth session encryption.'],
+            ['GOOGLE_CLIENT_ID', 'OAuth 2.0 client ID from Google Cloud Console.'],
+            ['GOOGLE_CLIENT_SECRET', 'OAuth 2.0 client secret.'],
+            ['NEXT_PUBLIC_SITE_URL', 'Public site URL for OG tags (same as NEXTAUTH_URL without trailing slash).'],
+            ['NEXT_PUBLIC_API_URL', 'API base URL (usually same origin). Used for preconnect hint in _document.js.'],
+          ].map(([key, desc]) => (
+            <div key={key} className="px-4 py-3 space-y-0.5">
+              <code className="text-[10px] font-mono text-theme-text-primary">{key}</code>
+              <p className="text-[10px] text-theme-text-tertiary leading-relaxed">{desc}</p>
+            </div>
+          ))}
+        </div>
+      </Section>
     </div>
   );
 }

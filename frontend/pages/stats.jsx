@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useTheme } from '../context/ThemeContext';
@@ -778,6 +778,9 @@ export default function StatsPage() {
             )}
           </section>
 
+          {/* ═══ DEBUG PANEL ═══ */}
+          <DebugPanel />
+
           {/* Footer */}
           <footer className="border-t border-theme-text-primary/10 pt-8 flex flex-wrap items-center justify-between gap-4">
             <div className="flex gap-6 text-xs uppercase tracking-widest">
@@ -791,6 +794,215 @@ export default function StatsPage() {
         </div>
       </div>
     </>
+  );
+}
+
+// ── Debug Panel ──
+function DebugPanel() {
+  const { mealsByDate, templates, waterByDate, weightByDate } = useMeals();
+  const [open, setOpen] = useState(false);
+  const [apiMs, setApiMs] = useState(null);
+  const [apiTesting, setApiTesting] = useState(false);
+  const [swStatus, setSwStatus] = useState(null);
+  const [storageInfo, setStorageInfo] = useState(null);
+  const [connection, setConnection] = useState(null);
+  const [notifPerm, setNotifPerm] = useState(null);
+  const [storageQuota, setStorageQuota] = useState(null);
+
+  useEffect(() => {
+    if (!open) return;
+
+    // localStorage usage estimate (UTF-16: 2 bytes per char)
+    try {
+      let bytes = 0;
+      const breakdown = {};
+      for (const key of Object.keys(localStorage)) {
+        const size = ((localStorage.getItem(key) || '').length + key.length) * 2;
+        bytes += size;
+        if (key.startsWith('boilerfuel')) {
+          breakdown[key] = size;
+        }
+      }
+      setStorageInfo({ bytes, breakdown });
+    } catch {}
+
+    // StorageManager quota (modern browsers)
+    if (navigator.storage?.estimate) {
+      navigator.storage.estimate().then(est => {
+        setStorageQuota({ used: est.usage, quota: est.quota });
+      });
+    }
+
+    // Service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(regs => {
+        if (regs.length === 0) { setSwStatus('none'); return; }
+        const sw = regs[0];
+        const state = sw.active?.state || sw.waiting?.state || sw.installing?.state || 'registered';
+        setSwStatus({ state, scope: sw.scope });
+      });
+    } else {
+      setSwStatus('unsupported');
+    }
+
+    // Connection info
+    const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    if (conn) {
+      setConnection({ type: conn.effectiveType, downlink: conn.downlink, rtt: conn.rtt, saveData: conn.saveData });
+    }
+
+    // Notification permission
+    if ('Notification' in window) setNotifPerm(Notification.permission);
+  }, [open]);
+
+  const testApi = useCallback(async () => {
+    setApiTesting(true);
+    setApiMs(null);
+    const start = performance.now();
+    try {
+      await fetch('/api/foods?dining_court=Ford&limit=1', { cache: 'no-store' });
+      setApiMs(Math.round(performance.now() - start));
+    } catch {
+      setApiMs(-1);
+    }
+    setApiTesting(false);
+  }, []);
+
+  const fmt = (bytes) => {
+    if (bytes == null) return '—';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+  };
+
+  const totalDays = Object.keys(mealsByDate).length;
+  const totalMeals = Object.values(mealsByDate).reduce((s, arr) => s + arr.length, 0);
+  const totalWaterDays = Object.keys(waterByDate).length;
+  const totalWeightDays = Object.keys(weightByDate).length;
+
+  const row = (label, value, mono = true) => (
+    <div className="flex items-center justify-between gap-4 px-4 py-2 border-b border-theme-text-primary/5 last:border-0">
+      <span className="text-[10px] uppercase tracking-wider text-theme-text-tertiary">{label}</span>
+      <span className={`text-xs text-theme-text-secondary ${mono ? 'font-mono tabular-nums' : ''}`}>{value}</span>
+    </div>
+  );
+
+  return (
+    <section className="space-y-3">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="flex items-center gap-2 text-xs uppercase tracking-[0.15em] text-theme-text-tertiary hover:text-theme-text-primary transition-colors border-b border-theme-text-primary/10 pb-2 w-full text-left"
+      >
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+          style={{ transform: open ? 'rotate(90deg)' : 'rotate(0)', transition: 'transform 0.15s' }}>
+          <polyline points="9 18 15 12 9 6" />
+        </svg>
+        <span className="font-bold">Debug &amp; System Info</span>
+      </button>
+
+      {open && (
+        <div className="space-y-6">
+          {/* API Performance */}
+          <div className="space-y-2">
+            <p className="text-[10px] uppercase tracking-widest text-theme-text-tertiary/60 px-1">API Performance</p>
+            <div className="border border-theme-text-primary/10">
+              <div className="flex items-center justify-between gap-4 px-4 py-2 border-b border-theme-text-primary/5">
+                <span className="text-[10px] uppercase tracking-wider text-theme-text-tertiary">Foods API latency</span>
+                <div className="flex items-center gap-3">
+                  {apiMs !== null && (
+                    <span className={`text-xs font-mono font-bold tabular-nums ${apiMs < 0 ? 'text-red-400' : apiMs < 300 ? 'text-green-400' : apiMs < 800 ? 'text-yellow-400' : 'text-red-400'}`}>
+                      {apiMs < 0 ? 'error' : `${apiMs} ms`}
+                    </span>
+                  )}
+                  <button
+                    onClick={testApi}
+                    disabled={apiTesting}
+                    className="text-[10px] uppercase tracking-wider px-2 py-0.5 border border-theme-text-primary/20 hover:border-theme-text-primary/50 text-theme-text-tertiary hover:text-theme-text-primary transition-colors disabled:opacity-40"
+                  >
+                    {apiTesting ? 'Testing…' : apiMs !== null ? 'Retest' : 'Test'}
+                  </button>
+                </div>
+              </div>
+              {apiMs !== null && apiMs >= 0 && (
+                <div className="px-4 py-2">
+                  <div className="h-1.5 bg-theme-text-primary/10 overflow-hidden">
+                    <div
+                      className={`h-full transition-all ${apiMs < 300 ? 'bg-green-400' : apiMs < 800 ? 'bg-yellow-400' : 'bg-red-400'}`}
+                      style={{ width: `${Math.min(apiMs / 2000 * 100, 100)}%` }}
+                    />
+                  </div>
+                  <div className="flex justify-between text-[9px] text-theme-text-tertiary/50 mt-1">
+                    <span>0ms</span><span>Fast &lt;300ms</span><span>Slow &gt;800ms</span><span>2000ms</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Storage */}
+          <div className="space-y-2">
+            <p className="text-[10px] uppercase tracking-widest text-theme-text-tertiary/60 px-1">Storage</p>
+            <div className="border border-theme-text-primary/10">
+              {storageQuota && (
+                <>
+                  <div className="flex items-center justify-between gap-4 px-4 py-2 border-b border-theme-text-primary/5">
+                    <span className="text-[10px] uppercase tracking-wider text-theme-text-tertiary">Browser storage used</span>
+                    <span className="text-xs font-mono text-theme-text-secondary">
+                      {fmt(storageQuota.used)} / {fmt(storageQuota.quota)}
+                    </span>
+                  </div>
+                  <div className="px-4 py-2 border-b border-theme-text-primary/5">
+                    <div className="h-1.5 bg-theme-text-primary/10 overflow-hidden">
+                      <div className="h-full bg-theme-text-primary/40" style={{ width: `${Math.min(storageQuota.used / storageQuota.quota * 100, 100)}%` }} />
+                    </div>
+                  </div>
+                </>
+              )}
+              {row('localStorage (BoilerFuel keys)', fmt(storageInfo?.bytes))}
+              {storageInfo?.breakdown && Object.entries(storageInfo.breakdown)
+                .sort(([, a], [, b]) => b - a)
+                .slice(0, 6)
+                .map(([key, size]) => (
+                  <div key={key} className="flex items-center justify-between gap-4 px-4 py-1.5 border-b border-theme-text-primary/5 last:border-0">
+                    <span className="text-[9px] text-theme-text-tertiary/60 truncate font-mono">{key}</span>
+                    <span className="text-[9px] font-mono text-theme-text-tertiary shrink-0">{fmt(size)}</span>
+                  </div>
+                ))}
+            </div>
+          </div>
+
+          {/* Local data counts */}
+          <div className="space-y-2">
+            <p className="text-[10px] uppercase tracking-widest text-theme-text-tertiary/60 px-1">Local Data</p>
+            <div className="border border-theme-text-primary/10">
+              {row('Days with meals logged', totalDays)}
+              {row('Total meal entries', totalMeals)}
+              {row('Days with water logged', totalWaterDays)}
+              {row('Days with weight logged', totalWeightDays)}
+              {row('Saved templates', templates.length)}
+            </div>
+          </div>
+
+          {/* Environment */}
+          <div className="space-y-2">
+            <p className="text-[10px] uppercase tracking-widest text-theme-text-tertiary/60 px-1">Environment</p>
+            <div className="border border-theme-text-primary/10">
+              {row('Service worker', typeof swStatus === 'string' ? swStatus : swStatus?.state || '—')}
+              {typeof swStatus === 'object' && swStatus?.scope && row('SW scope', swStatus.scope, false)}
+              {row('Notifications', notifPerm || '—')}
+              {connection && <>
+                {row('Connection type', connection.type || '—')}
+                {connection.downlink != null && row('Downlink', `${connection.downlink} Mbps`)}
+                {connection.rtt != null && row('RTT', `${connection.rtt} ms`)}
+                {row('Save-data mode', connection.saveData ? 'on' : 'off')}
+              </>}
+              {row('PWA mode', (typeof window !== 'undefined' && (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone)) ? 'standalone' : 'browser')}
+              {row('User agent', typeof navigator !== 'undefined' ? navigator.userAgent : '—', false)}
+            </div>
+          </div>
+        </div>
+      )}
+    </section>
   );
 }
 

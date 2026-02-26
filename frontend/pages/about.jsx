@@ -219,6 +219,7 @@ export default function About() {
                   {[
                     { href: '/', label: 'Home' },
                     { href: '/stats', label: 'Stats' },
+                    { href: '/compare', label: 'Compare' },
                     { href: '/about', label: 'About' },
                     { href: '/custom-foods', label: 'Custom Foods' },
                     { href: '/profile', label: 'Profile' },
