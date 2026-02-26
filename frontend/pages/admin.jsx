@@ -225,6 +225,8 @@ export default function AdminPanel() {
   );
 }
 
+AdminPanel.getLayout = (page) => page;
+
 // ── Stats Tab ──
 function StatsTab() {
   const [stats, setStats] = useState(null);
