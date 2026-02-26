@@ -8,11 +8,47 @@ import Head from 'next/head';
 
 const VERSIONS = [
 
+  // ─── 3.7.x  Polish, Custom Foods & Reminders  (Feb 26, 2026) ────────────
+  {
+    version: '3.7.1',
+    date: 'February 26, 2026',
+    latest: true,
+    changes: [
+      { cat: 'Fix', items: [
+        'Admin accuracy tab: always refresh Google OAuth JWT on load to prevent exp timestamp errors',
+        'Removed broken border-theme-border-secondary class from InstallPrompt, Onboarding, and update toast',
+        'Removed all shadow classes from modals and dropdowns in main page',
+        'Removed rounded-sm from all food/dietary badge chips (VG, V, allergens, N/A)',
+        'profile.jsx: removed rounded-lg/rounded from warning box and buttons; bg-white QR container fixed',
+        'hover:text-white replaced with hover:text-theme-bg-primary on destructive buttons',
+        'BarcodeScanner food image bg-white replaced with bg-theme-bg-secondary',
+        'OfflineIndicator restyled to flat monochromatic banner',
+      ]},
+      { cat: 'UI', items: [
+        'Added Stats link to changelog sidebar nav; added About link to about page navigate',
+        'Added Custom Foods link to main page footer, profile footer, and about navigate',
+        'AdminPanel.getLayout set explicitly to bypass Layout wrapper',
+      ]},
+    ],
+  },
+  {
+    version: '3.7.0',
+    date: 'February 26, 2026',
+    changes: [
+      { cat: 'Feature', items: [
+        'Breakfast and brunch meal reminder time pickers added to Profile reminders section',
+        'NotificationManager fires breakfast and brunch notifications at configured hours',
+        'Stats page: paired sections into two-column grid on large screens (Today+Macros, MealTime+MacroTrends, TopFoods+WeightTrend)',
+        'Custom Foods page fully restyled to monochromatic brutalist design system',
+        'Admin panel: Exercises tab removed',
+      ]},
+    ],
+  },
+
   // ─── 3.x.x  Beverages, Live Data & Sync  (Feb 17–20, 2026) ──────────────
   {
     version: '3.6.0',
     date: 'February 20, 2026',
-    latest: true,
     changes: [
       { cat: 'Feature', items: [
         'Beverages added to Quick Bites locations and Lawson On-the-GO!',
