@@ -994,7 +994,7 @@ export default function ProfilePage() {
                         Apply
                       </button>
                       <button onClick={() => deleteTemplate(t.id)}
-                        className="px-3 py-1.5 border border-red-500/30 text-xs uppercase tracking-wider text-red-500/60 hover:bg-red-500 hover:text-white transition-colors">
+                        className="px-3 py-1.5 border border-red-500/30 text-xs uppercase tracking-wider text-red-500/60 hover:bg-red-500 hover:text-theme-bg-primary transition-colors">
                         Delete
                       </button>
                     </div>
@@ -1208,7 +1208,7 @@ export default function ProfilePage() {
                       setSyncMsg('Unpaired successfully.');
                       setTimeout(() => setSyncMsg(''), 3000);
                     }}
-                    className="px-4 py-2 border border-red-500/30 text-red-500 text-xs uppercase tracking-wider hover:bg-red-500 hover:text-white transition-colors">
+                    className="px-4 py-2 border border-red-500/30 text-red-500 text-xs uppercase tracking-wider hover:bg-red-500 hover:text-theme-bg-primary transition-colors">
                     Unpair
                   </button>
                 </div>

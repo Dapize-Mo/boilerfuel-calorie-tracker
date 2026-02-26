@@ -128,21 +128,21 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
           {/* App update toast */}
           {updateAvailable && (
             <div className="fixed bottom-20 inset-x-0 z-50 flex justify-center px-4 pointer-events-none">
-              <div className="flex items-center gap-3 bg-theme-bg-secondary border border-theme-border-secondary rounded-xl shadow-2xl px-4 py-3 pointer-events-auto max-w-sm w-full">
+              <div className="flex items-center gap-3 bg-theme-bg-secondary border border-theme-text-primary/20 px-4 py-3 pointer-events-auto max-w-sm w-full">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-theme-text-primary">Update available</p>
                   <p className="text-xs text-theme-text-tertiary">Reload to get the latest version.</p>
                 </div>
                 <button
                   onClick={applyUpdate}
-                  className="shrink-0 px-3 py-1.5 rounded-lg bg-yellow-400 hover:bg-yellow-500 text-slate-900 text-xs font-bold transition-colors"
+                  className="shrink-0 px-3 py-1.5 bg-yellow-400 hover:bg-yellow-500 text-slate-900 text-xs font-bold uppercase tracking-wider transition-colors"
                 >
                   Reload
                 </button>
                 <button
                   onClick={() => setUpdateAvailable(false)}
                   aria-label="Dismiss"
-                  className="shrink-0 p-1 rounded text-theme-text-tertiary hover:text-theme-text-primary transition-colors"
+                  className="shrink-0 p-1 text-theme-text-tertiary hover:text-theme-text-primary transition-colors"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
                     <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
