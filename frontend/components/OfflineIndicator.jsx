@@ -32,8 +32,10 @@ export default function OfflineIndicator() {
   return (
     <div className="fixed top-16 inset-x-0 z-50 flex justify-center pointer-events-none">
       <div
-        className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold shadow-lg rounded-b-lg pointer-events-auto ${
-          status === 'offline' ? 'bg-red-500 text-white' : 'bg-green-500 text-white'
+        className={`flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-widest font-mono pointer-events-auto border-b border-x ${
+          status === 'offline'
+            ? 'bg-theme-bg-primary border-theme-text-primary/30 text-theme-text-primary'
+            : 'bg-theme-bg-primary border-theme-text-primary/20 text-theme-text-tertiary'
         }`}
       >
         {status === 'offline' ? (

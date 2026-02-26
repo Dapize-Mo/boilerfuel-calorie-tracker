@@ -966,7 +966,7 @@ export default function ProfilePage() {
               <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary">
                 Meal Templates
               </h2>
-              <span className="text-[9px] font-bold border border-blue-500/50 text-blue-500 px-1.5 py-0.5 rounded-sm uppercase tracking-wider">Beta</span>
+              <span className="text-[9px] font-bold border border-theme-text-primary/30 text-theme-text-tertiary px-1.5 py-0.5 uppercase tracking-wider">Beta</span>
             </div>
             {meals.length > 0 && (
               <div>
@@ -1175,7 +1175,7 @@ export default function ProfilePage() {
             {syncStatus === 'paired' && (
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full" />
+                  <div className="w-2 h-2 bg-green-500" />
                   <span className="text-xs font-bold text-theme-text-primary">Paired</span>
                   <span className="text-xs text-theme-text-tertiary font-mono">{syncCode}</span>
                 </div>

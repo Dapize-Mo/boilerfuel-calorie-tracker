@@ -220,6 +220,7 @@ export default function About() {
                     { href: '/', label: 'Home' },
                     { href: '/stats', label: 'Stats' },
                     { href: '/about', label: 'About' },
+                    { href: '/custom-foods', label: 'Custom Foods' },
                     { href: '/profile', label: 'Profile' },
                     { href: '/changelog', label: 'Changelog' },
                   ].map(link => (
