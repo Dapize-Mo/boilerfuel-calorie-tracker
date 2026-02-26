@@ -70,6 +70,7 @@ export default function ProfilePage() {
   const [logFilter, setLogFilter] = useState(null); // null | meal-time string
 
   // Notification settings
+  const [notifSupported, setNotifSupported] = useState(false);
   const [notifPermission, setNotifPermission] = useState('default');
   const [mealReminder, setMealReminder] = useState(false);
 
@@ -85,6 +86,7 @@ export default function ProfilePage() {
   // Load notification state
   useEffect(() => {
     if ('Notification' in window) {
+      setNotifSupported(true);
       setNotifPermission(Notification.permission);
       setMealReminder(localStorage.getItem('boilerfuel_notif_meal') === '1');
     }
@@ -788,7 +790,7 @@ export default function ProfilePage() {
           </section>
 
           {/* ═══ REMINDERS ═══ */}
-          {'Notification' in (typeof window !== 'undefined' ? window : {}) && (
+          {notifSupported && (
             <section className="space-y-6">
               <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-yellow-500/20 pb-2">
                 Reminders
@@ -1025,6 +1027,9 @@ export default function ProfilePage() {
               <div className="space-y-3">
                 <p className="text-xs text-theme-text-tertiary">
                   Sign in with Google to export your meal history to Google Fit as nutrition data.
+                </p>
+                <p className="text-xs text-theme-text-tertiary/70">
+                  Note: Google sign-in is browser &amp; device-specific. You&apos;ll need to connect on each device you use.
                 </p>
                 <button
                   onClick={() => signIn('google')}

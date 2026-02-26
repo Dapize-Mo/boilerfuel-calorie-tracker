@@ -161,8 +161,6 @@ export async function pushData() {
       updated_at: Date.now(),
     }),
   });
-
-  localStorage.setItem(SYNC_LAST_PULL_KEY, String(Date.now()));
 }
 
 // ── Pull remote data from server ──
