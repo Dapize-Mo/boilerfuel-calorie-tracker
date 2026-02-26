@@ -31,9 +31,26 @@ function formatShort(key) {
 // ── Simple SVG Pie Chart ──
 function PieChart({ data, size = 160 }) {
   const total = data.reduce((s, d) => s + d.value, 0);
+
+  const legend = (
+    <div className="space-y-1.5">
+      {data.map((d, i) => (
+        <div key={i} className="flex items-center gap-2 text-xs">
+          <div className="w-3 h-3 shrink-0" style={{ backgroundColor: d.color }} />
+          <span className="text-theme-text-secondary">{d.label}</span>
+          <span className="font-mono tabular-nums text-theme-text-tertiary">{Math.round(d.value)}g</span>
+          {total > 0 && <span className="text-theme-text-tertiary/60">({Math.round((d.value / total) * 100)}%)</span>}
+        </div>
+      ))}
+    </div>
+  );
+
   if (total === 0) return (
-    <div className="flex items-center justify-center" style={{ width: size, height: size }}>
-      <div className="text-xs text-theme-text-tertiary uppercase tracking-widest">No data</div>
+    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+      <div className="flex items-center justify-center" style={{ width: size, height: size }}>
+        <div className="text-xs text-theme-text-tertiary uppercase tracking-widest">No data</div>
+      </div>
+      {legend}
     </div>
   );
 
@@ -60,16 +77,7 @@ function PieChart({ data, size = 160 }) {
           <path key={i} d={s.path} fill={s.color} stroke="rgb(var(--color-bg-primary))" strokeWidth="2" />
         ))}
       </svg>
-      <div className="space-y-1.5">
-        {data.map((d, i) => (
-          <div key={i} className="flex items-center gap-2 text-xs">
-            <div className="w-3 h-3 shrink-0" style={{ backgroundColor: d.color }} />
-            <span className="text-theme-text-secondary">{d.label}</span>
-            <span className="font-mono tabular-nums text-theme-text-tertiary">{Math.round(d.value)}g</span>
-            <span className="text-theme-text-tertiary/60">({total > 0 ? Math.round((d.value / total) * 100) : 0}%)</span>
-          </div>
-        ))}
-      </div>
+      {legend}
     </div>
   );
 }
@@ -187,16 +195,14 @@ function StackedBarChart({ data, height = 120 }) {
           <div key={i} className={`text-[9px] flex-1 text-center ${d.date === getTodayKey() ? 'font-bold text-theme-text-primary' : 'text-theme-text-tertiary'}`}>{d.dayLabel}</div>
         ))}
       </div>
-      {usedKeys.length > 1 && (
-        <div className="flex flex-wrap gap-3 mt-2">
-          {usedKeys.map(k => (
-            <div key={k} className="flex items-center gap-1.5 text-[9px] text-theme-text-tertiary capitalize">
-              <div className="w-2.5 h-2.5 shrink-0" style={{ backgroundColor: colors[k] }} />
-              {k}
-            </div>
-          ))}
-        </div>
-      )}
+      <div className="flex flex-wrap gap-3 mt-2">
+        {mealKeys.map(k => (
+          <div key={k} className="flex items-center gap-1.5 text-[9px] text-theme-text-tertiary capitalize">
+            <div className="w-2.5 h-2.5 shrink-0" style={{ backgroundColor: colors[k] }} />
+            {k}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -230,10 +236,10 @@ function MultiLineChart({ datasets, data, max, height = 120 }) {
         )}
       </div>
       {/* Legend */}
-      <div className="flex gap-4 mt-2">
+      <div className="flex flex-wrap gap-4 mt-2">
         {datasets.map(ds => (
           <div key={ds.key} className="flex items-center gap-1.5 text-[10px]">
-            <div className="w-3 h-0.5" style={{ backgroundColor: ds.color }} />
+            <div className="w-4 h-px" style={{ backgroundColor: ds.color, height: '2px' }} />
             <span className="text-theme-text-tertiary">{ds.label}</span>
           </div>
         ))}
@@ -534,16 +540,18 @@ export default function StatsPage() {
           </section>
 
           {/* ═══ MEAL TIME BREAKDOWN ═══ */}
-          {daysWithData.length > 0 && (
-            <section className="space-y-4">
-              <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
-                Calories by Meal Time
-              </h2>
-              <div className="border border-theme-text-primary/10 p-4">
+          <section className="space-y-4">
+            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
+              Calories by Meal Time
+            </h2>
+            <div className="border border-theme-text-primary/10 p-4">
+              {daysWithData.length > 0 ? (
                 <StackedBarChart data={mealTimeBreakdown} height={140} />
-              </div>
-            </section>
-          )}
+              ) : (
+                <div className="text-xs text-theme-text-tertiary uppercase tracking-widest py-6 text-center">No data</div>
+              )}
+            </div>
+          </section>
 
           {/* ═══ MACRO TRENDS ═══ */}
           <section className="space-y-4">
@@ -589,9 +597,16 @@ export default function StatsPage() {
           {/* ═══ GOAL HIT RATE ═══ */}
           {goalHitRate.length > 0 && activeDays > 0 && (
             <section className="space-y-4">
-              <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
-                Goal Hit Rate <span className="font-normal text-theme-text-tertiary/50 normal-case tracking-normal">({activeDays} active day{activeDays !== 1 ? 's' : ''})</span>
-              </h2>
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-theme-text-primary/10 pb-2">
+                <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary">
+                  Goal Hit Rate <span className="font-normal text-theme-text-tertiary/50 normal-case tracking-normal">({activeDays} active day{activeDays !== 1 ? 's' : ''})</span>
+                </h2>
+                <div className="flex items-center gap-3 text-[9px] text-theme-text-tertiary uppercase tracking-wider">
+                  <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 bg-green-500/70" /> &ge;80%</span>
+                  <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 bg-theme-text-primary/30" /> &ge;50%</span>
+                  <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 bg-red-500/70" /> &lt;50%</span>
+                </div>
+              </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-theme-text-primary/10 border border-theme-text-primary/10">
                 {goalHitRate.map(g => {
                   const pct = activeDays > 0 ? g.daysHit / activeDays : 0;

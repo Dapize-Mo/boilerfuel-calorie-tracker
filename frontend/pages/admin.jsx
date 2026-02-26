@@ -2,13 +2,14 @@ import { useEffect, useState, useMemo } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { signIn, signOut, useSession } from "next-auth/react";
-import Layout from '../components/Layout';
 import {
   adminLogin,
   apiCall,
   deleteActivity,
   deleteFood,
+  getAdminToken,
   logoutAdmin,
+  setAdminToken,
   verifyAdminSession,
 } from '../utils/auth';
 
@@ -20,18 +21,28 @@ export default function AdminPanel() {
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('stats'); // stats, accuracy, foods, exercises
+  const [activeTab, setActiveTab] = useState('stats');
 
   useEffect(() => {
     async function bootstrap() {
-      // Check if user is signed in with Google
       if (session?.user) {
         setAuthenticated(true);
+        // Exchange Google session for admin JWT so API calls work
+        if (!getAdminToken()) {
+          try {
+            const res = await fetch('/api/admin/google-token', { method: 'POST' });
+            if (res.ok) {
+              const { token } = await res.json();
+              if (token) setAdminToken(token);
+            }
+          } catch {
+            // User is still authenticated via Google session
+          }
+        }
         setLoading(false);
         return;
       }
 
-      // Otherwise check traditional admin session
       const sessionOk = await verifyAdminSession();
       if (sessionOk) {
         setAuthenticated(true);
@@ -47,12 +58,10 @@ export default function AdminPanel() {
   async function handleLogin(event) {
     event.preventDefault();
     setLoginError('');
-
     if (!password.trim()) {
       setLoginError('Password is required');
       return;
     }
-
     try {
       await adminLogin(password.trim());
       setAuthenticated(true);
@@ -63,11 +72,9 @@ export default function AdminPanel() {
   }
 
   async function handleLogout() {
-    // Sign out from Google if using Google auth
     if (session?.user) {
       await signOut({ redirect: false });
     }
-    // Also logout from traditional admin session
     await logoutAdmin();
     setAuthenticated(false);
     setActiveTab('stats');
@@ -76,7 +83,7 @@ export default function AdminPanel() {
   async function handleGoogleSignIn() {
     try {
       await signIn('google', { redirect: false });
-    } catch (error) {
+    } catch {
       setLoginError('Failed to sign in with Google');
     }
   }
@@ -104,19 +111,16 @@ export default function AdminPanel() {
             <p className="text-sm uppercase tracking-widest text-theme-text-tertiary">Restricted access</p>
           </header>
 
-          <div className="max-w-md">
-            <div className="mb-8 space-y-1">
-              <p className="text-xs uppercase tracking-widest text-theme-text-tertiary">Authentication required</p>
-            </div>
+          <div className="max-w-md space-y-6">
+            <p className="text-xs uppercase tracking-widest text-theme-text-tertiary">Authentication required</p>
 
             <form onSubmit={handleLogin} className="space-y-3">
               {loginError && (
-                <div className="px-4 py-3 border border-theme-text-primary/30 text-theme-text-secondary text-xs uppercase tracking-widest">
+                <div className="border border-theme-text-primary/30 px-4 py-3 text-xs uppercase tracking-widest text-theme-text-secondary">
                   {loginError}
                 </div>
               )}
 
-              {/* Google Sign-In Button */}
               <button
                 type="button"
                 onClick={handleGoogleSignIn}
@@ -131,7 +135,6 @@ export default function AdminPanel() {
                 Sign in with Google
               </button>
 
-              {/* Divider */}
               <div className="flex items-center gap-3">
                 <div className="flex-1 border-t border-theme-text-primary/10" />
                 <span className="text-[10px] uppercase tracking-widest text-theme-text-tertiary">or</span>
@@ -189,46 +192,24 @@ export default function AdminPanel() {
 
         {/* Tabs */}
         <div className="flex gap-px border border-theme-text-primary/20 w-fit">
-          <button
-            onClick={() => setActiveTab('stats')}
-            className={`px-6 py-2.5 text-xs font-bold uppercase tracking-wider transition-colors ${
-              activeTab === 'stats'
-                ? 'bg-theme-text-primary text-theme-bg-primary'
-                : 'hover:bg-theme-bg-secondary text-theme-text-tertiary'
-            }`}
-          >
-            Stats
-          </button>
-          <button
-            onClick={() => setActiveTab('accuracy')}
-            className={`px-6 py-2.5 text-xs font-bold uppercase tracking-wider transition-colors ${
-              activeTab === 'accuracy'
-                ? 'bg-theme-text-primary text-theme-bg-primary'
-                : 'hover:bg-theme-bg-secondary text-theme-text-tertiary'
-            }`}
-          >
-            ✅ Accuracy
-          </button>
-          <button
-            onClick={() => setActiveTab('foods')}
-            className={`px-6 py-2.5 text-xs font-bold uppercase tracking-wider transition-colors ${
-              activeTab === 'foods'
-                ? 'bg-theme-text-primary text-theme-bg-primary'
-                : 'hover:bg-theme-bg-secondary text-theme-text-tertiary'
-            }`}
-          >
-            Foods
-          </button>
-          <button
-            onClick={() => setActiveTab('exercises')}
-            className={`px-6 py-2.5 text-xs font-bold uppercase tracking-wider transition-colors ${
-              activeTab === 'exercises'
-                ? 'bg-theme-text-primary text-theme-bg-primary'
-                : 'hover:bg-theme-bg-secondary text-theme-text-tertiary'
-            }`}
-          >
-            Exercises
-          </button>
+          {[
+            { key: 'stats', label: 'Stats' },
+            { key: 'accuracy', label: 'Accuracy' },
+            { key: 'foods', label: 'Foods' },
+            { key: 'exercises', label: 'Exercises' },
+          ].map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`px-6 py-2.5 text-xs font-bold uppercase tracking-wider transition-colors ${
+                activeTab === tab.key
+                  ? 'bg-theme-text-primary text-theme-bg-primary'
+                  : 'hover:bg-theme-bg-secondary text-theme-text-tertiary'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
 
         {/* Tab Content */}
@@ -249,6 +230,119 @@ export default function AdminPanel() {
   );
 }
 
+// ── Stats Tab ──
+function StatsTab() {
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadStats() {
+      try {
+        const [foods, activities] = await Promise.all([
+          apiCall('/api/foods'),
+          apiCall('/api/activities')
+        ]);
+
+        setStats({
+          foods: {
+            total: foods?.length || 0,
+            diningCourts: [...new Set(foods?.map(f => f.dining_court).filter(Boolean))].length,
+            avgCalories: foods?.length ? Math.round(foods.reduce((sum, f) => sum + (f.calories || 0), 0) / foods.length) : 0,
+          },
+          activities: {
+            total: activities?.length || 0,
+            categories: [...new Set(activities?.map(a => a.category).filter(Boolean))].length,
+            avgCalories: activities?.length ? Math.round(activities.reduce((sum, a) => sum + (a.calories_per_hour || 0), 0) / activities.length) : 0,
+          },
+        });
+      } catch (error) {
+        console.error('Failed to load stats:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadStats();
+  }, []);
+
+  if (loading) {
+    return <div className="text-xs uppercase tracking-widest text-theme-text-tertiary py-12">Loading...</div>;
+  }
+
+  if (!stats) {
+    return <div className="text-xs uppercase tracking-widest text-theme-text-tertiary py-12">Failed to load statistics</div>;
+  }
+
+  return (
+    <div className="space-y-8">
+      <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
+        Database Statistics
+      </h2>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-theme-text-primary/10 border border-theme-text-primary/10">
+        {/* Food Database */}
+        <div className="bg-theme-bg-primary p-6 space-y-4">
+          <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary">Food Database</div>
+          <div className="divide-y divide-theme-text-primary/5">
+            {[
+              { label: 'Total Foods', value: stats.foods.total.toLocaleString() },
+              { label: 'Dining Courts', value: stats.foods.diningCourts },
+              { label: 'Avg Calories', value: `${stats.foods.avgCalories} cal` },
+            ].map(s => (
+              <div key={s.label} className="flex items-center justify-between py-3">
+                <span className="text-xs text-theme-text-secondary">{s.label}</span>
+                <span className="text-lg font-bold tabular-nums">{s.value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Exercise Database */}
+        <div className="bg-theme-bg-primary p-6 space-y-4">
+          <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary">Exercise Database</div>
+          <div className="divide-y divide-theme-text-primary/5">
+            {[
+              { label: 'Total Exercises', value: stats.activities.total },
+              { label: 'Categories', value: stats.activities.categories },
+              { label: 'Avg Cal/hr', value: `${stats.activities.avgCalories} cal` },
+            ].map(s => (
+              <div key={s.label} className="flex items-center justify-between py-3">
+                <span className="text-xs text-theme-text-secondary">{s.label}</span>
+                <span className="text-lg font-bold tabular-nums">{s.value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="space-y-4">
+        <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
+          Quick Actions
+        </h2>
+        <div className="space-y-px border border-theme-text-primary/10">
+          {[
+            { href: '/admin-scraper', label: 'Scrape Menus', desc: 'Import dining hall menus' },
+            { href: '/settings', label: 'Settings', desc: 'Configure app settings' },
+          ].map(action => (
+            <Link
+              key={action.href}
+              href={action.href}
+              className="flex items-center justify-between px-4 py-4 bg-theme-bg-primary hover:bg-theme-text-primary/5 transition-colors group"
+            >
+              <div>
+                <div className="text-xs font-bold uppercase tracking-wider text-theme-text-primary group-hover:text-theme-text-primary">{action.label}</div>
+                <div className="text-[10px] text-theme-text-tertiary mt-0.5">{action.desc}</div>
+              </div>
+              <span className="text-theme-text-tertiary/40 group-hover:text-theme-text-tertiary transition-colors text-xs">&rarr;</span>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Menu Accuracy Tab ──
 function getDefaultDateRange() {
   const now = new Date();
   const start = new Date(now);
@@ -257,7 +351,7 @@ function getDefaultDateRange() {
   end.setDate(end.getDate() + 2);
   return {
     start: start.toISOString().slice(0, 10),
-    end: end.toISOString().slice(0, 10)
+    end: end.toISOString().slice(0, 10),
   };
 }
 
@@ -289,6 +383,7 @@ function MenuAccuracyTab() {
 
   useEffect(() => {
     runComparison();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const groupedByDate = useMemo(() => {
@@ -300,143 +395,164 @@ function MenuAccuracyTab() {
     }, {});
   }, [report]);
 
+  const PREVIEW_LIMIT = 3;
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+    <div className="space-y-8">
+      {/* Header + Run */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between border-b border-theme-text-primary/10 pb-6">
         <div>
-          <h2 className="text-2xl font-bold">Menu Accuracy</h2>
-          <p className="text-theme-text-tertiary">Compare site data to Purdue menus (API + snapshots)</p>
+          <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary">Menu Accuracy</h2>
+          <p className="text-xs text-theme-text-tertiary/60 mt-1">Compare site data to Purdue menus</p>
         </div>
         <button
           onClick={runComparison}
           disabled={loading}
-          className="px-4 py-2 rounded-xl bg-green-500 text-slate-900 font-semibold hover:bg-green-600 transition-colors disabled:opacity-60"
+          className="px-4 py-2 border border-theme-text-primary/30 bg-theme-text-primary text-theme-bg-primary font-bold uppercase tracking-widest text-xs hover:bg-theme-text-secondary transition-colors disabled:opacity-40"
         >
           {loading ? 'Running...' : 'Run Comparison'}
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="p-4 rounded-xl bg-theme-bg-secondary border border-theme-border-primary">
-          <label className="block text-sm text-theme-text-tertiary mb-2">Start date</label>
+      {/* Date Range + Summary */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-theme-text-primary/10 border border-theme-text-primary/10">
+        <div className="bg-theme-bg-primary p-4 space-y-2">
+          <label className="text-[10px] uppercase tracking-widest text-theme-text-tertiary block">Start Date</label>
           <input
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-theme-border-primary bg-theme-bg-tertiary"
+            className="w-full border border-theme-text-primary/20 bg-transparent text-theme-text-primary px-3 py-2 text-sm font-mono focus:outline-none focus:border-theme-text-primary/50 transition-colors"
           />
         </div>
-        <div className="p-4 rounded-xl bg-theme-bg-secondary border border-theme-border-primary">
-          <label className="block text-sm text-theme-text-tertiary mb-2">End date</label>
+        <div className="bg-theme-bg-primary p-4 space-y-2">
+          <label className="text-[10px] uppercase tracking-widest text-theme-text-tertiary block">End Date</label>
           <input
             type="date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-theme-border-primary bg-theme-bg-tertiary"
+            className="w-full border border-theme-text-primary/20 bg-transparent text-theme-text-primary px-3 py-2 text-sm font-mono focus:outline-none focus:border-theme-text-primary/50 transition-colors"
           />
         </div>
-        <div className="p-4 rounded-xl bg-theme-bg-secondary border border-theme-border-primary">
-          <label className="block text-sm text-theme-text-tertiary mb-2">Summary</label>
+        <div className="bg-theme-bg-primary p-4 space-y-2">
+          <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary">Summary</div>
           {report?.summary ? (
-            <div className="text-sm space-y-1">
-              <div>Missing: <span className="font-semibold">{report.summary.total_missing}</span></div>
-              <div>Extra: <span className="font-semibold">{report.summary.total_extra}</span></div>
-              <div>Nutrition mismatches: <span className="font-semibold">{report.summary.total_nutrition_mismatches}</span></div>
+            <div className="divide-y divide-theme-text-primary/5">
+              {[
+                { label: 'Missing', value: report.summary.total_missing },
+                { label: 'Extra', value: report.summary.total_extra },
+                { label: 'Nutrition mismatches', value: report.summary.total_nutrition_mismatches },
+              ].map(s => (
+                <div key={s.label} className="flex justify-between py-1.5">
+                  <span className="text-xs text-theme-text-tertiary">{s.label}</span>
+                  <span className="text-xs font-bold tabular-nums">{s.value}</span>
+                </div>
+              ))}
             </div>
           ) : (
-            <div className="text-sm text-theme-text-tertiary">Run comparison to see results</div>
+            <div className="text-xs text-theme-text-tertiary/50 pt-2">Run comparison to see results</div>
           )}
         </div>
       </div>
 
       {error && (
-        <div className="p-4 rounded-xl bg-red-500/10 border border-red-500 text-red-400">
-          {error}
+        <div className="border border-theme-text-primary/30 px-4 py-3 text-xs text-theme-text-secondary">
+          Error: {error}
         </div>
       )}
 
-      {!report && !loading && !error && (
-        <div className="text-center py-10 text-theme-text-tertiary">No report available</div>
+      {loading && (
+        <div className="text-xs uppercase tracking-widest text-theme-text-tertiary py-6">Running comparison...</div>
       )}
 
-      {report && (
+      {!report && !loading && !error && (
+        <div className="text-xs text-theme-text-tertiary py-6">No report available. Click Run Comparison to start.</div>
+      )}
+
+      {report && !loading && (
         <div className="space-y-6">
           {Object.keys(groupedByDate).sort().map(date => (
-            <div key={date} className="p-4 rounded-2xl bg-theme-bg-secondary border border-theme-border-primary">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold">{date}</h3>
-                <span className="text-xs text-theme-text-tertiary">Range source: {report.range?.start} → {report.range?.end}</span>
+            <div key={date} className="space-y-2">
+              <div className="flex items-center justify-between border-b border-theme-text-primary/10 pb-2">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-theme-text-secondary">{date}</h3>
+                <span className="text-[10px] text-theme-text-tertiary/50">
+                  {report.range?.start} &rarr; {report.range?.end}
+                </span>
               </div>
-              <div className="space-y-3">
+              <div className="border border-theme-text-primary/10 divide-y divide-theme-text-primary/5">
                 {groupedByDate[date].map((item, idx) => {
-                  const hasMismatches = item.status === 'open' && (item.missing_count > 0 || item.extra_count > 0 || item.nutrition_mismatch_count > 0);
-                  const borderColor = hasMismatches ? 'border-red-500/50' : 'border-theme-border-primary';
                   const itemKey = `${date}-${item.court_code}-${idx}`;
                   const isExpanded = expandedItems.has(itemKey);
-                  const PREVIEW_LIMIT = 3;
-                  
+                  const hasMismatches = item.status === 'open' && (item.missing_count > 0 || item.extra_count > 0 || item.nutrition_mismatch_count > 0);
+
                   return (
-                  <div key={`${item.court_code}-${idx}`} className={`p-3 rounded-xl bg-theme-bg-primary border ${borderColor}`}>
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div className="font-semibold">{item.display_name}</div>
-                      <div className="text-xs text-theme-text-tertiary">Source: {item.source}</div>
+                    <div key={`${item.court_code}-${idx}`} className={`px-4 py-3 ${hasMismatches ? 'bg-theme-text-primary/[0.02]' : ''}`}>
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="text-xs font-bold uppercase tracking-wider">{item.display_name}</span>
+                        <span className="text-[10px] text-theme-text-tertiary/50 uppercase tracking-wider">src: {item.source}</span>
+                      </div>
+
+                      {item.status !== 'open' ? (
+                        <div className="text-[10px] text-theme-text-tertiary mt-1">
+                          {item.status === 'closed' ? `Closed — ${item.reason}` : `Error — ${item.error}`}
+                        </div>
+                      ) : (
+                        <div className="flex flex-wrap gap-4 mt-1 text-[10px] font-mono text-theme-text-tertiary">
+                          <span>Coverage <span className="font-bold text-theme-text-primary">{item.coverage_percent}%</span></span>
+                          <span>API <span className="font-bold">{item.api_count}</span></span>
+                          <span>DB <span className="font-bold">{item.db_count}</span></span>
+                          <span>Missing <span className={`font-bold ${item.missing_count > 0 ? 'text-theme-text-primary' : 'text-theme-text-tertiary/50'}`}>{item.missing_count}</span></span>
+                          <span>Extra <span className={`font-bold ${item.extra_count > 0 ? 'text-theme-text-primary' : 'text-theme-text-tertiary/50'}`}>{item.extra_count}</span></span>
+                          <span>Nutrition <span className="font-bold">{item.nutrition_mismatch_count}</span></span>
+                        </div>
+                      )}
+
+                      {item.missing?.length > 0 && (
+                        <div className="mt-2 space-y-0.5">
+                          <div className="text-[10px] uppercase tracking-wider text-theme-text-tertiary">Missing in DB ({item.missing_count})</div>
+                          <div className="text-[10px] text-theme-text-secondary space-y-0.5 pl-2 border-l border-theme-text-primary/20">
+                            {(isExpanded ? item.missing : item.missing.slice(0, PREVIEW_LIMIT)).map((m, i) => (
+                              <div key={i}>{m}</div>
+                            ))}
+                            {item.missing.length > PREVIEW_LIMIT && (
+                              <button
+                                onClick={() => {
+                                  const s = new Set(expandedItems);
+                                  isExpanded ? s.delete(itemKey) : s.add(itemKey);
+                                  setExpandedItems(s);
+                                }}
+                                className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors underline"
+                              >
+                                {isExpanded ? 'Show less' : `+${item.missing.length - PREVIEW_LIMIT} more`}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {item.extra?.length > 0 && (
+                        <div className="mt-2 space-y-0.5">
+                          <div className="text-[10px] uppercase tracking-wider text-theme-text-tertiary">Extra in DB ({item.extra_count})</div>
+                          <div className="text-[10px] text-theme-text-secondary space-y-0.5 pl-2 border-l border-theme-text-primary/20">
+                            {(isExpanded ? item.extra : item.extra.slice(0, PREVIEW_LIMIT)).map((e, i) => (
+                              <div key={i}>{e}</div>
+                            ))}
+                            {item.extra.length > PREVIEW_LIMIT && (
+                              <button
+                                onClick={() => {
+                                  const s = new Set(expandedItems);
+                                  isExpanded ? s.delete(itemKey) : s.add(itemKey);
+                                  setExpandedItems(s);
+                                }}
+                                className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors underline"
+                              >
+                                {isExpanded ? 'Show less' : `+${item.extra.length - PREVIEW_LIMIT} more`}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    {item.status !== 'open' ? (
-                      <div className="text-sm text-theme-text-tertiary mt-1">
-                        {item.status === 'closed' ? `Closed: ${item.reason}` : `Error: ${item.error}`}
-                      </div>
-                    ) : (
-                      <div className="text-sm text-theme-text-tertiary mt-1">
-                        Coverage: <span className={`font-semibold ${item.coverage_percent === 100 ? 'text-green-400' : 'text-yellow-400'}`}>{item.coverage_percent}%</span> • API {item.api_count} • DB {item.db_count} • <span className={item.missing_count > 0 ? 'text-red-400 font-semibold' : ''}>Missing {item.missing_count}</span> • <span className={item.extra_count > 0 ? 'text-yellow-400 font-semibold' : ''}>Extra {item.extra_count}</span> • Nutrition {item.nutrition_mismatch_count}
-                      </div>
-                    )}
-                    {item.missing?.length > 0 && (
-                      <div className="mt-2">
-                        <div className="text-xs font-semibold text-red-400 mb-1">Missing in DB ({item.missing_count}):</div>
-                        <div className="text-xs text-red-400/80 space-y-0.5">
-                          {(isExpanded ? item.missing : item.missing.slice(0, PREVIEW_LIMIT)).map((missingItem, i) => (
-                            <div key={i}>• {missingItem}</div>
-                          ))}
-                          {item.missing.length > PREVIEW_LIMIT && (
-                            <button
-                              onClick={() => {
-                                const newSet = new Set(expandedItems);
-                                if (isExpanded) newSet.delete(itemKey);
-                                else newSet.add(itemKey);
-                                setExpandedItems(newSet);
-                              }}
-                              className="text-red-300 hover:text-red-200 underline"
-                            >
-                              {isExpanded ? '▲ Show less' : `▼ Show ${item.missing.length - PREVIEW_LIMIT} more`}
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                    {item.extra?.length > 0 && (
-                      <div className="mt-2">
-                        <div className="text-xs font-semibold text-yellow-400 mb-1">Extra in DB ({item.extra_count}):</div>
-                        <div className="text-xs text-yellow-300/80 space-y-0.5">
-                          {(isExpanded ? item.extra : item.extra.slice(0, PREVIEW_LIMIT)).map((extraItem, i) => (
-                            <div key={i}>• {extraItem}</div>
-                          ))}
-                          {item.extra.length > PREVIEW_LIMIT && (
-                            <button
-                              onClick={() => {
-                                const newSet = new Set(expandedItems);
-                                if (isExpanded) newSet.delete(itemKey);
-                                else newSet.add(itemKey);
-                                setExpandedItems(newSet);
-                              }}
-                              className="text-yellow-300 hover:text-yellow-200 underline"
-                            >
-                              {isExpanded ? '▲ Show less' : `▼ Show ${item.extra.length - PREVIEW_LIMIT} more`}
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
                   );
                 })}
               </div>
@@ -448,128 +564,7 @@ function MenuAccuracyTab() {
   );
 }
 
-// Stats Tab Component
-function StatsTab() {
-  const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadStats() {
-      try {
-        const [foods, activities] = await Promise.all([
-          apiCall('/api/foods'),
-          apiCall('/api/activities')
-        ]);
-
-        const foodStats = {
-          total: foods?.length || 0,
-          diningCourts: [...new Set(foods?.map(f => f.dining_court).filter(Boolean))].length,
-          avgCalories: foods?.length ? Math.round(foods.reduce((sum, f) => sum + (f.calories || 0), 0) / foods.length) : 0,
-        };
-
-        const activityStats = {
-          total: activities?.length || 0,
-          categories: [...new Set(activities?.map(a => a.category).filter(Boolean))].length,
-          avgCalories: activities?.length ? Math.round(activities.reduce((sum, a) => sum + (a.calories_per_hour || 0), 0) / activities.length) : 0,
-        };
-
-        setStats({ foods: foodStats, activities: activityStats });
-      } catch (error) {
-        console.error('Failed to load stats:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadStats();
-  }, []);
-
-  if (loading) {
-    return <div className="text-center py-12">Loading statistics...</div>;
-  }
-
-  if (!stats) {
-    return <div className="text-center py-12 text-theme-text-tertiary">Failed to load statistics</div>;
-  }
-
-  return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Database Statistics</h2>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Food Stats */}
-        <div className="p-6 rounded-2xl bg-theme-bg-secondary border border-theme-border-primary card-glow glow-yellow">
-          <div className="flex items-center gap-3 mb-6">
-            <span className="text-4xl">🍽️</span>
-            <h3 className="text-xl font-bold">Food Database</h3>
-          </div>
-          <div className="space-y-4">
-            <StatItem label="Total Foods" value={stats.foods.total} />
-            <StatItem label="Dining Courts" value={stats.foods.diningCourts} />
-            <StatItem label="Avg Calories" value={`${stats.foods.avgCalories} cal`} />
-          </div>
-        </div>
-
-        {/* Activity Stats */}
-        <div className="p-6 rounded-2xl bg-theme-bg-secondary border border-theme-border-primary card-glow glow-orange">
-          <div className="flex items-center gap-3 mb-6">
-            <span className="text-4xl">💪</span>
-            <h3 className="text-xl font-bold">Exercise Database</h3>
-          </div>
-          <div className="space-y-4">
-            <StatItem label="Total Exercises" value={stats.activities.total} />
-            <StatItem label="Categories" value={stats.activities.categories} />
-            <StatItem label="Avg Calories/hr" value={`${stats.activities.avgCalories} cal`} />
-          </div>
-        </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
-        <Link
-          href="/admin-scraper"
-          className="p-6 rounded-2xl bg-blue-500/10 border border-blue-500/30 hover:border-blue-500 transition-colors group card-glow glow-blue"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <h4 className="font-bold text-lg mb-1">🔄 Scrape Menus</h4>
-              <p className="text-sm text-theme-text-tertiary">Import dining hall menus</p>
-            </div>
-            <svg className="w-6 h-6 text-theme-text-tertiary group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </div>
-        </Link>
-
-        <Link
-          href="/settings"
-          className="p-6 rounded-2xl bg-purple-500/10 border border-purple-500/30 hover:border-purple-500 transition-colors group card-glow glow-purple"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <h4 className="font-bold text-lg mb-1">⚙️ Settings</h4>
-              <p className="text-sm text-theme-text-tertiary">Configure app settings</p>
-            </div>
-            <svg className="w-6 h-6 text-theme-text-tertiary group-hover:text-purple-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </div>
-        </Link>
-      </div>
-    </div>
-  );
-}
-
-function StatItem({ label, value }) {
-  return (
-    <div className="flex items-center justify-between p-3 rounded-xl bg-theme-bg-primary">
-      <span className="text-theme-text-secondary">{label}</span>
-      <span className="text-xl font-bold text-theme-text-primary">{value}</span>
-    </div>
-  );
-}
-
-// Foods Tab Component
+// ── Foods Tab ──
 function FoodsTab() {
   const [foods, setFoods] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -577,9 +572,7 @@ function FoodsTab() {
   const [currentPage, setCurrentPage] = useState(1);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    loadFoods();
-  }, []);
+  useEffect(() => { loadFoods(); }, []);
 
   async function loadFoods() {
     try {
@@ -596,7 +589,6 @@ function FoodsTab() {
 
   async function handleDelete(id, name) {
     if (!window.confirm(`Delete "${name}"?`)) return;
-
     try {
       await deleteFood(id);
       await loadFoods();
@@ -605,103 +597,90 @@ function FoodsTab() {
     }
   }
 
-  const filteredFoods = useMemo(() => {
-    return foods.filter(f =>
-      f.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      f.dining_court?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [foods, searchTerm]);
+  const filteredFoods = useMemo(() => foods.filter(f =>
+    f.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    f.dining_court?.toLowerCase().includes(searchTerm.toLowerCase())
+  ), [foods, searchTerm]);
 
+  const totalPages = Math.ceil(filteredFoods.length / ITEMS_PER_PAGE);
   const paginatedFoods = useMemo(() => {
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
     return filteredFoods.slice(start, start + ITEMS_PER_PAGE);
   }, [filteredFoods, currentPage]);
 
-  const totalPages = Math.ceil(filteredFoods.length / ITEMS_PER_PAGE);
-
   if (loading) {
-    return <div className="text-center py-12">Loading foods...</div>;
+    return <div className="text-xs uppercase tracking-widest text-theme-text-tertiary py-12">Loading...</div>;
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Food Database ({filteredFoods.length})</h2>
+      <div className="flex items-center justify-between border-b border-theme-text-primary/10 pb-4">
+        <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary">
+          Food Database <span className="font-normal">({filteredFoods.length.toLocaleString()})</span>
+        </h2>
         <Link
           href="/admin-scraper"
-          className="px-4 py-2 rounded-xl bg-blue-500 text-slate-900 font-semibold hover:bg-blue-600 transition-colors"
+          className="text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors border-b border-theme-text-primary/20"
         >
           + Add Food
         </Link>
       </div>
 
       {error && (
-        <div className="p-4 rounded-xl bg-red-500/10 border border-red-500 text-red-400">
+        <div className="border border-theme-text-primary/30 px-4 py-3 text-xs text-theme-text-secondary">
           {error}
         </div>
       )}
 
       {/* Search */}
-      <input
-        type="text"
-        placeholder="Search foods..."
-        value={searchTerm}
-        onChange={(e) => {
-          setSearchTerm(e.target.value);
-          setCurrentPage(1);
-        }}
-        className="w-full px-4 py-3 rounded-xl border border-theme-border-primary bg-theme-bg-tertiary focus:outline-none focus:ring-2 focus:ring-yellow-500"
-      />
+      <div className="relative">
+        <input
+          type="text"
+          placeholder="Search by name or dining court..."
+          value={searchTerm}
+          onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+          className="w-full border border-theme-text-primary/20 bg-transparent text-theme-text-primary px-3 py-2 text-sm font-mono placeholder:text-theme-text-tertiary/50 focus:outline-none focus:border-theme-text-primary/50 transition-colors pl-8"
+        />
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="absolute left-2.5 top-1/2 -translate-y-1/2 text-theme-text-tertiary">
+          <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+      </div>
 
-      {/* Foods List */}
-      <div className="space-y-2">
-        {paginatedFoods.map(food => {
-          const nextAvailable = food.next_available || [];
-          const upcoming = nextAvailable.slice(0, 7); // Show up to next 7 occurrences
-
+      {/* Foods list */}
+      <div className="border border-theme-text-primary/10 divide-y divide-theme-text-primary/5">
+        {paginatedFoods.length === 0 ? (
+          <div className="px-4 py-6 text-xs text-theme-text-tertiary text-center">
+            {searchTerm ? `No foods matching "${searchTerm}"` : 'No foods found'}
+          </div>
+        ) : paginatedFoods.map(food => {
+          const upcoming = (food.next_available || []).slice(0, 7);
           return (
-            <div
-              key={food.id}
-              className="p-4 rounded-xl bg-theme-bg-secondary border border-theme-border-primary hover:border-yellow-500 transition-colors card-glow"
-            >
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex-1">
-                  <h3 className="font-bold">{food.name}</h3>
-                  <p className="text-sm text-theme-text-tertiary">
-                    {food.calories} cal • {food.dining_court} • {food.meal_time}
+            <div key={food.id} className="px-4 py-3 hover:bg-theme-bg-secondary transition-colors">
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-bold truncate">{food.name}</p>
+                  <p className="text-[10px] text-theme-text-tertiary mt-0.5">
+                    {food.calories} cal &middot; {food.dining_court} &middot; {food.meal_time}
                   </p>
                   {upcoming.length > 0 && (
-                    <div className="mt-2 text-xs text-purple-400">
-                      <span className="font-semibold">📅 Next 7 days: </span>
+                    <p className="text-[10px] text-theme-text-tertiary/60 mt-0.5">
                       {upcoming.map((slot, idx) => {
                         const date = new Date(slot.date);
                         const today = new Date();
                         const tomorrow = new Date(today);
                         tomorrow.setDate(tomorrow.getDate() + 1);
-
-                        let dayLabel;
-                        if (date.toDateString() === today.toDateString()) {
-                          dayLabel = 'Today';
-                        } else if (date.toDateString() === tomorrow.toDateString()) {
-                          dayLabel = 'Tomorrow';
-                        } else {
-                          dayLabel = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-                        }
-
-                        return (
-                          <span key={idx} className="inline-block mr-2">
-                            {dayLabel} ({slot.meal_time})
-                            {idx < upcoming.length - 1 && ', '}
-                          </span>
-                        );
+                        let label;
+                        if (date.toDateString() === today.toDateString()) label = 'Today';
+                        else if (date.toDateString() === tomorrow.toDateString()) label = 'Tomorrow';
+                        else label = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                        return `${label} (${slot.meal_time})${idx < upcoming.length - 1 ? ', ' : ''}`;
                       })}
-                    </div>
+                    </p>
                   )}
                 </div>
                 <button
                   onClick={() => handleDelete(food.id, food.name)}
-                  className="px-3 py-1 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors text-sm whitespace-nowrap"
+                  className="text-[10px] uppercase tracking-wider text-theme-text-tertiary/40 hover:text-theme-text-primary transition-colors shrink-0 pt-0.5"
                 >
                   Delete
                 </button>
@@ -713,23 +692,21 @@ function FoodsTab() {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2">
+        <div className="flex items-center justify-center gap-6 text-xs uppercase tracking-wider">
           <button
             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
             disabled={currentPage === 1}
-            className="px-4 py-2 rounded-lg bg-theme-bg-tertiary disabled:opacity-50"
+            className="text-theme-text-tertiary hover:text-theme-text-primary disabled:opacity-30 transition-colors"
           >
-            ← Prev
+            &larr; Prev
           </button>
-          <span className="text-theme-text-secondary">
-            Page {currentPage} of {totalPages}
-          </span>
+          <span className="text-theme-text-tertiary">{currentPage} / {totalPages}</span>
           <button
             onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
-            className="px-4 py-2 rounded-lg bg-theme-bg-tertiary disabled:opacity-50"
+            className="text-theme-text-tertiary hover:text-theme-text-primary disabled:opacity-30 transition-colors"
           >
-            Next →
+            Next &rarr;
           </button>
         </div>
       )}
@@ -737,7 +714,7 @@ function FoodsTab() {
   );
 }
 
-// Exercises Tab Component
+// ── Exercises Tab ──
 function ExercisesTab() {
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -746,9 +723,7 @@ function ExercisesTab() {
   const [filterCategory, setFilterCategory] = useState('all');
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    loadActivities();
-  }, []);
+  useEffect(() => { loadActivities(); }, []);
 
   async function loadActivities() {
     try {
@@ -765,7 +740,6 @@ function ExercisesTab() {
 
   async function handleDelete(id, name) {
     if (!window.confirm(`Delete "${name}"?`)) return;
-
     try {
       await deleteActivity(id);
       await loadActivities();
@@ -774,65 +748,62 @@ function ExercisesTab() {
     }
   }
 
-  const filteredActivities = useMemo(() => {
-    return activities.filter(a => {
-      const matchesSearch = a.name.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory = filterCategory === 'all' || a.category === filterCategory;
-      return matchesSearch && matchesCategory;
-    });
-  }, [activities, searchTerm, filterCategory]);
+  const filteredActivities = useMemo(() => activities.filter(a => {
+    const matchesSearch = a.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = filterCategory === 'all' || a.category === filterCategory;
+    return matchesSearch && matchesCategory;
+  }), [activities, searchTerm, filterCategory]);
 
+  const totalPages = Math.ceil(filteredActivities.length / ITEMS_PER_PAGE);
   const paginatedActivities = useMemo(() => {
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
     return filteredActivities.slice(start, start + ITEMS_PER_PAGE);
   }, [filteredActivities, currentPage]);
 
-  const totalPages = Math.ceil(filteredActivities.length / ITEMS_PER_PAGE);
-
   if (loading) {
-    return <div className="text-center py-12">Loading exercises...</div>;
+    return <div className="text-xs uppercase tracking-widest text-theme-text-tertiary py-12">Loading...</div>;
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Exercise Database ({filteredActivities.length})</h2>
+      <div className="flex items-center justify-between border-b border-theme-text-primary/10 pb-4">
+        <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary">
+          Exercise Database <span className="font-normal">({filteredActivities.length})</span>
+        </h2>
         <Link
           href="/admin-exercises"
-          className="px-4 py-2 rounded-xl bg-orange-500 text-slate-900 font-semibold hover:bg-orange-600 transition-colors"
+          className="text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors border-b border-theme-text-primary/20"
         >
           + Add Exercise
         </Link>
       </div>
 
       {error && (
-        <div className="p-4 rounded-xl bg-red-500/10 border border-red-500 text-red-400">
+        <div className="border border-theme-text-primary/30 px-4 py-3 text-xs text-theme-text-secondary">
           {error}
         </div>
       )}
 
       {/* Filters */}
-      <div className="flex gap-4">
-        <input
-          type="text"
-          placeholder="Search exercises..."
-          value={searchTerm}
-          onChange={(e) => {
-            setSearchTerm(e.target.value);
-            setCurrentPage(1);
-          }}
-          className="flex-1 px-4 py-3 rounded-xl border border-theme-border-primary bg-theme-bg-tertiary focus:outline-none focus:ring-2 focus:ring-yellow-500"
-        />
+      <div className="flex gap-3">
+        <div className="relative flex-1">
+          <input
+            type="text"
+            placeholder="Search exercises..."
+            value={searchTerm}
+            onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+            className="w-full border border-theme-text-primary/20 bg-transparent text-theme-text-primary px-3 py-2 text-sm font-mono placeholder:text-theme-text-tertiary/50 focus:outline-none focus:border-theme-text-primary/50 transition-colors pl-8"
+          />
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="absolute left-2.5 top-1/2 -translate-y-1/2 text-theme-text-tertiary">
+            <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+        </div>
         <select
           value={filterCategory}
-          onChange={(e) => {
-            setFilterCategory(e.target.value);
-            setCurrentPage(1);
-          }}
-          className="px-4 py-3 rounded-xl border border-theme-border-primary bg-theme-bg-tertiary"
+          onChange={(e) => { setFilterCategory(e.target.value); setCurrentPage(1); }}
+          className="border border-theme-text-primary/20 bg-theme-bg-primary text-theme-text-primary px-3 py-2 text-xs font-mono focus:outline-none focus:border-theme-text-primary/50 transition-colors"
         >
-          <option value="all">All Categories</option>
+          <option value="all">All</option>
           <option value="cardio">Cardio</option>
           <option value="strength">Strength</option>
           <option value="flexibility">Flexibility</option>
@@ -841,53 +812,52 @@ function ExercisesTab() {
         </select>
       </div>
 
-      {/* Exercises List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {paginatedActivities.map(activity => (
-          <div
-            key={activity.id}
-            className="p-4 rounded-xl bg-theme-bg-secondary border border-theme-border-primary hover:border-orange-500 transition-colors card-glow glow-orange"
-          >
-            <div className="flex items-start justify-between mb-2">
-              <div className="flex-1">
-                <h3 className="font-bold text-lg">{activity.name}</h3>
-                <p className="text-sm text-theme-text-tertiary">
-                  {activity.calories_per_hour} cal/hr • {activity.category || 'other'} • {activity.intensity || 'moderate'}
+      {/* Exercises list */}
+      <div className="border border-theme-text-primary/10 divide-y divide-theme-text-primary/5">
+        {paginatedActivities.length === 0 ? (
+          <div className="px-4 py-6 text-xs text-theme-text-tertiary text-center">
+            {searchTerm ? `No exercises matching "${searchTerm}"` : 'No exercises found'}
+          </div>
+        ) : paginatedActivities.map(activity => (
+          <div key={activity.id} className="px-4 py-3 hover:bg-theme-bg-secondary transition-colors">
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-bold truncate">{activity.name}</p>
+                <p className="text-[10px] text-theme-text-tertiary mt-0.5">
+                  {activity.calories_per_hour} cal/hr &middot; {activity.category || 'other'} &middot; {activity.intensity || 'moderate'}
                 </p>
+                {activity.description && (
+                  <p className="text-[10px] text-theme-text-tertiary/60 mt-0.5 truncate">{activity.description}</p>
+                )}
               </div>
               <button
                 onClick={() => handleDelete(activity.id, activity.name)}
-                className="px-3 py-1 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors text-sm"
+                className="text-[10px] uppercase tracking-wider text-theme-text-tertiary/40 hover:text-theme-text-primary transition-colors shrink-0 pt-0.5"
               >
                 Delete
               </button>
             </div>
-            {activity.description && (
-              <p className="text-xs text-theme-text-tertiary mt-2">{activity.description}</p>
-            )}
           </div>
         ))}
       </div>
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2">
+        <div className="flex items-center justify-center gap-6 text-xs uppercase tracking-wider">
           <button
             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
             disabled={currentPage === 1}
-            className="px-4 py-2 rounded-lg bg-theme-bg-tertiary disabled:opacity-50"
+            className="text-theme-text-tertiary hover:text-theme-text-primary disabled:opacity-30 transition-colors"
           >
-            ← Prev
+            &larr; Prev
           </button>
-          <span className="text-theme-text-secondary">
-            Page {currentPage} of {totalPages}
-          </span>
+          <span className="text-theme-text-tertiary">{currentPage} / {totalPages}</span>
           <button
             onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
-            className="px-4 py-2 rounded-lg bg-theme-bg-tertiary disabled:opacity-50"
+            className="text-theme-text-tertiary hover:text-theme-text-primary disabled:opacity-30 transition-colors"
           >
-            Next →
+            Next &rarr;
           </button>
         </div>
       )}
