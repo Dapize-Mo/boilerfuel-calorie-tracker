@@ -80,7 +80,7 @@ function CalendarPicker({ value, onChange, compact = false, hideIcon = false }) 
         )}
       </button>
       {open && (
-        <div className="absolute z-50 mt-1 left-0 w-72 max-w-[calc(100vw-2rem)] border border-theme-text-primary bg-theme-bg-primary shadow-lg">
+        <div className="absolute z-50 mt-1 left-0 w-72 max-w-[calc(100vw-2rem)] border border-theme-text-primary bg-theme-bg-primary">
           <div className="flex items-center justify-between p-3 border-b border-theme-text-primary/20">
             <button type="button" onClick={prevMonth} className="px-2 py-1 hover:bg-theme-bg-hover text-theme-text-primary font-bold">&lt;</button>
             <span className="font-bold text-sm uppercase tracking-wider">{monthNames[viewMonth]} {viewYear}</span>
@@ -187,7 +187,7 @@ function LocationDropdown({ value, onChange, availableLocations, retailLocations
       </button>
 
       {open && (
-        <div className="absolute z-50 mt-1 left-0 w-72 max-w-[calc(100vw-2rem)] overflow-y-auto border border-theme-text-primary bg-theme-bg-primary shadow-lg"
+        <div className="absolute z-50 mt-1 left-0 w-72 max-w-[calc(100vw-2rem)] overflow-y-auto border border-theme-text-primary bg-theme-bg-primary"
           style={{ animation: `fadeInTooltip 0.15s ${EASE} both`, maxHeight: dropdownMaxH }}>
           {/* All Locations */}
           <button type="button" onClick={() => select({ type: 'all', value: 'All' })}
@@ -350,7 +350,7 @@ function MacroTooltip({ food, pos }) {
       animation: `fadeInTooltip 0.15s ${EASE} both`,
       pointerEvents: 'none',
     }}
-      className="bg-theme-bg-secondary border border-theme-text-primary/20 shadow-xl px-4 py-3 font-mono text-xs">
+      className="bg-theme-bg-secondary border border-theme-text-primary/20 px-4 py-3 font-mono text-xs">
       <div className="font-bold text-theme-text-primary mb-2 text-sm">{food.name}</div>
       <div className="grid grid-cols-2 gap-x-6 gap-y-1">
         <span className="text-theme-text-tertiary">Calories</span>
@@ -1122,7 +1122,7 @@ export default function Home() {
           </svg>
         </div>
         {showProfileTooltip && (
-          <div className="absolute right-0 top-full mt-1.5 w-44 border border-theme-text-primary/20 bg-theme-bg-secondary shadow-lg p-3 font-mono pointer-events-none"
+          <div className="absolute right-0 top-full mt-1.5 w-44 border border-theme-text-primary/20 bg-theme-bg-secondary p-3 font-mono pointer-events-none"
             style={{ animation: `fadeInTooltip 0.15s ${EASE} both` }}>
             <div className="text-[9px] uppercase tracking-widest text-theme-text-tertiary mb-2">{dateLabel}</div>
             {selectedDateTotals.calories > 0 ? (
@@ -2005,7 +2005,7 @@ export default function Home() {
         <div className="fixed inset-0 z-[200] flex items-center justify-center"
           onClick={() => setMealPickerFood(null)}>
           <div className="absolute inset-0 bg-black/50" />
-          <div className="relative bg-theme-bg-primary border border-theme-text-primary shadow-2xl max-w-xs w-full mx-4"
+          <div className="relative bg-theme-bg-primary border border-theme-text-primary max-w-xs w-full mx-4"
             onClick={(e) => e.stopPropagation()}
             style={{ animation: `fadeInTooltip 0.15s ${EASE} both` }}>
             <div className="px-5 py-4 border-b border-theme-text-primary/20">
@@ -2044,7 +2044,7 @@ export default function Home() {
           <div className="fixed inset-0 z-[200] flex items-center justify-center"
             onClick={() => setInfoFood(null)}>
             <div className="absolute inset-0 bg-black/50" />
-            <div className="relative bg-theme-bg-primary border border-theme-text-primary shadow-2xl max-w-lg w-full mx-4 max-h-[80vh] flex flex-col"
+            <div className="relative bg-theme-bg-primary border border-theme-text-primary max-w-lg w-full mx-4 max-h-[80vh] flex flex-col"
               onClick={(e) => e.stopPropagation()}
               style={{ animation: `fadeInTooltip 0.15s ${EASE} both` }}>
               {/* Header */}
