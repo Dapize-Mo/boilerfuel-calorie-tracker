@@ -1917,6 +1917,8 @@ export default function Home() {
             <div className="flex gap-4 text-xs font-mono">
               <Link href="/about" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">About</Link>
               <span className="text-theme-text-tertiary/20">&middot;</span>
+              <Link href="/custom-foods" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Custom Foods</Link>
+              <span className="text-theme-text-tertiary/20">&middot;</span>
               <Link href="/changelog" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Changelog</Link>
               <span className="text-theme-text-tertiary/20">&middot;</span>
               <Link href="/admin" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Admin</Link>
