@@ -35,9 +35,14 @@ export default function NotificationManager() {
     const todayMeals = (mealsByDate[today] || []).length;
     const streak = computeStreak(mealsByDate);
 
-    // ── Streak reminder: past 8pm, has active streak, nothing logged today ──
+    // Read user-configured times (fall back to defaults)
+    const streakHour = parseInt(localStorage.getItem('boilerfuel_notif_streak_hour') || '20', 10);
+    const lunchHour = parseInt(localStorage.getItem('boilerfuel_notif_lunch_hour') || '12', 10);
+    const dinnerHour = parseInt(localStorage.getItem('boilerfuel_notif_dinner_hour') || '18', 10);
+
+    // ── Streak reminder: at configured hour, has active streak, nothing logged today ──
     const streakKey = `boilerfuel_notif_streak_${today}`;
-    if (streak >= 1 && todayMeals === 0 && hour >= 20 && !localStorage.getItem(streakKey)) {
+    if (streak >= 1 && todayMeals === 0 && hour >= streakHour && !localStorage.getItem(streakKey)) {
       localStorage.setItem(streakKey, '1');
       new Notification('BoilerFuel — Streak at risk!', {
         body: `You have a ${streak}-day streak. Log today's meals to keep it alive! 🔥`,
@@ -51,8 +56,8 @@ export default function NotificationManager() {
     // ── Meal reminders (only if enabled in profile settings) ──
     if (localStorage.getItem('boilerfuel_notif_meal') !== '1') return;
 
-    // Lunch reminder: noon–1pm with nothing logged yet
-    if (todayMeals === 0 && hour >= 12 && hour < 13) {
+    // Lunch reminder: at configured hour, nothing logged yet
+    if (todayMeals === 0 && hour >= lunchHour && hour < lunchHour + 1) {
       const key = `boilerfuel_notif_lunch_${today}`;
       if (!localStorage.getItem(key)) {
         localStorage.setItem(key, '1');
@@ -65,8 +70,8 @@ export default function NotificationManager() {
       return;
     }
 
-    // Dinner reminder: 6pm–7pm
-    if (hour >= 18 && hour < 19) {
+    // Dinner reminder: at configured hour
+    if (hour >= dinnerHour && hour < dinnerHour + 1) {
       const key = `boilerfuel_notif_dinner_${today}`;
       if (!localStorage.getItem(key)) {
         localStorage.setItem(key, '1');

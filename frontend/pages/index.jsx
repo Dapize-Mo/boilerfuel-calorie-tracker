@@ -747,17 +747,6 @@ export default function Home() {
 
   // ── Get collection components for a food item ──
   // Uses macros.components from the database (scraped via GraphQL v3 API)
-  // Falls back to station-based grouping if no component data available
-  const stationItemsMap = useMemo(() => {
-    const map = new Map();
-    for (const f of regularFoods) {
-      const key = `${(f.dining_court || '').toLowerCase()}|${(f.station || '').toLowerCase()}`;
-      if (!map.has(key)) map.set(key, []);
-      map.get(key).push(f);
-    }
-    return map;
-  }, [regularFoods]);
-
   function getCollectionComponents(food) {
     const macros = food.macros || {};
     // Prefer component data from the database (scraped via GraphQL)
@@ -788,10 +777,8 @@ export default function Home() {
         meal_time: food.meal_time,
       }));
     }
-    // Fallback: group by station (other items with nutrition in same station)
-    const key = `${(food.dining_court || '').toLowerCase()}|${(food.station || '').toLowerCase()}`;
-    const items = stationItemsMap.get(key) || [];
-    return items.filter(f => f.id !== food.id && (f.calories > 0 || f.macros?.protein || f.macros?.carbs || f.macros?.fats || f.macros?.fat));
+    // No component data — return empty (station fallback was causing false associations)
+    return [];
   }
 
   // ── Sorted + grouped foods (excluding beverages) ──
@@ -1187,13 +1174,14 @@ export default function Home() {
             <>
             {/* Past-date logging banner */}
             {selectedDate !== localDateStr() && (
-              <div className="flex items-center justify-between gap-3 mb-4 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/40 text-amber-400 text-xs">
-                <span>
-                  📅 Logging meals to <strong>{new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</strong>
+              <div className="flex items-center justify-between gap-3 mb-4 px-3 py-2 border border-theme-text-primary/20 bg-theme-bg-secondary text-theme-text-secondary text-xs font-mono">
+                <span className="flex items-center gap-2">
+                  <span className="text-theme-text-primary/30 font-bold">›</span>
+                  Logging meals to <strong className="text-theme-text-primary ml-1">{new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</strong>
                 </span>
                 <button
                   onClick={() => setSelectedDate(localDateStr())}
-                  className="shrink-0 underline hover:text-amber-300 transition-colors"
+                  className="shrink-0 text-theme-text-tertiary hover:text-theme-text-primary transition-colors uppercase tracking-widest text-[10px]"
                 >
                   Return to today
                 </button>

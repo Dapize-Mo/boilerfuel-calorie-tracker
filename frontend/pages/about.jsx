@@ -218,6 +218,7 @@ export default function About() {
                 <div className="space-y-px border border-theme-text-primary/10">
                   {[
                     { href: '/', label: 'Home' },
+                    { href: '/stats', label: 'Stats' },
                     { href: '/profile', label: 'Profile' },
                     { href: '/changelog', label: 'Changelog' },
                   ].map(link => (

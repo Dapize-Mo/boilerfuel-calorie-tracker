@@ -425,7 +425,7 @@ export default function StatsPage() {
       </Head>
 
       <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary font-mono">
-        <div className="max-w-4xl mx-auto px-6 sm:px-10 py-16 sm:py-24 space-y-12">
+        <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 py-12 sm:py-20 space-y-12">
 
           {/* Header */}
           <header className="space-y-4">
@@ -763,8 +763,9 @@ export default function StatsPage() {
               <Link href="/" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Home</Link>
               <Link href="/profile" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Profile</Link>
               <Link href="/about" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">About</Link>
+              <Link href="/changelog" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Changelog</Link>
             </div>
-            <span className="text-xs text-theme-text-tertiary/40">{new Date().getFullYear()}</span>
+            <span className="text-[10px] uppercase tracking-widest text-theme-text-tertiary/40">BoilerFuel · {new Date().getFullYear()}</span>
           </footer>
         </div>
       </div>

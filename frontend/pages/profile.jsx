@@ -73,6 +73,9 @@ export default function ProfilePage() {
   const [notifSupported, setNotifSupported] = useState(false);
   const [notifPermission, setNotifPermission] = useState('default');
   const [mealReminder, setMealReminder] = useState(false);
+  const [streakHour, setStreakHour] = useState(20);
+  const [lunchHour, setLunchHour] = useState(12);
+  const [dinnerHour, setDinnerHour] = useState(18);
 
   // Google Fit export state
   const [fitExporting, setFitExporting] = useState(false);
@@ -89,6 +92,9 @@ export default function ProfilePage() {
       setNotifSupported(true);
       setNotifPermission(Notification.permission);
       setMealReminder(localStorage.getItem('boilerfuel_notif_meal') === '1');
+      setStreakHour(parseInt(localStorage.getItem('boilerfuel_notif_streak_hour') || '20', 10));
+      setLunchHour(parseInt(localStorage.getItem('boilerfuel_notif_lunch_hour') || '12', 10));
+      setDinnerHour(parseInt(localStorage.getItem('boilerfuel_notif_dinner_hour') || '18', 10));
     }
   }, []);
 
@@ -101,6 +107,21 @@ export default function ProfilePage() {
   function toggleMealReminder(enabled) {
     setMealReminder(enabled);
     localStorage.setItem('boilerfuel_notif_meal', enabled ? '1' : '0');
+  }
+
+  function updateStreakHour(h) {
+    setStreakHour(h);
+    localStorage.setItem('boilerfuel_notif_streak_hour', String(h));
+  }
+
+  function updateLunchHour(h) {
+    setLunchHour(h);
+    localStorage.setItem('boilerfuel_notif_lunch_hour', String(h));
+  }
+
+  function updateDinnerHour(h) {
+    setDinnerHour(h);
+    localStorage.setItem('boilerfuel_notif_dinner_hour', String(h));
   }
 
   // Check if already paired on mount
@@ -818,32 +839,81 @@ export default function ProfilePage() {
 
               {notifPermission === 'granted' && (
                 <div className="space-y-4">
-                  <div className="flex items-start gap-3 px-4 py-3 border border-green-500/20 bg-green-500/5">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-green-500 shrink-0 mt-0.5">
-                      <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
-                    </svg>
-                    <div>
-                      <p className="text-xs font-bold text-green-500">Notifications enabled</p>
-                      <p className="text-[10px] text-theme-text-tertiary mt-0.5">
-                        Streak reminders fire automatically at 8&nbsp;pm if you haven&rsquo;t logged today.
-                      </p>
+                  {/* Streak reminder row */}
+                  <div className="border border-theme-text-primary/10 divide-y divide-theme-text-primary/5">
+                    <div className="flex items-center justify-between px-4 py-3 gap-4">
+                      <div>
+                        <p className="text-xs font-bold text-green-500">Streak reminder</p>
+                        <p className="text-[10px] text-theme-text-tertiary mt-0.5">
+                          Fires if you haven&rsquo;t logged anything today
+                        </p>
+                      </div>
+                      <select
+                        value={streakHour}
+                        onChange={e => updateStreakHour(Number(e.target.value))}
+                        className="border border-theme-text-primary/30 bg-theme-bg-secondary text-theme-text-primary font-mono text-xs px-2 py-1.5 focus:outline-none focus:border-theme-text-primary transition-colors"
+                      >
+                        {Array.from({ length: 18 }, (_, i) => i + 6).map(h => (
+                          <option key={h} value={h}>
+                            {h === 0 ? '12 AM' : h === 12 ? '12 PM' : h < 12 ? `${h} AM` : `${h - 12} PM`}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   </div>
 
-                  <label className="flex items-start gap-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={mealReminder}
-                      onChange={e => toggleMealReminder(e.target.checked)}
-                      className="accent-yellow-500 w-4 h-4 mt-0.5"
-                    />
-                    <div>
-                      <span className="text-sm font-bold">Meal reminders</span>
-                      <p className="text-[10px] text-theme-text-tertiary mt-0.5">
-                        Remind me to log lunch (noon) and dinner (6&nbsp;pm) if I haven&rsquo;t already.
-                      </p>
-                    </div>
-                  </label>
+                  {/* Meal reminders */}
+                  <div className="border border-theme-text-primary/10 divide-y divide-theme-text-primary/5">
+                    <label className="flex items-center justify-between px-4 py-3 cursor-pointer gap-4">
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="checkbox"
+                          checked={mealReminder}
+                          onChange={e => toggleMealReminder(e.target.checked)}
+                          className="accent-yellow-500 w-4 h-4 shrink-0"
+                        />
+                        <div>
+                          <span className="text-xs font-bold text-theme-text-primary">Meal reminders</span>
+                          <p className="text-[10px] text-theme-text-tertiary mt-0.5">
+                            Remind me to log lunch and dinner if I haven&rsquo;t already
+                          </p>
+                        </div>
+                      </div>
+                    </label>
+
+                    {mealReminder && (
+                      <>
+                        <div className="flex items-center justify-between px-4 py-3 gap-4">
+                          <p className="text-[10px] text-theme-text-tertiary uppercase tracking-wider">Lunch</p>
+                          <select
+                            value={lunchHour}
+                            onChange={e => updateLunchHour(Number(e.target.value))}
+                            className="border border-theme-text-primary/30 bg-theme-bg-secondary text-theme-text-primary font-mono text-xs px-2 py-1.5 focus:outline-none focus:border-theme-text-primary transition-colors"
+                          >
+                            {Array.from({ length: 12 }, (_, i) => i + 8).map(h => (
+                              <option key={h} value={h}>
+                                {h === 12 ? '12 PM' : h < 12 ? `${h} AM` : `${h - 12} PM`}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="flex items-center justify-between px-4 py-3 gap-4">
+                          <p className="text-[10px] text-theme-text-tertiary uppercase tracking-wider">Dinner</p>
+                          <select
+                            value={dinnerHour}
+                            onChange={e => updateDinnerHour(Number(e.target.value))}
+                            className="border border-theme-text-primary/30 bg-theme-bg-secondary text-theme-text-primary font-mono text-xs px-2 py-1.5 focus:outline-none focus:border-theme-text-primary transition-colors"
+                          >
+                            {Array.from({ length: 10 }, (_, i) => i + 14).map(h => (
+                              <option key={h} value={h}>
+                                {h === 12 ? '12 PM' : h < 12 ? `${h} AM` : `${h - 12} PM`}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
               )}
             </section>
