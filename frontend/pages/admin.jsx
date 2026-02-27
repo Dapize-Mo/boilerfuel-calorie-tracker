@@ -449,6 +449,8 @@ function StatsTab() {
   const [loading, setLoading] = useState(true);
   const [retailScrapeStatus, setRetailScrapeStatus] = useState(null); // null | 'loading' | 'ok' | 'error'
   const [retailScrapeMsg, setRetailScrapeMsg] = useState('');
+  const [hfsScrapeStatus, setHfsScrapeStatus] = useState(null);
+  const [hfsScrapeMsg, setHfsScrapeMsg] = useState('');
 
   useEffect(() => {
     async function loadStats() {
@@ -535,22 +537,48 @@ function StatsTab() {
           Quick Actions
         </h2>
         <div className="space-y-px border border-theme-text-primary/10">
-          {[
-            { href: '/admin-scraper', label: 'Scrape Menus', desc: 'Import dining hall menus' },
-            { href: '/settings', label: 'Settings', desc: 'Configure app settings' },
-          ].map(action => (
-            <Link
-              key={action.href}
-              href={action.href}
-              className="flex items-center justify-between px-4 py-4 bg-theme-bg-primary hover:bg-theme-text-primary/5 transition-colors group"
-            >
-              <div>
-                <div className="text-xs font-bold uppercase tracking-wider text-theme-text-primary group-hover:text-theme-text-primary">{action.label}</div>
-                <div className="text-[10px] text-theme-text-tertiary mt-0.5">{action.desc}</div>
+          {/* Settings link */}
+          <Link
+            href="/settings"
+            className="flex items-center justify-between px-4 py-4 bg-theme-bg-primary hover:bg-theme-text-primary/5 transition-colors group"
+          >
+            <div>
+              <div className="text-xs font-bold uppercase tracking-wider text-theme-text-primary">Settings</div>
+              <div className="text-[10px] text-theme-text-tertiary mt-0.5">Configure app settings</div>
+            </div>
+            <span className="text-theme-text-tertiary/40 group-hover:text-theme-text-tertiary transition-colors text-xs">&rarr;</span>
+          </Link>
+
+          {/* HFS scraper trigger */}
+          <button
+            onClick={async () => {
+              setHfsScrapeStatus('loading');
+              setHfsScrapeMsg('');
+              try {
+                const res = await apiCall('/api/admin/scrape', { method: 'POST' }, { requireAdmin: true });
+                setHfsScrapeStatus('ok');
+                setHfsScrapeMsg(res?.message || 'Workflow dispatched');
+              } catch (err) {
+                setHfsScrapeStatus('error');
+                setHfsScrapeMsg(err.message || 'Failed to trigger workflow');
+              }
+            }}
+            disabled={hfsScrapeStatus === 'loading'}
+            className="w-full flex items-center justify-between px-4 py-4 bg-theme-bg-primary hover:bg-theme-text-primary/5 transition-colors group text-left disabled:opacity-50"
+          >
+            <div>
+              <div className="text-xs font-bold uppercase tracking-wider text-theme-text-primary">Scrape Dining Hall Menus</div>
+              <div className="text-[10px] text-theme-text-tertiary mt-0.5">
+                {hfsScrapeStatus === 'loading' && 'Dispatching workflow...'}
+                {hfsScrapeStatus === 'ok' && <span className="text-green-500">{hfsScrapeMsg}</span>}
+                {hfsScrapeStatus === 'error' && <span className="text-red-400">{hfsScrapeMsg}</span>}
+                {!hfsScrapeStatus && 'Import HFS dining court menus (runs scrape.yml)'}
               </div>
-              <span className="text-theme-text-tertiary/40 group-hover:text-theme-text-tertiary transition-colors text-xs">&rarr;</span>
-            </Link>
-          ))}
+            </div>
+            <span className="text-theme-text-tertiary/40 group-hover:text-theme-text-tertiary transition-colors text-xs">
+              {hfsScrapeStatus === 'loading' ? '...' : '\u2192'}
+            </span>
+          </button>
 
           {/* Retail scraper trigger */}
           <button
