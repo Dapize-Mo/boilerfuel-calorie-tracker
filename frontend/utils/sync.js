@@ -183,6 +183,41 @@ export async function pullData() {
   return true; // data was updated
 }
 
+// ── Meal backup / recovery ──
+
+/** Returns the backup meals object saved before the last merge, or null. */
+export function getMealsBackup() {
+  const raw = localStorage.getItem('boilerfuel_meals_backup');
+  if (!raw) return null;
+  try { return JSON.parse(raw); } catch { return null; }
+}
+
+/**
+ * Restore meals from the pre-merge backup, merging into current data.
+ * Safe to call even if no backup exists (no-op).
+ */
+export function restoreMealsFromBackup() {
+  const backup = getMealsBackup();
+  if (!backup) return false;
+  const currentRaw = localStorage.getItem('boilerfuel_meals');
+  const current = currentRaw ? JSON.parse(currentRaw) : {};
+  const restored = { ...backup };
+  // Also keep any NEW meals logged since the backup
+  for (const [date, meals] of Object.entries(current)) {
+    if (!restored[date]) {
+      restored[date] = meals;
+    } else {
+      const ts = new Set(restored[date].map(m => m.addedAt));
+      for (const m of meals) {
+        if (!ts.has(m.addedAt)) restored[date].push(m);
+      }
+    }
+  }
+  localStorage.setItem('boilerfuel_meals', JSON.stringify(restored));
+  localStorage.removeItem('boilerfuel_meals_backup');
+  return true;
+}
+
 // ── Unpair ──
 
 export async function unpair() {
@@ -213,10 +248,19 @@ function gatherLocalData() {
 
 function mergeRemoteData(remote) {
   if (!remote) return;
+
+  // ── Safety: snapshot meals before any merge so we can recover if data shrinks ──
+  const mealsBefore = localStorage.getItem('boilerfuel_meals');
+
   for (const key of SYNC_KEYS) {
     if (!(key in remote)) continue;
     const remoteVal = remote[key];
-    const localRaw = localStorage.getItem(key);
+    // Always read from localStorage at merge time AND also fall back to the
+    // pre-merge snapshot for meals (guards against a race where the
+    // persistence effect hasn't flushed state→localStorage yet).
+    const localRaw = key === 'boilerfuel_meals'
+      ? (localStorage.getItem(key) || mealsBefore)
+      : localStorage.getItem(key);
 
     if (key === 'boilerfuel_meals') {
       // Merge meals by date key — union of meals from both sides
@@ -235,17 +279,57 @@ function mergeRemoteData(remote) {
           }
         }
       }
+
+      // Post-merge loss guard: if we somehow ended up with fewer date-keys than
+      // before (should never happen, but defensive), merge the backup back in.
+      if (mealsBefore) {
+        const before = JSON.parse(mealsBefore);
+        for (const [date, meals] of Object.entries(before)) {
+          if (!merged[date] || merged[date].length === 0) {
+            merged[date] = meals;
+          } else {
+            const ts = new Set(merged[date].map(m => m.addedAt));
+            for (const m of meals) {
+              if (!ts.has(m.addedAt)) merged[date].push(m);
+            }
+          }
+        }
+      }
+
+      // Save a rolling backup BEFORE overwriting, so the UI can offer restore
+      if (mealsBefore) {
+        localStorage.setItem('boilerfuel_meals_backup', mealsBefore);
+      }
       localStorage.setItem(key, JSON.stringify(merged));
-    } else if (key === 'boilerfuel_water' || key === 'boilerfuel_weight') {
-      // Merge by date key — take the higher value (latest entry)
+    } else if (key === 'boilerfuel_water') {
+      // Water: take the max per date — can't "undrink" water, remote data should
+      // never reset a higher local value to 0, and vice versa.
       const local = localRaw ? JSON.parse(localRaw) : {};
       const merged = { ...local };
       for (const [date, val] of Object.entries(remoteVal || {})) {
-        if (merged[date] === undefined || merged[date] === null) {
+        const localVal = merged[date];
+        if (localVal === undefined || localVal === null) {
+          merged[date] = val;
+        } else {
+          merged[date] = Math.max(Number(localVal) || 0, Number(val) || 0);
+        }
+      }
+      localStorage.setItem(key, JSON.stringify(merged));
+    } else if (key === 'boilerfuel_weight') {
+      // Weight: take remote if local has no entry for that date.
+      // If both have an entry, keep local (user intentionally set it on this device).
+      // Never overwrite a real value with 0 from remote.
+      const local = localRaw ? JSON.parse(localRaw) : {};
+      const merged = { ...local };
+      for (const [date, val] of Object.entries(remoteVal || {})) {
+        const localVal = merged[date];
+        if (localVal === undefined || localVal === null) {
+          merged[date] = val;
+        } else if ((Number(localVal) || 0) === 0 && (Number(val) || 0) > 0) {
+          // Local has a 0/empty placeholder — prefer the real remote value
           merged[date] = val;
         }
-        // If both have a value for the same date, keep whichever is newer
-        // Since we can't tell which is newer per-key, keep the remote if syncing
+        // Otherwise keep local (last logged on this device)
       }
       localStorage.setItem(key, JSON.stringify(merged));
     } else if (key === 'boilerfuel_favorites') {

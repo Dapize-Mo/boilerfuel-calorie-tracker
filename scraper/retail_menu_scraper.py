@@ -27,7 +27,9 @@ from chain_scrapers import (
     get_jersey_mikes_items,
     get_starbucks_items,
     get_dining_court_beverage_items,
+    get_quick_bites_beverage_items,
     DINING_COURTS,
+    QUICK_BITES_LOCATIONS,
 )
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -168,6 +170,19 @@ def update_chain_restaurants(conn):
             logger.info(f"✓ Successfully added beverages to {court}")
         except Exception as e:
             logger.error(f"✗ Failed to add beverages to {court}: {e}")
+            conn.rollback()
+
+    # Add beverages to Quick Bites locations (fountain drinks + water, no milk)
+    quick_bites_beverage_items = get_quick_bites_beverage_items()
+    for location in QUICK_BITES_LOCATIONS:
+        try:
+            logger.info(f"Adding beverages to {location}...")
+            clear_location_menu(cursor, location)
+            insert_beverage_items(cursor, quick_bites_beverage_items, location)
+            conn.commit()
+            logger.info(f"✓ Successfully added beverages to {location}")
+        except Exception as e:
+            logger.error(f"✗ Failed to add beverages to {location}: {e}")
             conn.rollback()
 
     cursor.close()

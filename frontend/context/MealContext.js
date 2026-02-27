@@ -135,29 +135,61 @@ export function MealProvider({ children }) {
     }
   }, []);
 
-  // ── Auto-sync: pull on mount, debounced push on changes ──
+  // Reload all state from localStorage (after sync pull)
+  const reloadFromStorage = useCallback(() => {
+    try { const s = localStorage.getItem(STORAGE_KEY); if (s) setMealsByDate(JSON.parse(s)); } catch {}
+    try { const s = localStorage.getItem(GOALS_KEY); if (s) setGoalsState(JSON.parse(s)); } catch {}
+    try { const s = localStorage.getItem(FAVORITES_KEY); if (s) setFavoritesState(new Set(JSON.parse(s))); } catch {}
+    try { const s = localStorage.getItem(WATER_KEY); if (s) setWaterByDate(JSON.parse(s)); } catch {}
+    try { const s = localStorage.getItem(WEIGHT_KEY); if (s) setWeightByDate(JSON.parse(s)); } catch {}
+    try { const s = localStorage.getItem(TEMPLATES_KEY); if (s) setTemplatesState(JSON.parse(s)); } catch {}
+    try { const s = localStorage.getItem(DIETARY_KEY); if (s) setDietaryPrefsState(JSON.parse(s)); } catch {}
+    setHasMealsBackup(!!localStorage.getItem('boilerfuel_meals_backup'));
+  }, []);
+
+  // ── Auto-sync: pull on mount + on tab-focus, debounced push on changes ──
   const syncPushTimer = useRef(null);
   const mountedRef = useRef(false);
+  const isSyncingRef = useRef(false);  // prevent concurrent pulls
+  const lastPullRef = useRef(0);       // timestamp of last pull (ms)
+  const MIN_PULL_INTERVAL = 30_000;   // don't re-pull more than once per 30 s
 
-  // Pull on mount (if synced)
+  const doPull = useCallback(async (force = false) => {
+    if (isSyncingRef.current) return;
+    const now = Date.now();
+    if (!force && now - lastPullRef.current < MIN_PULL_INTERVAL) return;
+    try {
+      const { isSynced, pullData } = await import('../utils/sync');
+      if (!isSynced()) return;
+      isSyncingRef.current = true;
+      lastPullRef.current = now;
+      setSyncStatus('syncing');
+      const updated = await pullData();
+      if (updated) reloadFromStorage();
+      setSyncStatusTransient('success');
+    } catch {
+      setSyncStatusTransient('error');
+    } finally {
+      isSyncingRef.current = false;
+    }
+  }, [reloadFromStorage, setSyncStatusTransient]);
+
+  // Pull on mount (force = true so the cooldown doesn't block the first load)
   useEffect(() => {
     (async () => {
-      try {
-        const { isSynced, pullData } = await import('../utils/sync');
-        if (!isSynced()) return;
-        setSyncStatus('syncing');
-        const updated = await pullData();
-        if (updated) {
-          // Reload state from localStorage after pull merged new data
-          reloadFromStorage();
-        }
-        setSyncStatusTransient('success');
-      } catch {
-        setSyncStatusTransient('error');
-      }
+      await doPull(true);
       mountedRef.current = true;
     })();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [doPull]);
+
+  // Re-pull whenever the user returns to the tab/app (mobile suspend/resume, tab switch)
+  useEffect(() => {
+    function handleVisibilityChange() {
+      if (document.visibilityState === 'visible') doPull();
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [doPull]);
 
   // Debounced push after any data change (skip initial mount)
   useEffect(() => {
@@ -177,16 +209,23 @@ export function MealProvider({ children }) {
     return () => { if (syncPushTimer.current) clearTimeout(syncPushTimer.current); };
   }, [mealsByDate, goals, favorites, waterByDate, weightByDate, templates, dietaryPrefs, setSyncStatusTransient]);
 
-  // Reload all state from localStorage (after sync pull)
-  const reloadFromStorage = useCallback(() => {
-    try { const s = localStorage.getItem(STORAGE_KEY); if (s) setMealsByDate(JSON.parse(s)); } catch {}
-    try { const s = localStorage.getItem(GOALS_KEY); if (s) setGoalsState(JSON.parse(s)); } catch {}
-    try { const s = localStorage.getItem(FAVORITES_KEY); if (s) setFavoritesState(new Set(JSON.parse(s))); } catch {}
-    try { const s = localStorage.getItem(WATER_KEY); if (s) setWaterByDate(JSON.parse(s)); } catch {}
-    try { const s = localStorage.getItem(WEIGHT_KEY); if (s) setWeightByDate(JSON.parse(s)); } catch {}
-    try { const s = localStorage.getItem(TEMPLATES_KEY); if (s) setTemplatesState(JSON.parse(s)); } catch {}
-    try { const s = localStorage.getItem(DIETARY_KEY); if (s) setDietaryPrefsState(JSON.parse(s)); } catch {}
+  // ── Backup recovery ──
+  const [hasMealsBackup, setHasMealsBackup] = useState(false);
+
+  // Check for backup on mount and after any reload
+  useEffect(() => {
+    setHasMealsBackup(!!localStorage.getItem('boilerfuel_meals_backup'));
   }, []);
+
+  const restoreMealsBackup = useCallback(async () => {
+    const { restoreMealsFromBackup } = await import('../utils/sync');
+    const ok = restoreMealsFromBackup();
+    if (ok) {
+      reloadFromStorage();
+      setHasMealsBackup(false);
+    }
+    return ok;
+  }, [reloadFromStorage]);
 
   // Manual sync trigger (for UI button)
   const syncNow = useCallback(async () => {
@@ -529,6 +568,8 @@ export function MealProvider({ children }) {
       getDateRange,
       // Sync
       syncNow, reloadFromStorage, syncStatus,
+      // Backup recovery
+      hasMealsBackup, restoreMealsBackup,
     }}>
       {children}
     </MealContext.Provider>

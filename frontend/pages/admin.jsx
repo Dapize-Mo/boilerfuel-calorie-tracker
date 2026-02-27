@@ -447,6 +447,8 @@ AdminPanel.getLayout = (page) => page;
 function StatsTab() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [retailScrapeStatus, setRetailScrapeStatus] = useState(null); // null | 'loading' | 'ok' | 'error'
+  const [retailScrapeMsg, setRetailScrapeMsg] = useState('');
 
   useEffect(() => {
     async function loadStats() {
@@ -549,6 +551,37 @@ function StatsTab() {
               <span className="text-theme-text-tertiary/40 group-hover:text-theme-text-tertiary transition-colors text-xs">&rarr;</span>
             </Link>
           ))}
+
+          {/* Retail scraper trigger */}
+          <button
+            onClick={async () => {
+              setRetailScrapeStatus('loading');
+              setRetailScrapeMsg('');
+              try {
+                const res = await apiCall('/api/admin/scrape-retail', { method: 'POST' }, { requireAdmin: true });
+                setRetailScrapeStatus('ok');
+                setRetailScrapeMsg(res?.message || 'Workflow dispatched');
+              } catch (err) {
+                setRetailScrapeStatus('error');
+                setRetailScrapeMsg(err.message || 'Failed to trigger workflow');
+              }
+            }}
+            disabled={retailScrapeStatus === 'loading'}
+            className="w-full flex items-center justify-between px-4 py-4 bg-theme-bg-primary hover:bg-theme-text-primary/5 transition-colors group text-left disabled:opacity-50"
+          >
+            <div>
+              <div className="text-xs font-bold uppercase tracking-wider text-theme-text-primary">Update Retail Menus</div>
+              <div className="text-[10px] text-theme-text-tertiary mt-0.5">
+                {retailScrapeStatus === 'loading' && 'Dispatching workflow...'}
+                {retailScrapeStatus === 'ok' && <span className="text-green-500">{retailScrapeMsg}</span>}
+                {retailScrapeStatus === 'error' && <span className="text-red-400">{retailScrapeMsg}</span>}
+                {!retailScrapeStatus && 'Refresh beverages for 1Bowl, Pete\'s Za, Sushi Boss'}
+              </div>
+            </div>
+            <span className="text-theme-text-tertiary/40 group-hover:text-theme-text-tertiary transition-colors text-xs">
+              {retailScrapeStatus === 'loading' ? '...' : '\u2192'}
+            </span>
+          </button>
         </div>
       </div>
     </div>

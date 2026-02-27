@@ -54,7 +54,7 @@ export default function ProfilePage() {
   const { meals, goals, setGoals, totals, clearMeals, removeMeal, mealsByDate, getWeight, setWeight, weightByDate, exportData, templates, saveTemplate, deleteTemplate, applyTemplate, dietaryPrefs, setDietaryPrefs, waterByDate, getWater, addWater, syncNow, reloadFromStorage } = useMeals();
   const [editingGoals, setEditingGoals] = useState(false);
   const [draft, setDraft] = useState(goals);
-  const [goalWarnings, setGoalWarnings] = useState([]);
+  const [goalWarnings, setGoalWarnings] = useState(null); // null | { warnings: string[], suggestions: [{label, patch}] }
   const [weightInput, setWeightInput] = useState('');
   const [selectedDate, setSelectedDate] = useState(getTodayKey);
   const [syncStatus, setSyncStatus] = useState('idle'); // idle | creating | paired | joining | error
@@ -78,6 +78,10 @@ export default function ProfilePage() {
   const [brunchHour, setBrunchHour] = useState(11);
   const [lunchHour, setLunchHour] = useState(12);
   const [dinnerHour, setDinnerHour] = useState(18);
+  const [breakfastEnabled, setBreakfastEnabled] = useState(true);
+  const [brunchEnabled, setBrunchEnabled] = useState(true);
+  const [lunchEnabled, setLunchEnabled] = useState(true);
+  const [dinnerEnabled, setDinnerEnabled] = useState(true);
 
   // Google Fit export state
   const [fitExporting, setFitExporting] = useState(false);
@@ -99,6 +103,11 @@ export default function ProfilePage() {
       setBrunchHour(parseInt(localStorage.getItem('boilerfuel_notif_brunch_hour') || '11', 10));
       setLunchHour(parseInt(localStorage.getItem('boilerfuel_notif_lunch_hour') || '12', 10));
       setDinnerHour(parseInt(localStorage.getItem('boilerfuel_notif_dinner_hour') || '18', 10));
+      // Per-meal enabled defaults to true unless explicitly disabled
+      setBreakfastEnabled(localStorage.getItem('boilerfuel_notif_breakfast_on') !== '0');
+      setBrunchEnabled(localStorage.getItem('boilerfuel_notif_brunch_on') !== '0');
+      setLunchEnabled(localStorage.getItem('boilerfuel_notif_lunch_on') !== '0');
+      setDinnerEnabled(localStorage.getItem('boilerfuel_notif_dinner_on') !== '0');
     }
   }, []);
 
@@ -136,6 +145,19 @@ export default function ProfilePage() {
   function updateDinnerHour(h) {
     setDinnerHour(h);
     localStorage.setItem('boilerfuel_notif_dinner_hour', String(h));
+  }
+
+  function toggleMealEnabled(meal, enabled) {
+    const setters = { breakfast: setBreakfastEnabled, brunch: setBrunchEnabled, lunch: setLunchEnabled, dinner: setDinnerEnabled };
+    setters[meal]?.(enabled);
+    localStorage.setItem(`boilerfuel_notif_${meal}_on`, enabled ? '1' : '0');
+  }
+
+  const allMealsEnabled = breakfastEnabled && brunchEnabled && lunchEnabled && dinnerEnabled;
+  const noMealsEnabled = !breakfastEnabled && !brunchEnabled && !lunchEnabled && !dinnerEnabled;
+
+  function toggleAllMeals(enabled) {
+    ['breakfast', 'brunch', 'lunch', 'dinner'].forEach(m => toggleMealEnabled(m, enabled));
   }
 
   // Check if already paired on mount
@@ -243,19 +265,47 @@ export default function ProfilePage() {
 
     if (!force) {
       const warnings = [];
+      const suggestions = [];
       if (cal > 0 && cal < 1200) warnings.push('Calorie goal is very low (under 1,200 cal/day). This may be unhealthy.');
       if (cal > 5000) warnings.push('Calorie goal is very high (over 5,000 cal/day). Verify this is intentional.');
       const macroCal = protein * 4 + carbs * 4 + fat * 9;
       if (cal > 0 && macroCal > 0 && Math.abs(macroCal - cal) / cal > 0.3) {
         warnings.push(`Macro totals (~${macroCal} cal) are more than 30% off from your calorie goal (${cal} cal).`);
+        // Generate smart fix suggestions
+        const diff = cal - macroCal;
+        if (diff > 0) {
+          // Macros are too low — suggest adding protein (most healthy way to fill gap)
+          const extraProtein = Math.round(diff / 4);
+          suggestions.push({ label: `Add ${extraProtein}g protein (${protein + extraProtein}g total)`, patch: { protein: protein + extraProtein } });
+          const extraCarbs = Math.round(diff / 4);
+          suggestions.push({ label: `Add ${extraCarbs}g carbs (${carbs + extraCarbs}g total)`, patch: { carbs: carbs + extraCarbs } });
+        } else {
+          // Macros are too high — suggest reducing the largest contributor
+          const overCal = macroCal - cal;
+          const proteinCal = protein * 4;
+          const carbsCal = carbs * 4;
+          const fatCal = fat * 9;
+          if (carbsCal >= proteinCal && carbsCal >= fatCal) {
+            const newCarbs = Math.max(0, Math.round(carbs - overCal / 4));
+            suggestions.push({ label: `Reduce carbs to ${newCarbs}g (saves ~${overCal} cal)`, patch: { carbs: newCarbs } });
+          } else if (fatCal >= proteinCal) {
+            const newFat = Math.max(0, Math.round(fat - overCal / 9));
+            suggestions.push({ label: `Reduce fat to ${newFat}g (saves ~${overCal} cal)`, patch: { fat: newFat } });
+          } else {
+            const newProtein = Math.max(0, Math.round(protein - overCal / 4));
+            suggestions.push({ label: `Reduce protein to ${newProtein}g (saves ~${overCal} cal)`, patch: { protein: newProtein } });
+          }
+          // Also suggest bumping calories to match macros
+          suggestions.push({ label: `Set calorie goal to ${macroCal} cal (match your macros)`, patch: { calories: macroCal } });
+        }
       }
       if (warnings.length > 0) {
-        setGoalWarnings(warnings);
+        setGoalWarnings({ warnings, suggestions });
         return;
       }
     }
 
-    setGoalWarnings([]);
+    setGoalWarnings(null);
     setGoals({
       calories: Math.max(0, parseInt(draft.calories) || 0),
       protein: Math.max(0, parseInt(draft.protein) || 0),
@@ -620,17 +670,31 @@ export default function ProfilePage() {
                       </div>
                     ))}
                   </div>
-                  {goalWarnings.length > 0 && (
-                    <div className="p-3 bg-yellow-500/10 border border-yellow-500/50 space-y-1">
-                      {goalWarnings.map((w, i) => (
+                  {goalWarnings && goalWarnings.warnings?.length > 0 && (
+                    <div className="p-3 bg-yellow-500/10 border border-yellow-500/50 space-y-2">
+                      {goalWarnings.warnings.map((w, i) => (
                         <p key={i} className="text-xs text-yellow-400">⚠️ {w}</p>
                       ))}
+                      {goalWarnings.suggestions?.length > 0 && (
+                        <div className="pt-1 space-y-1">
+                          <p className="text-[10px] uppercase tracking-widest text-theme-text-tertiary">Quick fixes:</p>
+                          {goalWarnings.suggestions.map((s, i) => (
+                            <button
+                              key={i}
+                              onClick={() => { setDraft(prev => ({ ...prev, ...s.patch })); setGoalWarnings(null); }}
+                              className="block w-full text-left px-2.5 py-1.5 text-xs border border-yellow-500/30 text-yellow-400/80 hover:bg-yellow-500/10 transition-colors"
+                            >
+                              → {s.label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                       <div className="flex gap-2 mt-2">
                         <button onClick={() => saveGoals(true)}
                           className="px-3 py-1.5 bg-yellow-500 text-slate-900 text-xs font-bold hover:bg-yellow-600 transition-colors">
                           Save Anyway
                         </button>
-                        <button onClick={() => setGoalWarnings([])}
+                        <button onClick={() => setGoalWarnings(null)}
                           className="px-3 py-1.5 text-xs text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
                           Go Back
                         </button>
@@ -717,6 +781,28 @@ export default function ProfilePage() {
                     </div>
                   </div>
                   {theme === 'dark' && (
+                    <span className="text-[10px] uppercase tracking-widest font-bold">Active</span>
+                  )}
+                </button>
+
+                <div className="h-px bg-theme-text-primary/10" />
+
+                <button
+                  onClick={() => setTheme('system')}
+                  className={`w-full flex items-center justify-between px-5 py-4 transition-colors ${
+                    theme === 'system' ? 'bg-theme-text-primary text-theme-bg-primary' : 'hover:bg-theme-bg-secondary'
+                  }`}
+                >
+                  <div className="flex items-center gap-4">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0">
+                      <rect x="2" y="3" width="20" height="14" rx="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" />
+                    </svg>
+                    <div className="text-left">
+                      <span className="text-sm font-bold uppercase tracking-wider block">System</span>
+                      <span className={`text-xs ${theme === 'system' ? 'opacity-60' : 'text-theme-text-tertiary'}`}>Follows your device setting</span>
+                    </div>
+                  </div>
+                  {theme === 'system' && (
                     <span className="text-[10px] uppercase tracking-widest font-bold">Active</span>
                   )}
                 </button>
@@ -897,58 +983,50 @@ export default function ProfilePage() {
 
                     {mealReminder && (
                       <>
-                        <div className="flex items-center justify-between px-4 py-3 gap-4">
-                          <p className="text-[10px] text-theme-text-tertiary uppercase tracking-wider">Breakfast</p>
-                          <select
-                            value={breakfastHour}
-                            onChange={e => updateBreakfastHour(Number(e.target.value))}
-                            className="border border-theme-text-primary/30 bg-theme-bg-secondary text-theme-text-primary font-mono text-xs px-2 py-1.5 focus:outline-none focus:border-theme-text-primary transition-colors"
-                          >
-                            {Array.from({ length: 6 }, (_, i) => i + 6).map(h => (
-                              <option key={h} value={h}>{h < 12 ? `${h} AM` : '12 PM'}</option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="flex items-center justify-between px-4 py-3 gap-4">
-                          <p className="text-[10px] text-theme-text-tertiary uppercase tracking-wider">Brunch</p>
-                          <select
-                            value={brunchHour}
-                            onChange={e => updateBrunchHour(Number(e.target.value))}
-                            className="border border-theme-text-primary/30 bg-theme-bg-secondary text-theme-text-primary font-mono text-xs px-2 py-1.5 focus:outline-none focus:border-theme-text-primary transition-colors"
-                          >
-                            {Array.from({ length: 4 }, (_, i) => i + 9).map(h => (
-                              <option key={h} value={h}>{h < 12 ? `${h} AM` : '12 PM'}</option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="flex items-center justify-between px-4 py-3 gap-4">
-                          <p className="text-[10px] text-theme-text-tertiary uppercase tracking-wider">Lunch</p>
-                          <select
-                            value={lunchHour}
-                            onChange={e => updateLunchHour(Number(e.target.value))}
-                            className="border border-theme-text-primary/30 bg-theme-bg-secondary text-theme-text-primary font-mono text-xs px-2 py-1.5 focus:outline-none focus:border-theme-text-primary transition-colors"
-                          >
-                            {Array.from({ length: 12 }, (_, i) => i + 8).map(h => (
-                              <option key={h} value={h}>
-                                {h === 12 ? '12 PM' : h < 12 ? `${h} AM` : `${h - 12} PM`}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="flex items-center justify-between px-4 py-3 gap-4">
-                          <p className="text-[10px] text-theme-text-tertiary uppercase tracking-wider">Dinner</p>
-                          <select
-                            value={dinnerHour}
-                            onChange={e => updateDinnerHour(Number(e.target.value))}
-                            className="border border-theme-text-primary/30 bg-theme-bg-secondary text-theme-text-primary font-mono text-xs px-2 py-1.5 focus:outline-none focus:border-theme-text-primary transition-colors"
-                          >
-                            {Array.from({ length: 10 }, (_, i) => i + 14).map(h => (
-                              <option key={h} value={h}>
-                                {h === 12 ? '12 PM' : h < 12 ? `${h} AM` : `${h - 12} PM`}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
+                        {/* All toggle */}
+                        <label className="flex items-center justify-between px-4 py-2.5 cursor-pointer gap-4 bg-theme-bg-secondary/30">
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="checkbox"
+                              checked={allMealsEnabled}
+                              ref={el => { if (el) el.indeterminate = !allMealsEnabled && !noMealsEnabled; }}
+                              onChange={e => toggleAllMeals(e.target.checked)}
+                              className="accent-yellow-500 w-4 h-4 shrink-0"
+                            />
+                            <p className="text-[10px] text-theme-text-tertiary uppercase tracking-wider font-bold">All meals</p>
+                          </div>
+                        </label>
+
+                        {[
+                          { label: 'Breakfast', enabled: breakfastEnabled, meal: 'breakfast', hour: breakfastHour, update: updateBreakfastHour, hours: Array.from({ length: 6 }, (_, i) => i + 6) },
+                          { label: 'Brunch', enabled: brunchEnabled, meal: 'brunch', hour: brunchHour, update: updateBrunchHour, hours: Array.from({ length: 4 }, (_, i) => i + 9) },
+                          { label: 'Lunch', enabled: lunchEnabled, meal: 'lunch', hour: lunchHour, update: updateLunchHour, hours: Array.from({ length: 12 }, (_, i) => i + 8) },
+                          { label: 'Dinner', enabled: dinnerEnabled, meal: 'dinner', hour: dinnerHour, update: updateDinnerHour, hours: Array.from({ length: 10 }, (_, i) => i + 14) },
+                        ].map(({ label, enabled, meal, hour, update, hours }) => (
+                          <div key={meal} className={`flex items-center justify-between px-4 py-3 gap-4 transition-opacity ${!enabled ? 'opacity-40' : ''}`}>
+                            <label className="flex items-center gap-2.5 cursor-pointer flex-1 min-w-0">
+                              <input
+                                type="checkbox"
+                                checked={enabled}
+                                onChange={e => toggleMealEnabled(meal, e.target.checked)}
+                                className="accent-yellow-500 w-3.5 h-3.5 shrink-0"
+                              />
+                              <p className="text-[10px] text-theme-text-tertiary uppercase tracking-wider">{label}</p>
+                            </label>
+                            <select
+                              value={hour}
+                              disabled={!enabled}
+                              onChange={e => update(Number(e.target.value))}
+                              className="border border-theme-text-primary/30 bg-theme-bg-secondary text-theme-text-primary font-mono text-xs px-2 py-1.5 focus:outline-none focus:border-theme-text-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {hours.map(h => (
+                                <option key={h} value={h}>
+                                  {h === 0 ? '12 AM' : h === 12 ? '12 PM' : h < 12 ? `${h} AM` : `${h - 12} PM`}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        ))}
                       </>
                     )}
                   </div>

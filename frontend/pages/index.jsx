@@ -376,7 +376,7 @@ function MacroTooltip({ food, pos }) {
 // ══════════════════════════════════════
 export default function Home() {
   const router = useRouter();
-  const { addMeal, removeMeal, getCount, isFavorite, toggleFavorite, dietaryPrefs, getWater, addWater, mealsByDate, goals, templates, saveTemplate, deleteTemplate, applyTemplate } = useMeals();
+  const { addMeal, removeMeal, getCount, isFavorite, toggleFavorite, dietaryPrefs, getWater, addWater, mealsByDate, goals, templates, saveTemplate, deleteTemplate, applyTemplate, hasMealsBackup, restoreMealsBackup } = useMeals();
   // ── State ──
   const [location, setLocation] = useState({ type: 'all', value: 'All' });
   const [mealTime, setMealTime] = useState('All');
@@ -912,6 +912,28 @@ export default function Home() {
       <Head>
         <title>BoilerFuel - Dining Menu</title>
       </Head>
+
+      {/* ── Meal backup recovery banner ── */}
+      {hasMealsBackup && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-yellow-500 text-slate-900 px-4 py-3 flex items-center justify-between gap-3 shadow-lg">
+          <div>
+            <span className="font-bold text-xs uppercase tracking-wider">Meal data restored</span>
+            <span className="text-xs ml-2 opacity-70">A sync overwrote some meals. Tap to recover them.</span>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={async () => { await restoreMealsBackup(); }}
+              className="px-3 py-1.5 bg-slate-900 text-yellow-400 text-xs font-bold uppercase tracking-wider hover:bg-slate-800 transition-colors">
+              Restore
+            </button>
+            <button
+              onClick={() => { localStorage.removeItem('boilerfuel_meals_backup'); window.location.reload(); }}
+              className="px-3 py-1.5 bg-transparent border border-slate-900/30 text-slate-900 text-xs font-bold uppercase tracking-wider hover:bg-slate-900/10 transition-colors">
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ── Calorie progress bar — thin line at very top ── */}
       {(() => {
@@ -1624,21 +1646,30 @@ export default function Home() {
                                   if (compsWithCal.length === 0) return null;
                                   const total = compsWithCal.reduce((s, c) => s + c.calories, 0);
                                   return (
-                                    <div className="mt-3 pt-3 border-t border-theme-text-primary/10 flex items-center justify-between gap-3">
-                                      <div>
-                                        <span className="text-xs font-bold uppercase tracking-wider">Est. full meal: </span>
-                                        <span className="text-xs font-mono font-bold tabular-nums">{total} cal</span>
+                                    <div className="mt-3 pt-3 border-t border-theme-text-primary/10 space-y-2">
+                                      <div className="flex items-center justify-between gap-3">
+                                        <div>
+                                          <span className="text-xs font-bold uppercase tracking-wider">Est. full meal: </span>
+                                          <span className="text-xs font-mono font-bold tabular-nums">{total} cal</span>
+                                        </div>
+                                        <div className="flex items-center gap-1.5 shrink-0">
+                                          <button
+                                            onClick={(e) => { e.stopPropagation(); const name = window.prompt(`Save "${food.name}" combo as template:`, food.name); if (name) saveTemplate(name, compsWithCal); }}
+                                            className="text-[10px] border border-theme-text-primary/20 text-theme-text-tertiary px-2.5 py-1.5 font-bold uppercase tracking-wider hover:border-theme-text-primary hover:text-theme-text-primary transition-colors whitespace-nowrap">
+                                            Save combo
+                                          </button>
+                                          <button
+                                            onClick={(e) => { e.stopPropagation(); compsWithCal.forEach(c => addMeal(c, food.meal_time?.toLowerCase() || mealTime.toLowerCase(), selectedDate)); }}
+                                            className="text-[10px] border border-theme-text-primary/30 px-2.5 py-1.5 font-bold uppercase tracking-wider hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors whitespace-nowrap">
+                                            Add all
+                                          </button>
+                                        </div>
                                       </div>
-                                      <button
-                                        onClick={(e) => { e.stopPropagation(); compsWithCal.forEach(c => addMeal(c, food.meal_time?.toLowerCase() || mealTime.toLowerCase(), selectedDate)); }}
-                                        className="shrink-0 text-[10px] border border-theme-text-primary/30 px-2.5 py-1.5 font-bold uppercase tracking-wider hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors whitespace-nowrap">
-                                        Add all
-                                      </button>
                                     </div>
                                   );
                                 })()}
                                 <div className="mt-2 text-[10px] text-theme-text-tertiary/60">
-                                  Add individual items above or use Add all to log the full combo.
+                                  Add individual items above, use Add all to log the full combo, or Save combo as a reusable template.
                                 </div>
                               </div>
                             ) : (
