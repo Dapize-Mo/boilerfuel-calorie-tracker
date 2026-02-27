@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 
 export default function About() {
+  const router = useRouter();
   const [fbType, setFbType] = useState('idea');
   const [fbMessage, setFbMessage] = useState('');
   const [fbContact, setFbContact] = useState('');
@@ -57,9 +59,9 @@ export default function About() {
 
           {/* Header */}
           <header className="space-y-4 border-b border-theme-text-primary/10 pb-10">
-            <Link href="/" className="text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
+            <button onClick={() => router.back()} className="text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
               &larr; Back
-            </Link>
+            </button>
             <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6">
               <div className="space-y-3">
                 <h1 className="text-4xl sm:text-6xl font-bold uppercase tracking-[0.2em]">About</h1>
@@ -240,9 +242,17 @@ export default function About() {
           </div>
 
           {/* Footer */}
-          <footer className="border-t border-theme-text-primary/10 pt-6 flex items-center justify-between">
-            <span className="text-[10px] uppercase tracking-widest text-theme-text-tertiary/40">BoilerFuel</span>
-            <span className="text-[10px] text-theme-text-tertiary">{new Date().getFullYear()}</span>
+          <footer className="border-t border-theme-text-primary/10 pt-8 flex flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs uppercase tracking-widest">
+              <Link href="/" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Home</Link>
+              <Link href="/stats" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Stats</Link>
+              <Link href="/compare" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Compare</Link>
+              <Link href="/custom-foods" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Custom Foods</Link>
+              <Link href="/changelog" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Changelog</Link>
+              <Link href="/privacy" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Privacy</Link>
+              <Link href="/admin" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Admin</Link>
+            </div>
+            <span className="text-[10px] uppercase tracking-widest text-theme-text-tertiary/40">BoilerFuel · {new Date().getFullYear()}</span>
           </footer>
 
         </div>

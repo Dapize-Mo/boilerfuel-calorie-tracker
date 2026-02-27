@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import dynamic from 'next/dynamic';
 import { useSession, signIn } from 'next-auth/react';
 import { useTheme } from '../context/ThemeContext';
@@ -49,6 +50,7 @@ function shiftDate(dateKey, delta) {
 }
 
 export default function ProfilePage() {
+  const router = useRouter();
   const { theme, setTheme } = useTheme();
   const { data: googleSession } = useSession();
   const { meals, goals, setGoals, totals, clearMeals, removeMeal, mealsByDate, getWeight, setWeight, weightByDate, exportData, templates, saveTemplate, deleteTemplate, applyTemplate, dietaryPrefs, setDietaryPrefs, waterByDate, getWater, addWater, syncNow, reloadFromStorage } = useMeals();
@@ -407,9 +409,9 @@ export default function ProfilePage() {
 
           {/* Header */}
           <header className="space-y-4">
-            <Link href="/" className="text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
+            <button onClick={() => router.back()} className="text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
               &larr; Back
-            </Link>
+            </button>
             <h1 className="text-3xl sm:text-5xl font-bold uppercase tracking-[0.2em]">Profile</h1>
             <div className="w-12 h-0.5 bg-yellow-500" />
             <p className="text-sm uppercase tracking-widest text-theme-text-tertiary">
@@ -1433,7 +1435,7 @@ export default function ProfilePage() {
               <Link href="/privacy" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Privacy</Link>
               <Link href="/admin" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Admin</Link>
             </div>
-            <span className="text-xs text-theme-text-tertiary/40">{new Date().getFullYear()}</span>
+            <span className="text-[10px] uppercase tracking-widest text-theme-text-tertiary/40">BoilerFuel · {new Date().getFullYear()}</span>
           </footer>
 
         </div>

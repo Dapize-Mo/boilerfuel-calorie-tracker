@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 
 // Versioning system — built from actual git commit dates:
 //   x.0.0  Major — complete redesign or architectural overhaul
@@ -587,6 +588,7 @@ const ERAS = [
 ];
 
 export default function Changelog() {
+  const router = useRouter();
   const grouped = ERAS.map(era => ({
     ...era,
     versions: VERSIONS.filter(v => v.version.startsWith(era.prefix + '.')),
@@ -604,9 +606,9 @@ export default function Changelog() {
 
           {/* Header */}
           <header className="mb-12 space-y-4">
-            <Link href="/" className="text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
+            <button onClick={() => router.back()} className="text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
               &larr; Back
-            </Link>
+            </button>
             <h1 className="text-3xl sm:text-5xl font-bold uppercase tracking-[0.2em]">Changelog</h1>
             <div className="w-12 h-px bg-theme-text-primary/30" />
             <p className="text-sm uppercase tracking-widest text-theme-text-tertiary">
@@ -732,11 +734,14 @@ export default function Changelog() {
 
               {/* Footer */}
               <footer className="border-t border-theme-text-primary/10 pt-8 flex flex-wrap items-center justify-between gap-4">
-                <div className="flex gap-6 text-xs uppercase tracking-widest lg:hidden">
+                <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs uppercase tracking-widest">
                   <Link href="/" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Home</Link>
                   <Link href="/stats" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Stats</Link>
+                  <Link href="/compare" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Compare</Link>
+                  <Link href="/custom-foods" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Custom Foods</Link>
                   <Link href="/about" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">About</Link>
                   <Link href="/profile" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Profile</Link>
+                  <Link href="/privacy" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Privacy</Link>
                   <Link href="/admin" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Admin</Link>
                 </div>
                 <span className="text-[10px] uppercase tracking-widest text-theme-text-tertiary/40">BoilerFuel · {new Date().getFullYear()}</span>

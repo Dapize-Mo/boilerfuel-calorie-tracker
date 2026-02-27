@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { signIn, signOut, useSession } from "next-auth/react";
 import {
   adminLogin,
@@ -15,6 +16,7 @@ import {
 const ITEMS_PER_PAGE = 20;
 
 export default function AdminPanel() {
+  const router = useRouter();
   const { data: session, status } = useSession();
   const [authenticated, setAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
@@ -101,9 +103,9 @@ export default function AdminPanel() {
         <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 py-12 sm:py-20">
 
           <header className="space-y-4 border-b border-theme-text-primary/10 pb-10 mb-12">
-            <Link href="/" className="text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
+            <button onClick={() => router.back()} className="text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
               &larr; Back
-            </Link>
+            </button>
             <h1 className="text-4xl sm:text-6xl font-bold uppercase tracking-[0.2em]">Admin</h1>
             <p className="text-sm uppercase tracking-widest text-theme-text-tertiary">Restricted access</p>
           </header>
@@ -170,9 +172,9 @@ export default function AdminPanel() {
 
         {/* Header */}
         <header className="space-y-4 border-b border-theme-text-primary/10 pb-10">
-          <Link href="/" className="text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
+          <button onClick={() => router.back()} className="text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
             &larr; Back
-          </Link>
+          </button>
           <div className="flex items-end justify-between gap-6">
             <div className="space-y-3">
               <h1 className="text-4xl sm:text-6xl font-bold uppercase tracking-[0.2em]">Admin</h1>
@@ -218,9 +220,17 @@ export default function AdminPanel() {
         </div>
 
         {/* Footer */}
-        <footer className="border-t border-theme-text-primary/10 pt-6 flex items-center justify-between">
-          <span className="text-[10px] uppercase tracking-widest text-theme-text-tertiary/40">BoilerFuel</span>
-          <span className="text-[10px] text-theme-text-tertiary/40">{new Date().getFullYear()}</span>
+        <footer className="border-t border-theme-text-primary/10 pt-8 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs uppercase tracking-widest">
+            <Link href="/" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Home</Link>
+            <Link href="/stats" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Stats</Link>
+            <Link href="/compare" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Compare</Link>
+            <Link href="/custom-foods" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Custom Foods</Link>
+            <Link href="/about" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">About</Link>
+            <Link href="/changelog" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Changelog</Link>
+            <Link href="/privacy" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Privacy</Link>
+          </div>
+          <span className="text-[10px] uppercase tracking-widest text-theme-text-tertiary/40">BoilerFuel · {new Date().getFullYear()}</span>
         </footer>
       </div>
     </div>

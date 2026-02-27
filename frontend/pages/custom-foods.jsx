@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 
 export default function CustomFoods() {
+  const router = useRouter();
   const { data: session, status } = useSession();
   const [customFoods, setCustomFoods] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -154,9 +156,9 @@ export default function CustomFoods() {
 
           {/* Header */}
           <header className="space-y-4">
-            <Link href="/" className="text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
+            <button onClick={() => router.back()} className="text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
               &larr; Back
-            </Link>
+            </button>
             <h1 className="text-3xl sm:text-5xl font-bold uppercase tracking-[0.2em]">Custom Foods</h1>
             <div className="w-12 h-px bg-theme-text-primary/30" />
             <p className="text-sm uppercase tracking-widest text-theme-text-tertiary">
@@ -351,12 +353,17 @@ export default function CustomFoods() {
 
           {/* Footer */}
           <footer className="border-t border-theme-text-primary/10 pt-8 flex flex-wrap items-center justify-between gap-4">
-            <div className="flex gap-6 text-xs uppercase tracking-widest">
+            <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs uppercase tracking-widest">
               <Link href="/" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Home</Link>
-              <Link href="/profile" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Profile</Link>
               <Link href="/stats" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Stats</Link>
+              <Link href="/compare" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Compare</Link>
+              <Link href="/profile" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Profile</Link>
+              <Link href="/about" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">About</Link>
+              <Link href="/changelog" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Changelog</Link>
+              <Link href="/privacy" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Privacy</Link>
+              <Link href="/admin" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Admin</Link>
             </div>
-            <span className="text-[10px] uppercase tracking-widest text-theme-text-tertiary/40">BoilerFuel &middot; {new Date().getFullYear()}</span>
+            <span className="text-[10px] uppercase tracking-widest text-theme-text-tertiary/40">BoilerFuel · {new Date().getFullYear()}</span>
           </footer>
 
         </div>

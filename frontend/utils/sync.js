@@ -142,12 +142,32 @@ export async function joinSyncPair(token, secret) {
 }
 
 // ── Push local data to server ──
+// Always pulls and merges server data FIRST before pushing, so we never
+// clobber changes made on another device between our last pull and this push.
 
 export async function pushData() {
   const token = getSyncToken();
   const secret = getSyncSecret();
   if (!token || !secret) return;
 
+  // Step 1: Pull any server-side changes and merge into local storage.
+  const since = localStorage.getItem(SYNC_LAST_PULL_KEY) || '0';
+  try {
+    const res = await fetch(`/api/sync?token=${encodeURIComponent(token)}&since=${since}`);
+    if (res.ok) {
+      const body = await res.json();
+      if (body.changed && body.encrypted_data) {
+        const serverData = await decrypt(body.encrypted_data, secret);
+        mergeRemoteData(serverData);
+        localStorage.setItem(SYNC_LAST_PULL_KEY, String(body.updated_at || Date.now()));
+      }
+    }
+  } catch {
+    // Non-fatal: if we can't reach the server, push local data as-is.
+    // This is safer than not pushing at all.
+  }
+
+  // Step 2: Gather the now-merged local data and push to server.
   const data = gatherLocalData();
   const encrypted = await encrypt(data, secret);
 
