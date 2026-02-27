@@ -1881,7 +1881,7 @@ export default function Home() {
                         className="p-1 border border-theme-text-primary/20 text-theme-text-tertiary hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors">
                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
                       </button>
-                      <span className="text-[9px] text-theme-text-tertiary ml-0.5">glasses</span>
+                      <span className="text-[9px] text-theme-text-tertiary ml-0.5">cups (8 oz)</span>
                     </div>
                   </div>
 
