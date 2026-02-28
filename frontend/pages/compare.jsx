@@ -123,7 +123,11 @@ export default function ComparePage() {
     <>
       <Head>
         <title>Compare Dining Courts — BoilerFuel</title>
-        <meta name="description" content="Compare menus side by side for any two Purdue dining locations." />
+        <meta name="description" content="Compare Purdue dining court menus side by side. See nutritional differences between Wiley, Earhart, Ford, Hillenbrand, and more." />
+        <link rel="canonical" href="https://boilerfuel.vercel.app/compare" />
+        <meta property="og:title" content="Compare Dining Courts — BoilerFuel" />
+        <meta property="og:description" content="Compare Purdue dining hall menus side by side to find the best nutritional options." />
+        <meta property="og:url" content="https://boilerfuel.vercel.app/compare" />
       </Head>
 
       <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary font-mono">

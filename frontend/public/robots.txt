@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /profile
+Disallow: /stats
+Disallow: /custom-foods
+
+Sitemap: https://boilerfuel.vercel.app/sitemap.xml

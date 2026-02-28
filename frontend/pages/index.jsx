@@ -910,7 +910,25 @@ export default function Home() {
     <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary font-mono"
          style={{ position: 'relative', overflow: 'hidden', maxWidth: '100vw' }}>
       <Head>
-        <title>BoilerFuel - Dining Menu</title>
+        <title>BoilerFuel — Purdue Dining Menus & Calorie Tracker</title>
+        <meta name="description" content="Browse Purdue University dining hall menus, track calories and macros, and log meals for free. Real-time data from Wiley, Earhart, Ford, Hillenbrand, and more." />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href="https://boilerfuel.vercel.app/" />
+        <meta property="og:title" content="BoilerFuel — Purdue Dining Menus & Calorie Tracker" />
+        <meta property="og:description" content="Browse Purdue dining halls, track calories & macros for free. Real-time menus from Wiley, Earhart, Ford, Hillenbrand, and campus retail." />
+        <meta property="og:url" content="https://boilerfuel.vercel.app/" />
+        <meta property="og:type" content="website" />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebApplication",
+          "name": "BoilerFuel",
+          "description": "Free calorie and macro tracker for Purdue University students. Real-time dining hall menus from HFS.",
+          "url": "https://boilerfuel.vercel.app/",
+          "applicationCategory": "HealthApplication",
+          "operatingSystem": "Any",
+          "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+          "audience": { "@type": "Audience", "audienceType": "Purdue University students" }
+        })}} />
       </Head>
 
       {/* ── Meal backup recovery banner ── */}

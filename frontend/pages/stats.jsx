@@ -428,8 +428,13 @@ export default function StatsPage() {
   return (
     <>
       <Head>
-        <title>Stats - BoilerFuel</title>
-        <meta name="description" content="BoilerFuel nutrition analytics and insights" />
+        <title>Stats — BoilerFuel</title>
+        <meta name="description" content="View your nutrition analytics, calorie trends, macro breakdowns, and weekly insights with BoilerFuel." />
+        <meta name="robots" content="noindex, nofollow" />
+        <link rel="canonical" href="https://boilerfuel.vercel.app/stats" />
+        <meta property="og:title" content="Stats — BoilerFuel" />
+        <meta property="og:description" content="Your personal nutrition analytics — calorie trends, macro breakdowns, and weekly insights." />
+        <meta property="og:url" content="https://boilerfuel.vercel.app/stats" />
       </Head>
 
       <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary font-mono">

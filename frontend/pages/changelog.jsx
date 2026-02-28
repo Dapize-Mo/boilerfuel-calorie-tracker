@@ -597,8 +597,12 @@ export default function Changelog() {
   return (
     <>
       <Head>
-        <title>Changelog - BoilerFuel</title>
-        <meta name="description" content="BoilerFuel version history and updates" />
+        <title>Changelog — BoilerFuel</title>
+        <meta name="description" content="BoilerFuel version history, feature updates, and bug fixes." />
+        <link rel="canonical" href="https://boilerfuel.vercel.app/changelog" />
+        <meta property="og:title" content="Changelog — BoilerFuel" />
+        <meta property="og:description" content="BoilerFuel version history, feature updates, and bug fixes." />
+        <meta property="og:url" content="https://boilerfuel.vercel.app/changelog" />
       </Head>
 
       <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary font-mono">

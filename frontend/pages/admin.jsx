@@ -164,8 +164,9 @@ export default function AdminPanel() {
   return (
     <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary font-mono">
       <Head>
-        <title>Admin Panel - BoilerFuel</title>
-        <meta name="description" content="Manage foods, exercises, and view statistics" />
+        <title>Admin Panel — BoilerFuel</title>
+        <meta name="description" content="BoilerFuel admin panel — manage foods and view site statistics." />
+        <meta name="robots" content="noindex, nofollow" />
       </Head>
 
       <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 py-12 sm:py-20 space-y-10">

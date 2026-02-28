@@ -251,7 +251,7 @@ export default function BarcodeScanner({ onFoodFound, onClose }) {
             <div className="space-y-4" style={{ animation: `fadeInTooltip 0.2s ${EASE} both` }}>
               <div className="flex gap-3 items-start">
                 {foundFood.image ? (
-                  <img src={foundFood.image} alt="" className="w-16 h-16 object-contain border border-theme-text-primary/10 shrink-0 bg-theme-bg-secondary" />
+                  <img src={foundFood.image} alt={foundFood.name} className="w-16 h-16 object-contain border border-theme-text-primary/10 shrink-0 bg-theme-bg-secondary" />
                 ) : (
                   <div className="w-16 h-16 border border-theme-text-primary/10 shrink-0 flex items-center justify-center bg-theme-bg-secondary">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-theme-text-tertiary/30">
