@@ -191,6 +191,12 @@ export function MealProvider({ children }) {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [doPull]);
 
+  // Periodic pull every 2 minutes so changes from other devices appear without a tab switch
+  useEffect(() => {
+    const interval = setInterval(() => doPull(), 2 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [doPull]);
+
   // Debounced push after any data change (skip initial mount)
   useEffect(() => {
     if (!mountedRef.current) return;
@@ -234,8 +240,10 @@ export function MealProvider({ children }) {
     setSyncStatus('syncing');
     try {
       await pushData();
-      const updated = await pullData();
-      if (updated) reloadFromStorage();
+      // pushData() already merges remote data into localStorage before pushing,
+      // so always reload React state from localStorage to reflect any merged changes.
+      await pullData();
+      reloadFromStorage();
       setSyncStatusTransient('success');
     } catch {
       setSyncStatusTransient('error');

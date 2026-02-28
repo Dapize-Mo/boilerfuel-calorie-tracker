@@ -252,6 +252,42 @@ export async function unpair() {
   clearSyncCredentials();
 }
 
+// ── Device identity ──
+
+function getOrCreateDeviceId() {
+  let id = localStorage.getItem('boilerfuel_device_id');
+  if (!id) {
+    const arr = new Uint8Array(6);
+    crypto.getRandomValues(arr);
+    id = Array.from(arr, b => b.toString(16).padStart(2, '0')).join('');
+    localStorage.setItem('boilerfuel_device_id', id);
+  }
+  return id;
+}
+
+function getDeviceName() {
+  const ua = navigator.userAgent;
+  let os = 'Desktop';
+  if (/iPhone|iPod/.test(ua)) os = 'iPhone';
+  else if (/iPad/.test(ua)) os = 'iPad';
+  else if (/Android/.test(ua)) os = 'Android';
+  else if (/Mac/.test(ua)) os = 'Mac';
+  else if (/Windows/.test(ua)) os = 'Windows';
+  else if (/Linux/.test(ua)) os = 'Linux';
+  let browser = 'Browser';
+  if (/Edg\//.test(ua)) browser = 'Edge';
+  else if (/CriOS/.test(ua) || (/Chrome/.test(ua) && !/Chromium/.test(ua))) browser = 'Chrome';
+  else if (/Firefox|FxiOS/.test(ua)) browser = 'Firefox';
+  else if (/Safari/.test(ua)) browser = 'Safari';
+  return `${browser} on ${os}`;
+}
+
+export function getSyncDevices() {
+  const raw = localStorage.getItem('boilerfuel_sync_devices');
+  if (!raw) return {};
+  try { return JSON.parse(raw); } catch { return {}; }
+}
+
 // ── Helpers ──
 
 function gatherLocalData() {
@@ -263,6 +299,15 @@ function gatherLocalData() {
     }
   }
   data._timestamp = Date.now();
+
+  // Register this device's last-seen timestamp
+  const deviceId = getOrCreateDeviceId();
+  const existing = localStorage.getItem('boilerfuel_sync_devices');
+  const devices = existing ? JSON.parse(existing) : {};
+  devices[deviceId] = { name: getDeviceName(), lastSeen: Date.now() };
+  localStorage.setItem('boilerfuel_sync_devices', JSON.stringify(devices));
+  data._devices = devices;
+
   return data;
 }
 
@@ -361,5 +406,18 @@ function mergeRemoteData(remote) {
       // For goals, templates, dietary — remote wins (last push wins)
       localStorage.setItem(key, JSON.stringify(remoteVal));
     }
+  }
+
+  // Merge device registry: union by device_id, keep newest lastSeen per device
+  if (remote._devices && typeof remote._devices === 'object') {
+    const existing = localStorage.getItem('boilerfuel_sync_devices');
+    const localDevices = existing ? JSON.parse(existing) : {};
+    const merged = { ...localDevices };
+    for (const [id, dev] of Object.entries(remote._devices)) {
+      if (!merged[id] || (dev.lastSeen || 0) > (merged[id].lastSeen || 0)) {
+        merged[id] = dev;
+      }
+    }
+    localStorage.setItem('boilerfuel_sync_devices', JSON.stringify(merged));
   }
 }

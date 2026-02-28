@@ -69,6 +69,7 @@ export default function ProfilePage() {
   const [weightImportStatus, setWeightImportStatus] = useState(''); // '' | 'success' | 'error'
   const [weightImportMsg, setWeightImportMsg] = useState('');
   const weightFileRef = useRef(null);
+  const [syncDevices, setSyncDevices] = useState({});
   const [logFilter, setLogFilter] = useState(null); // null | meal-time string
 
   // Notification settings
@@ -172,6 +173,8 @@ export default function ProfilePage() {
         setSyncSecret(secret);
         setSyncStatus('paired');
       }
+      const devicesRaw = localStorage.getItem('boilerfuel_sync_devices');
+      if (devicesRaw) setSyncDevices(JSON.parse(devicesRaw));
     } catch {}
   }, []);
 
@@ -1260,7 +1263,7 @@ export default function ProfilePage() {
                   <span className="text-xs text-theme-text-tertiary font-mono">{syncCode}</span>
                 </div>
                 <p className="text-[10px] text-theme-text-tertiary">
-                  Your data syncs automatically when you open the app or log meals. Changes are pushed after a 3-second delay.
+                  Your data syncs automatically when you open the app or log meals. Changes are pushed after a 3-second delay, and pulled every 2 minutes.
                 </p>
                 <div className="flex gap-3">
                   <button
@@ -1271,6 +1274,11 @@ export default function ProfilePage() {
                         await syncNow();
                         setSyncMsg('Synced successfully!');
                         setTimeout(() => setSyncMsg(''), 3000);
+                        // Refresh device list after sync
+                        try {
+                          const devRaw = localStorage.getItem('boilerfuel_sync_devices');
+                          if (devRaw) setSyncDevices(JSON.parse(devRaw));
+                        } catch {}
                       } catch {
                         setSyncError('Sync failed. Check your connection.');
                       }
@@ -1285,6 +1293,7 @@ export default function ProfilePage() {
                       setSyncStatus('idle');
                       setSyncCode('');
                       setSyncSecret('');
+                      setSyncDevices({});
                       setSyncMsg('Unpaired successfully.');
                       setTimeout(() => setSyncMsg(''), 3000);
                     }}
@@ -1292,6 +1301,34 @@ export default function ProfilePage() {
                     Unpair
                   </button>
                 </div>
+
+                {/* Connected devices */}
+                {Object.keys(syncDevices).length > 0 && (
+                  <div className="space-y-2 pt-2 border-t border-theme-text-primary/10">
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-theme-text-tertiary">
+                      Connected Devices
+                    </div>
+                    {Object.entries(syncDevices)
+                      .sort((a, b) => (b[1].lastSeen || 0) - (a[1].lastSeen || 0))
+                      .map(([id, dev]) => {
+                        const isThisDevice = id === (typeof window !== 'undefined' ? localStorage.getItem('boilerfuel_device_id') : null);
+                        const lastSeen = dev.lastSeen
+                          ? new Date(dev.lastSeen).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+                          : 'Never';
+                        return (
+                          <div key={id} className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2 min-w-0">
+                              {isThisDevice && <div className="w-1.5 h-1.5 bg-green-500 shrink-0" />}
+                              <span className="text-xs text-theme-text-secondary truncate">
+                                {dev.name || 'Unknown device'}{isThisDevice ? ' (this device)' : ''}
+                              </span>
+                            </div>
+                            <span className="text-[10px] text-theme-text-tertiary/60 font-mono shrink-0">{lastSeen}</span>
+                          </div>
+                        );
+                      })}
+                  </div>
+                )}
               </div>
             )}
 
