@@ -2,9 +2,11 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
+import { useSmartBack } from '../utils/useSmartBack';
 
 export default function About() {
   const router = useRouter();
+  const goBack = useSmartBack();
   const [fbType, setFbType] = useState('idea');
   const [fbMessage, setFbMessage] = useState('');
   const [fbContact, setFbContact] = useState('');
@@ -63,7 +65,7 @@ export default function About() {
 
           {/* Header */}
           <header className="space-y-4 border-b border-theme-text-primary/10 pb-10">
-            <button onClick={() => router.back()} className="text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
+            <button onClick={goBack} className="text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
               &larr; Back
             </button>
             <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6">

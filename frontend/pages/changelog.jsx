@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
+import { useSmartBack } from '../utils/useSmartBack';
 
 // Versioning system — built from actual git commit dates:
 //   x.0.0  Major — complete redesign or architectural overhaul
@@ -589,6 +590,7 @@ const ERAS = [
 
 export default function Changelog() {
   const router = useRouter();
+  const goBack = useSmartBack();
   const grouped = ERAS.map(era => ({
     ...era,
     versions: VERSIONS.filter(v => v.version.startsWith(era.prefix + '.')),
@@ -610,7 +612,7 @@ export default function Changelog() {
 
           {/* Header */}
           <header className="mb-12 space-y-4">
-            <button onClick={() => router.back()} className="text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
+            <button onClick={goBack} className="text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
               &larr; Back
             </button>
             <h1 className="text-3xl sm:text-5xl font-bold uppercase tracking-[0.2em]">Changelog</h1>

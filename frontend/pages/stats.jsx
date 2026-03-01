@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useTheme } from '../context/ThemeContext';
 import { useMeals } from '../context/MealContext';
+import { useSmartBack } from '../utils/useSmartBack';
 
 function getTodayKey() {
   const d = new Date();
@@ -277,6 +278,7 @@ const HISTORY_PER_PAGE = 20;
 
 export default function StatsPage() {
   const router = useRouter();
+  const goBack = useSmartBack();
   const { theme } = useTheme();
   const { goals, mealsByDate, waterByDate, weightByDate, getDateRange } = useMeals();
   const [period, setPeriod] = useState('week'); // week | month
@@ -442,7 +444,7 @@ export default function StatsPage() {
 
           {/* Header */}
           <header className="space-y-4">
-            <button onClick={() => router.back()} className="text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
+            <button onClick={goBack} className="text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
               &larr; Back
             </button>
             <h1 className="text-3xl sm:text-5xl font-bold uppercase tracking-[0.2em]">Stats</h1>
