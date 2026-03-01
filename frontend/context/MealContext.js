@@ -45,6 +45,10 @@ export function MealProvider({ children }) {
   // Dietary preferences: { vegetarian: bool, vegan: bool, excludeAllergens: string[] }
   const [dietaryPrefs, setDietaryPrefsState] = useState({ vegetarian: false, vegan: false, excludeAllergens: [] });
 
+  // Track whether we've loaded from localStorage — prevents persist effects from
+  // overwriting saved data with initial default values before the load completes.
+  const [isLoaded, setIsLoaded] = useState(false);
+
   // Load from localStorage on mount
   useEffect(() => {
     try {
@@ -75,10 +79,12 @@ export function MealProvider({ children }) {
       const savedDietary = localStorage.getItem(DIETARY_KEY);
       if (savedDietary) setDietaryPrefsState(JSON.parse(savedDietary));
     } catch {}
+    setIsLoaded(true);
   }, []);
 
   // Persist meals (with quota-exceeded fallback: trim to last 90 days)
   useEffect(() => {
+    if (!isLoaded) return;
     if (Object.keys(mealsByDate).length === 0) return;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(mealsByDate));
@@ -89,39 +95,45 @@ export function MealProvider({ children }) {
         try { localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed)); } catch {}
       }
     }
-  }, [mealsByDate]);
+  }, [mealsByDate, isLoaded]);
 
   // Persist goals
   useEffect(() => {
+    if (!isLoaded) return;
     try { localStorage.setItem(GOALS_KEY, JSON.stringify(goals)); } catch {}
-  }, [goals]);
+  }, [goals, isLoaded]);
 
   // Persist favorites
   useEffect(() => {
+    if (!isLoaded) return;
     try { localStorage.setItem(FAVORITES_KEY, JSON.stringify([...favorites])); } catch {}
-  }, [favorites]);
+  }, [favorites, isLoaded]);
 
   // Persist water
   useEffect(() => {
+    if (!isLoaded) return;
     if (Object.keys(waterByDate).length === 0) return;
     try { localStorage.setItem(WATER_KEY, JSON.stringify(waterByDate)); } catch {}
-  }, [waterByDate]);
+  }, [waterByDate, isLoaded]);
 
   // Persist weight
   useEffect(() => {
+    if (!isLoaded) return;
     if (Object.keys(weightByDate).length === 0) return;
     try { localStorage.setItem(WEIGHT_KEY, JSON.stringify(weightByDate)); } catch {}
-  }, [weightByDate]);
+  }, [weightByDate, isLoaded]);
 
   // Persist templates
   useEffect(() => {
+    if (!isLoaded) return;
     try { localStorage.setItem(TEMPLATES_KEY, JSON.stringify(templates)); } catch {}
-  }, [templates]);
+  }, [templates, isLoaded]);
 
   // Persist dietary prefs
   useEffect(() => {
+    if (!isLoaded) return;
     try { localStorage.setItem(DIETARY_KEY, JSON.stringify(dietaryPrefs)); } catch {}
-  }, [dietaryPrefs]);
+  }, [dietaryPrefs, isLoaded]);
 
   // ── Sync status: 'idle' | 'syncing' | 'success' | 'error' ──
   const [syncStatus, setSyncStatus] = useState('idle');
