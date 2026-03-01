@@ -403,6 +403,8 @@ export default function Home() {
   const [showProfileTooltip, setShowProfileTooltip] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
   const [templateName, setTemplateName] = useState('');
+  const [saveComboFoodId, setSaveComboFoodId] = useState(null); // which food's inline combo-save form is open
+  const [saveComboName, setSaveComboName] = useState(''); // name being typed for combo save
 
   const mealTimes = ['All', 'Breakfast', 'Brunch', 'Lunch', 'Late Lunch', 'Dinner'];
   const isLanding = view === 'landing';
@@ -1671,11 +1673,46 @@ export default function Home() {
                                           <span className="text-xs font-mono font-bold tabular-nums">{total} cal</span>
                                         </div>
                                         <div className="flex items-center gap-1.5 shrink-0">
-                                          <button
-                                            onClick={(e) => { e.stopPropagation(); const name = window.prompt(`Save "${food.name}" combo as template:`, food.name); if (name) saveTemplate(name, compsWithCal); }}
-                                            className="text-[10px] border border-theme-text-primary/20 text-theme-text-tertiary px-2.5 py-1.5 font-bold uppercase tracking-wider hover:border-theme-text-primary hover:text-theme-text-primary transition-colors whitespace-nowrap">
-                                            Save combo
-                                          </button>
+                                          {saveComboFoodId === food.id ? (
+                                            <form
+                                              className="flex items-center gap-1"
+                                              onClick={e => e.stopPropagation()}
+                                              onSubmit={e => {
+                                                e.preventDefault();
+                                                const name = saveComboName.trim();
+                                                if (name) { saveTemplate(name, compsWithCal); }
+                                                setSaveComboFoodId(null);
+                                                setSaveComboName('');
+                                              }}>
+                                              <input
+                                                autoFocus
+                                                type="text"
+                                                value={saveComboName}
+                                                onChange={e => setSaveComboName(e.target.value)}
+                                                placeholder={food.name}
+                                                className="border border-theme-text-primary/40 bg-theme-bg-primary text-theme-text-primary px-2 py-1 text-[10px] font-mono focus:border-theme-text-primary focus:outline-none w-36"
+                                                onKeyDown={e => { if (e.key === 'Escape') { setSaveComboFoodId(null); setSaveComboName(''); } }}
+                                              />
+                                              <button
+                                                type="submit"
+                                                disabled={!saveComboName.trim()}
+                                                className="text-[10px] border border-theme-text-primary/40 text-theme-text-secondary px-2 py-1 font-bold uppercase tracking-wider hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors disabled:opacity-30">
+                                                Save
+                                              </button>
+                                              <button
+                                                type="button"
+                                                onClick={() => { setSaveComboFoodId(null); setSaveComboName(''); }}
+                                                className="text-[10px] px-1.5 py-1 text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
+                                                ✕
+                                              </button>
+                                            </form>
+                                          ) : (
+                                            <button
+                                              onClick={(e) => { e.stopPropagation(); setSaveComboName(food.name); setSaveComboFoodId(food.id); }}
+                                              className="text-[10px] border border-theme-text-primary/20 text-theme-text-tertiary px-2.5 py-1.5 font-bold uppercase tracking-wider hover:border-theme-text-primary hover:text-theme-text-primary transition-colors whitespace-nowrap">
+                                              Save combo
+                                            </button>
+                                          )}
                                           <button
                                             onClick={(e) => { e.stopPropagation(); compsWithCal.forEach(c => addMeal(c, food.meal_time?.toLowerCase() || mealTime.toLowerCase(), selectedDate)); }}
                                             className="text-[10px] border border-theme-text-primary/30 px-2.5 py-1.5 font-bold uppercase tracking-wider hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors whitespace-nowrap">
@@ -1683,11 +1720,35 @@ export default function Home() {
                                           </button>
                                         </div>
                                       </div>
+                                      {/* Matching saved combos (templates) for quick reuse */}
+                                      {(() => {
+                                        const matchingTemplates = (templates || []).filter(t =>
+                                          t.foods.some(f => compsWithCal.some(c => c.id === f.id))
+                                        );
+                                        if (matchingTemplates.length === 0) return null;
+                                        return (
+                                          <div className="pt-2 border-t border-theme-text-primary/5">
+                                            <div className="text-[9px] uppercase tracking-widest text-theme-text-tertiary/60 mb-1.5">Saved presets</div>
+                                            <div className="flex flex-wrap gap-1.5">
+                                              {matchingTemplates.map(t => (
+                                                <button
+                                                  key={t.id}
+                                                  onClick={(e) => { e.stopPropagation(); applyTemplate(t, selectedDate); }}
+                                                  className="flex items-center gap-1 text-[10px] border border-theme-text-primary/20 px-2 py-1 text-theme-text-secondary hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors"
+                                                  title={`Apply preset: ${t.foods.length} items · ${t.foods.reduce((s, f) => s + (f.calories || 0), 0)} cal`}>
+                                                  <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
+                                                  {t.name}
+                                                </button>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        );
+                                      })()}
                                     </div>
                                   );
                                 })()}
                                 <div className="mt-2 text-[10px] text-theme-text-tertiary/60">
-                                  Add individual items above, use Add all to log the full combo, or Save combo as a reusable template.
+                                  Add individual items above, use <span className="font-bold">Add all</span> to log the full combo, or <span className="font-bold">Save combo</span> to create a reusable preset.
                                 </div>
                               </div>
                             ) : (

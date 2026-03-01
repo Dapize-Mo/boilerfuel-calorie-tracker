@@ -73,6 +73,7 @@ export default function ProfilePage() {
   const [weightImportMsg, setWeightImportMsg] = useState('');
   const weightFileRef = useRef(null);
   const [syncDevices, setSyncDevices] = useState({});
+  const [syncLog, setSyncLog] = useState([]); // activity log entries from getSyncLog()
   const [logFilter, setLogFilter] = useState(null); // null | meal-time string
 
   // Notification settings
@@ -166,7 +167,7 @@ export default function ProfilePage() {
     ['breakfast', 'brunch', 'lunch', 'dinner'].forEach(m => toggleMealEnabled(m, enabled));
   }
 
-  // Check if already paired on mount
+  // Check if already paired on mount; also load sync activity log
   useEffect(() => {
     try {
       const token = localStorage.getItem('boilerfuel_sync_token');
@@ -178,6 +179,7 @@ export default function ProfilePage() {
       }
       const devicesRaw = localStorage.getItem('boilerfuel_sync_devices');
       if (devicesRaw) setSyncDevices(JSON.parse(devicesRaw));
+      import('../utils/sync').then(({ getSyncLog }) => setSyncLog(getSyncLog())).catch(() => {});
     } catch {}
   }, []);
 
@@ -1282,13 +1284,15 @@ export default function ProfilePage() {
                         await syncNow();
                         setSyncMsg('Synced successfully!');
                         setTimeout(() => setSyncMsg(''), 3000);
-                        // Refresh device list after sync
+                        // Refresh device list and sync log after sync
                         try {
                           const devRaw = localStorage.getItem('boilerfuel_sync_devices');
                           if (devRaw) setSyncDevices(JSON.parse(devRaw));
                         } catch {}
+                        import('../utils/sync').then(({ getSyncLog }) => setSyncLog(getSyncLog())).catch(() => {});
                       } catch {
                         setSyncError('Sync failed. Check your connection.');
+                        import('../utils/sync').then(({ getSyncLog }) => setSyncLog(getSyncLog())).catch(() => {});
                       }
                     }}
                     className="px-4 py-2 border border-theme-text-primary text-theme-text-primary text-xs font-bold uppercase tracking-wider hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors">
@@ -1426,11 +1430,12 @@ export default function ProfilePage() {
                         setSyncSecret(joinSecret.trim());
                         setSyncStatus('paired');
                         reloadFromStorage();
-                        // Refresh device list
+                        // Refresh device list and sync log
                         try {
                           const devRaw = localStorage.getItem('boilerfuel_sync_devices');
                           if (devRaw) setSyncDevices(JSON.parse(devRaw));
                         } catch {}
+                        import('../utils/sync').then(({ getSyncLog }) => setSyncLog(getSyncLog())).catch(() => {});
                         setSyncMsg('Paired and synced!');
                         setTimeout(() => setSyncMsg(''), 3000);
                       } catch (err) {
@@ -1488,6 +1493,43 @@ export default function ProfilePage() {
                     </p>
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* ── Sync Activity Log ── */}
+            {syncLog.length > 0 && (
+              <div className="space-y-2 pt-4 border-t border-theme-text-primary/10">
+                <div className="flex items-center justify-between">
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-theme-text-tertiary">
+                    Sync Activity
+                  </div>
+                  <button
+                    onClick={() => {
+                      import('../utils/sync').then(({ clearSyncLog }) => { clearSyncLog(); setSyncLog([]); }).catch(() => {});
+                    }}
+                    className="text-[9px] uppercase tracking-wider text-theme-text-tertiary/50 hover:text-theme-text-tertiary transition-colors">
+                    Clear
+                  </button>
+                </div>
+                <div className="space-y-1 max-h-52 overflow-y-auto">
+                  {syncLog.map((entry, i) => {
+                    const time = new Date(entry.ts).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                    const isError = entry.status === 'error';
+                    const isPush = entry.direction === 'push';
+                    return (
+                      <div key={i} className={`flex items-start gap-2 text-[10px] font-mono px-2 py-1.5 border ${isError ? 'border-red-500/20 bg-red-500/5' : 'border-theme-text-primary/5 bg-theme-bg-secondary/30'}`}>
+                        <span className={`shrink-0 font-bold uppercase ${isError ? 'text-red-500' : isPush ? 'text-blue-400' : 'text-green-500'}`}>
+                          {isError ? '✕' : isPush ? '↑' : '↓'} {entry.direction}
+                        </span>
+                        <span className="text-theme-text-tertiary/60 shrink-0">{time}</span>
+                        <span className={`truncate ${isError ? 'text-red-400' : 'text-theme-text-tertiary'}`}>{entry.detail}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="text-[9px] text-theme-text-tertiary/40">
+                  Showing last {syncLog.length} sync event{syncLog.length !== 1 ? 's' : ''}. ↑ push · ↓ pull. All data is encrypted end-to-end.
+                </p>
               </div>
             )}
           </section>
