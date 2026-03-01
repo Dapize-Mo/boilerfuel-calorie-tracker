@@ -18,6 +18,37 @@ const WEIGHT_KEY = 'boilerfuel_weight';
 const TEMPLATES_KEY = 'boilerfuel_templates';
 const DIETARY_KEY = 'boilerfuel_dietary';
 
+// Extra redundancy: a second localStorage key + sessionStorage copy that are
+// written on every meal save so data survives corruption or unexpected clears.
+const MEALS_REDUNDANT_KEY = 'boilerfuel_meals_r2';
+
+function saveMealsRedundant(data) {
+  const json = JSON.stringify(data);
+  try { localStorage.setItem(MEALS_REDUNDANT_KEY, json); } catch {}
+  try { sessionStorage.setItem(STORAGE_KEY, json); } catch {}
+}
+
+function loadMealsWithFallback() {
+  // Try primary → redundant localStorage → sessionStorage, picking whichever
+  // has the most date-keys (most complete dataset).
+  const sources = [
+    localStorage.getItem(STORAGE_KEY),
+    localStorage.getItem(MEALS_REDUNDANT_KEY),
+    sessionStorage.getItem(STORAGE_KEY),
+  ];
+  let best = null;
+  let bestCount = -1;
+  for (const raw of sources) {
+    if (!raw) continue;
+    try {
+      const parsed = JSON.parse(raw);
+      const count = Object.keys(parsed).length;
+      if (count > bestCount) { best = parsed; bestCount = count; }
+    } catch {}
+  }
+  return best;
+}
+
 function getTodayKey() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -52,8 +83,13 @@ export function MealProvider({ children }) {
   // Load from localStorage on mount
   useEffect(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) setMealsByDate(JSON.parse(saved));
+      const saved = loadMealsWithFallback();
+      if (saved) {
+        setMealsByDate(saved);
+        // Ensure all three copies are in sync after a fallback recovery
+        saveMealsRedundant(saved);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+      }
     } catch {}
     try {
       const savedGoals = localStorage.getItem(GOALS_KEY);
@@ -83,6 +119,8 @@ export function MealProvider({ children }) {
   }, []);
 
   // Persist meals (with quota-exceeded fallback: trim to last 90 days)
+  // Writes to three locations: primary localStorage, redundant localStorage key,
+  // and sessionStorage — so a single-store failure can't wipe data.
   useEffect(() => {
     if (!isLoaded) return;
     if (Object.keys(mealsByDate).length === 0) return;
@@ -95,6 +133,7 @@ export function MealProvider({ children }) {
         try { localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed)); } catch {}
       }
     }
+    saveMealsRedundant(mealsByDate);
   }, [mealsByDate, isLoaded]);
 
   // Persist goals
@@ -149,7 +188,7 @@ export function MealProvider({ children }) {
 
   // Reload all state from localStorage (after sync pull)
   const reloadFromStorage = useCallback(() => {
-    try { const s = localStorage.getItem(STORAGE_KEY); if (s) setMealsByDate(JSON.parse(s)); } catch {}
+    try { const s = loadMealsWithFallback(); if (s) setMealsByDate(s); } catch {}
     try { const s = localStorage.getItem(GOALS_KEY); if (s) setGoalsState(JSON.parse(s)); } catch {}
     try { const s = localStorage.getItem(FAVORITES_KEY); if (s) setFavoritesState(new Set(JSON.parse(s))); } catch {}
     try { const s = localStorage.getItem(WATER_KEY); if (s) setWaterByDate(JSON.parse(s)); } catch {}
