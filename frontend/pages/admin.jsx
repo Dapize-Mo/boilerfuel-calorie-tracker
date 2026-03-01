@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { useSmartBack } from '../utils/useSmartBack';
 import { signIn, signOut, useSession } from "next-auth/react";
 import {
   adminLogin,
@@ -17,6 +18,7 @@ const ITEMS_PER_PAGE = 20;
 
 export default function AdminPanel() {
   const router = useRouter();
+  const goBack = useSmartBack();
   const { data: session, status } = useSession();
   const [authenticated, setAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
@@ -103,7 +105,7 @@ export default function AdminPanel() {
         <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 py-12 sm:py-20">
 
           <header className="space-y-4 border-b border-theme-text-primary/10 pb-10 mb-12">
-            <button onClick={() => router.back()} className="text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
+            <button onClick={goBack} className="text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
               &larr; Back
             </button>
             <h1 className="text-4xl sm:text-6xl font-bold uppercase tracking-[0.2em]">Admin</h1>
@@ -173,7 +175,7 @@ export default function AdminPanel() {
 
         {/* Header */}
         <header className="space-y-4 border-b border-theme-text-primary/10 pb-10">
-          <button onClick={() => router.back()} className="text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
+          <button onClick={goBack} className="text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
             &larr; Back
           </button>
           <div className="flex items-end justify-between gap-6">
