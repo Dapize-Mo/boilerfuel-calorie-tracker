@@ -145,24 +145,40 @@ export async function joinSyncPair(token, secret) {
 // Always pulls and merges server data FIRST before pushing, so we never
 // clobber changes made on another device between our last pull and this push.
 
-export async function pushData() {
+export async function pushData(options = {}) {
+  const { strict = false, includeReport = false } = options;
   const token = getSyncToken();
   const secret = getSyncSecret();
-  if (!token || !secret) return;
+  if (!token || !secret) {
+    if (strict) throw new Error('Device is not paired for sync.');
+    return includeReport ? { pushed: false, pulled: false, skipped: true, transferred: [] } : undefined;
+  }
+
+  let pulled = false;
+  let pulledTransfer = [];
+  let pullUpdatedAt = null;
 
   // Step 1: Pull any server-side changes and merge into local storage.
   const since = localStorage.getItem(SYNC_LAST_PULL_KEY) || '0';
   try {
     const res = await fetch(`/api/sync?token=${encodeURIComponent(token)}&since=${since}`);
+    if (!res.ok) {
+      const msg = await parseErrorMessage(res, 'Failed to fetch remote sync data');
+      throw new Error(msg);
+    }
     if (res.ok) {
       const body = await res.json();
       if (body.changed && body.encrypted_data) {
         const serverData = await decrypt(body.encrypted_data, secret);
+        pulledTransfer = summarizeTransferredData(serverData);
         mergeRemoteData(serverData);
         localStorage.setItem(SYNC_LAST_PULL_KEY, String(body.updated_at || Date.now()));
+        pulled = true;
+        pullUpdatedAt = body.updated_at || Date.now();
       }
     }
-  } catch {
+  } catch (err) {
+    if (strict) throw err;
     // Non-fatal: if we can't reach the server, push local data as-is.
     // This is safer than not pushing at all.
   }
@@ -171,7 +187,7 @@ export async function pushData() {
   const data = gatherLocalData();
   const encrypted = await encrypt(data, secret);
 
-  await fetch('/api/sync', {
+  const pushRes = await fetch('/api/sync', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -181,26 +197,70 @@ export async function pushData() {
       updated_at: Date.now(),
     }),
   });
+
+  if (!pushRes.ok) {
+    const msg = await parseErrorMessage(pushRes, 'Failed to push local sync data');
+    throw new Error(msg);
+  }
+
+  if (!includeReport) return;
+
+  return {
+    pushed: true,
+    pulled,
+    pullUpdatedAt,
+    transferred: summarizeTransferredData(data),
+    pulledTransferred: pulledTransfer,
+  };
 }
 
 // ── Pull remote data from server ──
 
-export async function pullData() {
+export async function pullData(options = {}) {
+  const { includeReport = false, strict = false } = options;
   const token = getSyncToken();
   const secret = getSyncSecret();
-  if (!token || !secret) return false;
+  if (!token || !secret) {
+    if (strict) throw new Error('Device is not paired for sync.');
+    return includeReport ? { changed: false, skipped: true, transferred: [] } : false;
+  }
 
   const since = localStorage.getItem(SYNC_LAST_PULL_KEY) || '0';
   const res = await fetch(`/api/sync?token=${encodeURIComponent(token)}&since=${since}`);
-  if (!res.ok) return false;
+  if (!res.ok) {
+    const msg = await parseErrorMessage(res, 'Failed to pull sync data');
+    if (strict) throw new Error(msg);
+    return includeReport ? { changed: false, error: msg, transferred: [] } : false;
+  }
 
   const body = await res.json();
-  if (!body.changed) return false;
+  if (!body.changed) return includeReport ? { changed: false, transferred: [] } : false;
 
   const data = await decrypt(body.encrypted_data, secret);
+  const transferred = summarizeTransferredData(data);
   mergeRemoteData(data);
   localStorage.setItem(SYNC_LAST_PULL_KEY, String(body.updated_at || Date.now()));
-  return true; // data was updated
+  if (!includeReport) return true; // data was updated
+  return { changed: true, updatedAt: body.updated_at || Date.now(), transferred };
+}
+
+export async function syncNowDetailed() {
+  const pushReport = await pushData({ strict: true, includeReport: true });
+  const pullReport = await pullData({ strict: true, includeReport: true });
+  const devices = getSyncDevices();
+  return {
+    pushed: !!pushReport?.pushed,
+    pulledOnPush: !!pushReport?.pulled,
+    pulledAfterPush: !!pullReport?.changed,
+    transferred: pushReport?.transferred || [],
+    pulledTransferred: [
+      ...(pushReport?.pulledTransferred || []),
+      ...(pullReport?.transferred || []),
+    ],
+    deviceCount: Object.keys(devices).length,
+    devices,
+    syncedAt: Date.now(),
+  };
 }
 
 // ── Meal backup / recovery ──
@@ -286,6 +346,54 @@ export function getSyncDevices() {
   const raw = localStorage.getItem('boilerfuel_sync_devices');
   if (!raw) return {};
   try { return JSON.parse(raw); } catch { return {}; }
+}
+
+function summarizeTransferredData(data) {
+  const summary = [];
+  if (!data || typeof data !== 'object') return summary;
+
+  if (data.boilerfuel_meals && typeof data.boilerfuel_meals === 'object') {
+    const days = Object.keys(data.boilerfuel_meals).length;
+    const entries = Object.values(data.boilerfuel_meals).reduce((sum, dayMeals) => {
+      if (!Array.isArray(dayMeals)) return sum;
+      return sum + dayMeals.length;
+    }, 0);
+    summary.push({ key: 'meals', label: 'Meals', detail: `${entries} meal entries across ${days} days` });
+  }
+
+  if (data.boilerfuel_goals) {
+    summary.push({ key: 'goals', label: 'Goals', detail: 'Nutrition goals + targets' });
+  }
+
+  if (Array.isArray(data.boilerfuel_favorites)) {
+    summary.push({ key: 'favorites', label: 'Favorites', detail: `${data.boilerfuel_favorites.length} saved foods` });
+  }
+
+  if (data.boilerfuel_water && typeof data.boilerfuel_water === 'object') {
+    summary.push({ key: 'water', label: 'Water log', detail: `${Object.keys(data.boilerfuel_water).length} day entries` });
+  }
+
+  if (data.boilerfuel_weight && typeof data.boilerfuel_weight === 'object') {
+    summary.push({ key: 'weight', label: 'Weight log', detail: `${Object.keys(data.boilerfuel_weight).length} day entries` });
+  }
+
+  if (Array.isArray(data.boilerfuel_templates)) {
+    summary.push({ key: 'templates', label: 'Meal templates', detail: `${data.boilerfuel_templates.length} templates` });
+  }
+
+  if (data.boilerfuel_dietary) {
+    summary.push({ key: 'dietary', label: 'Dietary filters', detail: 'Preference + allergen filters' });
+  }
+
+  return summary;
+}
+
+async function parseErrorMessage(res, fallback = 'Sync request failed') {
+  try {
+    const body = await res.json();
+    if (body?.error) return body.error;
+  } catch {}
+  return fallback;
 }
 
 // ── Helpers ──

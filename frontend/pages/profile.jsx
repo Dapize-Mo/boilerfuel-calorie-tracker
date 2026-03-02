@@ -70,6 +70,10 @@ export default function ProfilePage() {
   const [weightImportMsg, setWeightImportMsg] = useState('');
   const weightFileRef = useRef(null);
   const [syncDevices, setSyncDevices] = useState({});
+  const [syncReport, setSyncReport] = useState(null);
+  const [syncNowLoading, setSyncNowLoading] = useState(false);
+  const [lastSyncAt, setLastSyncAt] = useState(null);
+  const [syncAgeTick, setSyncAgeTick] = useState(0);
   const [logFilter, setLogFilter] = useState(null); // null | meal-time string
 
   // Notification settings
@@ -168,15 +172,40 @@ export default function ProfilePage() {
     try {
       const token = localStorage.getItem('boilerfuel_sync_token');
       const secret = localStorage.getItem('boilerfuel_sync_secret');
+      const savedLastSyncAt = localStorage.getItem('boilerfuel_sync_last_success_at');
       if (token && secret) {
         setSyncCode(token);
         setSyncSecret(secret);
         setSyncStatus('paired');
       }
+      if (savedLastSyncAt) {
+        const parsed = parseInt(savedLastSyncAt, 10);
+        if (!Number.isNaN(parsed)) setLastSyncAt(parsed);
+      }
       const devicesRaw = localStorage.getItem('boilerfuel_sync_devices');
       if (devicesRaw) setSyncDevices(JSON.parse(devicesRaw));
     } catch {}
   }, []);
+
+  const lastSyncAgoLabel = useMemo(() => {
+    if (!lastSyncAt) return '';
+    const diffMs = Date.now() - lastSyncAt;
+    const minutes = Math.max(0, Math.floor(diffMs / 60000));
+    if (minutes < 1) return 'just now';
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    return `${days}d ago`;
+  }, [lastSyncAt, syncAgeTick]);
+
+  useEffect(() => {
+    if (!lastSyncAt) return;
+    const interval = setInterval(() => {
+      setSyncAgeTick((tick) => tick + 1);
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [lastSyncAt]);
 
   const isToday = selectedDate === getTodayKey();
 
@@ -1270,26 +1299,47 @@ export default function ProfilePage() {
                 <p className="text-[10px] text-theme-text-tertiary">
                   Your data syncs automatically when you open the app or log meals. Changes are pushed after a 3-second delay, and pulled every 2 minutes.
                 </p>
+                {lastSyncAgoLabel && (
+                  <p className="text-[10px] text-theme-text-tertiary/80">
+                    Last successful sync: {lastSyncAgoLabel}
+                  </p>
+                )}
                 <div className="flex gap-3">
                   <button
                     onClick={async () => {
+                      setSyncNowLoading(true);
                       setSyncMsg('');
                       setSyncError('');
+                      setSyncReport(null);
                       try {
-                        await syncNow();
-                        setSyncMsg('Synced successfully!');
-                        setTimeout(() => setSyncMsg(''), 3000);
+                        const report = await syncNow();
+                        setSyncReport(report || null);
+
                         // Refresh device list after sync
                         try {
-                          const devRaw = localStorage.getItem('boilerfuel_sync_devices');
-                          if (devRaw) setSyncDevices(JSON.parse(devRaw));
+                          if (report?.devices) {
+                            setSyncDevices(report.devices);
+                          } else {
+                            const devRaw = localStorage.getItem('boilerfuel_sync_devices');
+                            if (devRaw) setSyncDevices(JSON.parse(devRaw));
+                          }
                         } catch {}
-                      } catch {
-                        setSyncError('Sync failed. Check your connection.');
+
+                        const deviceCount = report?.deviceCount || Object.keys(syncDevices || {}).length;
+                        const syncedAt = report?.syncedAt || Date.now();
+                        setLastSyncAt(syncedAt);
+                        localStorage.setItem('boilerfuel_sync_last_success_at', String(syncedAt));
+                        setSyncMsg(`Sync completed. ${deviceCount} paired device${deviceCount === 1 ? '' : 's'} in this sync group.`);
+                        setTimeout(() => setSyncMsg(''), 3500);
+                      } catch (err) {
+                        setSyncError(err?.message || 'Sync failed. Check your connection.');
+                      } finally {
+                        setSyncNowLoading(false);
                       }
                     }}
+                    disabled={syncNowLoading}
                     className="px-4 py-2 border border-theme-text-primary text-theme-text-primary text-xs font-bold uppercase tracking-wider hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors">
-                    Sync Now
+                    {syncNowLoading ? 'Syncing…' : 'Sync Now'}
                   </button>
                   <button
                     onClick={async () => {
@@ -1299,6 +1349,9 @@ export default function ProfilePage() {
                       setSyncCode('');
                       setSyncSecret('');
                       setSyncDevices({});
+                      setSyncReport(null);
+                      setLastSyncAt(null);
+                      localStorage.removeItem('boilerfuel_sync_last_success_at');
                       setSyncMsg('Unpaired successfully.');
                       setTimeout(() => setSyncMsg(''), 3000);
                     }}
@@ -1306,6 +1359,58 @@ export default function ProfilePage() {
                     Unpair
                   </button>
                 </div>
+
+                {syncReport && (
+                  <div className="space-y-3 border border-theme-text-primary/20 p-3 bg-theme-bg-secondary/30">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="text-[10px] font-bold uppercase tracking-widest text-theme-text-tertiary">Last Sync Transfer</div>
+                      <div className="text-[10px] font-mono text-theme-text-tertiary/70">
+                        {syncReport.syncedAt ? new Date(syncReport.syncedAt).toLocaleString() : 'Just now'}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[10px] uppercase tracking-widest">
+                      <div className="border border-theme-text-primary/10 px-2 py-1 text-theme-text-secondary">
+                        Push: {syncReport.pushed ? 'Complete' : 'Skipped'}
+                      </div>
+                      <div className="border border-theme-text-primary/10 px-2 py-1 text-theme-text-secondary">
+                        Pulled before push: {syncReport.pulledOnPush ? 'Yes' : 'No'}
+                      </div>
+                      <div className="border border-theme-text-primary/10 px-2 py-1 text-theme-text-secondary">
+                        Pulled after push: {syncReport.pulledAfterPush ? 'Yes' : 'No'}
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <div className="text-[10px] font-bold uppercase tracking-widest text-theme-text-tertiary">Data sent from this device</div>
+                      {syncReport.transferred?.length ? (
+                        <ul className="space-y-1">
+                          {syncReport.transferred.map((item) => (
+                            <li key={`push-${item.key}`} className="text-xs text-theme-text-secondary">
+                              <span className="font-bold text-theme-text-primary">{item.label}:</span> {item.detail}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-xs text-theme-text-tertiary">No local sync data found to send.</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-1">
+                      <div className="text-[10px] font-bold uppercase tracking-widest text-theme-text-tertiary">Data received from paired devices</div>
+                      {syncReport.pulledTransferred?.length ? (
+                        <ul className="space-y-1">
+                          {syncReport.pulledTransferred.map((item, idx) => (
+                            <li key={`pull-${item.key}-${idx}`} className="text-xs text-theme-text-secondary">
+                              <span className="font-bold text-theme-text-primary">{item.label}:</span> {item.detail}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-xs text-theme-text-tertiary">No newer remote changes were available.</p>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/* Connected devices */}
                 {Object.keys(syncDevices).length > 0 && (
@@ -1345,6 +1450,7 @@ export default function ProfilePage() {
                     onClick={async () => {
                       setSyncStatus('creating');
                       setSyncError('');
+                      setSyncReport(null);
                       try {
                         const { createSyncPair } = await import('../utils/sync');
                         const { token, secret } = await createSyncPair();
@@ -1413,6 +1519,9 @@ export default function ProfilePage() {
                       try {
                         const { joinSyncPair } = await import('../utils/sync');
                         await joinSyncPair(joinCode.trim(), joinSecret.trim());
+                        const { getSyncDevices } = await import('../utils/sync');
+                        setSyncDevices(getSyncDevices());
+                        setSyncReport(null);
                         setSyncCode(joinCode.trim());
                         setSyncSecret(joinSecret.trim());
                         setSyncStatus('paired');

@@ -235,20 +235,18 @@ export function MealProvider({ children }) {
 
   // Manual sync trigger (for UI button)
   const syncNow = useCallback(async () => {
-    const { isSynced, pushData, pullData } = await import('../utils/sync');
-    if (!isSynced()) return false;
+    const { isSynced, syncNowDetailed } = await import('../utils/sync');
+    if (!isSynced()) return { skipped: true };
     setSyncStatus('syncing');
     try {
-      await pushData();
-      // pushData() already merges remote data into localStorage before pushing,
-      // so always reload React state from localStorage to reflect any merged changes.
-      await pullData();
+      const report = await syncNowDetailed();
       reloadFromStorage();
       setSyncStatusTransient('success');
-    } catch {
+      return report;
+    } catch (err) {
       setSyncStatusTransient('error');
+      throw err;
     }
-    return true;
   }, [reloadFromStorage, setSyncStatusTransient]);
 
   const todayKey = getTodayKey();
