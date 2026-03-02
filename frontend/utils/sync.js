@@ -561,7 +561,11 @@ function mergeRemoteData(remote) {
 
       // Save a rolling backup BEFORE overwriting, so the UI can offer restore
       if (mealsBefore) {
-        localStorage.setItem('boilerfuel_meals_backup', mealsBefore);
+        try {
+          localStorage.setItem('boilerfuel_meals_backup', mealsBefore);
+        } catch {
+          // localStorage quota exceeded — skip backup silently
+        }
       }
       localStorage.setItem(key, JSON.stringify(merged));
     } else if (key === 'boilerfuel_water') {
