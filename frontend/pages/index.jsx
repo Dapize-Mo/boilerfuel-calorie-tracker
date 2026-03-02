@@ -376,7 +376,7 @@ function MacroTooltip({ food, pos }) {
 // ══════════════════════════════════════
 export default function Home() {
   const router = useRouter();
-  const { addMeal, removeMeal, getCount, isFavorite, toggleFavorite, dietaryPrefs, getWater, addWater, mealsByDate, goals, templates, saveTemplate, deleteTemplate, applyTemplate, hasMealsBackup, restoreMealsBackup } = useMeals();
+  const { addMeal, removeMeal, getCount, isFavorite, toggleFavorite, dietaryPrefs, getWater, addWater, mealsByDate, goals, templates, saveTemplate, deleteTemplate, applyTemplate, hasMealsBackup, restoreMealsBackup, getStreak } = useMeals();
   // ── State ──
   const [location, setLocation] = useState({ type: 'all', value: 'All' });
   const [mealTime, setMealTime] = useState('All');
@@ -1235,6 +1235,16 @@ export default function Home() {
                 {searchText && <> matching &ldquo;{searchText}&rdquo;</>}
               </span>
               <div className="flex items-center gap-3">
+                {/* Streak indicator */}
+                {(() => {
+                  const streak = getStreak ? getStreak() : 0;
+                  if (streak < 2) return null;
+                  return (
+                    <span className="text-[10px] uppercase tracking-widest text-yellow-500/70 font-mono" title={`${streak}-day logging streak`}>
+                      {streak}d streak
+                    </span>
+                  );
+                })()}
                 {/* Stats link */}
                 <Link href="/stats" className="text-[10px] uppercase tracking-widest text-yellow-500/70 hover:text-yellow-500 transition-colors">
                   Stats
@@ -2026,6 +2036,8 @@ export default function Home() {
             </p>
             <div className="flex gap-4 text-xs font-mono">
               <Link href="/about" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">About</Link>
+              <span className="text-theme-text-tertiary/20">&middot;</span>
+              <Link href="/tools" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Tools</Link>
               <span className="text-theme-text-tertiary/20">&middot;</span>
               <Link href="/compare" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Compare</Link>
               <span className="text-theme-text-tertiary/20">&middot;</span>

@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import { useTheme } from '../context/ThemeContext';
 import { useMeals } from '../context/MealContext';
 import { useSmartBack } from '../utils/useSmartBack';
+import { calcNutritionScore } from '../utils/nutritionScore';
 
 function getTodayKey() {
   const d = new Date();
@@ -730,6 +731,50 @@ export default function StatsPage() {
             </div>
           </section>
 
+          {/* ═══ NUTRITION SCORE ═══ */}
+          {todayData.meals && todayData.meals.length > 0 && (() => {
+            const { score, grade, breakdown } = calcNutritionScore(todayData.totals, goals);
+            const gradeColorMap = { A: '#22c55e', B: '#3b82f6', C: '#eab308', D: '#f97316', F: '#ef4444' };
+            const gc = gradeColorMap[grade] || '#6b7280';
+            return (
+              <section className="space-y-4">
+                <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
+                  Today&rsquo;s Nutrition Score
+                </h2>
+                <div className="border border-theme-text-primary/10 p-6">
+                  <div className="flex items-center gap-6 mb-5">
+                    <div className="text-center">
+                      <div className="text-5xl font-bold tabular-nums" style={{ color: gc }}>{grade}</div>
+                      <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary mt-1">{score}/100</div>
+                    </div>
+                    <div className="flex-1 space-y-2.5">
+                      {breakdown.map(item => (
+                        <div key={item.label} className="space-y-0.5">
+                          <div className="flex items-center justify-between text-[10px] text-theme-text-tertiary">
+                            <span className="uppercase tracking-wider">{item.label}</span>
+                            <span className="font-mono tabular-nums">{item.score}/100 <span className="opacity-50">({item.detail})</span></span>
+                          </div>
+                          <div className="h-1.5 bg-theme-text-primary/10 overflow-hidden">
+                            <div
+                              className="h-full transition-all duration-500"
+                              style={{
+                                width: `${item.score}%`,
+                                backgroundColor: item.score >= 80 ? '#22c55e' : item.score >= 60 ? '#eab308' : '#ef4444',
+                              }}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-theme-text-tertiary/50">
+                    Score weights: Calories 30% · Protein 25% · Fiber 15% · Sodium 15% · Added Sugar 15%
+                  </p>
+                </div>
+              </section>
+            );
+          })()}
+
           {/* Meal History Search */}
           <section className="space-y-4">
             <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
@@ -797,6 +842,7 @@ export default function StatsPage() {
               <Link href="/profile" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Profile</Link>
               <Link href="/compare" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Compare</Link>
               <Link href="/custom-foods" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Custom Foods</Link>
+              <Link href="/tools" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Tools</Link>
               <Link href="/about" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">About</Link>
               <Link href="/changelog" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Changelog</Link>
               <Link href="/privacy" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Privacy</Link>

@@ -529,6 +529,23 @@ export function MealProvider({ children }) {
     return JSON.stringify(data, null, 2);
   }, [mealsByDate, goals, waterByDate, weightByDate, favorites, templates]);
 
+  // ── Streak calculation ──
+  // Returns the current consecutive-day streak of days with at least 1 meal logged.
+  const getStreak = useCallback(() => {
+    const today = getTodayKey();
+    let streak = 0;
+    let d = new Date(today + 'T00:00:00');
+    // Walk backwards day by day until we hit a day with no meals
+    while (true) {
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const dayMeals = mealsByDate[key] || [];
+      if (dayMeals.length === 0) break;
+      streak++;
+      d.setDate(d.getDate() - 1);
+    }
+    return streak;
+  }, [mealsByDate]);
+
   // ── Weekly/monthly analytics helpers ──
   const getDateRange = useCallback((startDate, endDate) => {
     const result = [];
@@ -573,7 +590,7 @@ export function MealProvider({ children }) {
       // Export
       exportData,
       // Analytics
-      getDateRange,
+      getDateRange, getStreak,
       // Sync
       syncNow, reloadFromStorage, syncStatus,
       // Backup recovery

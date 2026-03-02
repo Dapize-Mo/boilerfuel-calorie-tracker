@@ -40,6 +40,8 @@ export default function About() {
     { label: 'Organized', desc: 'Menu items grouped by station — Grill, Salad Bar, and more.' },
     { label: 'Quick Add', desc: 'One-click meal logging for fast daily tracking.' },
     { label: 'Macro Goals', desc: 'Set custom calorie and macro targets in your profile.' },
+    { label: 'TDEE Calculator', desc: 'Estimate your maintenance calories and ideal macros with the built-in Tools page.' },
+    { label: 'Nutrition Score', desc: 'Get an A–F daily nutrition grade based on calories, protein, fiber, sodium, and sugar.' },
   ];
 
   const steps = [
@@ -254,6 +256,7 @@ export default function About() {
               <Link href="/stats" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Stats</Link>
               <Link href="/compare" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Compare</Link>
               <Link href="/custom-foods" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Custom Foods</Link>
+              <Link href="/tools" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Tools</Link>
               <Link href="/changelog" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Changelog</Link>
               <Link href="/privacy" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Privacy</Link>
               <Link href="/admin" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Admin</Link>
