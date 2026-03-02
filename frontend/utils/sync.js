@@ -351,7 +351,6 @@ export async function syncNowDetailed() {
     detail: `Received: ${pulledKeys.map(k => k.replace('boilerfuel_', '')).join(', ')}`,
   });
   return true; // data was updated
->>>>>>> 5a4611c41172d456b939acd442634c89ef2b00e9
 }
 
 // ── Meal backup / recovery ──
