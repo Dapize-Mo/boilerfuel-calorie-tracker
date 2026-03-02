@@ -130,6 +130,7 @@ export async function createSyncPair() {
   const secret = generateSecret();
   const data = gatherLocalData();
   const encrypted = await encrypt(data, secret);
+  const createdAt = Date.now();
 
   const res = await fetch('/api/sync', {
     method: 'POST',
@@ -137,13 +138,15 @@ export async function createSyncPair() {
     body: JSON.stringify({
       action: 'create',
       encrypted_data: encrypted,
-      updated_at: Date.now(),
+      updated_at: createdAt,
     }),
   });
 
   if (!res.ok) throw new Error('Failed to create sync pair');
   const { token } = await res.json();
   saveSyncCredentials(token, secret);
+  // Mark this timestamp so the first auto-push doesn't pull our own blob back
+  localStorage.setItem(SYNC_LAST_PULL_KEY, String(createdAt));
   return { token, secret };
 }
 
@@ -202,6 +205,7 @@ export async function pushData() {
   const data = gatherLocalData();
   const pushedKeys = Object.keys(data).filter(k => SYNC_KEYS.includes(k));
   const encrypted = await encrypt(data, secret);
+  const pushTimestamp = Date.now();
 
   try {
     const res = await fetch('/api/sync', {
@@ -211,9 +215,15 @@ export async function pushData() {
         action: 'push',
         token,
         encrypted_data: encrypted,
-        updated_at: Date.now(),
+        updated_at: pushTimestamp,
       }),
     });
+    if (res.ok) {
+      // Record the push timestamp so the next pull knows the server is
+      // already up-to-date with our data — prevents pulling our own blob
+      // back as "changed" on the very next poll.
+      localStorage.setItem(SYNC_LAST_PULL_KEY, String(pushTimestamp));
+    }
     addSyncLogEntry({
       direction: 'push',
       status: res.ok ? 'ok' : 'error',
