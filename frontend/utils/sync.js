@@ -567,7 +567,22 @@ function mergeRemoteData(remote) {
           // localStorage quota exceeded — skip backup silently
         }
       }
-      localStorage.setItem(key, JSON.stringify(merged));
+      try {
+        localStorage.setItem(key, JSON.stringify(merged));
+      } catch (e) {
+        if (e.name === 'QuotaExceededError' || e.code === 22) {
+          // Storage full — prune meals older than 6 months and retry
+          const cutoff = new Date();
+          cutoff.setMonth(cutoff.getMonth() - 6);
+          const cutoffStr = cutoff.toISOString().slice(0, 10);
+          const pruned = Object.fromEntries(
+            Object.entries(merged).filter(([date]) => date >= cutoffStr)
+          );
+          localStorage.setItem(key, JSON.stringify(pruned));
+        } else {
+          throw e;
+        }
+      }
     } else if (key === 'boilerfuel_water') {
       // Water: take the max per date — can't "undrink" water, remote data should
       // never reset a higher local value to 0, and vice versa.
@@ -581,7 +596,7 @@ function mergeRemoteData(remote) {
           merged[date] = Math.max(Number(localVal) || 0, Number(val) || 0);
         }
       }
-      localStorage.setItem(key, JSON.stringify(merged));
+      try { localStorage.setItem(key, JSON.stringify(merged)); } catch {}
     } else if (key === 'boilerfuel_weight') {
       // Weight: take remote if local has no entry for that date.
       // If both have an entry, keep local (user intentionally set it on this device).
@@ -598,15 +613,15 @@ function mergeRemoteData(remote) {
         }
         // Otherwise keep local (last logged on this device)
       }
-      localStorage.setItem(key, JSON.stringify(merged));
+      try { localStorage.setItem(key, JSON.stringify(merged)); } catch {}
     } else if (key === 'boilerfuel_favorites') {
       // Union of favorites
       const local = localRaw ? JSON.parse(localRaw) : [];
       const merged = [...new Set([...local, ...(remoteVal || [])])];
-      localStorage.setItem(key, JSON.stringify(merged));
+      try { localStorage.setItem(key, JSON.stringify(merged)); } catch {}
     } else {
       // For goals, templates, dietary — remote wins (last push wins)
-      localStorage.setItem(key, JSON.stringify(remoteVal));
+      try { localStorage.setItem(key, JSON.stringify(remoteVal)); } catch {}
     }
   }
 
