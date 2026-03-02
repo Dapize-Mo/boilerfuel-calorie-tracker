@@ -6,6 +6,7 @@ import dynamic from 'next/dynamic';
 import { useSession, signIn } from 'next-auth/react';
 import { useTheme } from '../context/ThemeContext';
 import { useMeals } from '../context/MealContext';
+import { useSmartBack } from '../utils/useSmartBack';
 
 const QRCode = dynamic(() => import('../components/QRCode'), { ssr: false });
 
@@ -51,6 +52,7 @@ function shiftDate(dateKey, delta) {
 
 export default function ProfilePage() {
   const router = useRouter();
+  const goBack = useSmartBack();
   const { theme, setTheme } = useTheme();
   const { data: googleSession } = useSession();
   const { meals, goals, setGoals, totals, clearMeals, removeMeal, mealsByDate, getWeight, setWeight, weightByDate, exportData, templates, saveTemplate, deleteTemplate, applyTemplate, dietaryPrefs, setDietaryPrefs, waterByDate, getWater, addWater, syncNow, reloadFromStorage } = useMeals();
@@ -66,6 +68,7 @@ export default function ProfilePage() {
   const [joinSecret, setJoinSecret] = useState('');
   const [syncError, setSyncError] = useState('');
   const [syncMsg, setSyncMsg] = useState('');
+  const [joinLoading, setJoinLoading] = useState(false);
   const [weightImportStatus, setWeightImportStatus] = useState(''); // '' | 'success' | 'error'
   const [weightImportMsg, setWeightImportMsg] = useState('');
   const weightFileRef = useRef(null);
@@ -74,6 +77,7 @@ export default function ProfilePage() {
   const [syncNowLoading, setSyncNowLoading] = useState(false);
   const [lastSyncAt, setLastSyncAt] = useState(null);
   const [syncAgeTick, setSyncAgeTick] = useState(0);
+  const [syncLog, setSyncLog] = useState([]); // activity log entries from getSyncLog()
   const [logFilter, setLogFilter] = useState(null); // null | meal-time string
 
   // Notification settings
@@ -167,7 +171,7 @@ export default function ProfilePage() {
     ['breakfast', 'brunch', 'lunch', 'dinner'].forEach(m => toggleMealEnabled(m, enabled));
   }
 
-  // Check if already paired on mount
+  // Check if already paired on mount; also load sync activity log
   useEffect(() => {
     try {
       const token = localStorage.getItem('boilerfuel_sync_token');
@@ -184,6 +188,7 @@ export default function ProfilePage() {
       }
       const devicesRaw = localStorage.getItem('boilerfuel_sync_devices');
       if (devicesRaw) setSyncDevices(JSON.parse(devicesRaw));
+      import('../utils/sync').then(({ getSyncLog }) => setSyncLog(getSyncLog())).catch(() => {});
     } catch {}
   }, []);
 
@@ -442,11 +447,11 @@ export default function ProfilePage() {
       </Head>
 
       <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary font-mono">
-        <div className="max-w-7xl mx-auto px-6 sm:px-10 py-16 sm:py-24 space-y-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-12 sm:py-20 space-y-12">
 
           {/* Header */}
           <header className="space-y-4">
-            <button onClick={() => router.back()} className="text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
+            <button onClick={goBack} className="text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
               &larr; Back
             </button>
             <h1 className="text-3xl sm:text-5xl font-bold uppercase tracking-[0.2em]">Profile</h1>
@@ -1304,7 +1309,7 @@ export default function ProfilePage() {
                     Last successful sync: {lastSyncAgoLabel}
                   </p>
                 )}
-                <div className="flex gap-3">
+                <div className="flex flex-wrap gap-3">
                   <button
                     onClick={async () => {
                       setSyncNowLoading(true);
@@ -1324,6 +1329,9 @@ export default function ProfilePage() {
                             if (devRaw) setSyncDevices(JSON.parse(devRaw));
                           }
                         } catch {}
+                        
+                        // Refresh sync activity log
+                        import('../utils/sync').then(({ getSyncLog }) => setSyncLog(getSyncLog())).catch(() => {});
 
                         const deviceCount = report?.deviceCount || Object.keys(syncDevices || {}).length;
                         const syncedAt = report?.syncedAt || Date.now();
@@ -1333,6 +1341,8 @@ export default function ProfilePage() {
                         setTimeout(() => setSyncMsg(''), 3500);
                       } catch (err) {
                         setSyncError(err?.message || 'Sync failed. Check your connection.');
+                        // Refresh log even on error
+                        import('../utils/sync').then(({ getSyncLog }) => setSyncLog(getSyncLog())).catch(() => {});
                       } finally {
                         setSyncNowLoading(false);
                       }
@@ -1445,7 +1455,7 @@ export default function ProfilePage() {
             {/* Not paired — show options */}
             {syncStatus === 'idle' && (
               <div className="space-y-4">
-                <div className="flex gap-3">
+                <div className="flex flex-wrap gap-3">
                   <button
                     onClick={async () => {
                       setSyncStatus('creating');
@@ -1490,32 +1500,38 @@ export default function ProfilePage() {
                   <label className="text-[10px] font-bold uppercase tracking-widest text-theme-text-tertiary">Sync Code</label>
                   <input
                     type="text"
+                    inputMode="text"
                     value={joinCode}
                     onChange={e => setJoinCode(e.target.value.toUpperCase())}
                     placeholder="e.g. BF7X3K"
                     maxLength={6}
                     className="w-full border border-theme-text-primary/20 bg-transparent text-theme-text-primary px-3 py-2 text-sm font-mono tracking-[0.3em] text-center focus:border-theme-text-primary focus:outline-none transition-colors uppercase"
-                    autoFocus
                   />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-theme-text-tertiary">Secret Key</label>
                   <input
                     type="text"
+                    inputMode="text"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
                     value={joinSecret}
                     onChange={e => setJoinSecret(e.target.value)}
-                    placeholder="Paste the secret from your other device"
+                    placeholder="Paste the secret key from your other device"
                     className="w-full border border-theme-text-primary/20 bg-transparent text-theme-text-primary px-3 py-2 text-xs font-mono focus:border-theme-text-primary focus:outline-none transition-colors"
                   />
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-wrap gap-3">
                   <button
+                    disabled={joinLoading}
                     onClick={async () => {
                       if (!joinCode || !joinSecret) {
                         setSyncError('Enter both the sync code and secret key.');
                         return;
                       }
                       setSyncError('');
+                      setJoinLoading(true);
                       try {
                         const { joinSyncPair } = await import('../utils/sync');
                         await joinSyncPair(joinCode.trim(), joinSecret.trim());
@@ -1526,18 +1542,32 @@ export default function ProfilePage() {
                         setSyncSecret(joinSecret.trim());
                         setSyncStatus('paired');
                         reloadFromStorage();
+                        // Refresh device list and sync log
+                        try {
+                          const devRaw = localStorage.getItem('boilerfuel_sync_devices');
+                          if (devRaw) setSyncDevices(JSON.parse(devRaw));
+                        } catch {}
+                        import('../utils/sync').then(({ getSyncLog }) => setSyncLog(getSyncLog())).catch(() => {});
                         setSyncMsg('Paired and synced!');
                         setTimeout(() => setSyncMsg(''), 3000);
                       } catch (err) {
-                        setSyncError(err.message || 'Failed to join. Check your code and secret.');
+                        const msg = err.message || '';
+                        if (msg.toLowerCase().includes('not found')) {
+                          setSyncError('Sync code not found. Make sure the code is correct, or create a new one on your other device.');
+                        } else {
+                          setSyncError(msg || 'Failed to join. Check your code and secret key.');
+                        }
+                      } finally {
+                        setJoinLoading(false);
                       }
                     }}
-                    className="px-4 py-2 border border-theme-text-primary text-theme-text-primary text-xs font-bold uppercase tracking-wider hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors">
-                    Join
+                    className="px-4 py-2 border border-theme-text-primary text-theme-text-primary text-xs font-bold uppercase tracking-wider hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors disabled:opacity-40 disabled:cursor-wait">
+                    {joinLoading ? 'Joining…' : 'Join'}
                   </button>
                   <button
+                    disabled={joinLoading}
                     onClick={() => { setSyncStatus('idle'); setSyncError(''); setJoinCode(''); setJoinSecret(''); }}
-                    className="px-4 py-2 border border-theme-text-primary/20 text-theme-text-tertiary text-xs uppercase tracking-wider hover:text-theme-text-primary transition-colors">
+                    className="px-4 py-2 border border-theme-text-primary/20 text-theme-text-tertiary text-xs uppercase tracking-wider hover:text-theme-text-primary transition-colors disabled:opacity-40">
                     Cancel
                   </button>
                 </div>
@@ -1551,23 +1581,67 @@ export default function ProfilePage() {
                   Share with your other device
                 </div>
                 <div className="flex flex-col sm:flex-row gap-6 items-center">
-                  <div className="border border-theme-text-primary/10 p-2 bg-theme-bg-primary">
+                  <div className="border border-theme-text-primary/10 p-2 bg-white shrink-0">
                     <QRCode text={`BF:${syncCode}:${syncSecret}`} size={160} />
                   </div>
-                  <div className="space-y-3 flex-1">
+                  <div className="space-y-3 flex-1 w-full">
                     <div>
                       <div className="text-[9px] text-theme-text-tertiary uppercase tracking-widest mb-1">Sync Code</div>
                       <div className="text-2xl font-mono font-bold tracking-[0.3em] text-theme-text-primary select-all">{syncCode}</div>
                     </div>
                     <div>
-                      <div className="text-[9px] text-theme-text-tertiary uppercase tracking-widest mb-1">Secret Key</div>
-                      <div className="text-xs font-mono text-theme-text-secondary break-all select-all bg-theme-bg-secondary px-2 py-1">{syncSecret}</div>
+                      <div className="text-[9px] text-theme-text-tertiary uppercase tracking-widest mb-1">Secret Key — tap to select all</div>
+                      <div className="text-xs font-mono text-theme-text-secondary break-all select-all bg-theme-bg-secondary px-3 py-2 cursor-text"
+                        onClick={e => {
+                          const range = document.createRange();
+                          range.selectNodeContents(e.currentTarget);
+                          window.getSelection().removeAllRanges();
+                          window.getSelection().addRange(range);
+                        }}
+                      >{syncSecret}</div>
                     </div>
                     <p className="text-[10px] text-theme-text-tertiary">
-                      On your other device, go to Profile &rarr; Device Sync &rarr; Join Existing, and enter both values above.
+                      On your other device, open Profile &rarr; Device Sync &rarr; Join Existing and enter the code and secret key above.
                     </p>
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* ── Sync Activity Log ── */}
+            {syncLog.length > 0 && (
+              <div className="space-y-2 pt-4 border-t border-theme-text-primary/10">
+                <div className="flex items-center justify-between">
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-theme-text-tertiary">
+                    Sync Activity
+                  </div>
+                  <button
+                    onClick={() => {
+                      import('../utils/sync').then(({ clearSyncLog }) => { clearSyncLog(); setSyncLog([]); }).catch(() => {});
+                    }}
+                    className="text-[9px] uppercase tracking-wider text-theme-text-tertiary/50 hover:text-theme-text-tertiary transition-colors">
+                    Clear
+                  </button>
+                </div>
+                <div className="space-y-1 max-h-52 overflow-y-auto">
+                  {syncLog.map((entry, i) => {
+                    const time = new Date(entry.ts).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                    const isError = entry.status === 'error';
+                    const isPush = entry.direction === 'push';
+                    return (
+                      <div key={i} className={`flex items-start gap-2 text-[10px] font-mono px-2 py-1.5 border ${isError ? 'border-red-500/20 bg-red-500/5' : 'border-theme-text-primary/5 bg-theme-bg-secondary/30'}`}>
+                        <span className={`shrink-0 font-bold uppercase ${isError ? 'text-red-500' : isPush ? 'text-blue-400' : 'text-green-500'}`}>
+                          {isError ? '✕' : isPush ? '↑' : '↓'} {entry.direction}
+                        </span>
+                        <span className="text-theme-text-tertiary/60 shrink-0">{time}</span>
+                        <span className={`truncate ${isError ? 'text-red-400' : 'text-theme-text-tertiary'}`}>{entry.detail}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="text-[9px] text-theme-text-tertiary/40">
+                  Showing last {syncLog.length} sync event{syncLog.length !== 1 ? 's' : ''}. ↑ push · ↓ pull. All data is encrypted end-to-end.
+                </p>
               </div>
             )}
           </section>
@@ -1575,12 +1649,13 @@ export default function ProfilePage() {
           </div>{/* end three-column grid */}
 
           {/* Footer */}
-          <footer className="border-t border-theme-text-primary/10 pt-8 flex flex-wrap items-center justify-between gap-4">
-            <div className="flex gap-6 text-xs uppercase tracking-widest">
+          <footer className="border-t border-theme-text-primary/10 pt-8 space-y-3">
+            <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs uppercase tracking-widest">
               <Link href="/" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Home</Link>
               <Link href="/stats" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Stats</Link>
               <Link href="/compare" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Compare</Link>
               <Link href="/custom-foods" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Custom Foods</Link>
+              <Link href="/tools" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Tools</Link>
               <Link href="/about" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">About</Link>
               <Link href="/changelog" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Changelog</Link>
               <Link href="/privacy" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Privacy</Link>

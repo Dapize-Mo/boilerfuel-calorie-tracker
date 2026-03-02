@@ -135,8 +135,11 @@ export function MealProvider({ children }) {
     }
   }, []);
 
-  // Reload all state from localStorage (after sync pull)
+  // Reload all state from localStorage (after sync pull).
+  // Sets isReloadingFromSync so the push debounce effect knows to skip —
+  // we don't want to push data straight back out just because we pulled it in.
   const reloadFromStorage = useCallback(() => {
+    isReloadingFromSync.current = true;
     try { const s = localStorage.getItem(STORAGE_KEY); if (s) setMealsByDate(JSON.parse(s)); } catch {}
     try { const s = localStorage.getItem(GOALS_KEY); if (s) setGoalsState(JSON.parse(s)); } catch {}
     try { const s = localStorage.getItem(FAVORITES_KEY); if (s) setFavoritesState(new Set(JSON.parse(s))); } catch {}
@@ -150,9 +153,10 @@ export function MealProvider({ children }) {
   // ── Auto-sync: pull on mount + on tab-focus, debounced push on changes ──
   const syncPushTimer = useRef(null);
   const mountedRef = useRef(false);
-  const isSyncingRef = useRef(false);  // prevent concurrent pulls
-  const lastPullRef = useRef(0);       // timestamp of last pull (ms)
-  const MIN_PULL_INTERVAL = 30_000;   // don't re-pull more than once per 30 s
+  const isSyncingRef = useRef(false);      // prevent concurrent pulls
+  const lastPullRef = useRef(0);           // timestamp of last pull (ms)
+  const isReloadingFromSync = useRef(false); // suppress push debounce when state changes come from a sync pull
+  const MIN_PULL_INTERVAL = 30_000;        // don't re-pull more than once per 30 s
 
   const doPull = useCallback(async (force = false) => {
     if (isSyncingRef.current) return;
@@ -197,9 +201,16 @@ export function MealProvider({ children }) {
     return () => clearInterval(interval);
   }, [doPull]);
 
-  // Debounced push after any data change (skip initial mount)
+  // Debounced push after any data change (skip initial mount and sync-driven reloads)
   useEffect(() => {
     if (!mountedRef.current) return;
+    // If this state change was caused by reloadFromStorage (i.e. a pull just
+    // landed), clear the flag and skip — we must not push data straight back
+    // out and reset the server timestamp, which would break future pulls.
+    if (isReloadingFromSync.current) {
+      isReloadingFromSync.current = false;
+      return;
+    }
     if (syncPushTimer.current) clearTimeout(syncPushTimer.current);
     syncPushTimer.current = setTimeout(async () => {
       try {
@@ -527,6 +538,23 @@ export function MealProvider({ children }) {
     return JSON.stringify(data, null, 2);
   }, [mealsByDate, goals, waterByDate, weightByDate, favorites, templates]);
 
+  // ── Streak calculation ──
+  // Returns the current consecutive-day streak of days with at least 1 meal logged.
+  const getStreak = useCallback(() => {
+    const today = getTodayKey();
+    let streak = 0;
+    let d = new Date(today + 'T00:00:00');
+    // Walk backwards day by day until we hit a day with no meals
+    while (true) {
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const dayMeals = mealsByDate[key] || [];
+      if (dayMeals.length === 0) break;
+      streak++;
+      d.setDate(d.getDate() - 1);
+    }
+    return streak;
+  }, [mealsByDate]);
+
   // ── Weekly/monthly analytics helpers ──
   const getDateRange = useCallback((startDate, endDate) => {
     const result = [];
@@ -571,7 +599,7 @@ export function MealProvider({ children }) {
       // Export
       exportData,
       // Analytics
-      getDateRange,
+      getDateRange, getStreak,
       // Sync
       syncNow, reloadFromStorage, syncStatus,
       // Backup recovery

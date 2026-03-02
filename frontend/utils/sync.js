@@ -4,6 +4,35 @@
 const SYNC_TOKEN_KEY = 'boilerfuel_sync_token';
 const SYNC_SECRET_KEY = 'boilerfuel_sync_secret';
 const SYNC_LAST_PULL_KEY = 'boilerfuel_sync_last_pull';
+const SYNC_LOG_KEY = 'boilerfuel_sync_log';
+const MAX_LOG_ENTRIES = 30;
+
+// ── Sync activity log ──
+
+/**
+ * Append an entry to the in-browser sync log (stored in localStorage).
+ * entry: { direction: 'push'|'pull', status: 'ok'|'error', keys: string[], detail: string }
+ */
+function addSyncLogEntry(entry) {
+  try {
+    const raw = localStorage.getItem(SYNC_LOG_KEY);
+    const log = raw ? JSON.parse(raw) : [];
+    log.unshift({ ts: Date.now(), ...entry });
+    if (log.length > MAX_LOG_ENTRIES) log.splice(MAX_LOG_ENTRIES);
+    localStorage.setItem(SYNC_LOG_KEY, JSON.stringify(log));
+  } catch {}
+}
+
+export function getSyncLog() {
+  try {
+    const raw = localStorage.getItem(SYNC_LOG_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
+
+export function clearSyncLog() {
+  try { localStorage.removeItem(SYNC_LOG_KEY); } catch {}
+}
 
 // All localStorage keys that should be synced
 const SYNC_KEYS = [
@@ -101,6 +130,7 @@ export async function createSyncPair() {
   const secret = generateSecret();
   const data = gatherLocalData();
   const encrypted = await encrypt(data, secret);
+  const createdAt = Date.now();
 
   const res = await fetch('/api/sync', {
     method: 'POST',
@@ -108,13 +138,15 @@ export async function createSyncPair() {
     body: JSON.stringify({
       action: 'create',
       encrypted_data: encrypted,
-      updated_at: Date.now(),
+      updated_at: createdAt,
     }),
   });
 
   if (!res.ok) throw new Error('Failed to create sync pair');
   const { token } = await res.json();
   saveSyncCredentials(token, secret);
+  // Mark this timestamp so the first auto-push doesn't pull our own blob back
+  localStorage.setItem(SYNC_LAST_PULL_KEY, String(createdAt));
   return { token, secret };
 }
 
@@ -160,6 +192,7 @@ export async function pushData(options = {}) {
 
   // Step 1: Pull any server-side changes and merge into local storage.
   const since = localStorage.getItem(SYNC_LAST_PULL_KEY) || '0';
+  let pulledKeys = [];
   try {
     const res = await fetch(`/api/sync?token=${encodeURIComponent(token)}&since=${since}`);
     if (!res.ok) {
@@ -171,6 +204,7 @@ export async function pushData(options = {}) {
       if (body.changed && body.encrypted_data) {
         const serverData = await decrypt(body.encrypted_data, secret);
         pulledTransfer = summarizeTransferredData(serverData);
+        pulledKeys = Object.keys(serverData).filter(k => SYNC_KEYS.includes(k));
         mergeRemoteData(serverData);
         localStorage.setItem(SYNC_LAST_PULL_KEY, String(body.updated_at || Date.now()));
         pulled = true;
@@ -185,33 +219,56 @@ export async function pushData(options = {}) {
 
   // Step 2: Gather the now-merged local data and push to server.
   const data = gatherLocalData();
+  const pushedKeys = Object.keys(data).filter(k => SYNC_KEYS.includes(k));
   const encrypted = await encrypt(data, secret);
+  const pushTimestamp = Date.now();
 
-  const pushRes = await fetch('/api/sync', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      action: 'push',
-      token,
-      encrypted_data: encrypted,
-      updated_at: Date.now(),
-    }),
-  });
-
-  if (!pushRes.ok) {
-    const msg = await parseErrorMessage(pushRes, 'Failed to push local sync data');
-    throw new Error(msg);
+  try {
+    const pushRes = await fetch('/api/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'push',
+        token,
+        encrypted_data: encrypted,
+        updated_at: pushTimestamp,
+      }),
+    });
+    
+    if (!pushRes.ok) {
+      const msg = await parseErrorMessage(pushRes, 'Failed to push local sync data');
+      addSyncLogEntry({ direction: 'push', status: 'error', keys: pushedKeys, detail: msg });
+      throw new Error(msg);
+    }
+    
+    // Record the push timestamp so the next pull knows the server is
+    // already up-to-date with our data — prevents pulling our own blob
+    // back as "changed" on the very next poll.
+    localStorage.setItem(SYNC_LAST_PULL_KEY, String(pushTimestamp));
+    
+    addSyncLogEntry({
+      direction: 'push',
+      status: 'ok',
+      keys: pushedKeys,
+      detail: pulledKeys.length > 0
+        ? `Merged remote changes for: ${pulledKeys.map(k => k.replace('boilerfuel_', '')).join(', ')}`
+        : 'No remote changes to merge',
+    });
+    
+    if (!includeReport) return;
+    
+    return {
+      pushed: true,
+      pulled,
+      pullUpdatedAt,
+      transferred: summarizeTransferredData(data),
+      pulledTransferred: pulledTransfer,
+    };
+  } catch (err) {
+    if (!includeReport) throw err;
+    addSyncLogEntry({ direction: 'push', status: 'error', keys: pushedKeys, detail: String(err) });
+    throw err;
   }
-
-  if (!includeReport) return;
-
-  return {
-    pushed: true,
-    pulled,
-    pullUpdatedAt,
-    transferred: summarizeTransferredData(data),
-    pulledTransferred: pulledTransfer,
-  };
 }
 
 // ── Pull remote data from server ──
@@ -226,20 +283,41 @@ export async function pullData(options = {}) {
   }
 
   const since = localStorage.getItem(SYNC_LAST_PULL_KEY) || '0';
-  const res = await fetch(`/api/sync?token=${encodeURIComponent(token)}&since=${since}`);
+  let res;
+  try {
+    res = await fetch(`/api/sync?token=${encodeURIComponent(token)}&since=${since}`);
+  } catch (err) {
+    addSyncLogEntry({ direction: 'pull', status: 'error', keys: [], detail: String(err) });
+    if (strict) throw err;
+    return includeReport ? { changed: false, error: String(err), transferred: [] } : false;
+  }
+  
   if (!res.ok) {
     const msg = await parseErrorMessage(res, 'Failed to pull sync data');
+    addSyncLogEntry({ direction: 'pull', status: 'error', keys: [], detail: msg });
     if (strict) throw new Error(msg);
     return includeReport ? { changed: false, error: msg, transferred: [] } : false;
   }
 
   const body = await res.json();
-  if (!body.changed) return includeReport ? { changed: false, transferred: [] } : false;
+  if (!body.changed) {
+    addSyncLogEntry({ direction: 'pull', status: 'ok', keys: [], detail: 'Up to date — no new changes' });
+    return includeReport ? { changed: false, transferred: [] } : false;
+  }
 
   const data = await decrypt(body.encrypted_data, secret);
+  const pulledKeys = Object.keys(data).filter(k => SYNC_KEYS.includes(k));
   const transferred = summarizeTransferredData(data);
   mergeRemoteData(data);
   localStorage.setItem(SYNC_LAST_PULL_KEY, String(body.updated_at || Date.now()));
+  
+  addSyncLogEntry({
+    direction: 'pull',
+    status: 'ok',
+    keys: pulledKeys,
+    detail: `Received: ${pulledKeys.map(k => k.replace('boilerfuel_', '')).join(', ')}`,
+  });
+  
   if (!includeReport) return true; // data was updated
   return { changed: true, updatedAt: body.updated_at || Date.now(), transferred };
 }
@@ -261,6 +339,19 @@ export async function syncNowDetailed() {
     devices,
     syncedAt: Date.now(),
   };
+
+  const data = await decrypt(body.encrypted_data, secret);
+  const pulledKeys = Object.keys(data).filter(k => SYNC_KEYS.includes(k));
+  mergeRemoteData(data);
+  localStorage.setItem(SYNC_LAST_PULL_KEY, String(body.updated_at || Date.now()));
+  addSyncLogEntry({
+    direction: 'pull',
+    status: 'ok',
+    keys: pulledKeys,
+    detail: `Received: ${pulledKeys.map(k => k.replace('boilerfuel_', '')).join(', ')}`,
+  });
+  return true; // data was updated
+>>>>>>> 5a4611c41172d456b939acd442634c89ef2b00e9
 }
 
 // ── Meal backup / recovery ──

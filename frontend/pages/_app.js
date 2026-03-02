@@ -50,7 +50,11 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
 
   // Listen for route changes to trigger transitions
   useEffect(() => {
-    const handleStart = () => setTransitioning(true);
+    const handleStart = () => {
+      // Track that the user has navigated within the app (used by smart back buttons)
+      if (typeof window !== 'undefined') window._boilerfuelHasHistory = true;
+      setTransitioning(true);
+    };
     const handleComplete = () => {
       // Small delay to let the overlay fully cover before revealing new page
       setTimeout(() => {

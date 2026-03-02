@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
+import { useSmartBack } from '../utils/useSmartBack';
 
 // Versioning system — built from actual git commit dates:
 //   x.0.0  Major — complete redesign or architectural overhaul
@@ -9,11 +10,28 @@ import { useRouter } from 'next/router';
 
 const VERSIONS = [
 
+  // ─── 3.8.x  Tools, Nutrition Score & Streak  (Mar 2, 2026) ─────────────
+  {
+    version: '3.8.0',
+    date: 'March 2, 2026',
+    latest: true,
+    changes: [
+      { cat: 'Feature', items: [
+        'New Tools page (/tools): TDEE & BMI calculator with Mifflin–St Jeor equation, activity level picker, and macro split chooser (Balanced, High Protein, Low Carb, Keto)',
+        '"Apply Goals to Profile" button on Tools page instantly updates calorie & macro targets',
+        'Nutrition Score widget on Stats page: A–F grade with breakdown by calories, protein, fiber, sodium, and added sugar',
+        'Streak indicator on main page: displays consecutive logging days when streak ≥ 2',
+        'getStreak() added to MealContext for computing consecutive-day logging streaks',
+        'Tools link added to all page footers (Home, Stats, Profile, Compare, Custom Foods, About)',
+      ]},
+    ],
+  },
+
   // ─── 3.7.x  Polish, Custom Foods & Reminders  (Feb 26, 2026) ────────────
   {
     version: '3.7.1',
     date: 'February 26, 2026',
-    latest: true,
+    latest: false,
     changes: [
       { cat: 'Fix', items: [
         'Admin accuracy tab: always refresh Google OAuth JWT on load to prevent exp timestamp errors',
@@ -589,6 +607,7 @@ const ERAS = [
 
 export default function Changelog() {
   const router = useRouter();
+  const goBack = useSmartBack();
   const grouped = ERAS.map(era => ({
     ...era,
     versions: VERSIONS.filter(v => v.version.startsWith(era.prefix + '.')),
@@ -610,7 +629,7 @@ export default function Changelog() {
 
           {/* Header */}
           <header className="mb-12 space-y-4">
-            <button onClick={() => router.back()} className="text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
+            <button onClick={goBack} className="text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
               &larr; Back
             </button>
             <h1 className="text-3xl sm:text-5xl font-bold uppercase tracking-[0.2em]">Changelog</h1>
@@ -743,6 +762,7 @@ export default function Changelog() {
                   <Link href="/stats" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Stats</Link>
                   <Link href="/compare" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Compare</Link>
                   <Link href="/custom-foods" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Custom Foods</Link>
+                  <Link href="/tools" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Tools</Link>
                   <Link href="/about" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">About</Link>
                   <Link href="/profile" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Profile</Link>
                   <Link href="/privacy" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Privacy</Link>

@@ -3,9 +3,11 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
+import { useSmartBack } from '../utils/useSmartBack';
 
 export default function CustomFoods() {
   const router = useRouter();
+  const goBack = useSmartBack();
   const { data: session, status } = useSession();
   const [customFoods, setCustomFoods] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -161,7 +163,7 @@ export default function CustomFoods() {
 
           {/* Header */}
           <header className="space-y-4">
-            <button onClick={() => router.back()} className="text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
+            <button onClick={goBack} className="text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
               &larr; Back
             </button>
             <h1 className="text-3xl sm:text-5xl font-bold uppercase tracking-[0.2em]">Custom Foods</h1>
@@ -363,6 +365,7 @@ export default function CustomFoods() {
               <Link href="/stats" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Stats</Link>
               <Link href="/compare" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Compare</Link>
               <Link href="/profile" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Profile</Link>
+              <Link href="/tools" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Tools</Link>
               <Link href="/about" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">About</Link>
               <Link href="/changelog" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Changelog</Link>
               <Link href="/privacy" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Privacy</Link>

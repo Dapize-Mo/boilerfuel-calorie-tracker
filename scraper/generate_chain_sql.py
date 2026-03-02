@@ -125,7 +125,7 @@ def generate_chain_sql():
         print("-- ============================================================================")
         print(f"-- {court.upper()} DINING COURT - BEVERAGES")
         print("-- Source: Prairie Farms (milk), Coca-Cola (fountain drinks)")
-        print("-- Cup size: 16 oz standard dining hall cup")
+        print("-- Cup size: 8 oz standard dining hall cup")
         print("-- ============================================================================\n")
 
         print("INSERT INTO menu_snapshots (menu_date, name, calories, macros, dining_court, station, meal_time, source) VALUES")
@@ -139,7 +139,7 @@ def generate_chain_sql():
         print("-- ============================================================================")
         print(f"-- {label} - BEVERAGES")
         print("-- Source: Coca-Cola (fountain drinks)")
-        print("-- Cup size: 16 oz")
+        print("-- Cup size: 8 oz")
         print("-- ============================================================================\n")
 
         print("INSERT INTO menu_snapshots (menu_date, name, calories, macros, dining_court, station, meal_time, source) VALUES")

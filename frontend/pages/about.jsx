@@ -2,9 +2,11 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
+import { useSmartBack } from '../utils/useSmartBack';
 
 export default function About() {
   const router = useRouter();
+  const goBack = useSmartBack();
   const [fbType, setFbType] = useState('idea');
   const [fbMessage, setFbMessage] = useState('');
   const [fbContact, setFbContact] = useState('');
@@ -38,6 +40,8 @@ export default function About() {
     { label: 'Organized', desc: 'Menu items grouped by station — Grill, Salad Bar, and more.' },
     { label: 'Quick Add', desc: 'One-click meal logging for fast daily tracking.' },
     { label: 'Macro Goals', desc: 'Set custom calorie and macro targets in your profile.' },
+    { label: 'TDEE Calculator', desc: 'Estimate your maintenance calories and ideal macros with the built-in Tools page.' },
+    { label: 'Nutrition Score', desc: 'Get an A–F daily nutrition grade based on calories, protein, fiber, sodium, and sugar.' },
   ];
 
   const steps = [
@@ -63,7 +67,7 @@ export default function About() {
 
           {/* Header */}
           <header className="space-y-4 border-b border-theme-text-primary/10 pb-10">
-            <button onClick={() => router.back()} className="text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
+            <button onClick={goBack} className="text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
               &larr; Back
             </button>
             <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6">
@@ -252,6 +256,7 @@ export default function About() {
               <Link href="/stats" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Stats</Link>
               <Link href="/compare" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Compare</Link>
               <Link href="/custom-foods" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Custom Foods</Link>
+              <Link href="/tools" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Tools</Link>
               <Link href="/changelog" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Changelog</Link>
               <Link href="/privacy" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Privacy</Link>
               <Link href="/admin" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Admin</Link>
