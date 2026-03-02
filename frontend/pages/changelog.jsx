@@ -10,11 +10,28 @@ import { useSmartBack } from '../utils/useSmartBack';
 
 const VERSIONS = [
 
+  // ─── 3.8.x  Tools, Nutrition Score & Streak  (Mar 2, 2026) ─────────────
+  {
+    version: '3.8.0',
+    date: 'March 2, 2026',
+    latest: true,
+    changes: [
+      { cat: 'Feature', items: [
+        'New Tools page (/tools): TDEE & BMI calculator with Mifflin–St Jeor equation, activity level picker, and macro split chooser (Balanced, High Protein, Low Carb, Keto)',
+        '"Apply Goals to Profile" button on Tools page instantly updates calorie & macro targets',
+        'Nutrition Score widget on Stats page: A–F grade with breakdown by calories, protein, fiber, sodium, and added sugar',
+        'Streak indicator on main page: displays consecutive logging days when streak ≥ 2',
+        'getStreak() added to MealContext for computing consecutive-day logging streaks',
+        'Tools link added to all page footers (Home, Stats, Profile, Compare, Custom Foods, About)',
+      ]},
+    ],
+  },
+
   // ─── 3.7.x  Polish, Custom Foods & Reminders  (Feb 26, 2026) ────────────
   {
     version: '3.7.1',
     date: 'February 26, 2026',
-    latest: true,
+    latest: false,
     changes: [
       { cat: 'Fix', items: [
         'Admin accuracy tab: always refresh Google OAuth JWT on load to prevent exp timestamp errors',
@@ -745,6 +762,7 @@ export default function Changelog() {
                   <Link href="/stats" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Stats</Link>
                   <Link href="/compare" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Compare</Link>
                   <Link href="/custom-foods" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Custom Foods</Link>
+                  <Link href="/tools" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Tools</Link>
                   <Link href="/about" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">About</Link>
                   <Link href="/profile" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Profile</Link>
                   <Link href="/privacy" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Privacy</Link>
