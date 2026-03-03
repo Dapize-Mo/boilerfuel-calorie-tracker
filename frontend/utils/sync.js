@@ -606,14 +606,27 @@ function mergeRemoteData(remote) {
         localStorage.setItem(key, JSON.stringify(merged));
       } catch (e) {
         if (e.name === 'QuotaExceededError' || e.code === 22) {
-          // Storage full — prune meals older than 6 months and retry
-          const cutoff = new Date();
-          cutoff.setMonth(cutoff.getMonth() - 6);
-          const cutoffStr = cutoff.toISOString().slice(0, 10);
-          const pruned = Object.fromEntries(
-            Object.entries(merged).filter(([date]) => date >= cutoffStr)
-          );
-          localStorage.setItem(key, JSON.stringify(pruned));
+          // Storage full — progressively prune older meals until it fits
+          let saved = false;
+          for (const months of [6, 3, 1]) {
+            const cutoff = new Date();
+            cutoff.setMonth(cutoff.getMonth() - months);
+            const cutoffStr = cutoff.toISOString().slice(0, 10);
+            const pruned = Object.fromEntries(
+              Object.entries(merged).filter(([date]) => date >= cutoffStr)
+            );
+            try { localStorage.setItem(key, JSON.stringify(pruned)); saved = true; break; } catch {}
+          }
+          if (!saved) {
+            // Last resort: keep only the last 14 days
+            const cutoff = new Date();
+            cutoff.setDate(cutoff.getDate() - 14);
+            const cutoffStr = cutoff.toISOString().slice(0, 10);
+            const pruned = Object.fromEntries(
+              Object.entries(merged).filter(([date]) => date >= cutoffStr)
+            );
+            try { localStorage.setItem(key, JSON.stringify(pruned)); } catch {}
+          }
         } else {
           throw e;
         }
