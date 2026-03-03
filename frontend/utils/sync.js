@@ -22,7 +22,7 @@ export function pruneLocalStorage() {
   } catch {}
 
   try {
-    // Prune meals older than 6 months if meals data is large
+    // Prune meals older than 6 months — removeItem first to free space, then rewrite
     const raw = localStorage.getItem('boilerfuel_meals');
     if (!raw) return;
     const cutoff = new Date();
@@ -31,8 +31,13 @@ export function pruneLocalStorage() {
     const meals = JSON.parse(raw);
     const pruned = Object.fromEntries(Object.entries(meals).filter(([d]) => d >= cutoffStr));
     if (Object.keys(pruned).length < Object.keys(meals).length) {
+      localStorage.removeItem('boilerfuel_meals'); // free space first
       try { localStorage.setItem('boilerfuel_meals', JSON.stringify(pruned)); } catch {}
     }
+    // Also clear the sync log to free more space
+    localStorage.removeItem(SYNC_LOG_KEY);
+    // Clear sync devices registry (non-critical, will rebuild on next sync)
+    localStorage.removeItem('boilerfuel_sync_devices');
   } catch {}
 }
 
@@ -538,7 +543,7 @@ function gatherLocalData() {
   const existing = localStorage.getItem('boilerfuel_sync_devices');
   const devices = existing ? JSON.parse(existing) : {};
   devices[deviceId] = { name: getDeviceName(), lastSeen: Date.now() };
-  localStorage.setItem('boilerfuel_sync_devices', JSON.stringify(devices));
+  try { localStorage.setItem('boilerfuel_sync_devices', JSON.stringify(devices)); } catch {}
   data._devices = devices;
 
   return data;
@@ -602,34 +607,27 @@ function mergeRemoteData(remote) {
           // localStorage quota exceeded — skip backup silently
         }
       }
-      try {
-        localStorage.setItem(key, JSON.stringify(merged));
-      } catch (e) {
-        if (e.name === 'QuotaExceededError' || e.code === 22) {
-          // Storage full — progressively prune older meals until it fits
-          let saved = false;
-          for (const months of [6, 3, 1]) {
-            const cutoff = new Date();
-            cutoff.setMonth(cutoff.getMonth() - months);
-            const cutoffStr = cutoff.toISOString().slice(0, 10);
-            const pruned = Object.fromEntries(
-              Object.entries(merged).filter(([date]) => date >= cutoffStr)
-            );
-            try { localStorage.setItem(key, JSON.stringify(pruned)); saved = true; break; } catch {}
-          }
-          if (!saved) {
-            // Last resort: keep only the last 14 days
-            const cutoff = new Date();
-            cutoff.setDate(cutoff.getDate() - 14);
-            const cutoffStr = cutoff.toISOString().slice(0, 10);
-            const pruned = Object.fromEntries(
-              Object.entries(merged).filter(([date]) => date >= cutoffStr)
-            );
-            try { localStorage.setItem(key, JSON.stringify(pruned)); } catch {}
-          }
-        } else {
-          throw e;
+      // Remove the old key first so writing never fails due to "overwrite while full"
+      localStorage.removeItem(key);
+      let mealsSaved = false;
+      // Try full merged data first
+      try { localStorage.setItem(key, JSON.stringify(merged)); mealsSaved = true; } catch {}
+      if (!mealsSaved) {
+        // Progressively prune until it fits: 6mo → 3mo → 1mo → 14d
+        for (const months of [6, 3, 1]) {
+          const cutoff = new Date();
+          cutoff.setMonth(cutoff.getMonth() - months);
+          const cutoffStr = cutoff.toISOString().slice(0, 10);
+          const pruned = Object.fromEntries(Object.entries(merged).filter(([d]) => d >= cutoffStr));
+          try { localStorage.setItem(key, JSON.stringify(pruned)); mealsSaved = true; break; } catch {}
         }
+      }
+      if (!mealsSaved) {
+        const cutoff = new Date();
+        cutoff.setDate(cutoff.getDate() - 14);
+        const cutoffStr = cutoff.toISOString().slice(0, 10);
+        const pruned = Object.fromEntries(Object.entries(merged).filter(([d]) => d >= cutoffStr));
+        try { localStorage.setItem(key, JSON.stringify(pruned)); } catch {}
       }
     } else if (key === 'boilerfuel_water') {
       // Water: take the max per date — can't "undrink" water, remote data should
@@ -683,6 +681,6 @@ function mergeRemoteData(remote) {
         merged[id] = dev;
       }
     }
-    localStorage.setItem('boilerfuel_sync_devices', JSON.stringify(merged));
+    try { localStorage.setItem('boilerfuel_sync_devices', JSON.stringify(merged)); } catch {}
   }
 }
