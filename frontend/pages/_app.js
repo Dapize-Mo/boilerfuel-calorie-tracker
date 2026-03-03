@@ -9,6 +9,10 @@ import InstallPrompt from '../components/InstallPrompt';
 import OfflineIndicator from '../components/OfflineIndicator';
 import Onboarding from '../components/Onboarding';
 import NotificationManager from '../components/NotificationManager';
+import { pruneLocalStorage } from '../utils/sync';
+
+// Free up localStorage space immediately on startup
+if (typeof window !== 'undefined') pruneLocalStorage();
 
 const EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
 

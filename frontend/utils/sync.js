@@ -1,6 +1,41 @@
 // Client-side sync utilities: encryption + push/pull logic
 // Uses Web Crypto API — all encryption happens in the browser
 
+/**
+ * Free up localStorage space by removing stale per-day notification keys
+ * and pruning meal history older than 6 months.
+ * Safe to call on every app startup.
+ */
+export function pruneLocalStorage() {
+  if (typeof window === 'undefined') return;
+  try {
+    // Remove old per-day notification sentinel keys (boilerfuel_notif_*_YYYY-MM-DD)
+    const today = new Date().toISOString().slice(0, 10);
+    const notifKeysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('boilerfuel_notif_') && !k.endsWith('_hour') && !k.endsWith('_on') && k !== 'boilerfuel_notif_meal') {
+        if (!k.endsWith(`_${today}`)) notifKeysToRemove.push(k);
+      }
+    }
+    notifKeysToRemove.forEach(k => localStorage.removeItem(k));
+  } catch {}
+
+  try {
+    // Prune meals older than 6 months if meals data is large
+    const raw = localStorage.getItem('boilerfuel_meals');
+    if (!raw) return;
+    const cutoff = new Date();
+    cutoff.setMonth(cutoff.getMonth() - 6);
+    const cutoffStr = cutoff.toISOString().slice(0, 10);
+    const meals = JSON.parse(raw);
+    const pruned = Object.fromEntries(Object.entries(meals).filter(([d]) => d >= cutoffStr));
+    if (Object.keys(pruned).length < Object.keys(meals).length) {
+      try { localStorage.setItem('boilerfuel_meals', JSON.stringify(pruned)); } catch {}
+    }
+  } catch {}
+}
+
 const SYNC_TOKEN_KEY = 'boilerfuel_sync_token';
 const SYNC_SECRET_KEY = 'boilerfuel_sync_secret';
 const SYNC_LAST_PULL_KEY = 'boilerfuel_sync_last_pull';

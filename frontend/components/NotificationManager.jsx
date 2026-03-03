@@ -21,6 +21,21 @@ function computeStreak(mealsByDate) {
   return streak;
 }
 
+// Remove all per-day notification keys that aren't from today to free localStorage space
+function pruneOldNotifKeys(today) {
+  try {
+    const toRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('boilerfuel_notif_') && !k.endsWith('_hour') && !k.endsWith('_on') && k !== 'boilerfuel_notif_meal') {
+        // Key ends with a date like _2026-03-01 — remove if not today
+        if (!k.endsWith(`_${today}`)) toRemove.push(k);
+      }
+    }
+    toRemove.forEach(k => localStorage.removeItem(k));
+  } catch {}
+}
+
 // Non-rendering component: fires browser notifications based on meal data + time
 export default function NotificationManager() {
   const { mealsByDate } = useMeals();
@@ -34,6 +49,7 @@ export default function NotificationManager() {
       if (Notification.permission !== 'granted') return;
 
       const today = getTodayKey();
+      pruneOldNotifKeys(today);
       const hour = new Date().getHours();
       const todayMeals = (mealsByDate[today] || []).length;
       const streak = computeStreak(mealsByDate);
@@ -48,7 +64,7 @@ export default function NotificationManager() {
       // ── Streak reminder: at configured hour, has active streak, nothing logged today ──
       const streakKey = `boilerfuel_notif_streak_${today}`;
       if (streak >= 1 && todayMeals === 0 && hour >= streakHour && !localStorage.getItem(streakKey)) {
-        localStorage.setItem(streakKey, '1');
+        try { localStorage.setItem(streakKey, '1'); } catch {}
         new Notification('BoilerFuel — Streak at risk!', {
           body: `You have a ${streak}-day streak. Log today's meals to keep it alive! 🔥`,
           icon: '/icons/icon-192x192.png',
@@ -65,7 +81,7 @@ export default function NotificationManager() {
       if (todayMeals === 0 && hour >= breakfastHour && hour < breakfastHour + 1) {
         const key = `boilerfuel_notif_breakfast_${today}`;
         if (!localStorage.getItem(key)) {
-          localStorage.setItem(key, '1');
+          try { localStorage.setItem(key, '1'); } catch {}
           new Notification('BoilerFuel — Log your breakfast!', {
             body: 'Start your day right. Track your morning meal.',
             icon: '/icons/icon-192x192.png',
@@ -79,7 +95,7 @@ export default function NotificationManager() {
       if (todayMeals === 0 && hour >= brunchHour && hour < brunchHour + 1) {
         const key = `boilerfuel_notif_brunch_${today}`;
         if (!localStorage.getItem(key)) {
-          localStorage.setItem(key, '1');
+          try { localStorage.setItem(key, '1'); } catch {}
           new Notification('BoilerFuel — Log your brunch!', {
             body: "Don't forget to track your midday meal.",
             icon: '/icons/icon-192x192.png',
@@ -93,7 +109,7 @@ export default function NotificationManager() {
       if (todayMeals === 0 && hour >= lunchHour && hour < lunchHour + 1) {
         const key = `boilerfuel_notif_lunch_${today}`;
         if (!localStorage.getItem(key)) {
-          localStorage.setItem(key, '1');
+          try { localStorage.setItem(key, '1'); } catch {}
           new Notification('BoilerFuel — Log your lunch!', {
             body: "Don't forget to track your meals today.",
             icon: '/icons/icon-192x192.png',
@@ -107,7 +123,7 @@ export default function NotificationManager() {
       if (hour >= dinnerHour && hour < dinnerHour + 1) {
         const key = `boilerfuel_notif_dinner_${today}`;
         if (!localStorage.getItem(key)) {
-          localStorage.setItem(key, '1');
+          try { localStorage.setItem(key, '1'); } catch {}
           new Notification('BoilerFuel — Log your dinner!', {
             body: 'Track your nutrition to hit your daily goals.',
             icon: '/icons/icon-192x192.png',
