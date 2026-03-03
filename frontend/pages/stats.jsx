@@ -438,6 +438,18 @@ export default function StatsPage() {
         <meta property="og:title" content="Stats — BoilerFuel" />
         <meta property="og:description" content="Your personal nutrition analytics — calorie trends, macro breakdowns, and weekly insights." />
         <meta property="og:url" content="https://boilerfuel.vercel.app/stats" />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebPage",
+          "name": "Nutrition Stats",
+          "description": "View your nutrition analytics, calorie trends, macro breakdowns, and weekly insights.",
+          "url": "https://boilerfuel.vercel.app/stats",
+          "isPartOf": {
+            "@type": "WebApplication",
+            "name": "BoilerFuel",
+            "url": "https://boilerfuel.vercel.app/"
+          }
+        })}} />
       </Head>
 
       <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary font-mono">

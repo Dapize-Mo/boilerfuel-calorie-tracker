@@ -60,6 +60,21 @@ export default function About() {
         <meta property="og:title" content="About — BoilerFuel" />
         <meta property="og:description" content="Free, private calorie tracker for Purdue students. No account required. Your data stays on your device." />
         <meta property="og:url" content="https://boilerfuel.vercel.app/about" />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "AboutPage",
+          "name": "About BoilerFuel",
+          "description": "Learn about BoilerFuel — the free, private calorie and nutrition tracker built for Purdue University students.",
+          "url": "https://boilerfuel.vercel.app/about",
+          "mainEntity": {
+            "@type": "SoftwareApplication",
+            "name": "BoilerFuel",
+            "applicationCategory": "HealthApplication",
+            "operatingSystem": "Any",
+            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+            "featureList": "Privacy-first calorie tracking, Real-time dining hall menus, Custom macro goals, Fitness tracking, Nutrition scoring"
+          }
+        })}} />
       </Head>
 
       <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary font-mono">

@@ -1,9 +1,48 @@
+# robots.txt for BoilerFuel - Purdue Calorie Tracker
+# https://boilerfuel.vercel.app
+
+# Allow all good bots by default
 User-agent: *
 Allow: /
+Allow: /about
+Allow: /tools
+Allow: /compare
+Allow: /changelog
+Allow: /privacy
+
+# Block access to private/user-specific pages
 Disallow: /admin
-Disallow: /api/
+Disallow: /admin/*
 Disallow: /profile
 Disallow: /stats
 Disallow: /custom-foods
 
+# Block API endpoints (not useful for search engines)
+Disallow: /api/
+Disallow: /api/*
+
+# Block Next.js internal paths
+Disallow: /_next/
+Disallow: /_error
+
+# Allow static assets
+Allow: /icons/
+Allow: /manifest.json
+Allow: /sw.js
+
+# Block aggressive bots and crawlers
+User-agent: AhrefsBot
+User-agent: SemrushBot
+User-agent: DotBot
+User-agent: MJ12bot
+Disallow: /
+
+# Crawl delay for well-behaved bots
+User-agent: Googlebot
+Crawl-delay: 1
+
+User-agent: Bingbot
+Crawl-delay: 1
+
+# Sitemap location
 Sitemap: https://boilerfuel.vercel.app/sitemap.xml

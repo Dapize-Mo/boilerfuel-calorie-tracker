@@ -9,6 +9,7 @@ import InstallPrompt from '../components/InstallPrompt';
 import OfflineIndicator from '../components/OfflineIndicator';
 import Onboarding from '../components/Onboarding';
 import NotificationManager from '../components/NotificationManager';
+import ErrorBoundary from '../components/ErrorBoundary';
 import { pruneLocalStorage } from '../utils/sync';
 
 // Free up localStorage space immediately on startup
@@ -120,57 +121,59 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
       </Head>
       <ThemeProvider>
         <MealProvider>
-          {/* Page content with fade */}
-          <div style={{
-            opacity: displayChildren && !transitioning ? 1 : 0,
-            transition: `opacity 0.35s ${EASE}`,
-          }}>
-            {getLayout(<Component {...pageProps} />)}
-          </div>
-
-          <InstallPrompt />
-          <OfflineIndicator />
-          <Onboarding />
-          <NotificationManager />
-
-          {/* App update toast */}
-          {updateAvailable && (
-            <div className="fixed bottom-20 inset-x-0 z-50 flex justify-center px-4 pointer-events-none">
-              <div className="flex items-center gap-3 bg-theme-bg-secondary border border-theme-text-primary/20 px-4 py-3 pointer-events-auto max-w-sm w-full">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-theme-text-primary">Update available</p>
-                  <p className="text-xs text-theme-text-tertiary">Reload to get the latest version.</p>
-                </div>
-                <button
-                  onClick={applyUpdate}
-                  className="shrink-0 px-3 py-1.5 bg-yellow-400 hover:bg-yellow-500 text-slate-900 text-xs font-bold uppercase tracking-wider transition-colors"
-                >
-                  Reload
-                </button>
-                <button
-                  onClick={() => setUpdateAvailable(false)}
-                  aria-label="Dismiss"
-                  className="shrink-0 p-1 text-theme-text-tertiary hover:text-theme-text-primary transition-colors"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-                    <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Transition overlay */}
-          <div
-            aria-hidden="true"
-            style={{
-              position: 'fixed', inset: 0, zIndex: 99999,
-              background: 'rgb(var(--color-bg-primary))',
-              opacity: transitioning ? 1 : 0,
-              pointerEvents: transitioning ? 'all' : 'none',
+          <ErrorBoundary>
+            {/* Page content with fade */}
+            <div style={{
+              opacity: displayChildren && !transitioning ? 1 : 0,
               transition: `opacity 0.35s ${EASE}`,
-            }}
-          />
+            }}>
+              {getLayout(<Component {...pageProps} />)}
+            </div>
+
+            <InstallPrompt />
+            <OfflineIndicator />
+            <Onboarding />
+            <NotificationManager />
+
+            {/* App update toast */}
+            {updateAvailable && (
+              <div className="fixed bottom-20 inset-x-0 z-50 flex justify-center px-4 pointer-events-none">
+                <div className="flex items-center gap-3 bg-theme-bg-secondary border border-theme-text-primary/20 px-4 py-3 pointer-events-auto max-w-sm w-full">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-theme-text-primary">Update available</p>
+                    <p className="text-xs text-theme-text-tertiary">Reload to get the latest version.</p>
+                  </div>
+                  <button
+                    onClick={applyUpdate}
+                    className="shrink-0 px-3 py-1.5 bg-yellow-400 hover:bg-yellow-500 text-slate-900 text-xs font-bold uppercase tracking-wider transition-colors"
+                  >
+                    Reload
+                  </button>
+                  <button
+                    onClick={() => setUpdateAvailable(false)}
+                    aria-label="Dismiss"
+                    className="shrink-0 p-1 text-theme-text-tertiary hover:text-theme-text-primary transition-colors"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                      <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Transition overlay */}
+            <div
+              aria-hidden="true"
+              style={{
+                position: 'fixed', inset: 0, zIndex: 99999,
+                background: 'rgb(var(--color-bg-primary))',
+                opacity: transitioning ? 1 : 0,
+                pointerEvents: transitioning ? 'all' : 'none',
+                transition: `opacity 0.35s ${EASE}`,
+              }}
+            />
+          </ErrorBoundary>
         </MealProvider>
       </ThemeProvider>
     </SessionProvider>
