@@ -64,7 +64,7 @@ class ErrorBoundary extends React.Component {
                 Oops! Something Went Wrong
               </h1>
               <p className="text-theme-text-secondary text-sm sm:text-base">
-                We encountered an unexpected error. Don't worry — your data is safe in your browser.
+                We encountered an unexpected error. Don&apos;t worry — your data is safe in your browser.
               </p>
             </div>
 
