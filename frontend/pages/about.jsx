@@ -34,14 +34,16 @@ export default function About() {
   };
 
   const features = [
-    { label: 'Privacy-First', desc: 'All data stored locally. No accounts, no cloud, no tracking.' },
-    { label: 'Full Nutrition', desc: 'Calories, protein, carbs, and fats for every menu item.' },
-    { label: 'Filter & Sort', desc: 'Browse by dining court, meal time, and sort by any nutrient.' },
-    { label: 'Organized', desc: 'Menu items grouped by station — Grill, Salad Bar, and more.' },
-    { label: 'Quick Add', desc: 'One-click meal logging for fast daily tracking.' },
-    { label: 'Macro Goals', desc: 'Set custom calorie and macro targets in your profile.' },
+    { label: 'Privacy-First', desc: 'All data stored locally. No accounts required — nothing leaves your device without your permission.' },
+    { label: 'Full Nutrition', desc: 'Calories, protein, carbs, fats, fiber, sodium, sugar, and more for every menu item.' },
+    { label: 'Filter & Sort', desc: 'Browse by dining court, meal time, dietary tag (VG/V), allergen exclusions, and calorie range.' },
+    { label: 'Organized', desc: 'Menu items grouped by dining court and station — Grill, Salad Bar, Beverages, and more.' },
+    { label: 'Quick Add', desc: 'One-click meal logging. Frequent foods surface automatically for even faster re-logging.' },
+    { label: 'Macro Goals', desc: 'Set custom calorie and macro targets in your profile. Apply TDEE-calculated goals instantly.' },
     { label: 'TDEE Calculator', desc: 'Estimate your maintenance calories and ideal macros with the built-in Tools page.' },
-    { label: 'Nutrition Score', desc: 'Get an A–F daily nutrition grade based on calories, protein, fiber, sodium, and sugar.' },
+    { label: 'Nutrition Score', desc: 'Get an A–F daily nutrition grade based on calories, protein, fiber, sodium, and added sugar.' },
+    { label: 'Cross-Device Sync', desc: 'Pair two devices with an encrypted 6-character code — no account, no cloud login required.' },
+    { label: 'Streak Tracking', desc: 'Consecutive logging streak tracked daily. Stay consistent and hit your goals.' },
   ];
 
   const steps = [
@@ -195,10 +197,10 @@ export default function About() {
                   Privacy &amp; Data
                 </h2>
                 <p className="text-xs text-theme-text-secondary leading-relaxed">
-                  All meal logs are stored locally in your browser. Nothing is sent to a server.
+                  All meal logs are stored locally in your browser. No accounts required — data stays on your device by default.
                 </p>
                 <div className="space-y-px border border-theme-text-primary/10">
-                  {['No Accounts', 'No Cloud Sync', 'No Tracking', 'Device Only'].map(item => (
+                  {['No Accounts Required', 'No Tracking', 'Local by Default', 'Optional Encrypted Sync'].map(item => (
                     <div key={item} className="bg-theme-text-primary/5 px-4 py-2.5 flex items-center gap-3">
                       <span className="w-1.5 h-1.5 bg-theme-text-primary/30 shrink-0" />
                       <span className="text-xs uppercase tracking-wider text-theme-text-secondary">{item}</span>
@@ -206,7 +208,7 @@ export default function About() {
                   ))}
                 </div>
                 <p className="text-[10px] text-theme-text-tertiary leading-relaxed">
-                  Clearing browser storage will delete your logs. Data does not sync across devices.
+                  Clearing browser storage will delete your logs. Use cross-device sync (Profile → Sync) to back up and share data between your devices with end-to-end encryption.
                 </p>
               </section>
 
