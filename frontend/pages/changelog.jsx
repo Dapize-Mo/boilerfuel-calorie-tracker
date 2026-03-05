@@ -12,9 +12,22 @@ const VERSIONS = [
 
   // ─── 3.8.x  Tools, Nutrition Score & Streak  (Mar 2–5, 2026) ────────────
   {
-    version: '3.8.3',
+    version: '3.8.4',
     date: 'March 5, 2026',
     latest: true,
+    changes: [
+      { cat: 'Fix', items: [
+        'Sync: added "Force Resync" button on Profile page — clears the stuck last-pull timestamp so the device re-fetches all remote data, fixing the silent "no changes" loop caused by a race condition during simultaneous device recovery',
+        'Sync: 800ms delay between push and pull in Sync Now prevents a race where both devices push at the same millisecond and each misses the other\'s data',
+        'Sync: doPull() background check now auto-recovers a missing server token by triggering pushData(), restoring the sync row without user action',
+      ]},
+    ],
+  },
+
+  {
+    version: '3.8.3',
+    date: 'March 5, 2026',
+    latest: false,
     changes: [
       { cat: 'Feature', items: [
         'Stats page: Export Meal History to CSV — download button in Meal History header exports all logged meals (date, meal time, name, dining court, calories, macros)',

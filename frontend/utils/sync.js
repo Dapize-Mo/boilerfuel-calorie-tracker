@@ -373,6 +373,16 @@ export async function pullData(options = {}) {
   return { changed: true, updatedAt: body.updated_at || Date.now(), transferred };
 }
 
+/** Clears the last-pull timestamp then does a full push+pull.
+ *  Use this to recover from a stuck state where SYNC_LAST_PULL_KEY
+ *  is newer than the server's data, causing every pull to return "no changes". */
+export async function forceFullSync() {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(SYNC_LAST_PULL_KEY, '0');
+  }
+  return syncNowDetailed();
+}
+
 export async function syncNowDetailed() {
   const pushReport = await pushData({ strict: true, includeReport: true });
   // Wait briefly so any other paired device that pushed concurrently has

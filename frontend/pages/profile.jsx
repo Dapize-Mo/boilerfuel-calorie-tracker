@@ -75,6 +75,7 @@ export default function ProfilePage() {
   const [syncDevices, setSyncDevices] = useState({});
   const [syncReport, setSyncReport] = useState(null);
   const [syncNowLoading, setSyncNowLoading] = useState(false);
+  const [forceResyncLoading, setForceResyncLoading] = useState(false);
   const [lastSyncAt, setLastSyncAt] = useState(null);
   const [syncAgeTick, setSyncAgeTick] = useState(0);
   const [syncLog, setSyncLog] = useState([]); // activity log entries from getSyncLog()
@@ -1364,6 +1365,37 @@ export default function ProfilePage() {
                     disabled={syncNowLoading}
                     className="px-4 py-2 border border-theme-text-primary text-theme-text-primary text-xs font-bold uppercase tracking-wider hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors">
                     {syncNowLoading ? 'Syncing…' : 'Sync Now'}
+                  </button>
+                  <button
+                    onClick={async () => {
+                      setForceResyncLoading(true);
+                      setSyncMsg('');
+                      setSyncError('');
+                      setSyncReport(null);
+                      try {
+                        const { forceFullSync } = await import('../utils/sync');
+                        const report = await forceFullSync();
+                        reloadFromStorage();
+                        setSyncReport(report || null);
+                        try {
+                          if (report?.devices) setSyncDevices(report.devices);
+                        } catch {}
+                        import('../utils/sync').then(({ getSyncLog }) => setSyncLog(getSyncLog())).catch(() => {});
+                        const syncedAt = report?.syncedAt || Date.now();
+                        setLastSyncAt(syncedAt);
+                        localStorage.setItem('boilerfuel_sync_last_success_at', String(syncedAt));
+                        setSyncMsg('Force resync complete — pulled all remote data.');
+                        setTimeout(() => setSyncMsg(''), 4000);
+                      } catch (err) {
+                        setSyncError(err?.message || 'Force resync failed. Check your connection.');
+                        import('../utils/sync').then(({ getSyncLog }) => setSyncLog(getSyncLog())).catch(() => {});
+                      } finally {
+                        setForceResyncLoading(false);
+                      }
+                    }}
+                    disabled={forceResyncLoading || syncNowLoading}
+                    className="px-4 py-2 border border-yellow-500/40 text-yellow-500 text-xs font-bold uppercase tracking-wider hover:bg-yellow-500 hover:text-theme-bg-primary transition-colors">
+                    {forceResyncLoading ? 'Resyncing…' : 'Force Resync'}
                   </button>
                   <button
                     onClick={async () => {
