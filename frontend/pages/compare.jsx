@@ -178,8 +178,8 @@ export default function ComparePage() {
             </div>
 
             {/* Location selectors */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
+            <div className="flex items-end gap-3">
+              <div className="flex-1">
                 <label className="block text-[10px] uppercase tracking-widest text-theme-text-tertiary mb-1.5">
                   <span className="inline-block w-2 h-2 bg-theme-text-primary/50 mr-1.5" />
                   Court A
@@ -194,7 +194,14 @@ export default function ComparePage() {
                   ))}
                 </select>
               </div>
-              <div>
+              <button
+                onClick={() => { const tmp = courtA; setCourtA(courtB); setCourtB(tmp); }}
+                title="Swap courts"
+                className="shrink-0 mb-px border border-theme-text-primary/20 text-theme-text-tertiary hover:border-theme-text-primary/50 hover:text-theme-text-primary transition-colors px-2.5 py-2 text-xs"
+              >
+                ⇄
+              </button>
+              <div className="flex-1">
                 <label className="block text-[10px] uppercase tracking-widest text-theme-text-tertiary mb-1.5">
                   <span className="inline-block w-2 h-2 bg-yellow-500/50 mr-1.5" />
                   Court B
