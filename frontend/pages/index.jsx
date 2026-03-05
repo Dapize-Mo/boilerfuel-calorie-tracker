@@ -405,6 +405,7 @@ export default function Home() {
   const [templateName, setTemplateName] = useState('');
   const [saveComboFoodId, setSaveComboFoodId] = useState(null); // which food's inline combo-save form is open
   const [saveComboName, setSaveComboName] = useState(''); // name being typed for combo save
+  const [showShortcutsHint, setShowShortcutsHint] = useState(false);
 
   const mealTimes = ['All', 'Breakfast', 'Brunch', 'Lunch', 'Late Lunch', 'Dinner'];
   const isLanding = view === 'landing';
@@ -1319,6 +1320,39 @@ export default function Home() {
                   <rect x="2" y="4" width="20" height="16" rx="1" /><line x1="6" y1="8" x2="6" y2="16" /><line x1="9" y1="8" x2="9" y2="16" strokeWidth="1" /><line x1="11" y1="8" x2="11" y2="16" /><line x1="14" y1="8" x2="14" y2="16" strokeWidth="1" /><line x1="16" y1="8" x2="16" y2="16" /><line x1="18" y1="8" x2="18" y2="16" strokeWidth="1" />
                 </svg>
               </button>
+              {/* Keyboard shortcuts hint */}
+              <div className="relative hidden sm:block">
+                <button
+                  onMouseEnter={() => setShowShortcutsHint(true)}
+                  onMouseLeave={() => setShowShortcutsHint(false)}
+                  onClick={() => setShowShortcutsHint(f => !f)}
+                  className="px-2 py-1.5 border border-theme-text-primary/10 text-theme-text-tertiary/40 hover:text-theme-text-tertiary hover:border-theme-text-primary/20 transition-colors text-[10px] font-mono"
+                  title="Keyboard shortcuts"
+                >
+                  ?
+                </button>
+                {showShortcutsHint && (
+                  <div className="absolute right-0 top-full mt-1.5 z-50 bg-theme-bg-secondary border border-theme-text-primary/20 p-3 font-mono pointer-events-none whitespace-nowrap"
+                    style={{ animation: `fadeInTooltip 0.1s ${EASE} both` }}>
+                    <div className="text-[9px] uppercase tracking-widest text-theme-text-tertiary mb-2">Keyboard shortcuts</div>
+                    {[
+                      [['/', ''], 'Focus search'],
+                      [['Esc', ''], 'Close / clear'],
+                      [['[', ']'], 'Prev / next day'],
+                      [['T', ''], 'Jump to today'],
+                    ].map(([keys, label]) => (
+                      <div key={label} className="flex items-center justify-between gap-4 mb-1 last:mb-0">
+                        <span className="text-[10px] text-theme-text-tertiary">{label}</span>
+                        <div className="flex items-center gap-1">
+                          {keys.filter(Boolean).map(k => (
+                            <span key={k} className="text-[9px] border border-theme-text-primary/20 px-1.5 py-0.5 text-theme-text-secondary font-bold">{k}</span>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Templates panel */}
