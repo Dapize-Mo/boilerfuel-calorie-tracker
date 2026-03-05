@@ -1126,18 +1126,24 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ── Admin link — fades out ── */}
+      {/* ── Feature nav links — fades out on results ── */}
       <div style={{
         position: 'fixed', zIndex: 20,
-        top: isMobile ? '88vh' : '82vh', left: '50%', transform: 'translateX(-50%)',
+        top: isMobile ? '86vh' : '80vh', left: '50%', transform: 'translateX(-50%)',
         transition: `opacity 0.4s ${EASE}`,
-        opacity: isLanding ? 0.25 : 0,
+        opacity: isLanding ? 0.45 : 0,
         pointerEvents: isLanding ? 'auto' : 'none',
+        whiteSpace: 'nowrap',
       }}>
-        <Link href="/admin" className="text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary"
-          style={{ transition: 'color 0.2s' }}>
-          Admin
-        </Link>
+        <div className="flex items-center gap-4 text-[10px] uppercase tracking-widest font-mono">
+          <Link href="/stats" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Stats</Link>
+          <span className="text-theme-text-tertiary/20">·</span>
+          <Link href="/custom-foods" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Custom Foods</Link>
+          <span className="text-theme-text-tertiary/20">·</span>
+          <Link href="/tools" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Tools</Link>
+          <span className="text-theme-text-tertiary/20">·</span>
+          <Link href="/admin" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Admin</Link>
+        </div>
       </div>
 
       {/* ── Profile icon — always visible, top-right ── */}
@@ -1245,9 +1251,12 @@ export default function Home() {
                     </span>
                   );
                 })()}
-                {/* Stats link */}
-                <Link href="/stats" className="text-[10px] uppercase tracking-widest text-yellow-500/70 hover:text-yellow-500 transition-colors">
+                {/* Nav links */}
+                <Link href="/stats" className="text-[10px] uppercase tracking-widest text-theme-text-tertiary/60 hover:text-yellow-500 transition-colors">
                   Stats
+                </Link>
+                <Link href="/tools" className="text-[10px] uppercase tracking-widest text-theme-text-tertiary/60 hover:text-theme-text-primary transition-colors hidden sm:inline">
+                  Tools
                 </Link>
               </div>
             </div>
@@ -1928,14 +1937,48 @@ export default function Home() {
                 </>
               ) : (
                 <tr>
-                  <td colSpan={4} className="py-16 text-center text-theme-text-tertiary italic">
+                  <td colSpan={4} className="py-12 text-center">
                     {(location.type === 'all-foodco' || location.source === 'foodco') ? (
-                      <div className="space-y-2">
+                      <div className="space-y-2 text-theme-text-tertiary italic">
                         <div className="text-base not-italic font-bold text-theme-text-secondary">Purdue Food Co</div>
                         <div className="text-sm">No menu data available for this location yet.</div>
                         <div className="text-xs mt-3">Visit <a href="https://purduefoodco.com" target="_blank" rel="noopener noreferrer" className="underline text-theme-text-secondary hover:text-theme-text-primary">purduefoodco.com</a> for menus and ordering.</div>
                       </div>
-                    ) : 'No foods found for this selection.'}
+                    ) : (
+                      <div className="space-y-4 max-w-sm mx-auto">
+                        <div className="text-theme-text-secondary font-mono text-sm">No menu data for this selection.</div>
+                        <p className="text-xs text-theme-text-tertiary leading-relaxed">
+                          Purdue HFS updates menus daily — not all dates have data available.
+                          {searchText && <> No results matched &ldquo;<strong>{searchText}</strong>&rdquo;.</>}
+                        </p>
+                        <div className="flex flex-wrap gap-2 justify-center">
+                          {selectedDate !== localDateStr() && (
+                            <button
+                              onClick={() => setSelectedDate(localDateStr())}
+                              className="px-3 py-1.5 border border-theme-text-primary/30 text-xs text-theme-text-secondary hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors font-mono uppercase tracking-wider">
+                              Today
+                            </button>
+                          )}
+                          <button
+                            onClick={prevDay}
+                            className="px-3 py-1.5 border border-theme-text-primary/30 text-xs text-theme-text-secondary hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors font-mono uppercase tracking-wider">
+                            ← Prev Day
+                          </button>
+                          {searchText && (
+                            <button
+                              onClick={() => setSearchText('')}
+                              className="px-3 py-1.5 border border-theme-text-primary/30 text-xs text-theme-text-secondary hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors font-mono uppercase tracking-wider">
+                              Clear Search
+                            </button>
+                          )}
+                          <Link
+                            href="/custom-foods"
+                            className="px-3 py-1.5 border border-theme-text-primary/30 text-xs text-theme-text-secondary hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors font-mono uppercase tracking-wider">
+                            Custom Foods
+                          </Link>
+                        </div>
+                      </div>
+                    )}
                   </td>
                 </tr>
               )}
@@ -2112,8 +2155,9 @@ export default function Home() {
                 </div>
                 <button
                   onClick={() => router.push('/profile')}
-                  className="hidden sm:block text-[9px] uppercase tracking-widest text-theme-text-tertiary/50 hover:text-theme-text-primary transition-colors border border-theme-text-primary/15 px-1.5 py-0.5">
-                  Log
+                  className="hidden sm:block text-[9px] uppercase tracking-widest text-theme-text-tertiary/50 hover:text-theme-text-primary transition-colors border border-theme-text-primary/15 px-1.5 py-0.5"
+                  title="View full meal log">
+                  Profile
                 </button>
               </div>
             </div>

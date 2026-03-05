@@ -597,7 +597,7 @@ export default function ProfilePage() {
                     ))}
                   </div>
                 )}
-                <div className="max-h-72 overflow-y-auto">
+                <div className="max-h-96 overflow-y-auto">
                   {mealGroups.filter(g => !logFilter || g.label === logFilter).map(group => {
                     const groupCals = group.meals.reduce((s, m) => s + (m.calories || 0), 0);
                     // Group meals by food id
@@ -647,12 +647,17 @@ export default function ProfilePage() {
             )}
 
             {dateMeals.length === 0 && (
-              <div className="border border-dashed border-theme-text-primary/20 py-8 text-center">
+              <div className="border border-dashed border-theme-text-primary/20 py-8 text-center space-y-3">
                 <p className="text-sm text-theme-text-tertiary">
                   {isToday ? 'No foods logged today.' : `No foods logged on ${formatDateKey(selectedDate)}.`}
                 </p>
                 {isToday && (
-                  <p className="text-xs text-theme-text-tertiary/60 mt-1">Click a food on the menu and press Add to start tracking.</p>
+                  <>
+                    <p className="text-xs text-theme-text-tertiary/60">Browse dining menus and press Add to start tracking.</p>
+                    <Link href="/" className="inline-block px-4 py-2 border border-theme-text-primary/30 text-xs font-bold uppercase tracking-wider text-theme-text-secondary hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors">
+                      Browse Menus
+                    </Link>
+                  </>
                 )}
               </div>
             )}
@@ -1337,7 +1342,11 @@ export default function ProfilePage() {
                         const syncedAt = report?.syncedAt || Date.now();
                         setLastSyncAt(syncedAt);
                         localStorage.setItem('boilerfuel_sync_last_success_at', String(syncedAt));
-                        setSyncMsg(`Sync completed. ${deviceCount} paired device${deviceCount === 1 ? '' : 's'} in this sync group.`);
+                        if (report?.tokenRecovered) {
+                          setSyncMsg(`Sync recovered and completed. ${deviceCount} paired device${deviceCount === 1 ? '' : 's'} in this sync group.`);
+                        } else {
+                          setSyncMsg(`Sync completed. ${deviceCount} paired device${deviceCount === 1 ? '' : 's'} in this sync group.`);
+                        }
                         setTimeout(() => setSyncMsg(''), 3500);
                       } catch (err) {
                         setSyncError(err?.message || 'Sync failed. Check your connection.');
@@ -1389,6 +1398,12 @@ export default function ProfilePage() {
                         Pulled after push: {syncReport.pulledAfterPush ? 'Yes' : 'No'}
                       </div>
                     </div>
+
+                    {syncReport.tokenRecovered && (
+                      <div className="border border-yellow-500/20 px-3 py-2 text-xs text-theme-text-secondary">
+                        Sync token was reset on the server and this device restored it. Run Sync Now on your other device to pull the latest data.
+                      </div>
+                    )}
 
                     <div className="space-y-1">
                       <div className="text-[10px] font-bold uppercase tracking-widest text-theme-text-tertiary">Data sent from this device</div>
