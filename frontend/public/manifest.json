@@ -72,22 +72,22 @@
   "categories": ["health", "fitness", "lifestyle"],
   "shortcuts": [
     {
-      "name": "Log Food",
-      "short_name": "Log Food",
-      "description": "Quick log a meal",
-      "url": "/?tab=nutrition"
+      "name": "Browse Menus",
+      "short_name": "Menus",
+      "description": "Browse Purdue dining hall menus",
+      "url": "/"
     },
     {
-      "name": "View Menu",
-      "short_name": "Menu",
-      "description": "Browse dining hall menus",
-      "url": "/?tab=menu"
+      "name": "My Stats",
+      "short_name": "Stats",
+      "description": "View nutrition analytics and trends",
+      "url": "/stats"
     },
     {
-      "name": "Log Activity",
-      "short_name": "Activity",
-      "description": "Log an exercise",
-      "url": "/?tab=activity"
+      "name": "Profile",
+      "short_name": "Profile",
+      "description": "View meal log and settings",
+      "url": "/profile"
     }
   ]
 }
