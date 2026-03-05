@@ -1460,13 +1460,20 @@ export default function ProfilePage() {
                     <div className="space-y-1">
                       <div className="text-[10px] font-bold uppercase tracking-widest text-theme-text-tertiary">Data received from paired devices</div>
                       {syncReport.pulledTransferred?.length ? (
-                        <ul className="space-y-1">
-                          {syncReport.pulledTransferred.map((item, idx) => (
-                            <li key={`pull-${item.key}-${idx}`} className="text-xs text-theme-text-secondary">
-                              <span className="font-bold text-theme-text-primary">{item.label}:</span> {item.detail}
-                            </li>
-                          ))}
-                        </ul>
+                        <>
+                          <ul className="space-y-1">
+                            {syncReport.pulledTransferred.map((item, idx) => (
+                              <li key={`pull-${item.key}-${idx}`} className="text-xs text-theme-text-secondary">
+                                <span className="font-bold text-theme-text-primary">{item.label}:</span> {item.detail}
+                              </li>
+                            ))}
+                          </ul>
+                          {!syncReport.pulledTransferred.some(i => i.key === 'meals') && (
+                            <p className="text-[10px] text-yellow-500/70 mt-1">
+                              No meals in paired device&apos;s sync data — open your other device and press Sync Now, then Force Resync here.
+                            </p>
+                          )}
+                        </>
                       ) : (
                         <p className="text-xs text-theme-text-tertiary">No newer remote changes were available.</p>
                       )}
