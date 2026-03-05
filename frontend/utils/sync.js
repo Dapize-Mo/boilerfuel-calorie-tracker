@@ -141,7 +141,7 @@ export function getSyncSecret() {
 }
 
 export function saveSyncCredentials(token, secret) {
-  localStorage.setItem(SYNC_TOKEN_KEY, token);
+  localStorage.setItem(SYNC_TOKEN_KEY, normalizeToken(token));
   localStorage.setItem(SYNC_SECRET_KEY, secret);
 }
 
@@ -193,8 +193,9 @@ export async function createSyncPair() {
 // ── Join an existing sync pair (Device B) ──
 
 export async function joinSyncPair(token, secret) {
+  const normalizedToken = normalizeToken(token);
   // Verify the token exists and we can decrypt
-  const res = await fetch(`/api/sync?token=${encodeURIComponent(token)}`);
+  const res = await fetch(`/api/sync?token=${encodeURIComponent(normalizedToken)}`);
   if (!res.ok) throw new Error('Sync code not found');
   const body = await res.json();
 
@@ -205,7 +206,7 @@ export async function joinSyncPair(token, secret) {
     mergeRemoteData(data);
   }
 
-  saveSyncCredentials(token, secret);
+  saveSyncCredentials(normalizedToken, secret);
   localStorage.setItem(SYNC_LAST_PULL_KEY, String(body.updated_at || Date.now()));
 
   // Push our local data back (merged)
@@ -229,6 +230,7 @@ export async function pushData(options = {}) {
   let pulled = false;
   let pulledTransfer = [];
   let pullUpdatedAt = null;
+  let tokenRecovered = false;
 
   // Step 1: Pull any server-side changes and merge into local storage.
   const since = localStorage.getItem(SYNC_LAST_PULL_KEY) || '0';
@@ -252,7 +254,10 @@ export async function pushData(options = {}) {
       }
     }
   } catch (err) {
-    if (strict) throw err;
+    // If the server no longer has this token, continue to push so we can
+    // recover the sync row from local encrypted data.
+    if (isMissingTokenError(err)) tokenRecovered = true;
+    if (strict && !isMissingTokenError(err)) throw err;
     // Non-fatal: if we can't reach the server, push local data as-is.
     // This is safer than not pushing at all.
   }
@@ -290,9 +295,11 @@ export async function pushData(options = {}) {
       direction: 'push',
       status: 'ok',
       keys: pushedKeys,
-      detail: pulledKeys.length > 0
-        ? `Merged remote changes for: ${pulledKeys.map(k => k.replace('boilerfuel_', '')).join(', ')}`
-        : 'No remote changes to merge',
+      detail: tokenRecovered
+        ? 'Recovered sync token on server and pushed latest encrypted data'
+        : (pulledKeys.length > 0
+          ? `Merged remote changes for: ${pulledKeys.map(k => k.replace('boilerfuel_', '')).join(', ')}`
+          : 'No remote changes to merge'),
     });
     
     if (!includeReport) return;
@@ -300,6 +307,7 @@ export async function pushData(options = {}) {
     return {
       pushed: true,
       pulled,
+      tokenRecovered,
       pullUpdatedAt,
       transferred: summarizeTransferredData(data),
       pulledTransferred: pulledTransfer,
@@ -369,6 +377,7 @@ export async function syncNowDetailed() {
   return {
     pushed: !!pushReport?.pushed,
     pulledOnPush: !!pushReport?.pulled,
+    tokenRecovered: !!pushReport?.tokenRecovered,
     pulledAfterPush: !!pullReport?.changed,
     transferred: pushReport?.transferred || [],
     pulledTransferred: [
@@ -524,6 +533,16 @@ async function parseErrorMessage(res, fallback = 'Sync request failed') {
     if (body?.error) return body.error;
   } catch {}
   return fallback;
+}
+
+function isMissingTokenError(err) {
+  const msg = String(err?.message || err || '').toLowerCase();
+  return msg.includes('sync token not found');
+}
+
+function normalizeToken(token) {
+  if (!token) return '';
+  return String(token).trim().toUpperCase();
 }
 
 // ── Helpers ──

@@ -34,17 +34,19 @@ export default async function handler(req, res) {
       }
 
       if (action === 'push') {
-        if (!token || !encrypted_data) {
+        const normalizedToken = normalizeToken(token);
+        if (!normalizedToken || !encrypted_data) {
           return res.status(400).json({ error: 'Missing token or data' });
         }
-        // Update the encrypted blob
-        const result = await query(
-          `UPDATE sync_data SET encrypted_data = $1, updated_at = $2 WHERE token = $3`,
-          [encrypted_data, updated_at || Date.now(), token]
+        // Upsert the encrypted blob so paired devices can recover if the
+        // server row was pruned/reset while local credentials still exist.
+        await query(
+          `INSERT INTO sync_data (token, encrypted_data, updated_at)
+           VALUES ($1, $2, $3)
+           ON CONFLICT (token)
+           DO UPDATE SET encrypted_data = EXCLUDED.encrypted_data, updated_at = EXCLUDED.updated_at`,
+          [normalizedToken, encrypted_data, updated_at || Date.now()]
         );
-        if (result.rowCount === 0) {
-          return res.status(404).json({ error: 'Sync token not found' });
-        }
         return res.json({ ok: true });
       }
 
@@ -54,11 +56,12 @@ export default async function handler(req, res) {
     // GET /api/sync?token=XXX&since=timestamp — pull data
     if (req.method === 'GET') {
       const { token, since } = req.query;
-      if (!token) return res.status(400).json({ error: 'Missing token' });
+      const normalizedToken = normalizeToken(token);
+      if (!normalizedToken) return res.status(400).json({ error: 'Missing token' });
 
       const { rows } = await query(
         `SELECT encrypted_data, updated_at FROM sync_data WHERE token = $1`,
-        [token]
+        [normalizedToken]
       );
       if (rows.length === 0) {
         return res.status(404).json({ error: 'Sync token not found' });
@@ -81,8 +84,9 @@ export default async function handler(req, res) {
     // DELETE /api/sync — unpair
     if (req.method === 'DELETE') {
       const { token } = req.body;
-      if (token) {
-        await query(`DELETE FROM sync_data WHERE token = $1`, [token]);
+      const normalizedToken = normalizeToken(token);
+      if (normalizedToken) {
+        await query(`DELETE FROM sync_data WHERE token = $1`, [normalizedToken]);
       }
       return res.json({ ok: true });
     }
@@ -102,6 +106,11 @@ function generateCode() {
   require('crypto').randomFillSync(arr);
   for (let i = 0; i < 6; i++) code += chars[arr[i] % chars.length];
   return code;
+}
+
+function normalizeToken(token) {
+  if (!token) return '';
+  return String(Array.isArray(token) ? token[0] : token).trim().toUpperCase();
 }
 
 // Increase body size limit for sync data
