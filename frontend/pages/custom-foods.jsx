@@ -175,13 +175,33 @@ export default function CustomFoods() {
 
           {/* Auth gate */}
           {status === 'loading' && (
-            <div className="text-xs uppercase tracking-widest text-theme-text-tertiary py-12">Loading...</div>
+            <div className="border border-theme-text-primary/10 divide-y divide-theme-text-primary/5">
+              {Array.from({ length: 4 }, (_, i) => (
+                <div key={i} className="flex items-start justify-between gap-4 px-4 py-3 animate-pulse">
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3 bg-theme-text-primary/10 rounded-sm w-1/2" />
+                    <div className="h-2 bg-theme-text-primary/5 rounded-sm w-1/3" />
+                    <div className="h-2 bg-theme-text-primary/5 rounded-sm w-2/5" />
+                  </div>
+                  <div className="flex gap-3 shrink-0 pt-0.5">
+                    <div className="h-2.5 bg-theme-text-primary/8 rounded-sm w-6" />
+                    <div className="h-2.5 bg-theme-text-primary/8 rounded-sm w-10" />
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
 
           {status === 'unauthenticated' && (
-            <div className="border border-theme-text-primary/20 px-6 py-8 space-y-3">
+            <div className="border border-theme-text-primary/20 px-6 py-8 space-y-4">
               <p className="text-xs uppercase tracking-widest text-theme-text-tertiary">Sign-in required</p>
-              <p className="text-sm text-theme-text-secondary">Please sign in to manage your custom foods.</p>
+              <p className="text-sm text-theme-text-secondary">Sign in with Google to create and manage a personal food library that syncs with your account.</p>
+              <button
+                onClick={() => signIn('google')}
+                className="px-4 py-2 border border-theme-text-primary text-theme-text-primary text-xs font-bold uppercase tracking-wider hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors"
+              >
+                Sign in with Google
+              </button>
             </div>
           )}
 
