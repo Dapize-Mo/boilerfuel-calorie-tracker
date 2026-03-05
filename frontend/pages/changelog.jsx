@@ -12,9 +12,30 @@ const VERSIONS = [
 
   // ─── 3.8.x  Tools, Nutrition Score & Streak  (Mar 2–5, 2026) ────────────
   {
-    version: '3.8.2',
+    version: '3.8.3',
     date: 'March 5, 2026',
     latest: true,
+    changes: [
+      { cat: 'Feature', items: [
+        'Stats page: Export Meal History to CSV — download button in Meal History header exports all logged meals (date, meal time, name, dining court, calories, macros)',
+        'Stats page: period-over-period delta in Weekly/Monthly Averages — each macro card now shows +/− vs the previous period in a small annotation',
+      ]},
+      { cat: 'UI', items: [
+        'Main page: "Tmpl" label expands to "Templates" on desktop for clarity',
+        'Main page: Filters button shows a count badge when dietary filters are active',
+        'Main page: Filter panel gained a "Clear all" shortcut when any filter is active',
+      ]},
+      { cat: 'Fix', items: [
+        'Sync: normalizeToken() added on both client and server — trims and uppercases codes to prevent case-mismatch failures when typed manually',
+        'Sync: push uses INSERT … ON CONFLICT DO UPDATE so a pruned server row is automatically recreated instead of returning 404',
+      ]},
+    ],
+  },
+
+  {
+    version: '3.8.2',
+    date: 'March 5, 2026',
+    latest: false,
     changes: [
       { cat: 'UI', items: [
         'Stats page: added "No meals logged yet" empty state with Browse Menus CTA for first-time users',

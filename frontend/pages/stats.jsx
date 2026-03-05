@@ -322,6 +322,17 @@ export default function StatsPage() {
   const avgFat = activeDays > 0 ? daysWithData.reduce((s, d) => s + d.totals.fat, 0) / activeDays : 0;
   const avgWater = activeDays > 0 ? rangeData.reduce((s, d) => s + d.water, 0) / activeDays : 0;
 
+  // Previous period for comparison
+  const prevRangeEnd = shiftDate(rangeStart, -1);
+  const prevRangeStart = shiftDate(prevRangeEnd, period === 'week' ? -6 : -29);
+  const prevRangeData = useMemo(() => getDateRange(prevRangeStart, prevRangeEnd), [getDateRange, prevRangeStart, prevRangeEnd]);
+  const prevDaysWithData = prevRangeData.filter(d => d.meals.length > 0);
+  const prevActiveDays = prevDaysWithData.length;
+  const prevAvgCalories = prevActiveDays > 0 ? prevDaysWithData.reduce((s, d) => s + d.totals.calories, 0) / prevActiveDays : null;
+  const prevAvgProtein = prevActiveDays > 0 ? prevDaysWithData.reduce((s, d) => s + d.totals.protein, 0) / prevActiveDays : null;
+  const prevAvgCarbs = prevActiveDays > 0 ? prevDaysWithData.reduce((s, d) => s + d.totals.carbs, 0) / prevActiveDays : null;
+  const prevAvgFat = prevActiveDays > 0 ? prevDaysWithData.reduce((s, d) => s + d.totals.fat, 0) / prevActiveDays : null;
+
   // Totals for the period
   const periodTotals = rangeData.reduce((acc, d) => ({
     calories: acc.calories + d.totals.calories,
@@ -612,19 +623,27 @@ export default function StatsPage() {
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-theme-text-primary/10 border border-theme-text-primary/10">
               {[
-                { label: 'Calories', value: Math.round(avgCalories), unit: 'kcal', goal: goals.calories },
-                { label: 'Protein', value: Math.round(avgProtein), unit: 'g', goal: goals.protein },
-                { label: 'Carbs', value: Math.round(avgCarbs), unit: 'g', goal: goals.carbs },
-                { label: 'Fat', value: Math.round(avgFat), unit: 'g', goal: goals.fat },
-              ].map(s => (
-                <div key={s.label} className="bg-theme-bg-primary px-4 py-3">
-                  <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary">{s.label}</div>
-                  <div className={`text-lg font-bold tabular-nums mt-1 ${s.value > s.goal ? 'text-red-500' : ''}`}>
-                    {s.value}<span className="text-xs text-theme-text-tertiary ml-0.5">{s.unit}</span>
+                { label: 'Calories', value: Math.round(avgCalories), unit: 'kcal', goal: goals.calories, prev: prevAvgCalories },
+                { label: 'Protein', value: Math.round(avgProtein), unit: 'g', goal: goals.protein, prev: prevAvgProtein },
+                { label: 'Carbs', value: Math.round(avgCarbs), unit: 'g', goal: goals.carbs, prev: prevAvgCarbs },
+                { label: 'Fat', value: Math.round(avgFat), unit: 'g', goal: goals.fat, prev: prevAvgFat },
+              ].map(s => {
+                const delta = s.prev != null && activeDays > 0 ? Math.round(s.value - s.prev) : null;
+                return (
+                  <div key={s.label} className="bg-theme-bg-primary px-4 py-3">
+                    <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary">{s.label}</div>
+                    <div className={`text-lg font-bold tabular-nums mt-1 ${s.value > s.goal ? 'text-red-500' : ''}`}>
+                      {s.value}<span className="text-xs text-theme-text-tertiary ml-0.5">{s.unit}</span>
+                    </div>
+                    <div className="text-[10px] text-theme-text-tertiary mt-0.5">Goal: {s.goal}{s.unit}</div>
+                    {delta != null && delta !== 0 && (
+                      <div className={`text-[9px] font-mono tabular-nums mt-0.5 ${delta > 0 ? 'text-red-400/70' : 'text-green-500/70'}`}>
+                        {delta > 0 ? '+' : ''}{delta} vs prev
+                      </div>
+                    )}
                   </div>
-                  <div className="text-[10px] text-theme-text-tertiary mt-0.5">Goal: {s.goal}{s.unit}</div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </section>
 
@@ -800,9 +819,44 @@ export default function StatsPage() {
 
           {/* Meal History Search */}
           <section className="space-y-4">
-            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
-              Meal History
-            </h2>
+            <div className="flex items-center justify-between border-b border-theme-text-primary/10 pb-2">
+              <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary">
+                Meal History
+              </h2>
+              {allMealsFlat.length > 0 && (
+                <button
+                  onClick={() => {
+                    const header = 'Date,Meal Time,Name,Dining Court,Calories,Protein (g),Carbs (g),Fat (g)\n';
+                    const rows = allMealsFlat.map(m => [
+                      m.date,
+                      m.meal_time || 'other',
+                      `"${(m.name || '').replace(/"/g, '""')}"`,
+                      m.dining_court || '',
+                      m.calories || 0,
+                      Math.round(m.macros?.protein || 0),
+                      Math.round(m.macros?.carbs || 0),
+                      Math.round(m.macros?.fats || m.macros?.fat || 0),
+                    ].join(','));
+                    const csv = header + rows.join('\n');
+                    const blob = new Blob([csv], { type: 'text/csv' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `boilerfuel-meals-${new Date().toISOString().slice(0, 10)}.csv`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                  }}
+                  className="text-[10px] uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors flex items-center gap-1"
+                >
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
+                  Export CSV
+                </button>
+              )}
+            </div>
             <div className="relative">
               <input
                 type="text"
