@@ -342,7 +342,10 @@ export async function pullData(options = {}) {
   
   if (!res.ok) {
     const msg = await parseErrorMessage(res, 'Failed to pull sync data');
-    addSyncLogEntry({ direction: 'pull', status: 'error', keys: [], detail: msg });
+    // Don't log token-not-found as an error — the caller will recover via push
+    if (!isMissingTokenError(new Error(msg))) {
+      addSyncLogEntry({ direction: 'pull', status: 'error', keys: [], detail: msg });
+    }
     if (strict) throw new Error(msg);
     return includeReport ? { changed: false, error: msg, transferred: [] } : false;
   }

@@ -163,13 +163,18 @@ export function MealProvider({ children }) {
     const now = Date.now();
     if (!force && now - lastPullRef.current < MIN_PULL_INTERVAL) return;
     try {
-      const { isSynced, pullData } = await import('../utils/sync');
+      const { isSynced, pullData, pushData } = await import('../utils/sync');
       if (!isSynced()) return;
       isSyncingRef.current = true;
       lastPullRef.current = now;
       setSyncStatus('syncing');
-      const updated = await pullData();
-      if (updated) reloadFromStorage();
+      const result = await pullData({ includeReport: true });
+      // If the server row was pruned, recover it by pushing our local data back up
+      if (result?.error && /sync token not found/i.test(result.error)) {
+        await pushData({ strict: false });
+      } else if (result?.changed) {
+        reloadFromStorage();
+      }
       setSyncStatusTransient('success');
     } catch {
       setSyncStatusTransient('error');
