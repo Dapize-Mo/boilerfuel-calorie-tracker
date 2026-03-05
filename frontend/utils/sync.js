@@ -375,6 +375,10 @@ export async function pullData(options = {}) {
 
 export async function syncNowDetailed() {
   const pushReport = await pushData({ strict: true, includeReport: true });
+  // Wait briefly so any other paired device that pushed concurrently has
+  // time to land on the server before we pull — prevents a race where
+  // both devices push at the same millisecond and one misses the other's data.
+  await new Promise(r => setTimeout(r, 800));
   const pullReport = await pullData({ strict: true, includeReport: true });
   const devices = getSyncDevices();
   return {
