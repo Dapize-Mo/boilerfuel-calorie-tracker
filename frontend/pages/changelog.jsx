@@ -10,11 +10,27 @@ import { useSmartBack } from '../utils/useSmartBack';
 
 const VERSIONS = [
 
-  // ─── 3.8.x  Tools, Nutrition Score & Streak  (Mar 2, 2026) ─────────────
+  // ─── 3.8.x  Tools, Nutrition Score & Streak  (Mar 2–5, 2026) ────────────
+  {
+    version: '3.8.1',
+    date: 'March 5, 2026',
+    latest: true,
+    changes: [
+      { cat: 'UI', items: [
+        'Empty state for no menu data: replaced bare message with helpful context, Prev Day / Today / Custom Foods action buttons, and a Clear Search shortcut when a query is active',
+        'Landing page: expanded single Admin link to a full Stats · Custom Foods · Tools · Admin nav row (opacity 0.45, more discoverable)',
+        'Results header: added Tools link beside Stats for quick navigation',
+        'Bottom summary bar: renamed ambiguous "Log" button to "Profile"',
+        'Profile page: "No meals logged" empty state now includes a Browse Menus CTA button',
+        'Profile page: increased logged foods panel max-height from 288 px to 384 px',
+      ]},
+    ],
+  },
+
   {
     version: '3.8.0',
     date: 'March 2, 2026',
-    latest: true,
+    latest: false,
     changes: [
       { cat: 'Feature', items: [
         'New Tools page (/tools): TDEE & BMI calculator with Mifflin–St Jeor equation, activity level picker, and macro split chooser (Balanced, High Protein, Low Carb, Keto)',
