@@ -469,10 +469,16 @@ export default function Home() {
         e.preventDefault();
         searchInputRef.current?.focus();
       }
+      // '[' / ']': prev/next day; 't': jump to today (results view, not typing)
+      if (view === 'results' && document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA' && document.activeElement?.tagName !== 'SELECT') {
+        if (e.key === '[') { e.preventDefault(); prevDay(); }
+        if (e.key === ']') { e.preventDefault(); nextDay(); }
+        if (e.key === 't' || e.key === 'T') { e.preventDefault(); setSelectedDate(localDateStr()); }
+      }
     }
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [expandedId, mealPickerFood, infoFood, showBarcodeScanner, showFilters, showTemplates, view]);
+  }, [expandedId, mealPickerFood, infoFood, showBarcodeScanner, showFilters, showTemplates, view]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Responsive: track mobile ──
   const [isMobile, setIsMobile] = useState(false);
@@ -1129,7 +1135,9 @@ export default function Home() {
       {/* ── Feature nav links — fades out on results ── */}
       <div style={{
         position: 'fixed', zIndex: 20,
-        top: isMobile ? '86vh' : '80vh', left: '50%', transform: 'translateX(-50%)',
+        bottom: isMobile ? '5vh' : 'auto',
+        top: isMobile ? 'auto' : '80vh',
+        left: '50%', transform: 'translateX(-50%)',
         transition: `opacity 0.4s ${EASE}`,
         opacity: isLanding ? 0.45 : 0,
         pointerEvents: isLanding ? 'auto' : 'none',
@@ -1520,11 +1528,19 @@ export default function Home() {
             </thead>
             <tbody>
               {loading ? (
-                <tr>
-                  <td colSpan={4} className="py-16 text-center text-theme-text-tertiary">
-                    <span className="inline-block animate-pulse">Loading...</span>
-                  </td>
-                </tr>
+                <>
+                  {Array.from({ length: 6 }, (_, i) => (
+                    <tr key={i} className="border-b border-theme-text-primary/5 animate-pulse">
+                      <td className="py-3 pr-4">
+                        <div className="h-3 bg-theme-text-primary/10 rounded-sm w-3/4 mb-1.5" />
+                        <div className="h-2 bg-theme-text-primary/5 rounded-sm w-1/3 sm:hidden" />
+                      </td>
+                      <td className="py-3 hidden sm:table-cell w-36"><div className="h-3 bg-theme-text-primary/8 rounded-sm w-2/3" /></td>
+                      <td className="py-3 hidden md:table-cell w-28"><div className="h-3 bg-theme-text-primary/8 rounded-sm w-1/2" /></td>
+                      <td className="py-3 pl-4 w-16"><div className="h-3 bg-theme-text-primary/8 rounded-sm w-full ml-auto" /></td>
+                    </tr>
+                  ))}
+                </>
               ) : visibleGroups.length > 0 ? (
                 <>
                 {visibleGroups.map((item, i) => {
