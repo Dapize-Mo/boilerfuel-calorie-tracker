@@ -276,9 +276,25 @@ export default function ComparePage() {
                   </svg>
                 </div>
                 {loadingA ? (
-                  <div className="border border-theme-text-primary/10 p-6 text-center text-xs text-theme-text-tertiary uppercase tracking-widest">Loading…</div>
+                  <div className="border border-theme-text-primary/10 divide-y divide-theme-text-primary/5">
+                    {Array.from({ length: 8 }, (_, i) => (
+                      <div key={i} className="flex items-center justify-between gap-3 px-3 py-2.5 animate-pulse">
+                        <div className="flex-1 space-y-1.5">
+                          <div className="h-2.5 bg-theme-text-primary/10 rounded-sm w-3/4" />
+                          <div className="h-2 bg-theme-text-primary/5 rounded-sm w-1/3" />
+                        </div>
+                        <div className="shrink-0 space-y-1.5 text-right">
+                          <div className="h-2.5 bg-theme-text-primary/10 rounded-sm w-14 ml-auto" />
+                          <div className="h-2 bg-theme-text-primary/5 rounded-sm w-20 ml-auto" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 ) : filteredA.length === 0 ? (
-                  <div className="border border-theme-text-primary/10 p-6 text-center text-xs text-theme-text-tertiary uppercase tracking-widest">No items</div>
+                  <div className="border border-theme-text-primary/10 p-6 text-center space-y-1">
+                    <p className="text-xs text-theme-text-tertiary uppercase tracking-widest">{searchA ? 'No matches' : 'No menu data'}</p>
+                    {!searchA && <p className="text-[10px] text-theme-text-tertiary/50">Purdue HFS updates menus daily — try a different date.</p>}
+                  </div>
                 ) : (
                   <div className="border border-theme-text-primary/10 overflow-hidden max-h-[600px] overflow-y-auto">
                     {filteredA.map((food, i) => (
@@ -310,9 +326,25 @@ export default function ComparePage() {
                   </svg>
                 </div>
                 {loadingB ? (
-                  <div className="border border-theme-text-primary/10 p-6 text-center text-xs text-theme-text-tertiary uppercase tracking-widest">Loading…</div>
+                  <div className="border border-theme-text-primary/10 divide-y divide-theme-text-primary/5">
+                    {Array.from({ length: 8 }, (_, i) => (
+                      <div key={i} className="flex items-center justify-between gap-3 px-3 py-2.5 animate-pulse">
+                        <div className="flex-1 space-y-1.5">
+                          <div className="h-2.5 bg-theme-text-primary/10 rounded-sm w-3/4" />
+                          <div className="h-2 bg-theme-text-primary/5 rounded-sm w-1/3" />
+                        </div>
+                        <div className="shrink-0 space-y-1.5 text-right">
+                          <div className="h-2.5 bg-theme-text-primary/10 rounded-sm w-14 ml-auto" />
+                          <div className="h-2 bg-theme-text-primary/5 rounded-sm w-20 ml-auto" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 ) : filteredB.length === 0 ? (
-                  <div className="border border-theme-text-primary/10 p-6 text-center text-xs text-theme-text-tertiary uppercase tracking-widest">No items</div>
+                  <div className="border border-theme-text-primary/10 p-6 text-center space-y-1">
+                    <p className="text-xs text-theme-text-tertiary uppercase tracking-widest">{searchB ? 'No matches' : 'No menu data'}</p>
+                    {!searchB && <p className="text-[10px] text-theme-text-tertiary/50">Purdue HFS updates menus daily — try a different date.</p>}
+                  </div>
                 ) : (
                   <div className="border border-theme-text-primary/10 overflow-hidden max-h-[600px] overflow-y-auto">
                     {filteredB.map((food, i) => (

@@ -247,10 +247,11 @@ export default function About() {
                     { href: '/', label: 'Home' },
                     { href: '/stats', label: 'Stats' },
                     { href: '/compare', label: 'Compare' },
-                    { href: '/about', label: 'About' },
+                    { href: '/tools', label: 'Tools' },
                     { href: '/custom-foods', label: 'Custom Foods' },
                     { href: '/profile', label: 'Profile' },
                     { href: '/changelog', label: 'Changelog' },
+                    { href: '/about', label: 'About' },
                   ].map(link => (
                     <Link key={link.href} href={link.href}
                       className="flex items-center justify-between px-4 py-3 bg-theme-bg-primary hover:bg-theme-text-primary/5 transition-colors group">

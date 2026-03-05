@@ -12,9 +12,26 @@ const VERSIONS = [
 
   // ─── 3.8.x  Tools, Nutrition Score & Streak  (Mar 2–5, 2026) ────────────
   {
-    version: '3.8.1',
+    version: '3.8.2',
     date: 'March 5, 2026',
     latest: true,
+    changes: [
+      { cat: 'UI', items: [
+        'Stats page: added "No meals logged yet" empty state with Browse Menus CTA for first-time users',
+        'Compare page: replaced bare "Loading…" text with animated skeleton rows while menus fetch',
+        'Compare page: improved "No items" empty state — distinguishes between no search matches and no menu data available, with hint to try a different date',
+        'About page: added Tools and About to the Navigate sidebar section; reordered links for better flow',
+      ]},
+      { cat: 'SEO', items: [
+        'Tools page: removed noindex restriction; added canonical URL, Open Graph tags, and schema.org WebApplication markup — TDEE calculator is now indexable',
+      ]},
+    ],
+  },
+
+  {
+    version: '3.8.1',
+    date: 'March 5, 2026',
+    latest: false,
     changes: [
       { cat: 'UI', items: [
         'Empty state for no menu data: replaced bare message with helpful context, Prev Day / Today / Custom Foods action buttons, and a Clear Search shortcut when a query is active',

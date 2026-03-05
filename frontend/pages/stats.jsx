@@ -467,6 +467,17 @@ export default function StatsPage() {
             </p>
           </header>
 
+          {/* No data banner */}
+          {allMealsFlat.length === 0 && (
+            <div className="border border-dashed border-theme-text-primary/20 p-6 text-center space-y-3">
+              <p className="text-sm text-theme-text-tertiary">No meals logged yet.</p>
+              <p className="text-xs text-theme-text-tertiary/60">Browse the dining hall menus and press Add to start tracking your nutrition.</p>
+              <Link href="/" className="inline-block px-4 py-2 border border-theme-text-primary/30 text-xs font-bold uppercase tracking-wider text-theme-text-secondary hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors">
+                Browse Menus
+              </Link>
+            </div>
+          )}
+
           {/* Period toggle */}
           <div className="flex gap-px border border-theme-text-primary/20">
             {['week', 'month'].map(p => (

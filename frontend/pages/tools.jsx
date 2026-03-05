@@ -114,9 +114,23 @@ export default function ToolsPage() {
   return (
     <>
       <Head>
-        <title>Tools — BoilerFuel</title>
-        <meta name="description" content="TDEE and BMI calculator. Get personalized calorie and macro recommendations based on your body and goals." />
-        <meta name="robots" content="noindex" />
+        <title>TDEE & BMI Calculator — BoilerFuel</title>
+        <meta name="description" content="Free TDEE and BMI calculator for Purdue students. Get personalized daily calorie and macro targets based on your body stats and fitness goals." />
+        <link rel="canonical" href="https://boilerfuel.vercel.app/tools" />
+        <meta property="og:title" content="TDEE & BMI Calculator — BoilerFuel" />
+        <meta property="og:description" content="Calculate your daily calorie and macro targets with the free BoilerFuel TDEE calculator. Apply results directly to your profile." />
+        <meta property="og:url" content="https://boilerfuel.vercel.app/tools" />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebApplication",
+          "name": "BoilerFuel TDEE & BMI Calculator",
+          "description": "Free TDEE and BMI calculator. Get personalized daily calorie and macro recommendations based on your body stats and activity level.",
+          "url": "https://boilerfuel.vercel.app/tools",
+          "applicationCategory": "HealthApplication",
+          "operatingSystem": "Any",
+          "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+          "isPartOf": { "@type": "WebApplication", "name": "BoilerFuel", "url": "https://boilerfuel.vercel.app/" }
+        })}} />
       </Head>
 
       <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary font-mono">
