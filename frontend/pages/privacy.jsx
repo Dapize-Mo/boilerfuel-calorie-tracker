@@ -141,7 +141,7 @@ export default function PrivacyPage() {
                 <p className="text-sm text-theme-text-secondary leading-relaxed">
                   We may update this policy as features change. Material changes will be noted in the <Link href="/changelog" className="underline hover:text-theme-text-primary">Changelog</Link>.
                 </p>
-                <p className="text-xs text-theme-text-tertiary">Last updated: February 2026</p>
+                <p className="text-xs text-theme-text-tertiary">Last updated: March 2026</p>
               </section>
 
             </div>
@@ -178,6 +178,8 @@ export default function PrivacyPage() {
                   {[
                     { href: '/', label: 'Home' },
                     { href: '/stats', label: 'Stats' },
+                    { href: '/compare', label: 'Compare' },
+                    { href: '/tools', label: 'Tools' },
                     { href: '/profile', label: 'Profile' },
                     { href: '/about', label: 'About' },
                     { href: '/changelog', label: 'Changelog' },
