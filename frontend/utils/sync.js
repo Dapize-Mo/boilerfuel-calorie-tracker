@@ -457,14 +457,9 @@ export function restoreMealsFromBackup() {
 // ── Unpair ──
 
 export async function unpair() {
-  const token = getSyncToken();
-  if (token) {
-    await fetch('/api/sync', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token }),
-    }).catch(() => {});
-  }
+  // Only clear local credentials — do NOT delete the server row.
+  // Other paired devices still need the server row to sync.
+  // The row will be cleaned up server-side if unused for an extended period.
   clearSyncCredentials();
 }
 
