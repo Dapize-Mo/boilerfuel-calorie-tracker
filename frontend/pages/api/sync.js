@@ -38,16 +38,20 @@ export default async function handler(req, res) {
         if (!normalizedToken || !encrypted_data) {
           return res.status(400).json({ error: 'Missing token or data' });
         }
-        // Upsert the encrypted blob so paired devices can recover if the
-        // server row was pruned/reset while local credentials still exist.
+        // Use the server's clock so all devices share the same timestamp
+        // reference — prevents clock skew between phone/PC causing one device
+        // to permanently miss the other's pushes.
+        const serverTs = Date.now();
         await query(
           `INSERT INTO sync_data (token, encrypted_data, updated_at)
            VALUES ($1, $2, $3)
            ON CONFLICT (token)
            DO UPDATE SET encrypted_data = EXCLUDED.encrypted_data, updated_at = EXCLUDED.updated_at`,
-          [normalizedToken, encrypted_data, updated_at || Date.now()]
+          [normalizedToken, encrypted_data, serverTs]
         );
-        return res.json({ ok: true });
+        // Return the authoritative server timestamp so clients use it for
+        // SYNC_LAST_PULL_KEY instead of their own Date.now().
+        return res.json({ ok: true, updated_at: serverTs });
       }
 
       return res.status(400).json({ error: 'Invalid action' });

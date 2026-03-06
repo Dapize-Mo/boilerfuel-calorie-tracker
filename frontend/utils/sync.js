@@ -285,11 +285,13 @@ export async function pushData(options = {}) {
       addSyncLogEntry({ direction: 'push', status: 'error', keys: pushedKeys, detail: msg });
       throw new Error(msg);
     }
-    
-    // Record the push timestamp so the next pull knows the server is
-    // already up-to-date with our data — prevents pulling our own blob
-    // back as "changed" on the very next poll.
-    localStorage.setItem(SYNC_LAST_PULL_KEY, String(pushTimestamp));
+
+    // Use the server's authoritative timestamp (not our local Date.now()) so
+    // all devices share the same time reference.  Clock skew between phone and
+    // PC would otherwise cause one device to permanently miss the other's pushes.
+    const pushBody = await pushRes.json().catch(() => ({}));
+    const confirmedTs = pushBody.updated_at || pushTimestamp;
+    localStorage.setItem(SYNC_LAST_PULL_KEY, String(confirmedTs));
     
     addSyncLogEntry({
       direction: 'push',
