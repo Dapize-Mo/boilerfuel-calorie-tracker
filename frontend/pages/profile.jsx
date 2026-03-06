@@ -1398,6 +1398,18 @@ export default function ProfilePage() {
                     {forceResyncLoading ? 'Resyncing…' : 'Force Resync'}
                   </button>
                   <button
+                    onClick={() => {
+                      try {
+                        const meals = JSON.parse(localStorage.getItem('boilerfuel_meals') || '{}');
+                        const days = Object.keys(meals).length;
+                        const entries = Object.values(meals).reduce((s, a) => s + (Array.isArray(a) ? a.length : 0), 0);
+                        alert(`localStorage meals: ${entries} entries across ${days} days`);
+                      } catch (e) { alert('Error reading localStorage: ' + e.message); }
+                    }}
+                    className="px-4 py-2 border border-theme-text-primary/20 text-theme-text-tertiary text-xs uppercase tracking-wider hover:bg-theme-text-primary/10 transition-colors">
+                    Debug
+                  </button>
+                  <button
                     onClick={async () => {
                       const { unpair } = await import('../utils/sync');
                       await unpair();
