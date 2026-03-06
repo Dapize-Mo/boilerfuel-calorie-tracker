@@ -377,9 +377,16 @@ export async function pullData(options = {}) {
  *  Use this to recover from a stuck state where SYNC_LAST_PULL_KEY
  *  is newer than the server's data, causing every pull to return "no changes". */
 export async function forceFullSync() {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem(SYNC_LAST_PULL_KEY, '0');
-  }
+  if (typeof window === 'undefined') return syncNowDetailed();
+
+  // Step 1: Explicit pull-first (since=0) — writes server data directly to
+  // localStorage before the push loop runs, so gatherLocalData() picks up the
+  // remote meals even if the inline pull inside pushData races with a write.
+  localStorage.setItem(SYNC_LAST_PULL_KEY, '0');
+  await pullData({ strict: false });
+
+  // Step 2: Normal sync — pushes the now-merged local data back to server,
+  // then does a final pull to confirm both devices are in sync.
   return syncNowDetailed();
 }
 
