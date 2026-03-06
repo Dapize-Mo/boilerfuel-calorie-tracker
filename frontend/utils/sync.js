@@ -265,6 +265,26 @@ export async function pushData(options = {}) {
   // Step 2: Gather the now-merged local data and push to server.
   const data = gatherLocalData();
   const pushedKeys = Object.keys(data).filter(k => SYNC_KEYS.includes(k));
+
+  // Safety guard: if local meals are empty AND the server had no new data to
+  // offer (pulled=false), skip the push. Otherwise this device would silently
+  // overwrite the server's meal history with nothing — the exact failure mode
+  // where one device loses its data and then clobbers the other device's meals.
+  // If pulled=true the server DID have new data; we merged it and should push
+  // the merged result (even if meals are still empty, server had the same state).
+  const localMealDays = (data.boilerfuel_meals && typeof data.boilerfuel_meals === 'object')
+    ? Object.keys(data.boilerfuel_meals).length : 0;
+  if (localMealDays === 0 && !pulled) {
+    addSyncLogEntry({
+      direction: 'push',
+      status: 'ok',
+      keys: [],
+      detail: 'Skipped push: local meals empty and server is already up to date — waiting for data from paired device',
+    });
+    if (!includeReport) return;
+    return { pushed: false, pulled, skipped: true, transferred: [], pulledTransferred: pulledTransfer };
+  }
+
   const encrypted = await encrypt(data, secret);
   const pushTimestamp = Date.now();
 
@@ -450,18 +470,6 @@ export async function syncNowDetailed() {
     devices,
     syncedAt: Date.now(),
   };
-
-  const data = await decrypt(body.encrypted_data, secret);
-  const pulledKeys = Object.keys(data).filter(k => SYNC_KEYS.includes(k));
-  mergeRemoteData(data);
-  localStorage.setItem(SYNC_LAST_PULL_KEY, String(body.updated_at || Date.now()));
-  addSyncLogEntry({
-    direction: 'pull',
-    status: 'ok',
-    keys: pulledKeys,
-    detail: `Received: ${pulledKeys.map(k => k.replace('boilerfuel_', '')).join(', ')}`,
-  });
-  return true; // data was updated
 }
 
 // ── Meal backup / recovery ──
