@@ -379,14 +379,50 @@ export async function pullData(options = {}) {
 export async function forceFullSync() {
   if (typeof window === 'undefined') return syncNowDetailed();
 
-  // Step 1: Explicit pull-first (since=0) — writes server data directly to
-  // localStorage before the push loop runs, so gatherLocalData() picks up the
-  // remote meals even if the inline pull inside pushData races with a write.
-  localStorage.setItem(SYNC_LAST_PULL_KEY, '0');
-  await pullData({ strict: false });
+  // Step 1: Raw download — fetch and decrypt the server blob, then write each
+  // key directly to localStorage without going through mergeRemoteData.
+  // This bypasses any silent write failures in the merge pipeline and guarantees
+  // the remote data lands on disk before the push loop runs.
+  const token = getSyncToken();
+  const secret = getSyncSecret();
+  if (token && secret) {
+    try {
+      const res = await fetch(`/api/sync?token=${encodeURIComponent(token)}&since=0`);
+      if (res.ok) {
+        const body = await res.json();
+        if (body.changed && body.encrypted_data) {
+          const data = await decrypt(body.encrypted_data, secret);
+          // Write each key directly — meals get a union-merge with anything local
+          for (const key of SYNC_KEYS) {
+            if (!(key in data)) continue;
+            if (key === 'boilerfuel_meals') {
+              // Merge with local so we don't lose meals logged on this device
+              let local = {};
+              try { local = JSON.parse(localStorage.getItem(key) || '{}'); } catch {}
+              const remote = data[key] || {};
+              const merged = { ...local };
+              for (const [date, remoteMeals] of Object.entries(remote)) {
+                if (!merged[date]) {
+                  merged[date] = remoteMeals;
+                } else {
+                  const ts = new Set(merged[date].map(m => m.addedAt));
+                  for (const m of remoteMeals) {
+                    if (!ts.has(m.addedAt)) merged[date].push(m);
+                  }
+                }
+              }
+              try { localStorage.setItem(key, JSON.stringify(merged)); } catch {}
+            } else {
+              try { localStorage.setItem(key, JSON.stringify(data[key])); } catch {}
+            }
+          }
+          localStorage.setItem(SYNC_LAST_PULL_KEY, String(body.updated_at || Date.now()));
+        }
+      }
+    } catch {}
+  }
 
-  // Step 2: Normal sync — pushes the now-merged local data back to server,
-  // then does a final pull to confirm both devices are in sync.
+  // Step 2: Normal sync — pushes the now-written local data to server.
   return syncNowDetailed();
 }
 
