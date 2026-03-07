@@ -79,7 +79,8 @@ export function MealProvider({ children }) {
 
   // Persist meals (with quota-exceeded fallback: trim to last 90 days)
   useEffect(() => {
-    if (Object.keys(mealsByDate).length === 0) return;
+    // Always persist, even if empty - removing this prevents sync from working correctly
+    // if (Object.keys(mealsByDate).length === 0) return;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(mealsByDate));
     } catch (e) {
@@ -103,13 +104,13 @@ export function MealProvider({ children }) {
 
   // Persist water
   useEffect(() => {
-    if (Object.keys(waterByDate).length === 0) return;
+    // Always persist to keep React state and localStorage in sync
     try { localStorage.setItem(WATER_KEY, JSON.stringify(waterByDate)); } catch {}
   }, [waterByDate]);
 
   // Persist weight
   useEffect(() => {
-    if (Object.keys(weightByDate).length === 0) return;
+    // Always persist to keep React state and localStorage in sync
     try { localStorage.setItem(WEIGHT_KEY, JSON.stringify(weightByDate)); } catch {}
   }, [weightByDate]);
 
@@ -158,10 +159,25 @@ export function MealProvider({ children }) {
   const isReloadingFromSync = useRef(false); // suppress push debounce when state changes come from a sync pull
   const MIN_PULL_INTERVAL = 30_000;        // don't re-pull more than once per 30 s
 
+  // Force-flush current React state to localStorage before sync operations
+  const flushStateToStorage = useCallback(() => {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(mealsByDate)); } catch {}
+    try { localStorage.setItem(GOALS_KEY, JSON.stringify(goals)); } catch {}
+    try { localStorage.setItem(FAVORITES_KEY, JSON.stringify([...favorites])); } catch {}
+    try { localStorage.setItem(WATER_KEY, JSON.stringify(waterByDate)); } catch {}
+    try { localStorage.setItem(WEIGHT_KEY, JSON.stringify(weightByDate)); } catch {}
+    try { localStorage.setItem(TEMPLATES_KEY, JSON.stringify(templates)); } catch {}
+    try { localStorage.setItem(DIETARY_KEY, JSON.stringify(dietaryPrefs)); } catch {}
+  }, [mealsByDate, goals, favorites, waterByDate, weightByDate, templates, dietaryPrefs]);
+
   const doPull = useCallback(async (force = false) => {
     if (isSyncingRef.current) return;
     const now = Date.now();
     if (!force && now - lastPullRef.current < MIN_PULL_INTERVAL) return;
+    
+    // Flush React state to localStorage BEFORE pulling to prevent data loss
+    flushStateToStorage();
+    
     try {
       const { isSynced, pullData, pushData } = await import('../utils/sync');
       if (!isSynced()) return;
@@ -181,7 +197,7 @@ export function MealProvider({ children }) {
     } finally {
       isSyncingRef.current = false;
     }
-  }, [reloadFromStorage, setSyncStatusTransient]);
+  }, [reloadFromStorage, setSyncStatusTransient, flushStateToStorage]);
 
   // Pull on mount (force = true so the cooldown doesn't block the first load)
   useEffect(() => {
@@ -219,6 +235,9 @@ export function MealProvider({ children }) {
     if (syncPushTimer.current) clearTimeout(syncPushTimer.current);
     syncPushTimer.current = setTimeout(async () => {
       try {
+        // Flush state to localStorage before pushing
+        flushStateToStorage();
+        
         const { isSynced, pushData } = await import('../utils/sync');
         if (!isSynced()) return;
         setSyncStatus('syncing');
@@ -226,7 +245,7 @@ export function MealProvider({ children }) {
         setSyncStatusTransient('success');
       } catch {
         setSyncStatusTransient('error');
-      }
+      }, flushStateToStorage
     }, 3000); // 3 second debounce
     return () => { if (syncPushTimer.current) clearTimeout(syncPushTimer.current); };
   }, [mealsByDate, goals, favorites, waterByDate, weightByDate, templates, dietaryPrefs, setSyncStatusTransient]);
@@ -248,7 +267,10 @@ export function MealProvider({ children }) {
     }
     return ok;
   }, [reloadFromStorage]);
-
+// Flush React state to localStorage before syncing
+    flushStateToStorage();
+    
+    
   // Manual sync trigger (for UI button)
   const syncNow = useCallback(async () => {
     const { isSynced, syncNowDetailed } = await import('../utils/sync');
@@ -257,7 +279,7 @@ export function MealProvider({ children }) {
     try {
       const report = await syncNowDetailed();
       reloadFromStorage();
-      setSyncStatusTransient('success');
+      setSyncStatusTransient('success');, flushStateToStorage
       return report;
     } catch (err) {
       setSyncStatusTransient('error');

@@ -637,30 +637,60 @@ function mergeRemoteData(remote) {
   if (!remote) return;
 
   // ── Safety: snapshot meals before any merge so we can recover if data shrinks ──
+  // Also get a fresh snapshot right before each key's merge to ensure we have the
+  // latest React state that may have just been persisted to localStorage
   const mealsBefore = localStorage.getItem('boilerfuel_meals');
 
   for (const key of SYNC_KEYS) {
     if (!(key in remote)) continue;
     const remoteVal = remote[key];
-    // Always read from localStorage at merge time AND also fall back to the
-    // pre-merge snapshot for meals (guards against a race where the
-    // persistence effect hasn't flushed state→localStorage yet).
-    const localRaw = key === 'boilerfuel_meals'
-      ? (localStorage.getItem(key) || mealsBefore)
-      : localStorage.getItem(key);
+    
+    // Read fresh from localStorage for each key to catch any React state updates
+    // that may have landed between the start of this function and now
+    const localRaw = localStorage.getItem(key);
 
     if (key === 'boilerfuel_meals') {
       // Merge meals by date key — union of meals from both sides
+      // Use both the snapshot AND the fresh read to ensure we don't lose data
       const local = localRaw ? JSON.parse(localRaw) : {};
-      const merged = { ...local };
+      const snapshot = mealsBefore ? JSON.parse(mealsBefore) : {};
+      
+      // Start with the snapshot (older), then merge in current localStorage (fresher),
+      // then merge in remote data. This ensures we keep all meals from all sources.
+      const merged = { ...snapshot };
+      
+      // Merge current local data
+      for (const [date, localMeals] of Object.entries(local)) {
+        if (!merged[date]) {
+          merged[date] = localMeals;
+        } else {
+          const ts = new Set(merged[date].map(m => m.addedAt));
+          for (const m of localMeals) {
+            if (!ts.has(m.addedAt)) merged[date].push(m);
+          }
+        }
+      }
+      // Merge current local data
+      for (const [date, localMeals] of Object.entries(local)) {
+        if (!merged[date]) {
+          merged[date] = localMeals;
+        } else {
+          const ts = new Set(merged[date].map(m => m.addedAt));
+          for (const m of localMeals) {
+            if (!ts.has(m.addedAt)) merged[date].push(m);
+          }
+        }
+      }
+      
+      // Now merge remote data
       for (const [date, remoteMeals] of Object.entries(remoteVal || {})) {
         if (!merged[date]) {
           merged[date] = remoteMeals;
         } else {
           // Merge: add remote meals not already present (by addedAt timestamp)
-          const localTimestamps = new Set(merged[date].map(m => m.addedAt));
+          const mergedTimestamps = new Set(merged[date].map(m => m.addedAt));
           for (const rm of remoteMeals) {
-            if (!localTimestamps.has(rm.addedAt)) {
+            if (!mergedTimestamps.has(rm.addedAt)) {
               merged[date].push(rm);
             }
           }
