@@ -74,7 +74,7 @@ export default async function handler(req, res) {
       const row = rows[0];
       // If client already has latest, return 304-like response
       if (since && parseInt(since) >= parseInt(row.updated_at)) {
-        return res.json({ ok: true, changed: false });
+        return res.json({ ok: true, changed: false, updated_at: row.updated_at });
       }
 
       return res.json({

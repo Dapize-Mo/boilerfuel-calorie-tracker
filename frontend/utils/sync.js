@@ -234,6 +234,7 @@ export async function pushData(options = {}) {
 
   // Step 1: Pull any server-side changes and merge into local storage.
   const since = localStorage.getItem(SYNC_LAST_PULL_KEY) || '0';
+  const sinceNum = parseInt(since, 10) || 0;
   let pulledKeys = [];
   try {
     const res = await fetch(`/api/sync?token=${encodeURIComponent(token)}&since=${since}`);
@@ -251,6 +252,27 @@ export async function pushData(options = {}) {
         localStorage.setItem(SYNC_LAST_PULL_KEY, String(body.updated_at || Date.now()));
         pulled = true;
         pullUpdatedAt = body.updated_at || Date.now();
+      } else {
+        // Recovery path: local "since" can be ahead of server (legacy clock skew
+        // or stale local state), which causes endless "no changes" responses.
+        // In that case force a full pull before we push, so we never clobber
+        // newer server data with an incomplete local blob.
+        const serverUpdatedAt = parseInt(body.updated_at, 10) || 0;
+        if (sinceNum > serverUpdatedAt && serverUpdatedAt > 0) {
+          const fullRes = await fetch(`/api/sync?token=${encodeURIComponent(token)}&since=0`);
+          if (fullRes.ok) {
+            const fullBody = await fullRes.json();
+            if (fullBody.changed && fullBody.encrypted_data) {
+              const serverData = await decrypt(fullBody.encrypted_data, secret);
+              pulledTransfer = summarizeTransferredData(serverData);
+              pulledKeys = Object.keys(serverData).filter(k => SYNC_KEYS.includes(k));
+              mergeRemoteData(serverData);
+              localStorage.setItem(SYNC_LAST_PULL_KEY, String(fullBody.updated_at || serverUpdatedAt));
+              pulled = true;
+              pullUpdatedAt = fullBody.updated_at || serverUpdatedAt;
+            }
+          }
+        }
       }
     }
   } catch (err) {
@@ -353,6 +375,7 @@ export async function pullData(options = {}) {
   }
 
   const since = localStorage.getItem(SYNC_LAST_PULL_KEY) || '0';
+  const sinceNum = parseInt(since, 10) || 0;
   let res;
   try {
     res = await fetch(`/api/sync?token=${encodeURIComponent(token)}&since=${since}`);
@@ -374,6 +397,31 @@ export async function pullData(options = {}) {
 
   const body = await res.json();
   if (!body.changed) {
+    const serverUpdatedAt = parseInt(body.updated_at, 10) || 0;
+    if (sinceNum > serverUpdatedAt && serverUpdatedAt > 0) {
+      // Stale local timestamp ahead of server; reset and do a full pull.
+      try {
+        const fullRes = await fetch(`/api/sync?token=${encodeURIComponent(token)}&since=0`);
+        if (fullRes.ok) {
+          const fullBody = await fullRes.json();
+          if (fullBody.changed && fullBody.encrypted_data) {
+            const data = await decrypt(fullBody.encrypted_data, secret);
+            const pulledKeys = Object.keys(data).filter(k => SYNC_KEYS.includes(k));
+            const transferred = summarizeTransferredData(data);
+            mergeRemoteData(data);
+            localStorage.setItem(SYNC_LAST_PULL_KEY, String(fullBody.updated_at || serverUpdatedAt));
+            addSyncLogEntry({
+              direction: 'pull',
+              status: 'ok',
+              keys: pulledKeys,
+              detail: 'Recovered from stale pull timestamp and refreshed full sync state',
+            });
+            if (!includeReport) return true;
+            return { changed: true, updatedAt: fullBody.updated_at || serverUpdatedAt, transferred };
+          }
+        }
+      } catch {}
+    }
     addSyncLogEntry({ direction: 'pull', status: 'ok', keys: [], detail: 'Up to date — no new changes' });
     return includeReport ? { changed: false, transferred: [] } : false;
   }
