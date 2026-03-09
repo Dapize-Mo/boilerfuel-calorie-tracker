@@ -170,6 +170,22 @@ export function MealProvider({ children }) {
     try { localStorage.setItem(DIETARY_KEY, JSON.stringify(dietaryPrefs)); } catch {}
   }, [mealsByDate, goals, favorites, waterByDate, weightByDate, templates, dietaryPrefs]);
 
+  const getSyncStorageFingerprint = useCallback(() => {
+    try {
+      return JSON.stringify({
+        meals: localStorage.getItem(STORAGE_KEY) || '',
+        goals: localStorage.getItem(GOALS_KEY) || '',
+        favorites: localStorage.getItem(FAVORITES_KEY) || '',
+        water: localStorage.getItem(WATER_KEY) || '',
+        weight: localStorage.getItem(WEIGHT_KEY) || '',
+        templates: localStorage.getItem(TEMPLATES_KEY) || '',
+        dietary: localStorage.getItem(DIETARY_KEY) || '',
+      });
+    } catch {
+      return '';
+    }
+  }, []);
+
   const doPull = useCallback(async (force = false) => {
     if (isSyncingRef.current) return;
     const now = Date.now();
@@ -184,11 +200,14 @@ export function MealProvider({ children }) {
       isSyncingRef.current = true;
       lastPullRef.current = now;
       setSyncStatus('syncing');
+      const before = getSyncStorageFingerprint();
       const result = await pullData({ includeReport: true });
       // If the server row was pruned, recover it by pushing our local data back up
       if (result?.error && /sync token not found/i.test(result.error)) {
         await pushData({ strict: false });
-      } else if (result?.changed) {
+      }
+      const after = getSyncStorageFingerprint();
+      if (before !== after || result?.changed) {
         reloadFromStorage();
       }
       setSyncStatusTransient('success');
@@ -197,7 +216,7 @@ export function MealProvider({ children }) {
     } finally {
       isSyncingRef.current = false;
     }
-  }, [reloadFromStorage, setSyncStatusTransient, flushStateToStorage]);
+  }, [reloadFromStorage, setSyncStatusTransient, flushStateToStorage, getSyncStorageFingerprint]);
 
   // Pull on mount (force = true so the cooldown doesn't block the first load)
   useEffect(() => {
@@ -210,7 +229,7 @@ export function MealProvider({ children }) {
   // Re-pull whenever the user returns to the tab/app (mobile suspend/resume, tab switch)
   useEffect(() => {
     function handleVisibilityChange() {
-      if (document.visibilityState === 'visible') doPull();
+      if (document.visibilityState === 'visible') doPull(true);
     }
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
@@ -241,14 +260,29 @@ export function MealProvider({ children }) {
         const { isSynced, pushData } = await import('../utils/sync');
         if (!isSynced()) return;
         setSyncStatus('syncing');
+        const before = getSyncStorageFingerprint();
         await pushData();
+        const after = getSyncStorageFingerprint();
+        if (before !== after) reloadFromStorage();
         setSyncStatusTransient('success');
       } catch {
         setSyncStatusTransient('error');
-      }, flushStateToStorage
+      }
     }, 3000); // 3 second debounce
     return () => { if (syncPushTimer.current) clearTimeout(syncPushTimer.current); };
-  }, [mealsByDate, goals, favorites, waterByDate, weightByDate, templates, dietaryPrefs, setSyncStatusTransient]);
+  }, [
+    mealsByDate,
+    goals,
+    favorites,
+    waterByDate,
+    weightByDate,
+    templates,
+    dietaryPrefs,
+    setSyncStatusTransient,
+    flushStateToStorage,
+    getSyncStorageFingerprint,
+    reloadFromStorage,
+  ]);
 
   // ── Backup recovery ──
   const [hasMealsBackup, setHasMealsBackup] = useState(false);
@@ -267,10 +301,6 @@ export function MealProvider({ children }) {
     }
     return ok;
   }, [reloadFromStorage]);
-// Flush React state to localStorage before syncing
-    flushStateToStorage();
-    
-    
   // Manual sync trigger (for UI button)
   const syncNow = useCallback(async () => {
     const { isSynced, syncNowDetailed } = await import('../utils/sync');
@@ -279,7 +309,7 @@ export function MealProvider({ children }) {
     try {
       const report = await syncNowDetailed();
       reloadFromStorage();
-      setSyncStatusTransient('success');, flushStateToStorage
+      setSyncStatusTransient('success');
       return report;
     } catch (err) {
       setSyncStatusTransient('error');
