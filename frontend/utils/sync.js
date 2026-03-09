@@ -706,6 +706,23 @@ function mergeRemoteData(remote) {
   // latest React state that may have just been persisted to localStorage
   const mealsBefore = localStorage.getItem('boilerfuel_meals');
 
+  // Merge helper: dedupe by addedAt when present, keep all entries that do
+  // not have a timestamp so we never accidentally drop meals.
+  function appendMeals(targetMeals, incomingMeals) {
+    const seen = new Set((targetMeals || []).map(m => m?.addedAt).filter(ts => ts !== undefined && ts !== null));
+    for (const meal of (incomingMeals || [])) {
+      const ts = meal?.addedAt;
+      if (ts === undefined || ts === null) {
+        targetMeals.push(meal);
+        continue;
+      }
+      if (!seen.has(ts)) {
+        seen.add(ts);
+        targetMeals.push(meal);
+      }
+    }
+  }
+
   for (const key of SYNC_KEYS) {
     if (!(key in remote)) continue;
     const remoteVal = remote[key];
@@ -731,21 +748,7 @@ function mergeRemoteData(remote) {
         if (!merged[date]) {
           merged[date] = localMeals;
         } else {
-          const ts = new Set(merged[date].map(m => m.addedAt));
-          for (const m of localMeals) {
-            if (!ts.has(m.addedAt)) merged[date].push(m);
-          }
-        }
-      }
-      // Merge current local data
-      for (const [date, localMeals] of Object.entries(local)) {
-        if (!merged[date]) {
-          merged[date] = localMeals;
-        } else {
-          const ts = new Set(merged[date].map(m => m.addedAt));
-          for (const m of localMeals) {
-            if (!ts.has(m.addedAt)) merged[date].push(m);
-          }
+          appendMeals(merged[date], localMeals);
         }
       }
       
@@ -754,13 +757,7 @@ function mergeRemoteData(remote) {
         if (!merged[date]) {
           merged[date] = remoteMeals;
         } else {
-          // Merge: add remote meals not already present (by addedAt timestamp)
-          const mergedTimestamps = new Set(merged[date].map(m => m.addedAt));
-          for (const rm of remoteMeals) {
-            if (!mergedTimestamps.has(rm.addedAt)) {
-              merged[date].push(rm);
-            }
-          }
+          appendMeals(merged[date], remoteMeals);
         }
       }
 
@@ -774,10 +771,7 @@ function mergeRemoteData(remote) {
           if (!merged[date] || merged[date].length === 0) {
             merged[date] = meals;
           } else {
-            const ts = new Set(merged[date].map(m => m.addedAt));
-            for (const m of meals) {
-              if (!ts.has(m.addedAt)) merged[date].push(m);
-            }
+            appendMeals(merged[date], meals);
           }
         }
       }
@@ -810,9 +804,20 @@ function mergeRemoteData(remote) {
         cutoff.setDate(cutoff.getDate() - 14);
         const cutoffStr = cutoff.toISOString().slice(0, 10);
         const pruned = Object.fromEntries(Object.entries(merged).filter(([d]) => d >= cutoffStr));
-        try { localStorage.setItem(key, JSON.stringify(pruned)); } catch {}
+        try { localStorage.setItem(key, JSON.stringify(pruned)); mealsSaved = true; } catch {}
       }
-      console.log('[sync] Meals saved to localStorage, mealsSaved:', mealsSaved);
+
+      // Last-resort safety: never leave meals key empty after removing it.
+      if (!mealsSaved && mealsBefore) {
+        try {
+          localStorage.setItem(key, mealsBefore);
+          mealsSaved = true;
+          console.warn('[sync] Restored previous meals after save fallback failed');
+        } catch {}
+      }
+      const savedMealsRaw = localStorage.getItem(key);
+      const savedMeals = savedMealsRaw ? JSON.parse(savedMealsRaw) : {};
+      console.log('[sync] Meals saved to localStorage, mealsSaved:', mealsSaved, 'savedDays:', Object.keys(savedMeals).length);
     } else if (key === 'boilerfuel_water') {
       // Water: take the max per date — can't "undrink" water, remote data should
       // never reset a higher local value to 0, and vice versa.

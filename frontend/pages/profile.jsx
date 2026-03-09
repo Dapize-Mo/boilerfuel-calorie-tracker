@@ -1403,7 +1403,14 @@ export default function ProfilePage() {
                         const meals = JSON.parse(localStorage.getItem('boilerfuel_meals') || '{}');
                         const days = Object.keys(meals).length;
                         const entries = Object.values(meals).reduce((s, a) => s + (Array.isArray(a) ? a.length : 0), 0);
-                        alert(`localStorage meals: ${entries} entries across ${days} days`);
+                        const today = getTodayKey();
+                        const todayEntries = Array.isArray(meals[today]) ? meals[today].length : 0;
+                        const latestDates = Object.keys(meals).sort().slice(-5);
+                        alert(
+                          `localStorage meals: ${entries} entries across ${days} days\n` +
+                          `Today (${today}) entries: ${todayEntries}\n` +
+                          `Latest dates: ${latestDates.length ? latestDates.join(', ') : 'none'}`
+                        );
                       } catch (e) { alert('Error reading localStorage: ' + e.message); }
                     }}
                     className="px-4 py-2 border border-theme-text-primary/20 text-theme-text-tertiary text-xs uppercase tracking-wider hover:bg-theme-text-primary/10 transition-colors">
