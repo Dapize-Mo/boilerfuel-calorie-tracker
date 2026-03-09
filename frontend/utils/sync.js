@@ -246,6 +246,12 @@ export async function pushData(options = {}) {
       const body = await res.json();
       if (body.changed && body.encrypted_data) {
         const serverData = await decrypt(body.encrypted_data, secret);
+        console.log('[sync/pushData] Server had changes - decrypted keys:', Object.keys(serverData).filter(k => !k.startsWith('_')));
+        if (serverData.boilerfuel_meals) {
+          const remoteDays = Object.keys(serverData.boilerfuel_meals).length;
+          const remoteMeals = Object.values(serverData.boilerfuel_meals).reduce((sum, meals) => sum + (Array.isArray(meals) ? meals.length : 0), 0);
+          console.log('[sync/pushData] Remote meals:', { days: remoteDays, totalMeals: remoteMeals });
+        }
         pulledTransfer = summarizeTransferredData(serverData);
         pulledKeys = Object.keys(serverData).filter(k => SYNC_KEYS.includes(k));
         mergeRemoteData(serverData);
@@ -678,11 +684,22 @@ function gatherLocalData() {
   try { localStorage.setItem('boilerfuel_sync_devices', JSON.stringify(devices)); } catch {}
   data._devices = devices;
 
+  // Diagnostic logging for meals
+  if (data.boilerfuel_meals) {
+    const mealDays = Object.keys(data.boilerfuel_meals).length;
+    const totalMeals = Object.values(data.boilerfuel_meals).reduce((sum, dayMeals) => {
+      return sum + (Array.isArray(dayMeals) ? dayMeals.length : 0);
+    }, 0);
+    console.log('[sync] Gathering local data for push:', { mealDays, totalMeals, latestDates: Object.keys(data.boilerfuel_meals).sort().slice(-3) });
+  }
+
   return data;
 }
 
 function mergeRemoteData(remote) {
   if (!remote) return;
+
+  console.log('[sync] mergeRemoteData called with remote data keys:', Object.keys(remote).filter(k => !k.startsWith('_')));
 
   // ── Safety: snapshot meals before any merge so we can recover if data shrinks ──
   // Also get a fresh snapshot right before each key's merge to ensure we have the
@@ -702,6 +719,8 @@ function mergeRemoteData(remote) {
       // Use both the snapshot AND the fresh read to ensure we don't lose data
       const local = localRaw ? JSON.parse(localRaw) : {};
       const snapshot = mealsBefore ? JSON.parse(mealsBefore) : {};
+      
+      console.log('[sync] Merging meals - local days:', Object.keys(local).length, 'remote days:', Object.keys(remoteVal || {}).length);
       
       // Start with the snapshot (older), then merge in current localStorage (fresher),
       // then merge in remote data. This ensures we keep all meals from all sources.
@@ -744,6 +763,8 @@ function mergeRemoteData(remote) {
           }
         }
       }
+
+      console.log('[sync] Merged meals result - days:', Object.keys(merged).length, 'total meals:', Object.values(merged).reduce((sum, meals) => sum + (Array.isArray(meals) ? meals.length : 0), 0));
 
       // Post-merge loss guard: if we somehow ended up with fewer date-keys than
       // before (should never happen, but defensive), merge the backup back in.
@@ -791,6 +812,7 @@ function mergeRemoteData(remote) {
         const pruned = Object.fromEntries(Object.entries(merged).filter(([d]) => d >= cutoffStr));
         try { localStorage.setItem(key, JSON.stringify(pruned)); } catch {}
       }
+      console.log('[sync] Meals saved to localStorage, mealsSaved:', mealsSaved);
     } else if (key === 'boilerfuel_water') {
       // Water: take the max per date — can't "undrink" water, remote data should
       // never reset a higher local value to 0, and vice versa.

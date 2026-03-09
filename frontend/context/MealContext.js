@@ -202,16 +202,21 @@ export function MealProvider({ children }) {
       setSyncStatus('syncing');
       const before = getSyncStorageFingerprint();
       const result = await pullData({ includeReport: true });
+      console.log('[MealContext] doPull result:', { changed: result?.changed, error: result?.error });
       // If the server row was pruned, recover it by pushing our local data back up
       if (result?.error && /sync token not found/i.test(result.error)) {
         await pushData({ strict: false });
       }
       const after = getSyncStorageFingerprint();
-      if (before !== after || result?.changed) {
+      const storageChanged = before !== after;
+      console.log('[MealContext] doPull storage changed:', storageChanged);
+      if (storageChanged || result?.changed) {
+        console.log('[MealContext] doPull -> reloading from storage');
         reloadFromStorage();
       }
       setSyncStatusTransient('success');
-    } catch {
+    } catch (err) {
+      console.error('[MealContext] doPull error:', err);
       setSyncStatusTransient('error');
     } finally {
       isSyncingRef.current = false;
@@ -261,11 +266,19 @@ export function MealProvider({ children }) {
         if (!isSynced()) return;
         setSyncStatus('syncing');
         const before = getSyncStorageFingerprint();
-        await pushData();
+        console.log('[MealContext] Background push starting...');
+        const result = await pushData({ includeReport: true });
+        console.log('[MealContext] Background push result:', { pushed: result?.pushed, pulled: result?.pulled, skipped: result?.skipped });
         const after = getSyncStorageFingerprint();
-        if (before !== after) reloadFromStorage();
+        const storageChanged = before !== after;
+        console.log('[MealContext] Background push storage changed:', storageChanged);
+        if (storageChanged) {
+          console.log('[MealContext] Background push detected merge -> reloading from storage');
+          reloadFromStorage();
+        }
         setSyncStatusTransient('success');
-      } catch {
+      } catch (err) {
+        console.error('[MealContext] Background push error:', err);
         setSyncStatusTransient('error');
       }
     }, 3000); // 3 second debounce
