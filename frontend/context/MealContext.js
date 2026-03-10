@@ -158,6 +158,7 @@ export function MealProvider({ children }) {
   const lastPullRef = useRef(0);           // timestamp of last pull (ms)
   const isReloadingFromSync = useRef(false); // suppress push debounce when state changes come from a sync pull
   const MIN_PULL_INTERVAL = 30_000;        // don't re-pull more than once per 30 s
+  const lastSyncNotifRef = useRef(0);      // throttle sync notifications
 
   // Force-flush current React state to localStorage before sync operations
   const flushStateToStorage = useCallback(() => {
@@ -183,6 +184,27 @@ export function MealProvider({ children }) {
       });
     } catch {
       return '';
+    }
+  }, []);
+
+  // Show sync notification (mobile verification that sync succeeded)
+  // Throttled to once per 5 seconds to avoid notification spam
+  const maybeShowSyncNotif = useCallback(() => {
+    const now = Date.now();
+    if (now - lastSyncNotifRef.current < 5000) return;
+    lastSyncNotifRef.current = now;
+    if (typeof window === 'undefined' || !('Notification' in window)) return;
+    if (Notification.permission !== 'granted') return;
+    try {
+      // Simple notification without requiring interaction
+      new Notification('BoilerFuel', {
+        icon: '/icons/favicon.svg',
+        body: 'Data synced.',
+        tag: 'boilerfuel-sync',
+        requireInteraction: false,
+      });
+    } catch (err) {
+      console.error('[MealContext] Failed to show sync notification:', err);
     }
   }, []);
 
@@ -213,6 +235,8 @@ export function MealProvider({ children }) {
       if (storageChanged || result?.changed) {
         console.log('[MealContext] doPull -> reloading from storage');
         reloadFromStorage();
+        // Show notification on mobile so user knows sync happened
+        maybeShowSyncNotif();
       }
       setSyncStatusTransient('success');
     } catch (err) {
@@ -221,7 +245,7 @@ export function MealProvider({ children }) {
     } finally {
       isSyncingRef.current = false;
     }
-  }, [reloadFromStorage, setSyncStatusTransient, flushStateToStorage, getSyncStorageFingerprint]);
+  }, [reloadFromStorage, setSyncStatusTransient, flushStateToStorage, getSyncStorageFingerprint, maybeShowSyncNotif]);
 
   // Pull on mount (force = true so the cooldown doesn't block the first load)
   useEffect(() => {
@@ -241,9 +265,31 @@ export function MealProvider({ children }) {
   }, [doPull]);
 
   // Periodic pull every 2 minutes so changes from other devices appear without a tab switch
+  // On mobile, visibility change is more reliable, but still keep periodic as fallback
   useEffect(() => {
     const interval = setInterval(() => doPull(), 2 * 60 * 1000);
     return () => clearInterval(interval);
+  }, [doPull]);
+
+  // Mobile-specific: pull aggressively on resume (visibility, focus, online events)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        // Longer delay on mobile to ensure app is fully initialized
+        setTimeout(() => doPull(true), 500);
+      }
+    };
+    const handleFocus = () => setTimeout(() => doPull(true), 300);
+    const handleOnline = () => setTimeout(() => doPull(true), 500);
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('online', handleOnline);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('online', handleOnline);
+    };
   }, [doPull]);
 
   // Debounced push after any data change (skip initial mount and sync-driven reloads)
@@ -275,6 +321,8 @@ export function MealProvider({ children }) {
         if (storageChanged) {
           console.log('[MealContext] Background push detected merge -> reloading from storage');
           reloadFromStorage();
+          // Show notification on mobile if data changed during push
+          maybeShowSyncNotif();
         }
         setSyncStatusTransient('success');
       } catch (err) {
@@ -295,6 +343,7 @@ export function MealProvider({ children }) {
     flushStateToStorage,
     getSyncStorageFingerprint,
     reloadFromStorage,
+    maybeShowSyncNotif,
   ]);
 
   // ── Backup recovery ──

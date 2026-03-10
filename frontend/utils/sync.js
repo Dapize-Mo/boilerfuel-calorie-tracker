@@ -172,7 +172,7 @@ export async function createSyncPair() {
   const encrypted = await encrypt(data, secret);
   const createdAt = Date.now();
 
-  const res = await fetch('/api/sync', {
+  const res = await robustFetch('/api/sync', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -195,7 +195,7 @@ export async function createSyncPair() {
 export async function joinSyncPair(token, secret) {
   const normalizedToken = normalizeToken(token);
   // Verify the token exists and we can decrypt
-  const res = await fetch(`/api/sync?token=${encodeURIComponent(normalizedToken)}`);
+  const res = await robustFetch(`/api/sync?token=${encodeURIComponent(normalizedToken)}`);
   if (!res.ok) throw new Error('Sync code not found');
   const body = await res.json();
 
@@ -237,7 +237,7 @@ export async function pushData(options = {}) {
   const sinceNum = parseInt(since, 10) || 0;
   let pulledKeys = [];
   try {
-    const res = await fetch(`/api/sync?token=${encodeURIComponent(token)}&since=${since}`);
+    const res = await robustFetch(`/api/sync?token=${encodeURIComponent(token)}&since=${since}`);
     if (!res.ok) {
       const msg = await parseErrorMessage(res, 'Failed to fetch remote sync data');
       throw new Error(msg);
@@ -265,7 +265,7 @@ export async function pushData(options = {}) {
         // newer server data with an incomplete local blob.
         const serverUpdatedAt = parseInt(body.updated_at, 10) || 0;
         if (sinceNum > serverUpdatedAt && serverUpdatedAt > 0) {
-          const fullRes = await fetch(`/api/sync?token=${encodeURIComponent(token)}&since=0`);
+          const fullRes = await robustFetch(`/api/sync?token=${encodeURIComponent(token)}&since=0`);
           if (fullRes.ok) {
             const fullBody = await fullRes.json();
             if (fullBody.changed && fullBody.encrypted_data) {
@@ -317,7 +317,7 @@ export async function pushData(options = {}) {
   const pushTimestamp = Date.now();
 
   try {
-    const pushRes = await fetch('/api/sync', {
+    const pushRes = await robustFetch('/api/sync', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -384,7 +384,7 @@ export async function pullData(options = {}) {
   const sinceNum = parseInt(since, 10) || 0;
   let res;
   try {
-    res = await fetch(`/api/sync?token=${encodeURIComponent(token)}&since=${since}`);
+    res = await robustFetch(`/api/sync?token=${encodeURIComponent(token)}&since=${since}`);
   } catch (err) {
     addSyncLogEntry({ direction: 'pull', status: 'error', keys: [], detail: String(err) });
     if (strict) throw err;
@@ -407,7 +407,7 @@ export async function pullData(options = {}) {
     if (sinceNum > serverUpdatedAt && serverUpdatedAt > 0) {
       // Stale local timestamp ahead of server; reset and do a full pull.
       try {
-        const fullRes = await fetch(`/api/sync?token=${encodeURIComponent(token)}&since=0`);
+        const fullRes = await robustFetch(`/api/sync?token=${encodeURIComponent(token)}&since=0`);
         if (fullRes.ok) {
           const fullBody = await fullRes.json();
           if (fullBody.changed && fullBody.encrypted_data) {
@@ -662,6 +662,32 @@ function isMissingTokenError(err) {
 function normalizeToken(token) {
   if (!token) return '';
   return String(token).trim().toUpperCase();
+}
+
+// ── Robust fetch for mobile networks (with retry) ──
+// Mobile networks can be flaky (especially 4G/5G transitions) — implement simple retry with exponential backoff
+
+async function robustFetch(url, options = {}, maxRetries = 2) {
+  let lastErr = null;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const controller = new AbortController();
+      // 15 second timeout per attempt (mobile can be slower)
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+      const res = await fetch(url, { ...options, signal: controller.signal });
+      clearTimeout(timeoutId);
+      return res;
+    } catch (err) {
+      lastErr = err;
+      if (attempt < maxRetries) {
+        // Exponential backoff: 200ms, 500ms, 1000ms, etc.
+        const delay = Math.pow(2, attempt) * 100;
+        console.log(`[sync] Fetch retry attempt ${attempt + 1}/${maxRetries + 1}, backing off ${delay}ms`);
+        await new Promise(r => setTimeout(r, delay));
+      }
+    }
+  }
+  throw lastErr || new Error('Network request failed after retries');
 }
 
 // ── Helpers ──
