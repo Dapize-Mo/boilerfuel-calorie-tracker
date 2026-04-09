@@ -90,14 +90,14 @@ function BarChart({ data, max, height = 120, label = '' }) {
   const actualMax = max || Math.max(...data.map(d => d.value), 1);
   return (
     <div>
-      {label && <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary mb-2">{label}</div>}
+      {label && <div className="text-xs uppercase tracking-widest text-theme-text-tertiary mb-2">{label}</div>}
       <div className="flex items-end gap-1" style={{ height }}>
         {data.map((d, i) => {
           const pct = Math.min((d.value / actualMax) * 100, 100);
           const isToday = d.date === getTodayKey();
           return (
             <div key={i} className="flex-1 flex flex-col items-center gap-1" title={`${d.label}: ${Math.round(d.value)}`}>
-              <div className="text-[9px] font-mono tabular-nums text-theme-text-tertiary/60" style={{ opacity: d.value > 0 ? 1 : 0 }}>
+              <div className="text-[10px] font-mono tabular-nums text-theme-text-tertiary/70" style={{ opacity: d.value > 0 ? 1 : 0 }}>
                 {Math.round(d.value)}
               </div>
               <div className="w-full relative" style={{ height: height - 30 }}>
@@ -106,7 +106,7 @@ function BarChart({ data, max, height = 120, label = '' }) {
                   style={{ height: `${pct}%`, minHeight: d.value > 0 ? 2 : 0 }}
                 />
               </div>
-              <div className={`text-[9px] ${isToday ? 'font-bold text-theme-text-primary' : 'text-theme-text-tertiary'}`}>{d.dayLabel}</div>
+              <div className={`text-[10px] ${isToday ? 'font-bold text-theme-text-primary' : 'text-theme-text-tertiary'}`}>{d.dayLabel}</div>
             </div>
           );
         })}
@@ -135,7 +135,7 @@ function LineChart({ data, max, height = 120, label = '', color = 'rgb(var(--col
 
   return (
     <div>
-      {label && <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary mb-2">{label}</div>}
+      {label && <div className="text-xs uppercase tracking-widest text-theme-text-tertiary mb-2">{label}</div>}
       <svg width="100%" height={height} viewBox={`0 0 100 ${height}`} preserveAspectRatio="none" className="overflow-visible">
         {/* Fill area */}
         <path d={areaD} fill={color} opacity="0.08" />
@@ -153,14 +153,14 @@ function LineChart({ data, max, height = 120, label = '', color = 'rgb(var(--col
       {/* X-axis labels */}
       <div className="flex justify-between mt-1">
         {data.length <= 14 ? data.map((d, i) => (
-          <div key={i} className={`text-[9px] flex-1 text-center ${d.date === getTodayKey() ? 'font-bold text-theme-text-primary' : 'text-theme-text-tertiary'}`}>
+          <div key={i} className={`text-[10px] flex-1 text-center ${d.date === getTodayKey() ? 'font-bold text-theme-text-primary' : 'text-theme-text-tertiary'}`}>
             {d.dayLabel}
           </div>
         )) : (
           <>
-            <span className="text-[9px] text-theme-text-tertiary">{data[0]?.dayLabel}</span>
-            <span className="text-[9px] text-theme-text-tertiary">{data[Math.floor(data.length / 2)]?.dayLabel}</span>
-            <span className="text-[9px] text-theme-text-tertiary">{data[data.length - 1]?.dayLabel}</span>
+            <span className="text-[10px] text-theme-text-tertiary">{data[0]?.dayLabel}</span>
+            <span className="text-[10px] text-theme-text-tertiary">{data[Math.floor(data.length / 2)]?.dayLabel}</span>
+            <span className="text-[10px] text-theme-text-tertiary">{data[data.length - 1]?.dayLabel}</span>
           </>
         )}
       </div>
@@ -464,7 +464,7 @@ export default function StatsPage() {
       </Head>
 
       <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary font-mono">
-        <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 py-12 sm:py-20 space-y-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-16 py-10 sm:py-20 space-y-12">
 
           {/* Header */}
           <header className="space-y-4">
@@ -522,7 +522,7 @@ export default function StatsPage() {
           </div>
 
           {/* ═══ TODAY'S SNAPSHOT + MACRO BREAKDOWN ═══ */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
             <section className="space-y-4">
               <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
                 Today&rsquo;s Overview
@@ -584,7 +584,7 @@ export default function StatsPage() {
           </section>
 
           {/* ═══ MEAL TIME BREAKDOWN + MACRO TRENDS ═══ */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
             <section className="space-y-4">
               <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
                 Calories by Meal Time

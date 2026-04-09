@@ -133,7 +133,7 @@ export default function ComparePage() {
       </Head>
 
       <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary font-mono">
-        <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 py-12 sm:py-20 space-y-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-16 py-10 sm:py-20 space-y-10">
 
           {/* Header */}
           <header className="space-y-4">
@@ -164,10 +164,10 @@ export default function ComparePage() {
               </div>
               <div>
                 <label className="block text-[10px] uppercase tracking-widest text-theme-text-tertiary mb-1.5">Meal Time</label>
-                <div className="flex gap-px border border-theme-text-primary/20 w-full">
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-px border border-theme-text-primary/20 w-full">
                   {MEAL_TIMES.map(mt => (
                     <button key={mt} onClick={() => setMealTime(mt)}
-                      className={`flex-1 py-2 text-[9px] font-bold uppercase tracking-wider transition-colors ${
+                      className={`min-h-[44px] px-1 py-2 text-[10px] font-bold uppercase tracking-wider transition-colors ${
                         mealTime === mt ? 'bg-theme-text-primary text-theme-bg-primary' : 'hover:bg-theme-bg-secondary text-theme-text-tertiary'
                       }`}>
                       {mt === 'Late Night' ? 'Late' : mt}
@@ -178,7 +178,7 @@ export default function ComparePage() {
             </div>
 
             {/* Location selectors */}
-            <div className="flex items-end gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] items-end gap-3">
               <div className="flex-1">
                 <label className="block text-[10px] uppercase tracking-widest text-theme-text-tertiary mb-1.5">
                   <span className="inline-block w-2 h-2 bg-theme-text-primary/50 mr-1.5" />
@@ -225,7 +225,7 @@ export default function ComparePage() {
               <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
                 Nutrition Overview
               </h2>
-              <div className="grid grid-cols-2 gap-px bg-theme-text-primary/10 border border-theme-text-primary/10 mb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-theme-text-primary/10 border border-theme-text-primary/10 mb-4">
                 {[
                   { label: 'Items', a: foodsA.length, b: foodsB.length, unit: '' },
                   { label: 'Shared items', a: foodsA.filter(f => namesB.has(f.name.toLowerCase())).length, b: foodsB.filter(f => namesA.has(f.name.toLowerCase())).length, unit: '' },
@@ -260,7 +260,7 @@ export default function ComparePage() {
             <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
               Menu Comparison
             </h2>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
               {/* Court A */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between gap-3 border-b border-theme-text-primary/10 pb-2">

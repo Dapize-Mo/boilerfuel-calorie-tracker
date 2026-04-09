@@ -87,7 +87,7 @@ const SYNC_KEYS = [
 
 // ── Crypto helpers (AES-GCM with PBKDF2 key derivation) ──
 
-async function deriveKey(secret) {
+export async function deriveKey(secret) {
   const enc = new TextEncoder();
   const keyMaterial = await crypto.subtle.importKey(
     'raw', enc.encode(secret), 'PBKDF2', false, ['deriveKey']
@@ -101,7 +101,7 @@ async function deriveKey(secret) {
   );
 }
 
-async function encrypt(data, secret) {
+export async function encrypt(data, secret) {
   const key = await deriveKey(secret);
   const enc = new TextEncoder();
   const iv = crypto.getRandomValues(new Uint8Array(12));
@@ -117,7 +117,7 @@ async function encrypt(data, secret) {
   return btoa(String.fromCharCode(...combined));
 }
 
-async function decrypt(base64, secret) {
+export async function decrypt(base64, secret) {
   const key = await deriveKey(secret);
   const combined = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
   const iv = combined.slice(0, 12);
@@ -659,7 +659,7 @@ function isMissingTokenError(err) {
   return msg.includes('sync token not found');
 }
 
-function normalizeToken(token) {
+export function normalizeToken(token) {
   if (!token) return '';
   return String(token).trim().toUpperCase();
 }
@@ -680,8 +680,10 @@ async function robustFetch(url, options = {}, maxRetries = 2) {
     } catch (err) {
       lastErr = err;
       if (attempt < maxRetries) {
-        // Exponential backoff: 200ms, 500ms, 1000ms, etc.
-        const delay = Math.pow(2, attempt) * 100;
+        // Mobile handoffs can stall briefly; a slightly longer staggered backoff
+        // reduces false negatives without making sync feel unresponsive.
+        const delaySchedule = [250, 750, 1500, 2500];
+        const delay = delaySchedule[attempt] || 2500;
         console.log(`[sync] Fetch retry attempt ${attempt + 1}/${maxRetries + 1}, backing off ${delay}ms`);
         await new Promise(r => setTimeout(r, delay));
       }
@@ -722,7 +724,15 @@ function gatherLocalData() {
   return data;
 }
 
-function mergeRemoteData(remote) {
+function buildMealIdentity(meal) {
+  const ts = meal?.addedAt;
+  if (ts !== undefined && ts !== null) {
+    return `ts:${ts}:${meal?.name || ''}:${meal?.calories || ''}`;
+  }
+  return `fallback:${meal?.name || ''}:${meal?.calories || ''}:${meal?.servings || ''}:${meal?.dining_court || ''}:${meal?.meal_time || ''}`;
+}
+
+export function mergeRemoteData(remote) {
   if (!remote) return;
 
   console.log('[sync] mergeRemoteData called with remote data keys:', Object.keys(remote).filter(k => !k.startsWith('_')));
@@ -735,15 +745,11 @@ function mergeRemoteData(remote) {
   // Merge helper: dedupe by addedAt when present, keep all entries that do
   // not have a timestamp so we never accidentally drop meals.
   function appendMeals(targetMeals, incomingMeals) {
-    const seen = new Set((targetMeals || []).map(m => m?.addedAt).filter(ts => ts !== undefined && ts !== null));
+    const seen = new Set((targetMeals || []).map(buildMealIdentity));
     for (const meal of (incomingMeals || [])) {
-      const ts = meal?.addedAt;
-      if (ts === undefined || ts === null) {
-        targetMeals.push(meal);
-        continue;
-      }
-      if (!seen.has(ts)) {
-        seen.add(ts);
+      const mealIdentity = buildMealIdentity(meal);
+      if (!seen.has(mealIdentity)) {
+        seen.add(mealIdentity);
         targetMeals.push(meal);
       }
     }
@@ -841,6 +847,14 @@ function mergeRemoteData(remote) {
           console.warn('[sync] Restored previous meals after save fallback failed');
         } catch {}
       }
+      if (!mealsSaved) {
+        addSyncLogEntry({
+          direction: 'pull',
+          status: 'error',
+          keys: ['boilerfuel_meals'],
+          detail: 'Unable to save merged meals after quota fallback attempts',
+        });
+      }
       const savedMealsRaw = localStorage.getItem(key);
       const savedMeals = savedMealsRaw ? JSON.parse(savedMealsRaw) : {};
       console.log('[sync] Meals saved to localStorage, mealsSaved:', mealsSaved, 'savedDays:', Object.keys(savedMeals).length);
@@ -899,3 +913,11 @@ function mergeRemoteData(remote) {
     try { localStorage.setItem('boilerfuel_sync_devices', JSON.stringify(merged)); } catch {}
   }
 }
+
+export const __testables = {
+  buildMealIdentity,
+  mergeRemoteData,
+  summarizeTransferredData,
+  normalizeToken,
+  isMissingTokenError,
+};

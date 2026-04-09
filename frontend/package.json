@@ -29,6 +29,7 @@
     "eslint": "^8.57.1",
     "eslint-config-next": "^14.2.18",
     "jest": "^29.7.0",
+    "jest-environment-jsdom": "^30.3.0",
     "postcss": "^8.4.47"
   },
   "author": "Your Name",

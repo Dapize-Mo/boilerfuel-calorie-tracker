@@ -1,5 +1,8 @@
 import { query } from '../../utils/db';
 
+const MAX_SYNC_PAYLOAD_BYTES = 4 * 1024 * 1024;
+const TOKEN_LENGTH = 6;
+
 // Ensure sync table exists
 let syncSchemaReady = false;
 async function ensureSyncSchema() {
@@ -24,19 +27,40 @@ export default async function handler(req, res) {
       const { action, token, encrypted_data, updated_at } = req.body;
 
       if (action === 'create') {
-        // Generate a unique 6-char sync code
-        const code = generateCode();
-        await query(
-          `INSERT INTO sync_data (token, encrypted_data, updated_at) VALUES ($1, $2, $3)`,
-          [code, encrypted_data || '', updated_at || Date.now()]
-        );
-        return res.json({ ok: true, token: code });
+        if (encrypted_data != null && typeof encrypted_data !== 'string') {
+          return res.status(400).json({ error: 'encrypted_data must be a string' });
+        }
+        const payload = encrypted_data || '';
+        if (Buffer.byteLength(payload, 'utf8') > MAX_SYNC_PAYLOAD_BYTES) {
+          return res.status(413).json({ error: 'Sync payload too large' });
+        }
+        const clientTs = Number(updated_at);
+        const initialTs = Number.isFinite(clientTs) ? Math.floor(clientTs) : Date.now();
+
+        // Generate a unique sync code with collision retry.
+        for (let attempt = 0; attempt < 5; attempt += 1) {
+          const code = generateCode();
+          const result = await query(
+            `INSERT INTO sync_data (token, encrypted_data, updated_at)
+             VALUES ($1, $2, $3)
+             ON CONFLICT (token) DO NOTHING
+             RETURNING token`,
+            [code, payload, initialTs]
+          );
+          if (result.rows?.length) {
+            return res.json({ ok: true, token: code, updated_at: initialTs });
+          }
+        }
+        return res.status(503).json({ error: 'Could not allocate sync token. Please retry.' });
       }
 
       if (action === 'push') {
         const normalizedToken = normalizeToken(token);
-        if (!normalizedToken || !encrypted_data) {
+        if (!normalizedToken || typeof encrypted_data !== 'string' || encrypted_data.length === 0) {
           return res.status(400).json({ error: 'Missing token or data' });
+        }
+        if (Buffer.byteLength(encrypted_data, 'utf8') > MAX_SYNC_PAYLOAD_BYTES) {
+          return res.status(413).json({ error: 'Sync payload too large' });
         }
         // Use the server's clock so all devices share the same timestamp
         // reference — prevents clock skew between phone/PC causing one device
@@ -73,7 +97,8 @@ export default async function handler(req, res) {
 
       const row = rows[0];
       // If client already has latest, return 304-like response
-      if (since && parseInt(since) >= parseInt(row.updated_at)) {
+      const sinceNum = Number.parseInt(Array.isArray(since) ? since[0] : since, 10);
+      if (Number.isFinite(sinceNum) && sinceNum >= Number.parseInt(row.updated_at, 10)) {
         return res.json({ ok: true, changed: false, updated_at: row.updated_at });
       }
 
@@ -106,15 +131,17 @@ export default async function handler(req, res) {
 function generateCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no I/O/0/1 to avoid confusion
   let code = '';
-  const arr = new Uint8Array(6);
+  const arr = new Uint8Array(TOKEN_LENGTH);
   require('crypto').randomFillSync(arr);
-  for (let i = 0; i < 6; i++) code += chars[arr[i] % chars.length];
+  for (let i = 0; i < TOKEN_LENGTH; i++) code += chars[arr[i] % chars.length];
   return code;
 }
 
 function normalizeToken(token) {
   if (!token) return '';
-  return String(Array.isArray(token) ? token[0] : token).trim().toUpperCase();
+  const normalized = String(Array.isArray(token) ? token[0] : token).trim().toUpperCase();
+  if (!/^[A-Z2-9]{4,16}$/.test(normalized)) return '';
+  return normalized;
 }
 
 // Increase body size limit for sync data
