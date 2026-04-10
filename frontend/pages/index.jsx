@@ -1566,7 +1566,7 @@ export default function Home() {
             <thead>
               <tr className="border-b border-theme-text-primary/20">
                 <th className="py-3 font-bold uppercase text-xs tracking-wider text-theme-text-secondary">Food Item</th>
-                <th className="py-3 font-bold uppercase text-xs tracking-wider text-theme-text-secondary hidden sm:table-cell w-36">Location</th>
+                <th className="py-3 font-bold uppercase text-xs tracking-wider text-theme-text-secondary hidden sm:table-cell w-52">Location</th>
                 <th className="py-3 font-bold uppercase text-xs tracking-wider text-theme-text-secondary hidden md:table-cell w-28">Meal</th>
                 <th className="py-3 font-bold uppercase text-xs tracking-wider text-yellow-500/70 text-right cursor-pointer select-none hover:text-yellow-500 transition-colors w-16"
                   onClick={toggleCalorieSort}
@@ -1580,13 +1580,13 @@ export default function Home() {
                 <>
                   {Array.from({ length: 6 }, (_, i) => (
                     <tr key={i} className="border-b border-theme-text-primary/5 animate-pulse">
-                      <td className="py-3 pr-4">
+                      <td className="py-2 pr-4">
                         <div className="h-3 bg-theme-text-primary/10 rounded-sm w-3/4 mb-1.5" />
                         <div className="h-2 bg-theme-text-primary/5 rounded-sm w-1/3 sm:hidden" />
                       </td>
-                      <td className="py-3 hidden sm:table-cell w-36"><div className="h-3 bg-theme-text-primary/8 rounded-sm w-2/3" /></td>
-                      <td className="py-3 hidden md:table-cell w-28"><div className="h-3 bg-theme-text-primary/8 rounded-sm w-1/2" /></td>
-                      <td className="py-3 pl-4 w-16"><div className="h-3 bg-theme-text-primary/8 rounded-sm w-full ml-auto" /></td>
+                      <td className="py-2 hidden sm:table-cell w-52"><div className="h-3 bg-theme-text-primary/8 rounded-sm w-2/3" /></td>
+                      <td className="py-2 hidden md:table-cell w-28"><div className="h-3 bg-theme-text-primary/8 rounded-sm w-1/2" /></td>
+                      <td className="py-2 pl-4 w-16"><div className="h-3 bg-theme-text-primary/8 rounded-sm w-full ml-auto" /></td>
                     </tr>
                   ))}
                 </>
@@ -1641,7 +1641,7 @@ export default function Home() {
                           onMouseEnter={(e) => { if (!isExpanded) onFoodMouseEnter(food, e); }}
                           onMouseMove={(e) => { if (!isExpanded) onFoodMouseMove(e); }}
                           onMouseLeave={onFoodMouseLeave}>
-                          <div className="py-3 pr-4 flex-1 min-w-0 overflow-hidden">
+                          <div className="py-2 pr-4 flex-1 min-w-0 overflow-hidden">
                             <div className="flex items-center gap-2 overflow-hidden">
                               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"
                                 className="shrink-0 text-theme-text-tertiary transition-transform duration-200"
@@ -1676,9 +1676,9 @@ export default function Home() {
                             </div>
                             <span className="block sm:hidden text-xs text-theme-text-tertiary capitalize mt-0.5 pl-[18px]">{food.dining_court} &middot; {food.meal_time}</span>
                           </div>
-                          <div className="py-3 px-4 text-theme-text-secondary capitalize hidden sm:block w-36 shrink-0">{food.dining_court}</div>
-                          <div className="py-3 px-4 text-theme-text-tertiary capitalize hidden md:block w-28 shrink-0">{food.meal_time}</div>
-                          <div className={`py-3 pl-4 text-right font-mono tabular-nums w-16 shrink-0 ${noNutrition && !estimatedCal ? 'text-amber-500/60' : noNutrition && estimatedCal ? 'text-theme-text-tertiary' : 'text-theme-text-secondary'}`}>
+                          <div className="py-2 px-4 text-theme-text-secondary capitalize hidden sm:block w-52 shrink-0 whitespace-nowrap overflow-hidden text-ellipsis">{food.dining_court}</div>
+                          <div className="py-2 px-4 text-theme-text-tertiary capitalize hidden md:block w-28 shrink-0">{food.meal_time}</div>
+                          <div className={`py-2 pl-4 text-right font-mono tabular-nums w-16 shrink-0 ${noNutrition && !estimatedCal ? 'text-amber-500/60' : noNutrition && estimatedCal ? 'text-theme-text-tertiary' : 'text-theme-text-secondary'}`}>
                             {noNutrition ? (estimatedCal ? `~${estimatedCal}` : 'N/A') : (food.calories || '—')}
                           </div>
                         </div>
