@@ -47,7 +47,6 @@ export default function Onboarding() {
       fat: Math.round((cal * 0.25) / 9),
     });
     localStorage.setItem(ONBOARDED_KEY, '1');
-    setVisible(false);
   }
 
   function handleSkip() {
@@ -59,14 +58,13 @@ export default function Onboarding() {
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70"
       role="dialog"
       aria-modal="true"
       aria-label="Welcome to BoilerFuel"
     >
-      <div className="w-full max-w-sm bg-theme-bg-primary border border-theme-text-primary/20">
-        {/* Amber top strip */}
-        <div className="h-1 bg-gradient-to-r from-yellow-400 to-yellow-500" />
+      <div className="w-full max-w-xl bg-theme-bg-primary border border-theme-text-primary/20 shadow-2xl">
+        <div className="h-0.5 bg-theme-text-primary/20" />
 
         {/* Step indicators */}
         <div className="flex gap-1.5 px-6 pt-5">
@@ -85,26 +83,26 @@ export default function Onboarding() {
           {step === 0 && (
             <>
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-yellow-500/10 border border-yellow-500/30 flex items-center justify-center shrink-0">
+                <div className="w-14 h-14 bg-theme-bg-secondary border border-theme-text-primary/20 flex items-center justify-center shrink-0">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8 text-yellow-500/80">
                     <path fillRule="evenodd" d="M12.963 2.286a.75.75 0 00-1.071-.136 9.742 9.742 0 00-3.539 6.177A7.547 7.547 0 016.648 6.61a.75.75 0 00-1.152.082A9 9 0 1015.68 4.534a7.46 7.46 0 01-2.717-2.248zM15.75 14.25a3.75 3.75 0 11-7.313-1.172c.628.465 1.35.81 2.133 1.001a3.75 3.75 0 011.89-3.334 3.75 3.75 0 013.29 3.505z" clipRule="evenodd" />
                   </svg>
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-theme-text-primary">{STEPS[0].title}</h2>
-                  <p className="text-xs text-theme-text-tertiary mt-0.5 uppercase tracking-widest">{STEPS[0].subtitle}</p>
+                  <h2 className="text-xl font-bold text-theme-text-primary uppercase tracking-wide">{STEPS[0].title}</h2>
+                  <p className="text-xs text-theme-text-tertiary mt-0.5 uppercase tracking-[0.18em]">{STEPS[0].subtitle}</p>
                 </div>
               </div>
 
-              <ul className="space-y-3 text-sm text-theme-text-secondary">
+              <ul className="space-y-2.5 text-sm text-theme-text-secondary border border-theme-text-primary/10 bg-theme-bg-secondary/30 p-4">
                 {[
-                  ['🍽️', 'Search real menus from Purdue dining halls & retail'],
-                  ['📊', 'Track calories, protein, carbs, fat & more'],
-                  ['📱', 'All data stays on your device — no account needed'],
-                  ['🔄', 'Optional Google Fit sync & cross-device pairing'],
-                ].map(([icon, text]) => (
+                  'Search real menus from Purdue dining halls and retail',
+                  'Track calories, protein, carbs, fat, and more',
+                  'Data stays on your device by default',
+                  'Optional Google Fit sync and cross-device pairing',
+                ].map((text) => (
                   <li key={text} className="flex items-start gap-3">
-                    <span className="text-base leading-tight shrink-0">{icon}</span>
+                    <span className="w-1.5 h-1.5 mt-1.5 bg-yellow-500/70 shrink-0" />
                     <span>{text}</span>
                   </li>
                 ))}
@@ -112,7 +110,7 @@ export default function Onboarding() {
 
               <button
                 onClick={() => setStep(1)}
-                className="w-full py-3 bg-yellow-400 hover:bg-yellow-500 active:bg-yellow-600 text-slate-900 font-bold text-sm uppercase tracking-wider transition-colors"
+                className="w-full py-3 bg-yellow-400 hover:bg-yellow-500 active:bg-yellow-600 text-slate-900 font-bold text-sm uppercase tracking-[0.16em] transition-colors"
               >
                 Get Started
               </button>
@@ -123,8 +121,8 @@ export default function Onboarding() {
           {step === 1 && (
             <>
               <div>
-                <h2 className="text-xl font-bold text-theme-text-primary">{STEPS[1].title}</h2>
-                <p className="text-xs text-theme-text-tertiary mt-1 uppercase tracking-widest">{STEPS[1].subtitle}</p>
+                <h2 className="text-xl font-bold text-theme-text-primary uppercase tracking-wide">{STEPS[1].title}</h2>
+                <p className="text-xs text-theme-text-tertiary mt-1 uppercase tracking-[0.18em]">{STEPS[1].subtitle}</p>
               </div>
 
               <div className="space-y-3">
@@ -133,7 +131,7 @@ export default function Onboarding() {
                     <button
                       key={p}
                       onClick={() => setCalorieInput(String(p))}
-                      className={`px-3 py-1.5 text-xs font-bold border transition-colors ${
+                      className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider border transition-colors ${
                         calorieInput === String(p)
                           ? 'border-yellow-400 bg-yellow-400/10 text-yellow-400'
                           : 'border-theme-text-primary/20 text-theme-text-tertiary hover:border-theme-text-primary/50'
@@ -174,7 +172,7 @@ export default function Onboarding() {
                     handleFinish(calorieInput);
                     setStep(2);
                   }}
-                  className="flex-1 py-2.5 bg-yellow-400 hover:bg-yellow-500 text-slate-900 font-bold text-sm uppercase tracking-wider transition-colors"
+                  className="flex-1 py-2.5 bg-yellow-400 hover:bg-yellow-500 text-slate-900 font-bold text-sm uppercase tracking-[0.16em] transition-colors"
                 >
                   Continue
                 </button>
@@ -186,8 +184,8 @@ export default function Onboarding() {
           {step === 2 && (
             <>
               <div className="text-center py-2">
-                <div className="text-4xl mb-3">🎉</div>
-                <h2 className="text-xl font-bold text-theme-text-primary">{STEPS[2].title}</h2>
+                <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-yellow-500/80 mb-2">System Ready</div>
+                <h2 className="text-xl font-bold text-theme-text-primary uppercase tracking-wide">{STEPS[2].title}</h2>
                 <p className="text-sm text-theme-text-tertiary mt-2">{STEPS[2].subtitle}</p>
               </div>
 
@@ -208,7 +206,7 @@ export default function Onboarding() {
 
               <button
                 onClick={() => setVisible(false)}
-                className="w-full py-3 bg-yellow-400 hover:bg-yellow-500 text-slate-900 font-bold text-sm uppercase tracking-wider transition-colors"
+                className="w-full py-3 bg-yellow-400 hover:bg-yellow-500 text-slate-900 font-bold text-sm uppercase tracking-[0.16em] transition-colors"
               >
                 Start Tracking
               </button>

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -66,6 +66,7 @@ export default function ProfilePage() {
   const [syncSecret, setSyncSecret] = useState('');
   const [joinCode, setJoinCode] = useState('');
   const [joinSecret, setJoinSecret] = useState('');
+  const [joinLinkInput, setJoinLinkInput] = useState('');
   const [syncError, setSyncError] = useState('');
   const [syncMsg, setSyncMsg] = useState('');
   const [joinLoading, setJoinLoading] = useState(false);
@@ -80,6 +81,8 @@ export default function ProfilePage() {
   const [syncAgeTick, setSyncAgeTick] = useState(0);
   const [syncLog, setSyncLog] = useState([]); // activity log entries from getSyncLog()
   const [logFilter, setLogFilter] = useState(null); // null | meal-time string
+  const [syncOrigin, setSyncOrigin] = useState('');
+  const [copiedJoinLink, setCopiedJoinLink] = useState(false);
 
   // Notification settings
   const [notifSupported, setNotifSupported] = useState(false);
@@ -104,8 +107,35 @@ export default function ProfilePage() {
   const [fitStartDate, setFitStartDate] = useState(thirtyDaysAgo);
   const [fitEndDate, setFitEndDate] = useState(todayStr);
 
+  const getJoinUrl = useCallback((code, secret) => {
+    if (!code || !secret || !syncOrigin) return '';
+    const encodedCode = encodeURIComponent(code);
+    const encodedSecret = encodeURIComponent(secret);
+    return `${syncOrigin}/profile?sync_code=${encodedCode}&sync_secret=${encodedSecret}`;
+  }, [syncOrigin]);
+
+  const syncJoinUrl = useMemo(() => getJoinUrl(syncCode, syncSecret), [getJoinUrl, syncCode, syncSecret]);
+
+  const parseJoinLink = useCallback((raw) => {
+    const value = String(raw || '').trim();
+    if (!value) return null;
+    try {
+      const url = new URL(value);
+      const code = (url.searchParams.get('sync_code') || '').trim().toUpperCase();
+      const secret = (url.searchParams.get('sync_secret') || '').trim();
+      if (!code || !secret) return null;
+      return { code, secret };
+    } catch {
+      return null;
+    }
+  }, []);
+
   // Load notification state
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setSyncOrigin(window.location.origin);
+    }
+
     if ('Notification' in window) {
       setNotifSupported(true);
       setNotifPermission(Notification.permission);
@@ -122,6 +152,26 @@ export default function ProfilePage() {
       setDinnerEnabled(localStorage.getItem('boilerfuel_notif_dinner_on') !== '0');
     }
   }, []);
+
+  // Auto-fill join fields when opened from a sync QR URL
+  useEffect(() => {
+    if (!router.isReady) return;
+    const code = typeof router.query.sync_code === 'string' ? router.query.sync_code : '';
+    const secret = typeof router.query.sync_secret === 'string' ? router.query.sync_secret : '';
+    if (!code || !secret) return;
+
+    const normalizedCode = code.trim().toUpperCase();
+    if (!/^[A-Z2-9]{4,16}$/.test(normalizedCode)) return;
+
+    setJoinCode(normalizedCode);
+    setJoinSecret(secret.trim());
+    setSyncStatus('joining');
+    setSyncError('');
+    setSyncMsg('Sync details loaded from QR. Tap Join to pair this device.');
+
+    const cleanPath = '/profile';
+    router.replace(cleanPath, undefined, { shallow: true }).catch(() => {});
+  }, [router]);
 
   async function requestNotificationPermission() {
     if (!('Notification' in window)) return;
@@ -1575,6 +1625,36 @@ export default function ProfilePage() {
             {syncStatus === 'joining' && (
               <div className="space-y-4">
                 <div className="space-y-2">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-theme-text-tertiary">Sync Link (optional)</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={joinLinkInput}
+                      onChange={e => setJoinLinkInput(e.target.value)}
+                      placeholder="Paste sync link from your other device"
+                      className="flex-1 border border-theme-text-primary/20 bg-transparent text-theme-text-primary px-3 py-2 text-xs font-mono focus:border-theme-text-primary focus:outline-none transition-colors"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const parsed = parseJoinLink(joinLinkInput);
+                        if (!parsed) {
+                          setSyncError('Invalid sync link. Paste the full link from your other device.');
+                          return;
+                        }
+                        setJoinCode(parsed.code);
+                        setJoinSecret(parsed.secret);
+                        setSyncError('');
+                        setSyncMsg('Sync code and secret loaded from link.');
+                        setTimeout(() => setSyncMsg(''), 2500);
+                      }}
+                      className="px-3 py-2 border border-theme-text-primary/20 text-[10px] font-bold uppercase tracking-wider text-theme-text-primary hover:border-theme-text-primary hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors"
+                    >
+                      Use Link
+                    </button>
+                  </div>
+                </div>
+                <div className="space-y-2">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-theme-text-tertiary">Sync Code</label>
                   <input
                     type="text"
@@ -1644,7 +1724,7 @@ export default function ProfilePage() {
                   </button>
                   <button
                     disabled={joinLoading}
-                    onClick={() => { setSyncStatus('idle'); setSyncError(''); setJoinCode(''); setJoinSecret(''); }}
+                    onClick={() => { setSyncStatus('idle'); setSyncError(''); setJoinCode(''); setJoinSecret(''); setJoinLinkInput(''); }}
                     className="px-4 py-2 border border-theme-text-primary/20 text-theme-text-tertiary text-xs uppercase tracking-wider hover:text-theme-text-primary transition-colors disabled:opacity-40">
                     Cancel
                   </button>
@@ -1660,7 +1740,7 @@ export default function ProfilePage() {
                 </div>
                 <div className="flex flex-col sm:flex-row gap-6 items-center">
                   <div className="border border-theme-text-primary/10 p-2 bg-white shrink-0">
-                    <QRCode text={`BF:${syncCode}:${syncSecret}`} size={160} />
+                    <QRCode text={syncJoinUrl || `BF:${syncCode}:${syncSecret}`} size={160} />
                   </div>
                   <div className="space-y-3 flex-1 w-full">
                     <div>
@@ -1678,8 +1758,37 @@ export default function ProfilePage() {
                         }}
                       >{syncSecret}</div>
                     </div>
+                    {syncJoinUrl && (
+                      <div className="space-y-1">
+                        <div className="text-[9px] text-theme-text-tertiary uppercase tracking-widest">Sync Link (from QR)</div>
+                        <input
+                          type="text"
+                          readOnly
+                          value={syncJoinUrl}
+                          onClick={e => e.currentTarget.select()}
+                          className="w-full border border-theme-text-primary/15 bg-theme-bg-secondary/50 text-theme-text-secondary px-2 py-1.5 text-[10px] font-mono focus:outline-none"
+                        />
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              try {
+                                await navigator.clipboard.writeText(syncJoinUrl);
+                                setCopiedJoinLink(true);
+                                setTimeout(() => setCopiedJoinLink(false), 1500);
+                              } catch {
+                                setCopiedJoinLink(false);
+                              }
+                            }}
+                            className="px-3 py-1.5 border border-theme-text-primary/20 text-[10px] font-bold uppercase tracking-wider text-theme-text-primary hover:border-theme-text-primary hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors"
+                          >
+                            {copiedJoinLink ? 'Copied' : 'Copy Sync Link'}
+                          </button>
+                        </div>
+                      </div>
+                    )}
                     <p className="text-[10px] text-theme-text-tertiary">
-                      On your other device, open Profile &rarr; Device Sync &rarr; Join Existing and enter the code and secret key above.
+                      Scan this QR on your other device to open BoilerFuel with code + secret prefilled, then tap Join.
                     </p>
                   </div>
                 </div>

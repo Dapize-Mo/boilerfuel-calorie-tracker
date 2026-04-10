@@ -1621,7 +1621,8 @@ export default function Home() {
                   // Food row
                   const food = item.food;
                   const ri = rowIndex++;
-                  const isExpanded = expandedId === food.id;
+                  const rowKey = `${food.id}-${food.dining_court || 'na'}-${food.station || 'na'}-${food.meal_time || 'na'}-${i}`;
+                  const isExpanded = expandedId === rowKey;
                   const count = getCount(food.id, selectedDate);
                   const macros = food.macros || {};
                   const noNutrition = food.calories === 0 && !macros.protein && !macros.carbs && !(macros.fats || macros.fat);
@@ -1633,13 +1634,13 @@ export default function Home() {
                   })() : null;
                   const fav = isFavorite(food.id);
                   return (
-                    <tr key={food.id}
+                    <tr key={rowKey}
                       className={`border-b border-theme-text-primary/5 transition-colors group ${fav ? 'bg-yellow-500/[0.03]' : ''}`}
                       style={ri < 20 ? { animation: `fadeInRow 0.3s ${EASE} ${Math.min(ri * 0.02, 0.3)}s both` } : undefined}>
                       <td colSpan={4} className="p-0">
                         {/* Clickable summary row — hover shows tooltip, click expands */}
                         <div className="flex items-center cursor-pointer hover:bg-theme-bg-secondary/50 transition-colors overflow-hidden"
-                          onClick={() => setExpandedId(isExpanded ? null : food.id)}
+                          onClick={() => setExpandedId(isExpanded ? null : rowKey)}
                           onMouseEnter={(e) => { if (!isExpanded) onFoodMouseEnter(food, e); }}
                           onMouseMove={(e) => { if (!isExpanded) onFoodMouseMove(e); }}
                           onMouseLeave={onFoodMouseLeave}>
