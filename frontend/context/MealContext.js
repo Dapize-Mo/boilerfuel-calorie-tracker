@@ -208,14 +208,14 @@ export function MealProvider({ children }) {
     }
   }, []);
 
-  const doPull = useCallback(async (force = false) => {
+  const doPull = useCallback(async (force = false, forceFull = false) => {
     if (isSyncingRef.current) return;
     const now = Date.now();
     if (!force && now - lastPullRef.current < MIN_PULL_INTERVAL) return;
-    
+
     // Flush React state to localStorage BEFORE pulling to prevent data loss
     flushStateToStorage();
-    
+
     try {
       const { isSynced, pullData, pushData } = await import('../utils/sync');
       if (!isSynced()) return;
@@ -223,7 +223,7 @@ export function MealProvider({ children }) {
       lastPullRef.current = now;
       setSyncStatus('syncing');
       const before = getSyncStorageFingerprint();
-      const result = await pullData({ includeReport: true });
+      const result = await pullData({ includeReport: true, forceFull });
       console.log('[MealContext] doPull result:', { changed: result?.changed, error: result?.error });
       // If the server row was pruned, recover it by pushing our local data back up
       if (result?.error && /sync token not found/i.test(result.error)) {
@@ -247,10 +247,11 @@ export function MealProvider({ children }) {
     }
   }, [reloadFromStorage, setSyncStatusTransient, flushStateToStorage, getSyncStorageFingerprint, maybeShowSyncNotif]);
 
-  // Pull on mount (force = true so the cooldown doesn't block the first load)
+  // Pull on mount — force=true bypasses cooldown, forceFull=true uses since=0
+  // so we always get the latest server state on every page refresh.
   useEffect(() => {
     (async () => {
-      await doPull(true);
+      await doPull(true, true);
       mountedRef.current = true;
     })();
   }, [doPull]);

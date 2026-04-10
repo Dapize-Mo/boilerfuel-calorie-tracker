@@ -372,7 +372,7 @@ export async function pushData(options = {}) {
 // ── Pull remote data from server ──
 
 export async function pullData(options = {}) {
-  const { includeReport = false, strict = false } = options;
+  const { includeReport = false, strict = false, forceFull = false } = options;
   const token = getSyncToken();
   const secret = getSyncSecret();
   if (!token || !secret) {
@@ -380,7 +380,7 @@ export async function pullData(options = {}) {
     return includeReport ? { changed: false, skipped: true, transferred: [] } : false;
   }
 
-  const since = localStorage.getItem(SYNC_LAST_PULL_KEY) || '0';
+  const since = forceFull ? '0' : (localStorage.getItem(SYNC_LAST_PULL_KEY) || '0');
   const sinceNum = parseInt(since, 10) || 0;
   let res;
   try {
