@@ -1596,8 +1596,7 @@ export default function Home() {
                   if (item.type === 'court-header') {
                     return (
                       <tr key={`court-${item.label}-${i}`}>
-                        <td colSpan={4} className="pt-6 pb-2 px-0"
-                          style={i < 20 ? { animation: `slideInStation 0.3s ${EASE} ${Math.min(i * 0.015, 0.25)}s both` } : undefined}>
+                        <td colSpan={4} className="pt-6 pb-2 px-0">
                           <div className="text-sm font-bold uppercase tracking-widest text-theme-text-primary border-b-2 border-yellow-500/30 pb-1">
                             {item.label}
                           </div>
@@ -1608,8 +1607,7 @@ export default function Home() {
                   if (item.type === 'station-header') {
                     return (
                       <tr key={`station-${item.court}-${item.label}-${i}`}>
-                        <td colSpan={4} className="pt-4 pb-1 px-0"
-                          style={i < 20 ? { animation: `slideInStation 0.3s ${EASE} ${Math.min(i * 0.015, 0.25)}s both` } : undefined}>
+                        <td colSpan={4} className="pt-4 pb-1 px-0">
                           <div className="text-xs font-bold uppercase tracking-wider text-theme-text-tertiary pl-1"
                             style={{ borderLeft: '3px solid', borderColor: 'rgb(var(--color-accent-primary))', paddingLeft: 8 }}>
                             {item.label}
@@ -1621,7 +1619,7 @@ export default function Home() {
                   // Food row
                   const food = item.food;
                   const ri = rowIndex++;
-                  const rowKey = `${food.id}-${food.dining_court || 'na'}-${food.station || 'na'}-${food.meal_time || 'na'}-${i}`;
+                  const rowKey = `${food.id}-${food.dining_court || 'na'}-${food.station || 'na'}-${food.meal_time || 'na'}-${food.name || 'na'}-${food.calories ?? 'na'}`;
                   const isExpanded = expandedId === rowKey;
                   const count = getCount(food.id, selectedDate);
                   const macros = food.macros || {};
@@ -1635,8 +1633,7 @@ export default function Home() {
                   const fav = isFavorite(food.id);
                   return (
                     <tr key={rowKey}
-                      className={`border-b border-theme-text-primary/5 transition-colors group ${fav ? 'bg-yellow-500/[0.03]' : ''}`}
-                      style={ri < 20 ? { animation: `fadeInRow 0.3s ${EASE} ${Math.min(ri * 0.02, 0.3)}s both` } : undefined}>
+                      className={`border-b border-theme-text-primary/5 transition-colors group ${fav ? 'bg-yellow-500/[0.03]' : ''}`}>
                       <td colSpan={4} className="p-0">
                         {/* Clickable summary row — hover shows tooltip, click expands */}
                         <div className="flex items-center cursor-pointer hover:bg-theme-bg-secondary/50 transition-colors overflow-hidden"
@@ -2054,7 +2051,7 @@ export default function Home() {
 
           {/* ── Beverages sidebar (desktop) / bottom section (mobile) ── */}
           {beverageFoods.length > 0 && (
-            <div className="w-full 2xl:w-72 shrink-0 mt-6 2xl:mt-0">
+            <div className="w-full xl:w-72 shrink-0 mt-6 xl:mt-0">
               <div className="border border-theme-text-primary/10 sticky top-0">
                 <div className="px-3 py-2 bg-theme-bg-secondary/50 border-b border-theme-text-primary/10">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-theme-text-tertiary">Beverages</span>
