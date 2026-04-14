@@ -1,12 +1,37 @@
 import { Pool } from 'pg';
 
-// Prefer Vercel Postgres URL if present, else fall back to generic DATABASE_URL
-const connectionString = process.env.POSTGRES_URL
-  || process.env.POSTGRES_PRISMA_URL
-  || process.env.DATABASE_URL;
+function envOrNull(name) {
+  const value = process.env[name];
+  // Treat unresolved template placeholders like {{ Postgres.DATABASE_URL }} as unset
+  if (value && value.includes('{{') && value.includes('}}') && !value.startsWith('${{')) {
+    return null;
+  }
+  return value || null;
+}
+
+function buildConnectionStringFromParts() {
+  const host = envOrNull('POSTGRES_HOST') || envOrNull('PGHOST');
+  const port = envOrNull('POSTGRES_PORT') || envOrNull('PGPORT') || '5432';
+  const user = envOrNull('POSTGRES_USER') || envOrNull('PGUSER');
+  const password = envOrNull('POSTGRES_PASSWORD') || envOrNull('PGPASSWORD');
+  const dbname = envOrNull('POSTGRES_DB') || envOrNull('POSTGRES_DATABASE') || envOrNull('PGDATABASE');
+
+  if (host && user && password && dbname) {
+    return `postgresql://${encodeURIComponent(user)}:${encodeURIComponent(password)}@${host}:${port}/${encodeURIComponent(dbname)}`;
+  }
+  return null;
+}
+
+// Resolve DB URL similarly to backend so both services can share the same env config.
+const connectionString =
+  envOrNull('POSTGRES_URL')
+  || envOrNull('POSTGRES_PRISMA_URL')
+  || envOrNull('DATABASE_URL')
+  || envOrNull('DATABASE_PUBLIC_URL')
+  || buildConnectionStringFromParts();
 
 if (!connectionString) {
-  console.warn('[db] No DATABASE_URL/POSTGRES_URL found. API routes will fail until set.');
+  console.warn('[db] No DB connection env vars found. API routes will fail until DB config is set.');
 }
 
 // In serverless, avoid long-lived pools across cold starts; keep a global
@@ -14,6 +39,12 @@ let pool;
 let schemaInitialized = false;
 
 function getPool() {
+  if (!connectionString) {
+    throw new Error(
+      'Database connection is not configured. Set POSTGRES_URL, POSTGRES_PRISMA_URL, DATABASE_URL, DATABASE_PUBLIC_URL, or POSTGRES_* vars.'
+    );
+  }
+
   if (!pool) {
     pool = new Pool({
       connectionString,
@@ -38,7 +69,7 @@ function shouldUseSSL(url) {
   if (!url) return false;
   // If connecting to localhost, skip SSL
   if (url.includes('localhost') || url.includes('127.0.0.1')) return false;
-  return url.startsWith('postgres');
+  return url.startsWith('postgresql://') || url.startsWith('postgres://');
 }
 
 export async function query(text, params) {
