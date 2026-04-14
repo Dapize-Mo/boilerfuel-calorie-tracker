@@ -34,8 +34,9 @@ export default async function handler(req, res) {
         if (Buffer.byteLength(payload, 'utf8') > MAX_SYNC_PAYLOAD_BYTES) {
           return res.status(413).json({ error: 'Sync payload too large' });
         }
-        const clientTs = Number(updated_at);
-        const initialTs = Number.isFinite(clientTs) ? Math.floor(clientTs) : Date.now();
+        // Always use server time for sync row creation so all clients share
+        // one authoritative timeline. Client clocks can be skewed.
+        const initialTs = Date.now();
 
         // Generate a unique sync code with collision retry.
         for (let attempt = 0; attempt < 5; attempt += 1) {

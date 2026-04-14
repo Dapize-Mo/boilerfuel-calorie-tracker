@@ -769,6 +769,9 @@ export function mergeRemoteData(remote) {
       // Use both the snapshot AND the fresh read to ensure we don't lose data
       const local = localRaw ? JSON.parse(localRaw) : {};
       const snapshot = mealsBefore ? JSON.parse(mealsBefore) : {};
+      const beforeMealCount = Object.values(snapshot).reduce((sum, dayMeals) => {
+        return sum + (Array.isArray(dayMeals) ? dayMeals.length : 0);
+      }, 0);
       
       console.log('[sync] Merging meals - local days:', Object.keys(local).length, 'remote days:', Object.keys(remoteVal || {}).length);
       
@@ -796,6 +799,11 @@ export function mergeRemoteData(remote) {
 
       console.log('[sync] Merged meals result - days:', Object.keys(merged).length, 'total meals:', Object.values(merged).reduce((sum, meals) => sum + (Array.isArray(meals) ? meals.length : 0), 0));
 
+      const mergedMealCount = Object.values(merged).reduce((sum, dayMeals) => {
+        return sum + (Array.isArray(dayMeals) ? dayMeals.length : 0);
+      }, 0);
+      const shouldKeepBackup = mergedMealCount < beforeMealCount;
+
       // Post-merge loss guard: if we somehow ended up with fewer date-keys than
       // before (should never happen, but defensive), merge the backup back in.
       if (mealsBefore) {
@@ -809,13 +817,16 @@ export function mergeRemoteData(remote) {
         }
       }
 
-      // Save a rolling backup BEFORE overwriting, so the UI can offer restore
-      if (mealsBefore) {
+      // Save a rolling backup only when merge appears to shrink data.
+      // Otherwise we clear stale backup to avoid false recovery warnings.
+      if (mealsBefore && shouldKeepBackup) {
         try {
           localStorage.setItem('boilerfuel_meals_backup', mealsBefore);
         } catch {
           // localStorage quota exceeded — skip backup silently
         }
+      } else {
+        localStorage.removeItem('boilerfuel_meals_backup');
       }
       // Remove the old key first so writing never fails due to "overwrite while full"
       localStorage.removeItem(key);
