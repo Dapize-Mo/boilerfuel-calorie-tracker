@@ -183,10 +183,11 @@ export async function createSyncPair() {
   });
 
   if (!res.ok) throw new Error('Failed to create sync pair');
-  const { token } = await res.json();
+  const { token, updated_at: serverTs } = await res.json();
   saveSyncCredentials(token, secret);
   // Mark this timestamp so the first auto-push doesn't pull our own blob back
-  localStorage.setItem(SYNC_LAST_PULL_KEY, String(createdAt));
+  // Use the server's authoritative timestamp to prevent clock skew issues
+  localStorage.setItem(SYNC_LAST_PULL_KEY, String(serverTs || createdAt));
   return { token, secret };
 }
 

@@ -98,15 +98,16 @@ export default async function handler(req, res) {
       const row = rows[0];
       // If client already has latest, return 304-like response
       const sinceNum = Number.parseInt(Array.isArray(since) ? since[0] : since, 10);
-      if (Number.isFinite(sinceNum) && sinceNum >= Number.parseInt(row.updated_at, 10)) {
-        return res.json({ ok: true, changed: false, updated_at: row.updated_at });
+      const serverTs = Number.parseInt(String(row.updated_at), 10);
+      if (Number.isFinite(sinceNum) && Number.isFinite(serverTs) && sinceNum >= serverTs) {
+        return res.json({ ok: true, changed: false, updated_at: serverTs });
       }
 
       return res.json({
         ok: true,
         changed: true,
         encrypted_data: row.encrypted_data,
-        updated_at: row.updated_at,
+        updated_at: serverTs,
       });
     }
 
