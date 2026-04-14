@@ -79,20 +79,15 @@ export default async function handler(req, res) {
         // reference — prevents clock skew between phone/PC causing one device
         // to permanently miss the other's pushes.
         const serverTs = Date.now();
-        await query(
+        const { rows } = await query(
           `INSERT INTO sync_data (token, encrypted_data, revision, updated_at)
-           VALUES ($1, $2, COALESCE((SELECT revision FROM sync_data WHERE token = $1), 0) + 1, $3)
+           VALUES ($1, $2, 1, $3)
            ON CONFLICT (token)
            DO UPDATE SET encrypted_data = EXCLUDED.encrypted_data,
                          revision = COALESCE(sync_data.revision, 0) + 1,
-                         updated_at = EXCLUDED.updated_at`,
+                         updated_at = EXCLUDED.updated_at
+           RETURNING revision, updated_at`,
           [normalizedToken, encrypted_data, serverTs]
-        );
-        // Return the authoritative server timestamp so clients use it for
-        // SYNC_LAST_PULL_KEY instead of their own Date.now().
-        const { rows } = await query(
-          `SELECT revision, updated_at FROM sync_data WHERE token = $1`,
-          [normalizedToken]
         );
         const row = rows[0] || {};
         return res.json({

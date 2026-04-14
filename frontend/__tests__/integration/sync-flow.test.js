@@ -68,8 +68,9 @@ describe('Complete sync flow between two devices', () => {
         // The API handler uses Date.now() server-side, not the client's value
         // For testing, use the current timestamp to simulate server behavior
         const ts = Date.now();
-        database[token] = { encrypted_data: data, updated_at: ts, revision: (current.revision || 0) + 1 };
-        return { rows: [] };
+        const revision = (current.revision || 0) + 1;
+        database[token] = { encrypted_data: data, updated_at: ts, revision };
+        return { rows: [{ revision, updated_at: ts }] };
       }
       
       // Handle SELECT for pull
@@ -202,8 +203,9 @@ describe('Complete sync flow between two devices', () => {
         const data = params[1];
         const current = database[token] || { revision: 0 };
         const ts = params[2] || Date.now();
-        database[token] = { encrypted_data: data, updated_at: ts, revision: (current.revision || 0) + 1 };
-        return { rows: [] };
+        const revision = (current.revision || 0) + 1;
+        database[token] = { encrypted_data: data, updated_at: ts, revision };
+        return { rows: [{ revision, updated_at: ts }] };
       }
       if (sqlStr.includes('SELECT encrypted_data') || sqlStr.includes('SELECT revision, updated_at')) {
         const token = params[0];
