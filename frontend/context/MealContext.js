@@ -20,6 +20,7 @@ const DIETARY_KEY = 'boilerfuel_dietary';
 const SYNC_TOKEN_KEY = 'boilerfuel_sync_token';
 const SYNC_SECRET_KEY = 'boilerfuel_sync_secret';
 const SYNC_LAST_PULL_KEY = 'boilerfuel_sync_last_pull';
+const SYNC_LAST_REVISION_KEY = 'boilerfuel_sync_last_revision';
 
 function getTodayKey() {
   const d = new Date();
@@ -313,6 +314,7 @@ export function MealProvider({ children }) {
         DIETARY_KEY,
       ]);
       const syncKeys = new Set([SYNC_TOKEN_KEY, SYNC_SECRET_KEY, SYNC_LAST_PULL_KEY]);
+      syncKeys.add(SYNC_LAST_REVISION_KEY);
 
       if (stateKeys.has(changedKey)) {
         reloadFromStorage();

@@ -44,6 +44,7 @@ export function pruneLocalStorage() {
 const SYNC_TOKEN_KEY = 'boilerfuel_sync_token';
 const SYNC_SECRET_KEY = 'boilerfuel_sync_secret';
 const SYNC_LAST_PULL_KEY = 'boilerfuel_sync_last_pull';
+const SYNC_LAST_REVISION_KEY = 'boilerfuel_sync_last_revision';
 const SYNC_LOG_KEY = 'boilerfuel_sync_log';
 const MAX_LOG_ENTRIES = 30;
 
@@ -149,6 +150,7 @@ export function clearSyncCredentials() {
   localStorage.removeItem(SYNC_TOKEN_KEY);
   localStorage.removeItem(SYNC_SECRET_KEY);
   localStorage.removeItem(SYNC_LAST_PULL_KEY);
+  localStorage.removeItem(SYNC_LAST_REVISION_KEY);
 }
 
 export function isSynced() {
@@ -183,10 +185,12 @@ export async function createSyncPair() {
   });
 
   if (!res.ok) throw new Error('Failed to create sync pair');
-  const { token, updated_at: serverTs } = await res.json();
+  const { token, revision, updated_at: serverTs } = await res.json();
   saveSyncCredentials(token, secret);
-  // Mark this timestamp so the first auto-push doesn't pull our own blob back
-  // Use the server's authoritative timestamp to prevent clock skew issues
+  if (Number.isFinite(Number(revision))) {
+    localStorage.setItem(SYNC_LAST_REVISION_KEY, String(Math.floor(Number(revision))));
+  }
+  // Keep the server timestamp for display/diagnostics, but compare by revision.
   localStorage.setItem(SYNC_LAST_PULL_KEY, String(serverTs || createdAt));
   return { token, secret };
 }
@@ -208,6 +212,9 @@ export async function joinSyncPair(token, secret) {
   }
 
   saveSyncCredentials(normalizedToken, secret);
+  if (Number.isFinite(Number(body.revision))) {
+    localStorage.setItem(SYNC_LAST_REVISION_KEY, String(Math.floor(Number(body.revision))));
+  }
   localStorage.setItem(SYNC_LAST_PULL_KEY, String(body.updated_at || Date.now()));
 
   // Push our local data back (merged)
@@ -234,11 +241,15 @@ export async function pushData(options = {}) {
   let tokenRecovered = false;
 
   // Step 1: Pull any server-side changes and merge into local storage.
+  const sinceRevision = parseInt(localStorage.getItem(SYNC_LAST_REVISION_KEY) || '', 10);
   const since = localStorage.getItem(SYNC_LAST_PULL_KEY) || '0';
   const sinceNum = parseInt(since, 10) || 0;
   let pulledKeys = [];
   try {
-    const res = await robustFetch(`/api/sync?token=${encodeURIComponent(token)}&since=${since}`);
+    const syncQuery = Number.isFinite(sinceRevision)
+      ? `token=${encodeURIComponent(token)}&since_revision=${sinceRevision}&since=${since}`
+      : `token=${encodeURIComponent(token)}&since=${since}`;
+    const res = await robustFetch(`/api/sync?${syncQuery}`);
     if (!res.ok) {
       const msg = await parseErrorMessage(res, 'Failed to fetch remote sync data');
       throw new Error(msg);
@@ -256,6 +267,9 @@ export async function pushData(options = {}) {
         pulledTransfer = summarizeTransferredData(serverData);
         pulledKeys = Object.keys(serverData).filter(k => SYNC_KEYS.includes(k));
         mergeRemoteData(serverData);
+        if (Number.isFinite(Number(body.revision))) {
+          localStorage.setItem(SYNC_LAST_REVISION_KEY, String(Math.floor(Number(body.revision))));
+        }
         localStorage.setItem(SYNC_LAST_PULL_KEY, String(body.updated_at || Date.now()));
         pulled = true;
         pullUpdatedAt = body.updated_at || Date.now();
@@ -265,8 +279,9 @@ export async function pushData(options = {}) {
         // In that case force a full pull before we push, so we never clobber
         // newer server data with an incomplete local blob.
         const serverUpdatedAt = parseInt(body.updated_at, 10) || 0;
-        if (sinceNum > serverUpdatedAt && serverUpdatedAt > 0) {
-          const fullRes = await robustFetch(`/api/sync?token=${encodeURIComponent(token)}&since=0`);
+        const serverRevision = parseInt(body.revision, 10) || 0;
+        if (Number.isFinite(sinceRevision) && serverRevision > 0 && sinceRevision > serverRevision) {
+          const fullRes = await robustFetch(`/api/sync?token=${encodeURIComponent(token)}&since_revision=0&since=0`);
           if (fullRes.ok) {
             const fullBody = await fullRes.json();
             if (fullBody.changed && fullBody.encrypted_data) {
@@ -274,6 +289,26 @@ export async function pushData(options = {}) {
               pulledTransfer = summarizeTransferredData(serverData);
               pulledKeys = Object.keys(serverData).filter(k => SYNC_KEYS.includes(k));
               mergeRemoteData(serverData);
+              if (Number.isFinite(Number(fullBody.revision))) {
+                localStorage.setItem(SYNC_LAST_REVISION_KEY, String(Math.floor(Number(fullBody.revision))));
+              }
+              localStorage.setItem(SYNC_LAST_PULL_KEY, String(fullBody.updated_at || serverUpdatedAt));
+              pulled = true;
+              pullUpdatedAt = fullBody.updated_at || serverUpdatedAt;
+            }
+          }
+        } else if (!Number.isFinite(sinceRevision) && sinceNum > serverUpdatedAt && serverUpdatedAt > 0) {
+          const fullRes = await robustFetch(`/api/sync?token=${encodeURIComponent(token)}&since_revision=0&since=0`);
+          if (fullRes.ok) {
+            const fullBody = await fullRes.json();
+            if (fullBody.changed && fullBody.encrypted_data) {
+              const serverData = await decrypt(fullBody.encrypted_data, secret);
+              pulledTransfer = summarizeTransferredData(serverData);
+              pulledKeys = Object.keys(serverData).filter(k => SYNC_KEYS.includes(k));
+              mergeRemoteData(serverData);
+              if (Number.isFinite(Number(fullBody.revision))) {
+                localStorage.setItem(SYNC_LAST_REVISION_KEY, String(Math.floor(Number(fullBody.revision))));
+              }
               localStorage.setItem(SYNC_LAST_PULL_KEY, String(fullBody.updated_at || serverUpdatedAt));
               pulled = true;
               pullUpdatedAt = fullBody.updated_at || serverUpdatedAt;
@@ -339,6 +374,9 @@ export async function pushData(options = {}) {
     // all devices share the same time reference.  Clock skew between phone and
     // PC would otherwise cause one device to permanently miss the other's pushes.
     const pushBody = await pushRes.json().catch(() => ({}));
+    if (Number.isFinite(Number(pushBody.revision))) {
+      localStorage.setItem(SYNC_LAST_REVISION_KEY, String(Math.floor(Number(pushBody.revision))));
+    }
     const confirmedTs = pushBody.updated_at || pushTimestamp;
     localStorage.setItem(SYNC_LAST_PULL_KEY, String(confirmedTs));
     
@@ -381,11 +419,15 @@ export async function pullData(options = {}) {
     return includeReport ? { changed: false, skipped: true, transferred: [] } : false;
   }
 
+  const sinceRevision = forceFull ? 0 : parseInt(localStorage.getItem(SYNC_LAST_REVISION_KEY) || '', 10);
   const since = forceFull ? '0' : (localStorage.getItem(SYNC_LAST_PULL_KEY) || '0');
   const sinceNum = parseInt(since, 10) || 0;
   let res;
   try {
-    res = await robustFetch(`/api/sync?token=${encodeURIComponent(token)}&since=${since}`);
+    const syncQuery = Number.isFinite(sinceRevision)
+      ? `token=${encodeURIComponent(token)}&since_revision=${sinceRevision}&since=${since}`
+      : `token=${encodeURIComponent(token)}&since=${since}`;
+    res = await robustFetch(`/api/sync?${syncQuery}`);
   } catch (err) {
     addSyncLogEntry({ direction: 'pull', status: 'error', keys: [], detail: String(err) });
     if (strict) throw err;
@@ -405,10 +447,11 @@ export async function pullData(options = {}) {
   const body = await res.json();
   if (!body.changed) {
     const serverUpdatedAt = parseInt(body.updated_at, 10) || 0;
-    if (sinceNum > serverUpdatedAt && serverUpdatedAt > 0) {
+    const serverRevision = parseInt(body.revision, 10) || 0;
+    if (Number.isFinite(sinceRevision) && serverRevision > 0 && sinceRevision > serverRevision) {
       // Stale local timestamp ahead of server; reset and do a full pull.
       try {
-        const fullRes = await robustFetch(`/api/sync?token=${encodeURIComponent(token)}&since=0`);
+        const fullRes = await robustFetch(`/api/sync?token=${encodeURIComponent(token)}&since_revision=0&since=0`);
         if (fullRes.ok) {
           const fullBody = await fullRes.json();
           if (fullBody.changed && fullBody.encrypted_data) {
@@ -416,6 +459,35 @@ export async function pullData(options = {}) {
             const pulledKeys = Object.keys(data).filter(k => SYNC_KEYS.includes(k));
             const transferred = summarizeTransferredData(data);
             mergeRemoteData(data);
+            if (Number.isFinite(Number(fullBody.revision))) {
+              localStorage.setItem(SYNC_LAST_REVISION_KEY, String(Math.floor(Number(fullBody.revision))));
+            }
+            localStorage.setItem(SYNC_LAST_PULL_KEY, String(fullBody.updated_at || serverUpdatedAt));
+            addSyncLogEntry({
+              direction: 'pull',
+              status: 'ok',
+              keys: pulledKeys,
+              detail: 'Recovered from stale pull timestamp and refreshed full sync state',
+            });
+            if (!includeReport) return true;
+            return { changed: true, updatedAt: fullBody.updated_at || serverUpdatedAt, transferred };
+          }
+        }
+      } catch {}
+    } else if (!Number.isFinite(sinceRevision) && sinceNum > serverUpdatedAt && serverUpdatedAt > 0) {
+      // Stale local timestamp ahead of server; reset and do a full pull.
+      try {
+        const fullRes = await robustFetch(`/api/sync?token=${encodeURIComponent(token)}&since_revision=0&since=0`);
+        if (fullRes.ok) {
+          const fullBody = await fullRes.json();
+          if (fullBody.changed && fullBody.encrypted_data) {
+            const data = await decrypt(fullBody.encrypted_data, secret);
+            const pulledKeys = Object.keys(data).filter(k => SYNC_KEYS.includes(k));
+            const transferred = summarizeTransferredData(data);
+            mergeRemoteData(data);
+            if (Number.isFinite(Number(fullBody.revision))) {
+              localStorage.setItem(SYNC_LAST_REVISION_KEY, String(Math.floor(Number(fullBody.revision))));
+            }
             localStorage.setItem(SYNC_LAST_PULL_KEY, String(fullBody.updated_at || serverUpdatedAt));
             addSyncLogEntry({
               direction: 'pull',
@@ -437,6 +509,9 @@ export async function pullData(options = {}) {
   const pulledKeys = Object.keys(data).filter(k => SYNC_KEYS.includes(k));
   const transferred = summarizeTransferredData(data);
   mergeRemoteData(data);
+  if (Number.isFinite(Number(body.revision))) {
+    localStorage.setItem(SYNC_LAST_REVISION_KEY, String(Math.floor(Number(body.revision))));
+  }
   localStorage.setItem(SYNC_LAST_PULL_KEY, String(body.updated_at || Date.now()));
   
   addSyncLogEntry({
@@ -464,7 +539,7 @@ export async function forceFullSync() {
   const secret = getSyncSecret();
   if (token && secret) {
     try {
-      const res = await fetch(`/api/sync?token=${encodeURIComponent(token)}&since=0`);
+      const res = await fetch(`/api/sync?token=${encodeURIComponent(token)}&since_revision=0&since=0`);
       if (res.ok) {
         const body = await res.json();
         if (body.changed && body.encrypted_data) {
@@ -492,6 +567,9 @@ export async function forceFullSync() {
             } else {
               try { localStorage.setItem(key, JSON.stringify(data[key])); } catch {}
             }
+          }
+          if (Number.isFinite(Number(body.revision))) {
+            localStorage.setItem(SYNC_LAST_REVISION_KEY, String(Math.floor(Number(body.revision))));
           }
           localStorage.setItem(SYNC_LAST_PULL_KEY, String(body.updated_at || Date.now()));
         }

@@ -37,7 +37,7 @@ describe('/api/sync handler', () => {
   test('POST create returns token', async () => {
     query.mockImplementation(async sql => {
       if (String(sql).includes('RETURNING token')) {
-        return { rows: [{ token: 'ABCD23' }] };
+        return { rows: [{ token: 'ABCD23', revision: 1, updated_at: 1234 }] };
       }
       return { rows: [] };
     });
@@ -53,6 +53,7 @@ describe('/api/sync handler', () => {
     expect(res.statusCode).toBe(200);
     expect(res.body.ok).toBe(true);
     expect(res.body.token).toHaveLength(6);
+    expect(res.body.revision).toBe(1);
   });
 
   test('POST push rejects invalid token', async () => {
@@ -73,7 +74,7 @@ describe('/api/sync handler', () => {
   test('GET returns changed false when since is up to date', async () => {
     query.mockImplementation(async sql => {
       if (String(sql).includes('SELECT encrypted_data')) {
-        return { rows: [{ encrypted_data: 'enc', updated_at: 1000 }] };
+        return { rows: [{ encrypted_data: 'enc', updated_at: 1000, revision: 7 }] };
       }
       return { rows: [] };
     });
@@ -89,6 +90,27 @@ describe('/api/sync handler', () => {
     expect(res.statusCode).toBe(200);
     expect(res.body.changed).toBe(false);
     expect(res.body.updated_at).toBe(1000);
+  });
+
+  test('GET returns changed false when since_revision is up to date', async () => {
+    query.mockImplementation(async sql => {
+      if (String(sql).includes('SELECT encrypted_data')) {
+        return { rows: [{ encrypted_data: 'enc', updated_at: 1000, revision: 7 }] };
+      }
+      return { rows: [] };
+    });
+
+    const req = {
+      method: 'GET',
+      query: { token: 'ABCD23', since_revision: '7', since: '0' },
+    };
+    const res = createRes();
+
+    await handler(req, res);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.changed).toBe(false);
+    expect(res.body.revision).toBe(7);
   });
 
   test('GET returns 404 for unknown token', async () => {

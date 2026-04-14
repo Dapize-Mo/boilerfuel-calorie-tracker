@@ -11,9 +11,14 @@ async function ensureSyncSchema() {
     CREATE TABLE IF NOT EXISTS sync_data (
       token VARCHAR(12) PRIMARY KEY,
       encrypted_data TEXT NOT NULL,
+      revision BIGINT NOT NULL DEFAULT 1,
       updated_at BIGINT NOT NULL,
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
+  `);
+  await query(`
+    ALTER TABLE sync_data
+      ADD COLUMN IF NOT EXISTS revision BIGINT NOT NULL DEFAULT 1;
   `);
   syncSchemaReady = true;
 }
@@ -37,19 +42,26 @@ export default async function handler(req, res) {
         // Always use server time for sync row creation so all clients share
         // one authoritative timeline. Client clocks can be skewed.
         const initialTs = Date.now();
+        const initialRevision = 1;
 
         // Generate a unique sync code with collision retry.
         for (let attempt = 0; attempt < 5; attempt += 1) {
           const code = generateCode();
           const result = await query(
-            `INSERT INTO sync_data (token, encrypted_data, updated_at)
-             VALUES ($1, $2, $3)
+            `INSERT INTO sync_data (token, encrypted_data, revision, updated_at)
+             VALUES ($1, $2, $3, $4)
              ON CONFLICT (token) DO NOTHING
-             RETURNING token`,
-            [code, payload, initialTs]
+             RETURNING token, revision, updated_at`,
+            [code, payload, initialRevision, initialTs]
           );
           if (result.rows?.length) {
-            return res.json({ ok: true, token: code, updated_at: initialTs });
+            const row = result.rows[0];
+            return res.json({
+              ok: true,
+              token: code,
+              revision: Number.parseInt(String(row.revision), 10) || initialRevision,
+              updated_at: Number.parseInt(String(row.updated_at), 10) || initialTs,
+            });
           }
         }
         return res.status(503).json({ error: 'Could not allocate sync token. Please retry.' });
@@ -68,15 +80,26 @@ export default async function handler(req, res) {
         // to permanently miss the other's pushes.
         const serverTs = Date.now();
         await query(
-          `INSERT INTO sync_data (token, encrypted_data, updated_at)
-           VALUES ($1, $2, $3)
+          `INSERT INTO sync_data (token, encrypted_data, revision, updated_at)
+           VALUES ($1, $2, COALESCE((SELECT revision FROM sync_data WHERE token = $1), 0) + 1, $3)
            ON CONFLICT (token)
-           DO UPDATE SET encrypted_data = EXCLUDED.encrypted_data, updated_at = EXCLUDED.updated_at`,
+           DO UPDATE SET encrypted_data = EXCLUDED.encrypted_data,
+                         revision = COALESCE(sync_data.revision, 0) + 1,
+                         updated_at = EXCLUDED.updated_at`,
           [normalizedToken, encrypted_data, serverTs]
         );
         // Return the authoritative server timestamp so clients use it for
         // SYNC_LAST_PULL_KEY instead of their own Date.now().
-        return res.json({ ok: true, updated_at: serverTs });
+        const { rows } = await query(
+          `SELECT revision, updated_at FROM sync_data WHERE token = $1`,
+          [normalizedToken]
+        );
+        const row = rows[0] || {};
+        return res.json({
+          ok: true,
+          revision: Number.parseInt(String(row.revision), 10) || 0,
+          updated_at: Number.parseInt(String(row.updated_at), 10) || serverTs,
+        });
       }
 
       return res.status(400).json({ error: 'Invalid action' });
@@ -84,12 +107,12 @@ export default async function handler(req, res) {
 
     // GET /api/sync?token=XXX&since=timestamp — pull data
     if (req.method === 'GET') {
-      const { token, since } = req.query;
+      const { token, since, since_revision, revision } = req.query;
       const normalizedToken = normalizeToken(token);
       if (!normalizedToken) return res.status(400).json({ error: 'Missing token' });
 
       const { rows } = await query(
-        `SELECT encrypted_data, updated_at FROM sync_data WHERE token = $1`,
+        `SELECT encrypted_data, updated_at, revision FROM sync_data WHERE token = $1`,
         [normalizedToken]
       );
       if (rows.length === 0) {
@@ -97,17 +120,29 @@ export default async function handler(req, res) {
       }
 
       const row = rows[0];
-      // If client already has latest, return 304-like response
-      const sinceNum = Number.parseInt(Array.isArray(since) ? since[0] : since, 10);
       const serverTs = Number.parseInt(String(row.updated_at), 10);
+      const serverRevision = Number.parseInt(String(row.revision), 10) || 1;
+
+      const sinceRevisionRaw = Array.isArray(since_revision) ? since_revision[0] : since_revision;
+      const revisionRaw = Array.isArray(revision) ? revision[0] : revision;
+      const cursorRevision = Number.parseInt(String(sinceRevisionRaw ?? revisionRaw), 10);
+      const sinceNum = Number.parseInt(String(Array.isArray(since) ? since[0] : since), 10);
+
+      // Preferred path: compare server-owned revision numbers.
+      if (Number.isFinite(cursorRevision) && cursorRevision >= serverRevision) {
+        return res.json({ ok: true, changed: false, revision: serverRevision, updated_at: serverTs });
+      }
+
+      // Backward-compatible fallback for older clients that still send timestamps.
       if (Number.isFinite(sinceNum) && Number.isFinite(serverTs) && sinceNum >= serverTs) {
-        return res.json({ ok: true, changed: false, updated_at: serverTs });
+        return res.json({ ok: true, changed: false, revision: serverRevision, updated_at: serverTs });
       }
 
       return res.json({
         ok: true,
         changed: true,
         encrypted_data: row.encrypted_data,
+        revision: serverRevision,
         updated_at: serverTs,
       });
     }

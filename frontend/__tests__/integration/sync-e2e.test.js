@@ -64,12 +64,14 @@ describe('Sync merge logic and timestamp handling', () => {
     // This is what the FIXED code does:
     deviceAStorage.setItem('boilerfuel_sync_token', syncToken);
     deviceAStorage.setItem('boilerfuel_sync_secret', syncSecret);
+    deviceAStorage.setItem('boilerfuel_sync_last_revision', '1');
     // KEY FIX: Use server timestamp, not client's
     deviceAStorage.setItem('boilerfuel_sync_last_pull', String(mockServerTs));
     
     // Verify it was stored correctly
     expect(deviceAStorage.getItem('boilerfuel_sync_token')).toBe(syncToken);
     expect(deviceAStorage.getItem('boilerfuel_sync_secret')).toBe(syncSecret);
+    expect(deviceAStorage.getItem('boilerfuel_sync_last_revision')).toBe('1');
     
     const storedTs = parseInt(deviceAStorage.getItem('boilerfuel_sync_last_pull'), 10);
     expect(storedTs).toBe(mockServerTs);

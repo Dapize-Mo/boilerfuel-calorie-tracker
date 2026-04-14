@@ -54,26 +54,26 @@ describe('Complete sync flow between two devices', () => {
       if (sqlStr.includes('INSERT INTO sync_data') && sqlStr.includes('RETURNING token')) {
         const token = params[0];
         const data = params[1];
-        // The API handler uses the client's value for create but returns it server-side
-        // For realistic testing, we'll use a simulated server timestamp
-        const ts = params[2] || Date.now();
-        database[token] = { encrypted_data: data, updated_at: ts };
-        return { rows: [{ token }] };
+        const revision = params[2] || 1;
+        const ts = params[3] || Date.now();
+        database[token] = { encrypted_data: data, updated_at: ts, revision };
+        return { rows: [{ token, revision, updated_at: ts }] };
       }
       
       // Handle UPDATE for push action
       if (sqlStr.includes('ON CONFLICT (token)') && sqlStr.includes('DO UPDATE')) {
         const token = params[0];
         const data = params[1];
+        const current = database[token] || { revision: 0 };
         // The API handler uses Date.now() server-side, not the client's value
         // For testing, use the current timestamp to simulate server behavior
         const ts = Date.now();
-        database[token] = { encrypted_data: data, updated_at: ts };
+        database[token] = { encrypted_data: data, updated_at: ts, revision: (current.revision || 0) + 1 };
         return { rows: [] };
       }
       
       // Handle SELECT for pull
-      if (sqlStr.includes('SELECT encrypted_data')) {
+      if (sqlStr.includes('SELECT encrypted_data') || sqlStr.includes('SELECT revision, updated_at')) {
         const token = params[0];
         const row = database[token];
         if (!row) return { rows: [] };
@@ -98,8 +98,9 @@ describe('Complete sync flow between two devices', () => {
     expect(createResponse.statusCode).toBe(200);
     expect(createResponse.body.ok).toBe(true);
     expect(createResponse.body.token).toBeDefined();
+    expect(createResponse.body.revision).toBe(1);
     const syncToken = createResponse.body.token;
-    const serverTsAfterCreate = createResponse.body.updated_at;
+    const serverRevisionAfterCreate = createResponse.body.revision;
 
     // Small delay to ensure different timestamps
     await new Promise(r => setTimeout(r, 10));
@@ -107,13 +108,14 @@ describe('Complete sync flow between two devices', () => {
     // Step 2: Device A pulls after creation (should get no changes)
     const pullAfterCreateReq = {
       method: 'GET',
-      query: { token: syncToken, since: String(serverTsAfterCreate) },
+      query: { token: syncToken, since_revision: String(serverRevisionAfterCreate), since: String(createResponse.body.updated_at) },
     };
     const pullAfterCreateResponse = createRes();
     await handler(pullAfterCreateReq, pullAfterCreateResponse);
     
     expect(pullAfterCreateResponse.statusCode).toBe(200);
     expect(pullAfterCreateResponse.body.changed).toBe(false); // No changes, as expected
+    expect(pullAfterCreateResponse.body.revision).toBe(serverRevisionAfterCreate);
 
     // Step 3: Device A pushes new data (simulating adding a meal)
     const pushReq = {
@@ -130,7 +132,8 @@ describe('Complete sync flow between two devices', () => {
     
     expect(pushResponse.statusCode).toBe(200);
     expect(pushResponse.body.ok).toBe(true);
-    const serverTsAfterPush = pushResponse.body.updated_at;
+    expect(pushResponse.body.revision).toBe(2);
+    const serverRevisionAfterPush = pushResponse.body.revision;
 
     // Another small delay
     await new Promise(r => setTimeout(r, 10));
@@ -138,7 +141,7 @@ describe('Complete sync flow between two devices', () => {
     // Step 4: Device B pulls from the same token (simulating joining)
     const deviceBPullReq = {
       method: 'GET',
-      query: { token: syncToken, since: '0' }, // Full pull
+      query: { token: syncToken, since_revision: '0', since: '0' }, // Full pull
     };
     const deviceBPullResponse = createRes();
     await handler(deviceBPullReq, deviceBPullResponse);
@@ -146,7 +149,7 @@ describe('Complete sync flow between two devices', () => {
     expect(deviceBPullResponse.statusCode).toBe(200);
     expect(deviceBPullResponse.body.changed).toBe(true);
     expect(deviceBPullResponse.body.encrypted_data).toBe('device-a-with-meal-data');
-    expect(deviceBPullResponse.body.updated_at).toBe(serverTsAfterPush);
+    expect(deviceBPullResponse.body.revision).toBe(serverRevisionAfterPush);
 
     // Step 5: Device B pushes its merged data back
     const deviceBPushReq = {
@@ -163,15 +166,16 @@ describe('Complete sync flow between two devices', () => {
     
     expect(deviceBPushResponse.statusCode).toBe(200);
     expect(deviceBPushResponse.body.ok).toBe(true);
-    const serverTsAfterDeviceBPush = deviceBPushResponse.body.updated_at;
+    expect(deviceBPushResponse.body.revision).toBe(3);
+    const serverRevisionAfterDeviceBPush = deviceBPushResponse.body.revision;
 
     // We should have gotten a new timestamp from Device B's push
-    expect(serverTsAfterDeviceBPush).toBeGreaterThan(serverTsAfterPush);
+    expect(serverRevisionAfterDeviceBPush).toBeGreaterThan(serverRevisionAfterPush);
 
     // Step 6: Device A pulls again (should see Device B's changes)
     const deviceAPullAfterBPushReq = {
       method: 'GET',
-      query: { token: syncToken, since: String(serverTsAfterPush) },
+      query: { token: syncToken, since_revision: String(serverRevisionAfterPush), since: String(pushResponse.body.updated_at) },
     };
     const deviceAPullAfterBPushResponse = createRes();
     await handler(deviceAPullAfterBPushReq, deviceAPullAfterBPushResponse);
@@ -188,11 +192,20 @@ describe('Complete sync flow between two devices', () => {
       if (sqlStr.includes('INSERT INTO sync_data') && sqlStr.includes('RETURNING token')) {
         const token = params[0];
         const data = params[1];
-        const ts = params[2];
-        database[token] = { encrypted_data: data, updated_at: ts };
-        return { rows: [{ token }] };
+        const revision = params[2] || 1;
+        const ts = params[3];
+        database[token] = { encrypted_data: data, updated_at: ts, revision };
+        return { rows: [{ token, revision, updated_at: ts }] };
       }
-      if (sqlStr.includes('SELECT encrypted_data')) {
+      if (sqlStr.includes('ON CONFLICT (token)') && sqlStr.includes('DO UPDATE')) {
+        const token = params[0];
+        const data = params[1];
+        const current = database[token] || { revision: 0 };
+        const ts = params[2] || Date.now();
+        database[token] = { encrypted_data: data, updated_at: ts, revision: (current.revision || 0) + 1 };
+        return { rows: [] };
+      }
+      if (sqlStr.includes('SELECT encrypted_data') || sqlStr.includes('SELECT revision, updated_at')) {
         const token = params[0];
         const row = database[token];
         if (!row) return { rows: [] };
@@ -209,32 +222,43 @@ describe('Complete sync flow between two devices', () => {
     const createResponse = createRes();
     await handler(createReq, createResponse);
     const token = createResponse.body.token;
+    expect(createResponse.body.revision).toBe(1);
 
-    // Pull with since = updated_at (no changes expected)
+    // Pull with since_revision = current revision (no changes expected)
     const pullExactMatchReq = {
       method: 'GET',
-      query: { token, since: String(createResponse.body.updated_at) },
+      query: { token, since_revision: String(createResponse.body.revision), since: String(createResponse.body.updated_at) },
     };
     const pullExactMatchResponse = createRes();
     await handler(pullExactMatchReq, pullExactMatchResponse);
     expect(pullExactMatchResponse.body.changed).toBe(false);
+    expect(pullExactMatchResponse.body.revision).toBe(1);
 
-    // Pull with since > updated_at (no changes expected)
+    // Pull with since_revision > updated_at-equivalent (no changes expected)
     const pullBehindReq = {
       method: 'GET',
-      query: { token, since: String(createResponse.body.updated_at + 1000) },
+      query: { token, since_revision: String(createResponse.body.revision + 1), since: String(createResponse.body.updated_at + 1000) },
     };
     const pullBehindResponse = createRes();
     await handler(pullBehindReq, pullBehindResponse);
     expect(pullBehindResponse.body.changed).toBe(false);
 
-    // Pull with since < updated_at (changes expected)
+    // Pull with since_revision < current revision (changes expected after push)
+    const pushReq = {
+      method: 'POST',
+      body: { action: 'push', token, encrypted_data: 'data-2', updated_at: 6000 },
+    };
+    const pushResponse = createRes();
+    await handler(pushReq, pushResponse);
+    expect(pushResponse.body.revision).toBe(2);
+
     const pullAheadReq = {
       method: 'GET',
-      query: { token, since: String(createResponse.body.updated_at - 1000) },
+      query: { token, since_revision: String(createResponse.body.revision), since: String(createResponse.body.updated_at - 1000) },
     };
     const pullAheadResponse = createRes();
     await handler(pullAheadReq, pullAheadResponse);
     expect(pullAheadResponse.body.changed).toBe(true);
+    expect(pullAheadResponse.body.revision).toBe(2);
   });
 });
