@@ -17,6 +17,9 @@ const WATER_KEY = 'boilerfuel_water';
 const WEIGHT_KEY = 'boilerfuel_weight';
 const TEMPLATES_KEY = 'boilerfuel_templates';
 const DIETARY_KEY = 'boilerfuel_dietary';
+const SYNC_TOKEN_KEY = 'boilerfuel_sync_token';
+const SYNC_SECRET_KEY = 'boilerfuel_sync_secret';
+const SYNC_LAST_PULL_KEY = 'boilerfuel_sync_last_pull';
 
 function getTodayKey() {
   const d = new Date();
@@ -157,7 +160,7 @@ export function MealProvider({ children }) {
   const isSyncingRef = useRef(false);      // prevent concurrent pulls
   const lastPullRef = useRef(0);           // timestamp of last pull (ms)
   const isReloadingFromSync = useRef(false); // suppress push debounce when state changes come from a sync pull
-  const MIN_PULL_INTERVAL = 30_000;        // don't re-pull more than once per 30 s
+  const MIN_PULL_INTERVAL = 10_000;        // don't re-pull more than once per 10 s
   const lastSyncNotifRef = useRef(0);      // throttle sync notifications
 
   // Force-flush current React state to localStorage before sync operations
@@ -265,10 +268,9 @@ export function MealProvider({ children }) {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [doPull]);
 
-  // Periodic pull every 2 minutes so changes from other devices appear without a tab switch
-  // On mobile, visibility change is more reliable, but still keep periodic as fallback
+  // Periodic fallback pull (hidden tabs): keeps long-lived background tabs from drifting.
   useEffect(() => {
-    const interval = setInterval(() => doPull(), 2 * 60 * 1000);
+    const interval = setInterval(() => doPull(), 60 * 1000);
     return () => clearInterval(interval);
   }, [doPull]);
 
@@ -291,6 +293,52 @@ export function MealProvider({ children }) {
       window.removeEventListener('focus', handleFocus);
       window.removeEventListener('online', handleOnline);
     };
+  }, [doPull]);
+
+  // Cross-tab sync: when another tab writes localStorage (meals/goals/sync creds),
+  // immediately reload local React state so this tab doesn't stay stale.
+  useEffect(() => {
+    function onStorage(event) {
+      if (!event || event.storageArea !== localStorage) return;
+      const changedKey = event.key;
+      if (!changedKey) return;
+
+      const stateKeys = new Set([
+        STORAGE_KEY,
+        GOALS_KEY,
+        FAVORITES_KEY,
+        WATER_KEY,
+        WEIGHT_KEY,
+        TEMPLATES_KEY,
+        DIETARY_KEY,
+      ]);
+      const syncKeys = new Set([SYNC_TOKEN_KEY, SYNC_SECRET_KEY, SYNC_LAST_PULL_KEY]);
+
+      if (stateKeys.has(changedKey)) {
+        reloadFromStorage();
+        return;
+      }
+
+      if (syncKeys.has(changedKey)) {
+        // If pairing or sync metadata changed in another tab, refresh quickly.
+        doPull(true).catch(() => {});
+      }
+    }
+
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, [reloadFromStorage, doPull]);
+
+  // Pull more frequently while app is visible so paired devices update promptly.
+  // Hidden tabs pull less often to reduce unnecessary network traffic.
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const visible = typeof document !== 'undefined' && document.visibilityState === 'visible';
+      if (visible) {
+        doPull();
+      }
+    }, 20 * 1000);
+    return () => clearInterval(interval);
   }, [doPull]);
 
   // Debounced push after any data change (skip initial mount and sync-driven reloads)
