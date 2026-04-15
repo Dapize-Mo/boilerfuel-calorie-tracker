@@ -171,17 +171,29 @@ export default function AdminPanel() {
         <meta name="robots" content="noindex, nofollow" />
       </Head>
 
-      <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 py-12 sm:py-20 space-y-10">
+      <div className="relative overflow-hidden max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 py-12 sm:py-20 space-y-10">
+        <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-80 bg-[radial-gradient(circle_at_top_left,rgba(250,204,21,0.16),transparent_45%),radial-gradient(circle_at_top_right,rgba(168,85,247,0.12),transparent_38%)]" />
+        <div className="pointer-events-none absolute -left-24 top-28 -z-10 h-64 w-64 rounded-full bg-theme-text-primary/5 blur-3xl" />
+        <div className="pointer-events-none absolute right-0 top-72 -z-10 h-72 w-72 rounded-full bg-theme-text-primary/5 blur-3xl" />
 
         {/* Header */}
-        <header className="space-y-4 border-b border-theme-text-primary/10 pb-10">
+        <header className="space-y-6 border border-theme-text-primary/10 bg-theme-bg-secondary/80 backdrop-blur-sm p-6 sm:p-8 shadow-[0_0_0_1px_rgba(255,255,255,0.02)]">
           <button onClick={goBack} className="text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
             &larr; Back
           </button>
-          <div className="flex items-end justify-between gap-6">
-            <div className="space-y-3">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-3xl space-y-4">
+              <div className="flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-theme-text-tertiary">
+                <span className="border border-theme-text-primary/10 px-2 py-1">Control Center</span>
+                <span className="border border-theme-text-primary/10 px-2 py-1">Live data</span>
+                <span className="border border-theme-text-primary/10 px-2 py-1">No public exposure</span>
+              </div>
               <h1 className="text-4xl sm:text-6xl font-bold uppercase tracking-[0.2em]">Admin</h1>
               <p className="text-sm uppercase tracking-widest text-theme-text-tertiary">Manage application data</p>
+              <p className="max-w-2xl text-sm text-theme-text-secondary leading-relaxed">
+                Inspect menu health, scrape fresh items, and read the operational docs that explain how BoilerFuel stays fast,
+                private, and resilient across devices.
+              </p>
             </div>
             <button
               onClick={handleLogout}
@@ -275,10 +287,59 @@ function DocsTab() {
 
   return (
     <div className="space-y-6">
-      <div className="border-b border-theme-text-primary/10 pb-4">
-        <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary">System Documentation</h2>
-        <p className="text-[10px] text-theme-text-tertiary/60 mt-1">Architecture, database schema, and API reference for BoilerFuel.</p>
+      <div className="border-b border-theme-text-primary/10 pb-4 space-y-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary">System Documentation</h2>
+          <span className="text-[10px] uppercase tracking-[0.2em] text-theme-text-tertiary/50 border border-theme-text-primary/10 px-2 py-1">Admin only</span>
+        </div>
+        <p className="text-[10px] text-theme-text-tertiary/60 max-w-3xl leading-relaxed">
+          Architecture, product intent, and operational reference for BoilerFuel. Use this section to understand how the app is
+          assembled, how sync behaves, and what to inspect when something looks off.
+        </p>
       </div>
+
+      <Section id="about" title="About BoilerFuel">
+        <div className="space-y-4 text-xs text-theme-text-secondary leading-relaxed">
+          <p>
+            BoilerFuel is a privacy-first Purdue dining tracker that keeps meal logging fast, local, and low-friction. Users can
+            browse dining hall menus, log meals with a single click, and review calories, macros, water, weight, and nutrition
+            trends without creating an account.
+          </p>
+          <p>
+            The core idea is simple: the browser holds the user&apos;s data, and the server only stores what it needs to serve menus,
+            admin operations, and encrypted sync blobs. That keeps the app lightweight while still supporting recovery, offline
+            usage, and cross-device continuity.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-theme-text-primary/10 border border-theme-text-primary/10">
+            {[
+              { label: 'Primary goal', value: 'Make meal logging faster than opening a notes app.' },
+              { label: 'Data model', value: 'Local-first state with optional encrypted device sync.' },
+              { label: 'Ops focus', value: 'Keep menus fresh, errors visible, and admin actions auditable.' },
+            ].map(item => (
+              <div key={item.label} className="bg-theme-bg-primary p-4 space-y-2">
+                <div className="text-[10px] uppercase tracking-[0.2em] text-theme-text-tertiary">{item.label}</div>
+                <p className="text-xs text-theme-text-secondary leading-relaxed">{item.value}</p>
+              </div>
+            ))}
+          </div>
+          <div className="border border-theme-text-primary/10 bg-theme-bg-secondary p-4 space-y-3">
+            <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-theme-text-primary">What makes it different</h3>
+            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-theme-text-secondary">
+              {[
+                'No account wall before the first meal is logged',
+                'Encrypted sync uses a shared passphrase instead of a user profile',
+                'Menu filters are tuned for real campus dining choices',
+                'Admin tools are built to keep stale or wrong food data easy to fix',
+              ].map(item => (
+                <li key={item} className="flex items-start gap-2">
+                  <span className="mt-1 w-1.5 h-1.5 rounded-full bg-theme-text-primary/40 shrink-0" />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </Section>
 
       <Section id="arch" title="Frontend Architecture">
         <div className="space-y-3 text-xs text-theme-text-secondary leading-relaxed">
