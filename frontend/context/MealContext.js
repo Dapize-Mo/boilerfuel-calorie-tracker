@@ -418,6 +418,9 @@ export function MealProvider({ children }) {
   const syncNow = useCallback(async () => {
     const { isSynced, syncNowDetailed } = await import('../utils/sync');
     if (!isSynced()) return { skipped: true };
+    // Flush the latest React state before sync gathers localStorage.
+    // Without this, an immediate sync after adding a meal can miss the new entry.
+    flushStateToStorage();
     setSyncStatus('syncing');
     try {
       const report = await syncNowDetailed();
@@ -428,7 +431,7 @@ export function MealProvider({ children }) {
       setSyncStatusTransient('error');
       throw err;
     }
-  }, [reloadFromStorage, setSyncStatusTransient]);
+  }, [reloadFromStorage, setSyncStatusTransient, flushStateToStorage]);
 
   const todayKey = getTodayKey();
   const meals = mealsByDate[todayKey] || [];
