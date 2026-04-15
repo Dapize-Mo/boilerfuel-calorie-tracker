@@ -10,11 +10,27 @@ import { useSmartBack } from '../utils/useSmartBack';
 
 const VERSIONS = [
 
+  // ─── 3.8.x  Admin polish & sync reliability  (Apr 15, 2026) ─────────────
+  {
+    version: '3.8.5',
+    date: 'April 15, 2026',
+    latest: true,
+    changes: [
+      { cat: 'UI', items: [
+        'Admin panel: added a more in-depth About BoilerFuel section inside the Docs tab to explain product goals, privacy model, and sync behavior',
+        'Admin panel: refreshed the header and page shell with a more atmospheric, polished control-center layout',
+      ]},
+      { cat: 'Fix', items: [
+        'Sync: manual Sync Now now flushes the latest React meal state to localStorage before upload so an immediate sync cannot miss a newly logged meal',
+      ]},
+    ],
+  },
+
   // ─── 3.8.x  Tools, Nutrition Score & Streak  (Mar 2–5, 2026) ────────────
   {
     version: '3.8.4',
     date: 'March 5, 2026',
-    latest: true,
+    latest: false,
     changes: [
       { cat: 'Fix', items: [
         'Sync: added "Force Resync" button on Profile page — clears the stuck last-pull timestamp so the device re-fetches all remote data, fixing the silent "no changes" loop caused by a race condition during simultaneous device recovery',
