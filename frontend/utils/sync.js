@@ -390,6 +390,8 @@ export async function pushData(options = {}) {
           ? `Merged remote changes for: ${pulledKeys.map(k => k.replace('boilerfuel_', '')).join(', ')}`
           : 'No remote changes to merge'),
     });
+    const pushedMealInfo = data.boilerfuel_meals ? Object.values(data.boilerfuel_meals).reduce((sum, m) => sum + (Array.isArray(m) ? m.length : 0), 0) : 0;
+    console.log('[sync] pushData successful:', { tokenRecovered, pulledKeys: pulledKeys.length, pushedMealCount: pushedMealInfo, confirmedTs });
     
     if (!includeReport) return;
     
@@ -797,7 +799,7 @@ function gatherLocalData() {
     const totalMeals = Object.values(data.boilerfuel_meals).reduce((sum, dayMeals) => {
       return sum + (Array.isArray(dayMeals) ? dayMeals.length : 0);
     }, 0);
-    console.log('[sync] Gathering local data for push:', { mealDays, totalMeals, latestDates: Object.keys(data.boilerfuel_meals).sort().slice(-3) });
+    console.log('[sync] gatherLocalData:', { mealDays, totalMeals, latestDates: Object.keys(data.boilerfuel_meals).sort().slice(-3), hasMeals: totalMeals > 0 });
   }
 
   return data;
