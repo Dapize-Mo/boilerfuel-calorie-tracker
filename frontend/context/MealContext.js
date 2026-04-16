@@ -258,7 +258,6 @@ export function MealProvider({ children }) {
       await doPull(true, true);
       mountedRef.current = true;
     })();
-    return () => clearInterval(interval);
   }, [doPull]);
 
   // Re-pull whenever the user returns to the tab/app (mobile suspend/resume, tab switch)
