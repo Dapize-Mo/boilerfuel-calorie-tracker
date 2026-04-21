@@ -557,21 +557,16 @@ function StatsTab() {
     loadStats();
   }, []);
 
-  if (loading) {
-    return <div className="text-xs uppercase tracking-widest text-theme-text-tertiary py-12">Loading...</div>;
-  }
-
-  if (!stats) {
-    return <div className="text-xs uppercase tracking-widest text-theme-text-tertiary py-12">Failed to load statistics</div>;
-  }
-
   return (
     <div className="space-y-8">
       <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
         Database Statistics
       </h2>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-theme-text-primary/10 border border-theme-text-primary/10">
+      {loading && <div className="text-xs uppercase tracking-widest text-theme-text-tertiary">Loading...</div>}
+      {!loading && !stats && <div className="text-xs uppercase tracking-widest text-theme-text-tertiary">Failed to load statistics — DB may be over quota</div>}
+
+      {stats && <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-theme-text-primary/10 border border-theme-text-primary/10">
         {/* Food Database */}
         <div className="bg-theme-bg-primary p-6 space-y-4">
           <div className="text-[10px] uppercase tracking-widest text-theme-text-tertiary">Food Database</div>
@@ -605,7 +600,7 @@ function StatsTab() {
             ))}
           </div>
         </div>
-      </div>
+      </div>}
 
       {/* Quick Actions */}
       <div className="space-y-4">
