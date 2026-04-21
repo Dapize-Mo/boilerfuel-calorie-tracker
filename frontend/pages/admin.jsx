@@ -230,7 +230,7 @@ export default function AdminPanel() {
         <div>
           {activeTab === 'stats' && <StatsTab />}
           {activeTab === 'accuracy' && <MenuAccuracyTab />}
-          {activeTab === 'foods' && <FoodsTab />}
+          {activeTab === 'foods' && <FoodsTab onOpenScraper={() => setActiveTab('stats')} />}
           {activeTab === 'docs' && <DocsTab />}
         </div>
 
@@ -913,7 +913,7 @@ function MenuAccuracyTab() {
 }
 
 // ── Foods Tab ──
-function FoodsTab() {
+function FoodsTab({ onOpenScraper }) {
   const [foods, setFoods] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -966,12 +966,12 @@ function FoodsTab() {
         <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary">
           Food Database <span className="font-normal">({filteredFoods.length.toLocaleString()})</span>
         </h2>
-        <Link
-          href="/admin-scraper"
+        <button
+          onClick={onOpenScraper}
           className="text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors border-b border-theme-text-primary/20"
         >
-          + Add Food
-        </Link>
+          Run Scraper →
+        </button>
       </div>
 
       {error && (
