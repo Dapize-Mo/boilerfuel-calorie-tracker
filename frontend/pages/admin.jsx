@@ -525,6 +525,8 @@ function StatsTab() {
   const [retailScrapeMsg, setRetailScrapeMsg] = useState('');
   const [hfsScrapeStatus, setHfsScrapeStatus] = useState(null);
   const [hfsScrapeMsg, setHfsScrapeMsg] = useState('');
+  const [cleanupStatus, setCleanupStatus] = useState(null); // null | 'loading' | 'ok' | 'error'
+  const [cleanupResult, setCleanupResult] = useState(null);
 
   useEffect(() => {
     async function loadStats() {
@@ -682,6 +684,41 @@ function StatsTab() {
             </div>
             <span className="text-theme-text-tertiary/40 group-hover:text-theme-text-tertiary transition-colors text-xs">
               {retailScrapeStatus === 'loading' ? '...' : '\u2192'}
+            </span>
+          </button>
+
+          {/* DB cleanup */}
+          <button
+            onClick={async () => {
+              setCleanupStatus('loading');
+              setCleanupResult(null);
+              try {
+                const res = await apiCall('/api/admin/cleanup-db', { method: 'POST' }, { requireAdmin: true });
+                setCleanupStatus('ok');
+                setCleanupResult(res);
+              } catch (err) {
+                setCleanupStatus('error');
+                setCleanupResult({ error: err.message });
+              }
+            }}
+            disabled={cleanupStatus === 'loading'}
+            className="w-full flex items-center justify-between px-4 py-4 bg-theme-bg-primary hover:bg-theme-text-primary/5 transition-colors group text-left disabled:opacity-50"
+          >
+            <div>
+              <div className="text-xs font-bold uppercase tracking-wider text-theme-text-primary">Clean Database</div>
+              <div className="text-[10px] text-theme-text-tertiary mt-0.5">
+                {cleanupStatus === 'loading' && 'Running cleanup...'}
+                {cleanupStatus === 'ok' && cleanupResult && (
+                  <span className="text-green-500">
+                    Deleted {cleanupResult.snapshots_deleted} old snapshots · DB size: {cleanupResult.db_size}
+                  </span>
+                )}
+                {cleanupStatus === 'error' && <span className="text-red-400">{cleanupResult?.error}</span>}
+                {!cleanupStatus && 'Delete menu snapshots older than 7 days'}
+              </div>
+            </div>
+            <span className="text-theme-text-tertiary/40 group-hover:text-theme-text-tertiary transition-colors text-xs">
+              {cleanupStatus === 'loading' ? '...' : '\u2192'}
             </span>
           </button>
         </div>
