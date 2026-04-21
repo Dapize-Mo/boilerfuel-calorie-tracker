@@ -45,6 +45,28 @@ function getTodayKey() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
+// Cookie helpers — store today's meal log as a fallback if localStorage is wiped
+const MEAL_COOKIE_PREFIX = 'bf_m_';
+
+function cookieGet(name) {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.split('; ').find(r => r.startsWith(`${name}=`));
+  return match ? decodeURIComponent(match.slice(name.length + 1)) : null;
+}
+
+function cookieSet(name, value, expiryHours) {
+  if (typeof document === 'undefined') return;
+  const encoded = encodeURIComponent(value);
+  if (encoded.length > 3900) return; // skip if too large for a single cookie
+  const expires = new Date(Date.now() + expiryHours * 3_600_000).toUTCString();
+  document.cookie = `${name}=${encoded}; expires=${expires}; path=/; SameSite=Strict`;
+}
+
+function cookieDel(name) {
+  if (typeof document === 'undefined') return;
+  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+}
+
 const DEFAULT_GOALS = { calories: 2000, protein: 150, carbs: 250, fat: 65, saturated_fat: 20, fiber: 28, sugar: 50, sodium: 2300, cholesterol: 300, added_sugar: 25 };
 
 export function MealProvider({ children }) {
@@ -67,11 +89,25 @@ export function MealProvider({ children }) {
   // Dietary preferences: { vegetarian: bool, vegan: bool, excludeAllergens: string[] }
   const [dietaryPrefs, setDietaryPrefsState] = useState({ vegetarian: false, vegan: false, excludeAllergens: [] });
 
-  // Load from localStorage on mount
+  // Load from localStorage on mount (with cookie fallback for today)
   useEffect(() => {
     try {
       const saved = lsGet(STORAGE_KEY);
-      if (saved) setMealsByDate(JSON.parse(saved));
+      const parsed = saved ? JSON.parse(saved) : {};
+      // If today has no meals in localStorage, check the cookie backup
+      const today = getTodayKey();
+      if (!parsed[today] || parsed[today].length === 0) {
+        try {
+          const cookieVal = cookieGet(MEAL_COOKIE_PREFIX + today);
+          if (cookieVal) {
+            const cookieMeals = JSON.parse(cookieVal);
+            if (Array.isArray(cookieMeals) && cookieMeals.length > 0) {
+              parsed[today] = cookieMeals;
+            }
+          }
+        } catch {}
+      }
+      if (Object.keys(parsed).length > 0) setMealsByDate(parsed);
     } catch {}
     try {
       const savedGoals = lsGet(GOALS_KEY);
@@ -112,6 +148,23 @@ export function MealProvider({ children }) {
         try { lsSet(STORAGE_KEY, JSON.stringify(trimmed)); } catch {}
       }
     }
+    // Also write today's meals to a cookie as a short-lived backup
+    try {
+      const today = getTodayKey();
+      const todayMeals = mealsByDate[today];
+      if (todayMeals && todayMeals.length > 0) {
+        cookieSet(MEAL_COOKIE_PREFIX + today, JSON.stringify(todayMeals), 26);
+      } else {
+        cookieDel(MEAL_COOKIE_PREFIX + today);
+      }
+      // Remove stale meal cookies from previous days
+      document.cookie.split('; ').forEach(c => {
+        const name = c.split('=')[0];
+        if (name.startsWith(MEAL_COOKIE_PREFIX) && name !== MEAL_COOKIE_PREFIX + today) {
+          cookieDel(name);
+        }
+      });
+    } catch {}
   }, [mealsByDate]);
 
   // Persist goals

@@ -158,6 +158,9 @@ export async function ensureSchema() {
   await query(`CREATE INDEX IF NOT EXISTS idx_menu_snapshots_court ON menu_snapshots(dining_court);`);
   await query(`CREATE UNIQUE INDEX IF NOT EXISTS idx_menu_snapshots_unique ON menu_snapshots(menu_date, dining_court, meal_time, station, name);`);
 
+  // Prune snapshots older than 7 days to keep the table small
+  await query(`DELETE FROM menu_snapshots WHERE menu_date < CURRENT_DATE - INTERVAL '7 days'`);
+
   await query(`
     CREATE TABLE IF NOT EXISTS activities (
       id SERIAL PRIMARY KEY,
