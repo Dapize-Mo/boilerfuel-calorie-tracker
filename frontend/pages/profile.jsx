@@ -7,8 +7,21 @@ import { useSession, signIn } from 'next-auth/react';
 import { useTheme } from '../context/ThemeContext';
 import { useMeals } from '../context/MealContext';
 import { useSmartBack } from '../utils/useSmartBack';
+import { getNamespacedStorageKey } from '../utils/storageNamespace';
 
 const QRCode = dynamic(() => import('../components/QRCode'), { ssr: false });
+
+function getSyncStorageItem(key) {
+  return localStorage.getItem(getNamespacedStorageKey(key));
+}
+
+function setSyncStorageItem(key, value) {
+  localStorage.setItem(getNamespacedStorageKey(key), value);
+}
+
+function removeSyncStorageItem(key) {
+  localStorage.removeItem(getNamespacedStorageKey(key));
+}
 
 function ProgressBar({ label, current, goal, unit = '', color = 'bg-theme-text-primary' }) {
   const pct = goal > 0 ? Math.min((current / goal) * 100, 100) : 0;
@@ -225,9 +238,9 @@ export default function ProfilePage() {
   // Check if already paired on mount; also load sync activity log
   useEffect(() => {
     try {
-      const token = localStorage.getItem('boilerfuel_sync_token');
-      const secret = localStorage.getItem('boilerfuel_sync_secret');
-      const savedLastSyncAt = localStorage.getItem('boilerfuel_sync_last_success_at');
+      const token = getSyncStorageItem('boilerfuel_sync_token');
+      const secret = getSyncStorageItem('boilerfuel_sync_secret');
+      const savedLastSyncAt = getSyncStorageItem('boilerfuel_sync_last_success_at');
       if (token && secret) {
         setSyncCode(token);
         setSyncSecret(secret);
@@ -237,7 +250,7 @@ export default function ProfilePage() {
         const parsed = parseInt(savedLastSyncAt, 10);
         if (!Number.isNaN(parsed)) setLastSyncAt(parsed);
       }
-      const devicesRaw = localStorage.getItem('boilerfuel_sync_devices');
+      const devicesRaw = getSyncStorageItem('boilerfuel_sync_devices');
       if (devicesRaw) setSyncDevices(JSON.parse(devicesRaw));
       import('../utils/sync').then(({ getSyncLog }) => setSyncLog(getSyncLog())).catch(() => {});
     } catch {}
@@ -1386,7 +1399,7 @@ export default function ProfilePage() {
                           if (report?.devices) {
                             setSyncDevices(report.devices);
                           } else {
-                            const devRaw = localStorage.getItem('boilerfuel_sync_devices');
+                            const devRaw = getSyncStorageItem('boilerfuel_sync_devices');
                             if (devRaw) setSyncDevices(JSON.parse(devRaw));
                           }
                         } catch {}
@@ -1397,7 +1410,7 @@ export default function ProfilePage() {
                         const deviceCount = report?.deviceCount || Object.keys(syncDevices || {}).length;
                         const syncedAt = report?.syncedAt || Date.now();
                         setLastSyncAt(syncedAt);
-                        localStorage.setItem('boilerfuel_sync_last_success_at', String(syncedAt));
+                        setSyncStorageItem('boilerfuel_sync_last_success_at', String(syncedAt));
                         if (report?.tokenRecovered) {
                           setSyncMsg(`Sync recovered and completed. ${deviceCount} paired device${deviceCount === 1 ? '' : 's'} in this sync group.`);
                         } else {
@@ -1433,7 +1446,7 @@ export default function ProfilePage() {
                         import('../utils/sync').then(({ getSyncLog }) => setSyncLog(getSyncLog())).catch(() => {});
                         const syncedAt = report?.syncedAt || Date.now();
                         setLastSyncAt(syncedAt);
-                        localStorage.setItem('boilerfuel_sync_last_success_at', String(syncedAt));
+                        setSyncStorageItem('boilerfuel_sync_last_success_at', String(syncedAt));
                         setSyncMsg('Force resync complete — pulled all remote data.');
                         setTimeout(() => setSyncMsg(''), 4000);
                       } catch (err) {
@@ -1450,7 +1463,7 @@ export default function ProfilePage() {
                   <button
                     onClick={() => {
                       try {
-                        const meals = JSON.parse(localStorage.getItem('boilerfuel_meals') || '{}');
+                        const meals = JSON.parse(getSyncStorageItem('boilerfuel_meals') || '{}');
                         const days = Object.keys(meals).length;
                         const entries = Object.values(meals).reduce((s, a) => s + (Array.isArray(a) ? a.length : 0), 0);
                         const today = getTodayKey();
@@ -1476,7 +1489,7 @@ export default function ProfilePage() {
                       setSyncDevices({});
                       setSyncReport(null);
                       setLastSyncAt(null);
-                      localStorage.removeItem('boilerfuel_sync_last_success_at');
+                      removeSyncStorageItem('boilerfuel_sync_last_success_at');
                       setSyncMsg('Unpaired successfully.');
                       setTimeout(() => setSyncMsg(''), 3000);
                     }}
@@ -1702,7 +1715,7 @@ export default function ProfilePage() {
                         reloadFromStorage();
                         // Refresh device list and sync log
                         try {
-                          const devRaw = localStorage.getItem('boilerfuel_sync_devices');
+                          const devRaw = getSyncStorageItem('boilerfuel_sync_devices');
                           if (devRaw) setSyncDevices(JSON.parse(devRaw));
                         } catch {}
                         import('../utils/sync').then(({ getSyncLog }) => setSyncLog(getSyncLog())).catch(() => {});

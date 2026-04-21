@@ -8,6 +8,17 @@ This document provides step-by-step instructions to manually verify the sync fea
 - Frontend dev server running on http://localhost:3000
 - Two browser windows/tabs open
 
+### Optional: Debug Device Mode (single browser, isolated storage per tab)
+If you are testing in one browser profile and need each tab to behave like a separate device, add `bf_device` to the URL:
+
+- Device A: `http://localhost:3000/profile?bf_device=A`
+- Device B: `http://localhost:3000/profile?bf_device=B`
+
+Rules:
+- Use only letters/numbers/underscore/dash (`A-Z`, `a-z`, `0-9`, `_`, `-`).
+- Keep each tab on its own label for the full test run.
+- This mode namespaces core BoilerFuel localStorage keys per tab so sync can be tested without opening separate browser profiles.
+
 ---
 
 ## Manual Test Steps

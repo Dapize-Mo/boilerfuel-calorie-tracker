@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
+import { getNamespacedStorageKey } from '../utils/storageNamespace';
 
 const MealContext = createContext({
   meals: [],
@@ -21,6 +22,23 @@ const SYNC_TOKEN_KEY = 'boilerfuel_sync_token';
 const SYNC_SECRET_KEY = 'boilerfuel_sync_secret';
 const SYNC_LAST_PULL_KEY = 'boilerfuel_sync_last_pull';
 const SYNC_LAST_REVISION_KEY = 'boilerfuel_sync_last_revision';
+const MEALS_BACKUP_KEY = 'boilerfuel_meals_backup';
+
+function lsKey(key) {
+  return getNamespacedStorageKey(key);
+}
+
+function lsGet(key) {
+  return localStorage.getItem(lsKey(key));
+}
+
+function lsSet(key, value) {
+  localStorage.setItem(lsKey(key), value);
+}
+
+function lsRemove(key) {
+  localStorage.removeItem(lsKey(key));
+}
 
 function getTodayKey() {
   const d = new Date();
@@ -52,31 +70,31 @@ export function MealProvider({ children }) {
   // Load from localStorage on mount
   useEffect(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
+      const saved = lsGet(STORAGE_KEY);
       if (saved) setMealsByDate(JSON.parse(saved));
     } catch {}
     try {
-      const savedGoals = localStorage.getItem(GOALS_KEY);
+      const savedGoals = lsGet(GOALS_KEY);
       if (savedGoals) setGoalsState(JSON.parse(savedGoals));
     } catch {}
     try {
-      const savedFavs = localStorage.getItem(FAVORITES_KEY);
+      const savedFavs = lsGet(FAVORITES_KEY);
       if (savedFavs) setFavoritesState(new Set(JSON.parse(savedFavs)));
     } catch {}
     try {
-      const savedWater = localStorage.getItem(WATER_KEY);
+      const savedWater = lsGet(WATER_KEY);
       if (savedWater) setWaterByDate(JSON.parse(savedWater));
     } catch {}
     try {
-      const savedWeight = localStorage.getItem(WEIGHT_KEY);
+      const savedWeight = lsGet(WEIGHT_KEY);
       if (savedWeight) setWeightByDate(JSON.parse(savedWeight));
     } catch {}
     try {
-      const savedTemplates = localStorage.getItem(TEMPLATES_KEY);
+      const savedTemplates = lsGet(TEMPLATES_KEY);
       if (savedTemplates) setTemplatesState(JSON.parse(savedTemplates));
     } catch {}
     try {
-      const savedDietary = localStorage.getItem(DIETARY_KEY);
+      const savedDietary = lsGet(DIETARY_KEY);
       if (savedDietary) setDietaryPrefsState(JSON.parse(savedDietary));
     } catch {}
   }, []);
@@ -86,46 +104,46 @@ export function MealProvider({ children }) {
     // Always persist, even if empty - removing this prevents sync from working correctly
     // if (Object.keys(mealsByDate).length === 0) return;
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(mealsByDate));
+      lsSet(STORAGE_KEY, JSON.stringify(mealsByDate));
     } catch (e) {
       if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
         const keys = Object.keys(mealsByDate).sort();
         const trimmed = Object.fromEntries(keys.slice(-90).map(k => [k, mealsByDate[k]]));
-        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed)); } catch {}
+        try { lsSet(STORAGE_KEY, JSON.stringify(trimmed)); } catch {}
       }
     }
   }, [mealsByDate]);
 
   // Persist goals
   useEffect(() => {
-    try { localStorage.setItem(GOALS_KEY, JSON.stringify(goals)); } catch {}
+    try { lsSet(GOALS_KEY, JSON.stringify(goals)); } catch {}
   }, [goals]);
 
   // Persist favorites
   useEffect(() => {
-    try { localStorage.setItem(FAVORITES_KEY, JSON.stringify([...favorites])); } catch {}
+    try { lsSet(FAVORITES_KEY, JSON.stringify([...favorites])); } catch {}
   }, [favorites]);
 
   // Persist water
   useEffect(() => {
     // Always persist to keep React state and localStorage in sync
-    try { localStorage.setItem(WATER_KEY, JSON.stringify(waterByDate)); } catch {}
+    try { lsSet(WATER_KEY, JSON.stringify(waterByDate)); } catch {}
   }, [waterByDate]);
 
   // Persist weight
   useEffect(() => {
     // Always persist to keep React state and localStorage in sync
-    try { localStorage.setItem(WEIGHT_KEY, JSON.stringify(weightByDate)); } catch {}
+    try { lsSet(WEIGHT_KEY, JSON.stringify(weightByDate)); } catch {}
   }, [weightByDate]);
 
   // Persist templates
   useEffect(() => {
-    try { localStorage.setItem(TEMPLATES_KEY, JSON.stringify(templates)); } catch {}
+    try { lsSet(TEMPLATES_KEY, JSON.stringify(templates)); } catch {}
   }, [templates]);
 
   // Persist dietary prefs
   useEffect(() => {
-    try { localStorage.setItem(DIETARY_KEY, JSON.stringify(dietaryPrefs)); } catch {}
+    try { lsSet(DIETARY_KEY, JSON.stringify(dietaryPrefs)); } catch {}
   }, [dietaryPrefs]);
 
   // ── Sync status: 'idle' | 'syncing' | 'success' | 'error' ──
@@ -145,14 +163,14 @@ export function MealProvider({ children }) {
   // we don't want to push data straight back out just because we pulled it in.
   const reloadFromStorage = useCallback(() => {
     isReloadingFromSync.current = true;
-    try { const s = localStorage.getItem(STORAGE_KEY); if (s) setMealsByDate(JSON.parse(s)); } catch {}
-    try { const s = localStorage.getItem(GOALS_KEY); if (s) setGoalsState(JSON.parse(s)); } catch {}
-    try { const s = localStorage.getItem(FAVORITES_KEY); if (s) setFavoritesState(new Set(JSON.parse(s))); } catch {}
-    try { const s = localStorage.getItem(WATER_KEY); if (s) setWaterByDate(JSON.parse(s)); } catch {}
-    try { const s = localStorage.getItem(WEIGHT_KEY); if (s) setWeightByDate(JSON.parse(s)); } catch {}
-    try { const s = localStorage.getItem(TEMPLATES_KEY); if (s) setTemplatesState(JSON.parse(s)); } catch {}
-    try { const s = localStorage.getItem(DIETARY_KEY); if (s) setDietaryPrefsState(JSON.parse(s)); } catch {}
-    setHasMealsBackup(!!localStorage.getItem('boilerfuel_meals_backup'));
+    try { const s = lsGet(STORAGE_KEY); if (s) setMealsByDate(JSON.parse(s)); } catch {}
+    try { const s = lsGet(GOALS_KEY); if (s) setGoalsState(JSON.parse(s)); } catch {}
+    try { const s = lsGet(FAVORITES_KEY); if (s) setFavoritesState(new Set(JSON.parse(s))); } catch {}
+    try { const s = lsGet(WATER_KEY); if (s) setWaterByDate(JSON.parse(s)); } catch {}
+    try { const s = lsGet(WEIGHT_KEY); if (s) setWeightByDate(JSON.parse(s)); } catch {}
+    try { const s = lsGet(TEMPLATES_KEY); if (s) setTemplatesState(JSON.parse(s)); } catch {}
+    try { const s = lsGet(DIETARY_KEY); if (s) setDietaryPrefsState(JSON.parse(s)); } catch {}
+    setHasMealsBackup(!!lsGet(MEALS_BACKUP_KEY));
   }, []);
 
   // ── Auto-sync: pull on mount + on tab-focus, debounced push on changes ──
@@ -166,25 +184,25 @@ export function MealProvider({ children }) {
 
   // Force-flush current React state to localStorage before sync operations
   const flushStateToStorage = useCallback(() => {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(mealsByDate)); } catch {}
-    try { localStorage.setItem(GOALS_KEY, JSON.stringify(goals)); } catch {}
-    try { localStorage.setItem(FAVORITES_KEY, JSON.stringify([...favorites])); } catch {}
-    try { localStorage.setItem(WATER_KEY, JSON.stringify(waterByDate)); } catch {}
-    try { localStorage.setItem(WEIGHT_KEY, JSON.stringify(weightByDate)); } catch {}
-    try { localStorage.setItem(TEMPLATES_KEY, JSON.stringify(templates)); } catch {}
-    try { localStorage.setItem(DIETARY_KEY, JSON.stringify(dietaryPrefs)); } catch {}
+    try { lsSet(STORAGE_KEY, JSON.stringify(mealsByDate)); } catch {}
+    try { lsSet(GOALS_KEY, JSON.stringify(goals)); } catch {}
+    try { lsSet(FAVORITES_KEY, JSON.stringify([...favorites])); } catch {}
+    try { lsSet(WATER_KEY, JSON.stringify(waterByDate)); } catch {}
+    try { lsSet(WEIGHT_KEY, JSON.stringify(weightByDate)); } catch {}
+    try { lsSet(TEMPLATES_KEY, JSON.stringify(templates)); } catch {}
+    try { lsSet(DIETARY_KEY, JSON.stringify(dietaryPrefs)); } catch {}
   }, [mealsByDate, goals, favorites, waterByDate, weightByDate, templates, dietaryPrefs]);
 
   const getSyncStorageFingerprint = useCallback(() => {
     try {
       return JSON.stringify({
-        meals: localStorage.getItem(STORAGE_KEY) || '',
-        goals: localStorage.getItem(GOALS_KEY) || '',
-        favorites: localStorage.getItem(FAVORITES_KEY) || '',
-        water: localStorage.getItem(WATER_KEY) || '',
-        weight: localStorage.getItem(WEIGHT_KEY) || '',
-        templates: localStorage.getItem(TEMPLATES_KEY) || '',
-        dietary: localStorage.getItem(DIETARY_KEY) || '',
+        meals: lsGet(STORAGE_KEY) || '',
+        goals: lsGet(GOALS_KEY) || '',
+        favorites: lsGet(FAVORITES_KEY) || '',
+        water: lsGet(WATER_KEY) || '',
+        weight: lsGet(WEIGHT_KEY) || '',
+        templates: lsGet(TEMPLATES_KEY) || '',
+        dietary: lsGet(DIETARY_KEY) || '',
       });
     } catch {
       return '';
@@ -305,16 +323,16 @@ export function MealProvider({ children }) {
       if (!changedKey) return;
 
       const stateKeys = new Set([
-        STORAGE_KEY,
-        GOALS_KEY,
-        FAVORITES_KEY,
-        WATER_KEY,
-        WEIGHT_KEY,
-        TEMPLATES_KEY,
-        DIETARY_KEY,
+        lsKey(STORAGE_KEY),
+        lsKey(GOALS_KEY),
+        lsKey(FAVORITES_KEY),
+        lsKey(WATER_KEY),
+        lsKey(WEIGHT_KEY),
+        lsKey(TEMPLATES_KEY),
+        lsKey(DIETARY_KEY),
       ]);
-      const syncKeys = new Set([SYNC_TOKEN_KEY, SYNC_SECRET_KEY, SYNC_LAST_PULL_KEY]);
-      syncKeys.add(SYNC_LAST_REVISION_KEY);
+      const syncKeys = new Set([lsKey(SYNC_TOKEN_KEY), lsKey(SYNC_SECRET_KEY), lsKey(SYNC_LAST_PULL_KEY)]);
+      syncKeys.add(lsKey(SYNC_LAST_REVISION_KEY));
 
       if (stateKeys.has(changedKey)) {
         reloadFromStorage();
@@ -402,7 +420,7 @@ export function MealProvider({ children }) {
 
   // Check for backup on mount and after any reload
   useEffect(() => {
-    setHasMealsBackup(!!localStorage.getItem('boilerfuel_meals_backup'));
+    setHasMealsBackup(!!lsGet(MEALS_BACKUP_KEY));
   }, []);
 
   const restoreMealsBackup = useCallback(async () => {
@@ -480,7 +498,7 @@ export function MealProvider({ children }) {
       const updated = { ...prev, [key]: next };
       if (next.length === 0) {
         delete updated[key];
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+        lsSet(STORAGE_KEY, JSON.stringify(updated));
       }
       return updated;
     });
@@ -491,7 +509,7 @@ export function MealProvider({ children }) {
       const key = getTodayKey();
       const updated = { ...prev };
       delete updated[key];
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      lsSet(STORAGE_KEY, JSON.stringify(updated));
       return updated;
     });
   }, []);
@@ -786,3 +804,4 @@ export function MealProvider({ children }) {
 export function useMeals() {
   return useContext(MealContext);
 }
+

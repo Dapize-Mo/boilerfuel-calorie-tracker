@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { getNamespacedStorageKey } from '../utils/storageNamespace';
 
 const EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
 
@@ -158,7 +159,7 @@ export default function BarcodeScanner({ onFoodFound, onClose }) {
         serving_size: foundFood.serving_size || '',
         notes: `Barcode: ${scannedCode}`,
       };
-      const key = 'boilerfuel_custom_foods';
+      const key = getNamespacedStorageKey('boilerfuel_custom_foods');
       const existing = JSON.parse(localStorage.getItem(key) || '[]');
       existing.push({ ...body, id: `custom-${Date.now()}`, createdAt: Date.now() });
       localStorage.setItem(key, JSON.stringify(existing));

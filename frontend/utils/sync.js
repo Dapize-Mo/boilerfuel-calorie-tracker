@@ -1,5 +1,18 @@
 // Client-side sync utilities: encryption + push/pull logic
 // Uses Web Crypto API — all encryption happens in the browser
+import { getNamespacedStorageKey } from './storageNamespace';
+
+function storageGetItem(key) {
+  return localStorage.getItem(getNamespacedStorageKey(key));
+}
+
+function storageSetItem(key, value) {
+  localStorage.setItem(getNamespacedStorageKey(key), value);
+}
+
+function storageRemoveItem(key) {
+  localStorage.removeItem(getNamespacedStorageKey(key));
+}
 
 /**
  * Free up localStorage space by removing stale per-day notification keys
@@ -18,12 +31,12 @@ export function pruneLocalStorage() {
         if (!k.endsWith(`_${today}`)) notifKeysToRemove.push(k);
       }
     }
-    notifKeysToRemove.forEach(k => localStorage.removeItem(k));
+    notifKeysToRemove.forEach(k => storageRemoveItem(k));
   } catch {}
 
   try {
     // Prune meals older than 6 months — removeItem first to free space, then rewrite
-    const raw = localStorage.getItem('boilerfuel_meals');
+    const raw = storageGetItem('boilerfuel_meals');
     if (!raw) return;
     const cutoff = new Date();
     cutoff.setMonth(cutoff.getMonth() - 6);
@@ -31,13 +44,13 @@ export function pruneLocalStorage() {
     const meals = JSON.parse(raw);
     const pruned = Object.fromEntries(Object.entries(meals).filter(([d]) => d >= cutoffStr));
     if (Object.keys(pruned).length < Object.keys(meals).length) {
-      localStorage.removeItem('boilerfuel_meals'); // free space first
-      try { localStorage.setItem('boilerfuel_meals', JSON.stringify(pruned)); } catch {}
+      storageRemoveItem('boilerfuel_meals'); // free space first
+      try { storageSetItem('boilerfuel_meals', JSON.stringify(pruned)); } catch {}
     }
     // Also clear the sync log to free more space
-    localStorage.removeItem(SYNC_LOG_KEY);
+    storageRemoveItem(SYNC_LOG_KEY);
     // Clear sync devices registry (non-critical, will rebuild on next sync)
-    localStorage.removeItem('boilerfuel_sync_devices');
+    storageRemoveItem('boilerfuel_sync_devices');
   } catch {}
 }
 
@@ -56,23 +69,23 @@ const MAX_LOG_ENTRIES = 30;
  */
 function addSyncLogEntry(entry) {
   try {
-    const raw = localStorage.getItem(SYNC_LOG_KEY);
+    const raw = storageGetItem(SYNC_LOG_KEY);
     const log = raw ? JSON.parse(raw) : [];
     log.unshift({ ts: Date.now(), ...entry });
     if (log.length > MAX_LOG_ENTRIES) log.splice(MAX_LOG_ENTRIES);
-    localStorage.setItem(SYNC_LOG_KEY, JSON.stringify(log));
+    storageSetItem(SYNC_LOG_KEY, JSON.stringify(log));
   } catch {}
 }
 
 export function getSyncLog() {
   try {
-    const raw = localStorage.getItem(SYNC_LOG_KEY);
+    const raw = storageGetItem(SYNC_LOG_KEY);
     return raw ? JSON.parse(raw) : [];
   } catch { return []; }
 }
 
 export function clearSyncLog() {
-  try { localStorage.removeItem(SYNC_LOG_KEY); } catch {}
+  try { storageRemoveItem(SYNC_LOG_KEY); } catch {}
 }
 
 // All localStorage keys that should be synced
@@ -134,23 +147,23 @@ export async function decrypt(base64, secret) {
 // ── Token management ──
 
 export function getSyncToken() {
-  return localStorage.getItem(SYNC_TOKEN_KEY);
+  return storageGetItem(SYNC_TOKEN_KEY);
 }
 
 export function getSyncSecret() {
-  return localStorage.getItem(SYNC_SECRET_KEY);
+  return storageGetItem(SYNC_SECRET_KEY);
 }
 
 export function saveSyncCredentials(token, secret) {
-  localStorage.setItem(SYNC_TOKEN_KEY, normalizeToken(token));
-  localStorage.setItem(SYNC_SECRET_KEY, secret);
+  storageSetItem(SYNC_TOKEN_KEY, normalizeToken(token));
+  storageSetItem(SYNC_SECRET_KEY, secret);
 }
 
 export function clearSyncCredentials() {
-  localStorage.removeItem(SYNC_TOKEN_KEY);
-  localStorage.removeItem(SYNC_SECRET_KEY);
-  localStorage.removeItem(SYNC_LAST_PULL_KEY);
-  localStorage.removeItem(SYNC_LAST_REVISION_KEY);
+  storageRemoveItem(SYNC_TOKEN_KEY);
+  storageRemoveItem(SYNC_SECRET_KEY);
+  storageRemoveItem(SYNC_LAST_PULL_KEY);
+  storageRemoveItem(SYNC_LAST_REVISION_KEY);
 }
 
 export function isSynced() {
@@ -188,10 +201,10 @@ export async function createSyncPair() {
   const { token, revision, updated_at: serverTs } = await res.json();
   saveSyncCredentials(token, secret);
   if (Number.isFinite(Number(revision))) {
-    localStorage.setItem(SYNC_LAST_REVISION_KEY, String(Math.floor(Number(revision))));
+    storageSetItem(SYNC_LAST_REVISION_KEY, String(Math.floor(Number(revision))));
   }
   // Keep the server timestamp for display/diagnostics, but compare by revision.
-  localStorage.setItem(SYNC_LAST_PULL_KEY, String(serverTs || createdAt));
+  storageSetItem(SYNC_LAST_PULL_KEY, String(serverTs || createdAt));
   return { token, secret };
 }
 
@@ -213,9 +226,9 @@ export async function joinSyncPair(token, secret) {
 
   saveSyncCredentials(normalizedToken, secret);
   if (Number.isFinite(Number(body.revision))) {
-    localStorage.setItem(SYNC_LAST_REVISION_KEY, String(Math.floor(Number(body.revision))));
+    storageSetItem(SYNC_LAST_REVISION_KEY, String(Math.floor(Number(body.revision))));
   }
-  localStorage.setItem(SYNC_LAST_PULL_KEY, String(body.updated_at || Date.now()));
+  storageSetItem(SYNC_LAST_PULL_KEY, String(body.updated_at || Date.now()));
 
   // Push our local data back (merged)
   await pushData();
@@ -241,8 +254,8 @@ export async function pushData(options = {}) {
   let tokenRecovered = false;
 
   // Step 1: Pull any server-side changes and merge into local storage.
-  const sinceRevision = parseInt(localStorage.getItem(SYNC_LAST_REVISION_KEY) || '', 10);
-  const since = localStorage.getItem(SYNC_LAST_PULL_KEY) || '0';
+  const sinceRevision = parseInt(storageGetItem(SYNC_LAST_REVISION_KEY) || '', 10);
+  const since = storageGetItem(SYNC_LAST_PULL_KEY) || '0';
   const sinceNum = parseInt(since, 10) || 0;
   let pulledKeys = [];
   try {
@@ -268,9 +281,9 @@ export async function pushData(options = {}) {
         pulledKeys = Object.keys(serverData).filter(k => SYNC_KEYS.includes(k));
         mergeRemoteData(serverData);
         if (Number.isFinite(Number(body.revision))) {
-          localStorage.setItem(SYNC_LAST_REVISION_KEY, String(Math.floor(Number(body.revision))));
+          storageSetItem(SYNC_LAST_REVISION_KEY, String(Math.floor(Number(body.revision))));
         }
-        localStorage.setItem(SYNC_LAST_PULL_KEY, String(body.updated_at || Date.now()));
+        storageSetItem(SYNC_LAST_PULL_KEY, String(body.updated_at || Date.now()));
         pulled = true;
         pullUpdatedAt = body.updated_at || Date.now();
       } else {
@@ -290,9 +303,9 @@ export async function pushData(options = {}) {
               pulledKeys = Object.keys(serverData).filter(k => SYNC_KEYS.includes(k));
               mergeRemoteData(serverData);
               if (Number.isFinite(Number(fullBody.revision))) {
-                localStorage.setItem(SYNC_LAST_REVISION_KEY, String(Math.floor(Number(fullBody.revision))));
+                storageSetItem(SYNC_LAST_REVISION_KEY, String(Math.floor(Number(fullBody.revision))));
               }
-              localStorage.setItem(SYNC_LAST_PULL_KEY, String(fullBody.updated_at || serverUpdatedAt));
+              storageSetItem(SYNC_LAST_PULL_KEY, String(fullBody.updated_at || serverUpdatedAt));
               pulled = true;
               pullUpdatedAt = fullBody.updated_at || serverUpdatedAt;
             }
@@ -307,9 +320,9 @@ export async function pushData(options = {}) {
               pulledKeys = Object.keys(serverData).filter(k => SYNC_KEYS.includes(k));
               mergeRemoteData(serverData);
               if (Number.isFinite(Number(fullBody.revision))) {
-                localStorage.setItem(SYNC_LAST_REVISION_KEY, String(Math.floor(Number(fullBody.revision))));
+                storageSetItem(SYNC_LAST_REVISION_KEY, String(Math.floor(Number(fullBody.revision))));
               }
-              localStorage.setItem(SYNC_LAST_PULL_KEY, String(fullBody.updated_at || serverUpdatedAt));
+              storageSetItem(SYNC_LAST_PULL_KEY, String(fullBody.updated_at || serverUpdatedAt));
               pulled = true;
               pullUpdatedAt = fullBody.updated_at || serverUpdatedAt;
             }
@@ -375,10 +388,10 @@ export async function pushData(options = {}) {
     // PC would otherwise cause one device to permanently miss the other's pushes.
     const pushBody = await pushRes.json().catch(() => ({}));
     if (Number.isFinite(Number(pushBody.revision))) {
-      localStorage.setItem(SYNC_LAST_REVISION_KEY, String(Math.floor(Number(pushBody.revision))));
+      storageSetItem(SYNC_LAST_REVISION_KEY, String(Math.floor(Number(pushBody.revision))));
     }
     const confirmedTs = pushBody.updated_at || pushTimestamp;
-    localStorage.setItem(SYNC_LAST_PULL_KEY, String(confirmedTs));
+    storageSetItem(SYNC_LAST_PULL_KEY, String(confirmedTs));
     
     addSyncLogEntry({
       direction: 'push',
@@ -421,8 +434,8 @@ export async function pullData(options = {}) {
     return includeReport ? { changed: false, skipped: true, transferred: [] } : false;
   }
 
-  const sinceRevision = forceFull ? 0 : parseInt(localStorage.getItem(SYNC_LAST_REVISION_KEY) || '', 10);
-  const since = forceFull ? '0' : (localStorage.getItem(SYNC_LAST_PULL_KEY) || '0');
+  const sinceRevision = forceFull ? 0 : parseInt(storageGetItem(SYNC_LAST_REVISION_KEY) || '', 10);
+  const since = forceFull ? '0' : (storageGetItem(SYNC_LAST_PULL_KEY) || '0');
   const sinceNum = parseInt(since, 10) || 0;
   let res;
   try {
@@ -462,9 +475,9 @@ export async function pullData(options = {}) {
             const transferred = summarizeTransferredData(data);
             mergeRemoteData(data);
             if (Number.isFinite(Number(fullBody.revision))) {
-              localStorage.setItem(SYNC_LAST_REVISION_KEY, String(Math.floor(Number(fullBody.revision))));
+              storageSetItem(SYNC_LAST_REVISION_KEY, String(Math.floor(Number(fullBody.revision))));
             }
-            localStorage.setItem(SYNC_LAST_PULL_KEY, String(fullBody.updated_at || serverUpdatedAt));
+            storageSetItem(SYNC_LAST_PULL_KEY, String(fullBody.updated_at || serverUpdatedAt));
             addSyncLogEntry({
               direction: 'pull',
               status: 'ok',
@@ -488,9 +501,9 @@ export async function pullData(options = {}) {
             const transferred = summarizeTransferredData(data);
             mergeRemoteData(data);
             if (Number.isFinite(Number(fullBody.revision))) {
-              localStorage.setItem(SYNC_LAST_REVISION_KEY, String(Math.floor(Number(fullBody.revision))));
+              storageSetItem(SYNC_LAST_REVISION_KEY, String(Math.floor(Number(fullBody.revision))));
             }
-            localStorage.setItem(SYNC_LAST_PULL_KEY, String(fullBody.updated_at || serverUpdatedAt));
+            storageSetItem(SYNC_LAST_PULL_KEY, String(fullBody.updated_at || serverUpdatedAt));
             addSyncLogEntry({
               direction: 'pull',
               status: 'ok',
@@ -512,9 +525,9 @@ export async function pullData(options = {}) {
   const transferred = summarizeTransferredData(data);
   mergeRemoteData(data);
   if (Number.isFinite(Number(body.revision))) {
-    localStorage.setItem(SYNC_LAST_REVISION_KEY, String(Math.floor(Number(body.revision))));
+    storageSetItem(SYNC_LAST_REVISION_KEY, String(Math.floor(Number(body.revision))));
   }
-  localStorage.setItem(SYNC_LAST_PULL_KEY, String(body.updated_at || Date.now()));
+  storageSetItem(SYNC_LAST_PULL_KEY, String(body.updated_at || Date.now()));
   
   addSyncLogEntry({
     direction: 'pull',
@@ -552,7 +565,7 @@ export async function forceFullSync() {
             if (key === 'boilerfuel_meals') {
               // Merge with local so we don't lose meals logged on this device
               let local = {};
-              try { local = JSON.parse(localStorage.getItem(key) || '{}'); } catch {}
+              try { local = JSON.parse(storageGetItem(key) || '{}'); } catch {}
               const remote = data[key] || {};
               const merged = { ...local };
               for (const [date, remoteMeals] of Object.entries(remote)) {
@@ -565,15 +578,15 @@ export async function forceFullSync() {
                   }
                 }
               }
-              try { localStorage.setItem(key, JSON.stringify(merged)); } catch {}
+              try { storageSetItem(key, JSON.stringify(merged)); } catch {}
             } else {
-              try { localStorage.setItem(key, JSON.stringify(data[key])); } catch {}
+              try { storageSetItem(key, JSON.stringify(data[key])); } catch {}
             }
           }
           if (Number.isFinite(Number(body.revision))) {
-            localStorage.setItem(SYNC_LAST_REVISION_KEY, String(Math.floor(Number(body.revision))));
+            storageSetItem(SYNC_LAST_REVISION_KEY, String(Math.floor(Number(body.revision))));
           }
-          localStorage.setItem(SYNC_LAST_PULL_KEY, String(body.updated_at || Date.now()));
+          storageSetItem(SYNC_LAST_PULL_KEY, String(body.updated_at || Date.now()));
         }
       }
     } catch {}
@@ -611,7 +624,7 @@ export async function syncNowDetailed() {
 
 /** Returns the backup meals object saved before the last merge, or null. */
 export function getMealsBackup() {
-  const raw = localStorage.getItem('boilerfuel_meals_backup');
+  const raw = storageGetItem('boilerfuel_meals_backup');
   if (!raw) return null;
   try { return JSON.parse(raw); } catch { return null; }
 }
@@ -623,7 +636,7 @@ export function getMealsBackup() {
 export function restoreMealsFromBackup() {
   const backup = getMealsBackup();
   if (!backup) return false;
-  const currentRaw = localStorage.getItem('boilerfuel_meals');
+  const currentRaw = storageGetItem('boilerfuel_meals');
   const current = currentRaw ? JSON.parse(currentRaw) : {};
   const restored = { ...backup };
   // Also keep any NEW meals logged since the backup
@@ -637,8 +650,8 @@ export function restoreMealsFromBackup() {
       }
     }
   }
-  localStorage.setItem('boilerfuel_meals', JSON.stringify(restored));
-  localStorage.removeItem('boilerfuel_meals_backup');
+  storageSetItem('boilerfuel_meals', JSON.stringify(restored));
+  storageRemoveItem('boilerfuel_meals_backup');
   return true;
 }
 
@@ -654,12 +667,12 @@ export async function unpair() {
 // ── Device identity ──
 
 function getOrCreateDeviceId() {
-  let id = localStorage.getItem('boilerfuel_device_id');
+  let id = storageGetItem('boilerfuel_device_id');
   if (!id) {
     const arr = new Uint8Array(6);
     crypto.getRandomValues(arr);
     id = Array.from(arr, b => b.toString(16).padStart(2, '0')).join('');
-    localStorage.setItem('boilerfuel_device_id', id);
+    storageSetItem('boilerfuel_device_id', id);
   }
   return id;
 }
@@ -682,7 +695,7 @@ function getDeviceName() {
 }
 
 export function getSyncDevices() {
-  const raw = localStorage.getItem('boilerfuel_sync_devices');
+  const raw = storageGetItem('boilerfuel_sync_devices');
   if (!raw) return {};
   try { return JSON.parse(raw); } catch { return {}; }
 }
@@ -778,7 +791,7 @@ async function robustFetch(url, options = {}, maxRetries = 2) {
 function gatherLocalData() {
   const data = {};
   for (const key of SYNC_KEYS) {
-    const val = localStorage.getItem(key);
+    const val = storageGetItem(key);
     if (val) {
       try { data[key] = JSON.parse(val); } catch { data[key] = val; }
     }
@@ -787,10 +800,10 @@ function gatherLocalData() {
 
   // Register this device's last-seen timestamp
   const deviceId = getOrCreateDeviceId();
-  const existing = localStorage.getItem('boilerfuel_sync_devices');
+  const existing = storageGetItem('boilerfuel_sync_devices');
   const devices = existing ? JSON.parse(existing) : {};
   devices[deviceId] = { name: getDeviceName(), lastSeen: Date.now() };
-  try { localStorage.setItem('boilerfuel_sync_devices', JSON.stringify(devices)); } catch {}
+  try { storageSetItem('boilerfuel_sync_devices', JSON.stringify(devices)); } catch {}
   data._devices = devices;
 
   // Diagnostic logging for meals
@@ -821,7 +834,7 @@ export function mergeRemoteData(remote) {
   // ── Safety: snapshot meals before any merge so we can recover if data shrinks ──
   // Also get a fresh snapshot right before each key's merge to ensure we have the
   // latest React state that may have just been persisted to localStorage
-  const mealsBefore = localStorage.getItem('boilerfuel_meals');
+  const mealsBefore = storageGetItem('boilerfuel_meals');
 
   // Merge helper: dedupe by addedAt when present, keep all entries that do
   // not have a timestamp so we never accidentally drop meals.
@@ -842,7 +855,7 @@ export function mergeRemoteData(remote) {
     
     // Read fresh from localStorage for each key to catch any React state updates
     // that may have landed between the start of this function and now
-    const localRaw = localStorage.getItem(key);
+    const localRaw = storageGetItem(key);
 
     if (key === 'boilerfuel_meals') {
       // Merge meals by date key — union of meals from both sides
@@ -901,18 +914,18 @@ export function mergeRemoteData(remote) {
       // Otherwise we clear stale backup to avoid false recovery warnings.
       if (mealsBefore && shouldKeepBackup) {
         try {
-          localStorage.setItem('boilerfuel_meals_backup', mealsBefore);
+          storageSetItem('boilerfuel_meals_backup', mealsBefore);
         } catch {
           // localStorage quota exceeded — skip backup silently
         }
       } else {
-        localStorage.removeItem('boilerfuel_meals_backup');
+        storageRemoveItem('boilerfuel_meals_backup');
       }
       // Remove the old key first so writing never fails due to "overwrite while full"
-      localStorage.removeItem(key);
+      storageRemoveItem(key);
       let mealsSaved = false;
       // Try full merged data first
-      try { localStorage.setItem(key, JSON.stringify(merged)); mealsSaved = true; } catch {}
+      try { storageSetItem(key, JSON.stringify(merged)); mealsSaved = true; } catch {}
       if (!mealsSaved) {
         // Progressively prune until it fits: 6mo → 3mo → 1mo → 14d
         for (const months of [6, 3, 1]) {
@@ -920,7 +933,7 @@ export function mergeRemoteData(remote) {
           cutoff.setMonth(cutoff.getMonth() - months);
           const cutoffStr = cutoff.toISOString().slice(0, 10);
           const pruned = Object.fromEntries(Object.entries(merged).filter(([d]) => d >= cutoffStr));
-          try { localStorage.setItem(key, JSON.stringify(pruned)); mealsSaved = true; break; } catch {}
+          try { storageSetItem(key, JSON.stringify(pruned)); mealsSaved = true; break; } catch {}
         }
       }
       if (!mealsSaved) {
@@ -928,13 +941,13 @@ export function mergeRemoteData(remote) {
         cutoff.setDate(cutoff.getDate() - 14);
         const cutoffStr = cutoff.toISOString().slice(0, 10);
         const pruned = Object.fromEntries(Object.entries(merged).filter(([d]) => d >= cutoffStr));
-        try { localStorage.setItem(key, JSON.stringify(pruned)); mealsSaved = true; } catch {}
+        try { storageSetItem(key, JSON.stringify(pruned)); mealsSaved = true; } catch {}
       }
 
       // Last-resort safety: never leave meals key empty after removing it.
       if (!mealsSaved && mealsBefore) {
         try {
-          localStorage.setItem(key, mealsBefore);
+          storageSetItem(key, mealsBefore);
           mealsSaved = true;
           console.warn('[sync] Restored previous meals after save fallback failed');
         } catch {}
@@ -947,7 +960,7 @@ export function mergeRemoteData(remote) {
           detail: 'Unable to save merged meals after quota fallback attempts',
         });
       }
-      const savedMealsRaw = localStorage.getItem(key);
+      const savedMealsRaw = storageGetItem(key);
       const savedMeals = savedMealsRaw ? JSON.parse(savedMealsRaw) : {};
       console.log('[sync] Meals saved to localStorage, mealsSaved:', mealsSaved, 'savedDays:', Object.keys(savedMeals).length);
     } else if (key === 'boilerfuel_water') {
@@ -963,7 +976,7 @@ export function mergeRemoteData(remote) {
           merged[date] = Math.max(Number(localVal) || 0, Number(val) || 0);
         }
       }
-      try { localStorage.setItem(key, JSON.stringify(merged)); } catch {}
+      try { storageSetItem(key, JSON.stringify(merged)); } catch {}
     } else if (key === 'boilerfuel_weight') {
       // Weight: take remote if local has no entry for that date.
       // If both have an entry, keep local (user intentionally set it on this device).
@@ -980,21 +993,21 @@ export function mergeRemoteData(remote) {
         }
         // Otherwise keep local (last logged on this device)
       }
-      try { localStorage.setItem(key, JSON.stringify(merged)); } catch {}
+      try { storageSetItem(key, JSON.stringify(merged)); } catch {}
     } else if (key === 'boilerfuel_favorites') {
       // Union of favorites
       const local = localRaw ? JSON.parse(localRaw) : [];
       const merged = [...new Set([...local, ...(remoteVal || [])])];
-      try { localStorage.setItem(key, JSON.stringify(merged)); } catch {}
+      try { storageSetItem(key, JSON.stringify(merged)); } catch {}
     } else {
       // For goals, templates, dietary — remote wins (last push wins)
-      try { localStorage.setItem(key, JSON.stringify(remoteVal)); } catch {}
+      try { storageSetItem(key, JSON.stringify(remoteVal)); } catch {}
     }
   }
 
   // Merge device registry: union by device_id, keep newest lastSeen per device
   if (remote._devices && typeof remote._devices === 'object') {
-    const existing = localStorage.getItem('boilerfuel_sync_devices');
+    const existing = storageGetItem('boilerfuel_sync_devices');
     const localDevices = existing ? JSON.parse(existing) : {};
     const merged = { ...localDevices };
     for (const [id, dev] of Object.entries(remote._devices)) {
@@ -1002,7 +1015,7 @@ export function mergeRemoteData(remote) {
         merged[id] = dev;
       }
     }
-    try { localStorage.setItem('boilerfuel_sync_devices', JSON.stringify(merged)); } catch {}
+    try { storageSetItem('boilerfuel_sync_devices', JSON.stringify(merged)); } catch {}
   }
 }
 
@@ -1013,3 +1026,4 @@ export const __testables = {
   normalizeToken,
   isMissingTokenError,
 };
+

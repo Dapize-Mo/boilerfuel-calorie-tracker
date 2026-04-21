@@ -2,24 +2,59 @@ import { query } from '../../utils/db';
 
 const MAX_SYNC_PAYLOAD_BYTES = 4 * 1024 * 1024;
 const TOKEN_LENGTH = 6;
+const useInMemoryFallback = process.env.NODE_ENV !== 'production';
+
+function getGlobalMemoryStore() {
+  const g = globalThis;
+  if (!g.__boilerfuelSyncMemoryStore) {
+    g.__boilerfuelSyncMemoryStore = new Map();
+  }
+  return g.__boilerfuelSyncMemoryStore;
+}
+
+let memoryMode = false;
+const memorySyncData = getGlobalMemoryStore();
+
+function setMemoryRow(token, encryptedData) {
+  const now = Date.now();
+  const existing = memorySyncData.get(token);
+  const revision = existing ? existing.revision + 1 : 1;
+  memorySyncData.set(token, {
+    token,
+    encrypted_data: encryptedData,
+    revision,
+    updated_at: now,
+  });
+  return memorySyncData.get(token);
+}
 
 // Ensure sync table exists
 let syncSchemaReady = false;
 async function ensureSyncSchema() {
   if (syncSchemaReady) return;
-  await query(`
-    CREATE TABLE IF NOT EXISTS sync_data (
-      token VARCHAR(12) PRIMARY KEY,
-      encrypted_data TEXT NOT NULL,
-      revision BIGINT NOT NULL DEFAULT 1,
-      updated_at BIGINT NOT NULL,
-      created_at TIMESTAMPTZ DEFAULT NOW()
-    );
-  `);
-  await query(`
-    ALTER TABLE sync_data
-      ADD COLUMN IF NOT EXISTS revision BIGINT NOT NULL DEFAULT 1;
-  `);
+  try {
+    await query(`
+      CREATE TABLE IF NOT EXISTS sync_data (
+        token VARCHAR(12) PRIMARY KEY,
+        encrypted_data TEXT NOT NULL,
+        revision BIGINT NOT NULL DEFAULT 1,
+        updated_at BIGINT NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+    await query(`
+      ALTER TABLE sync_data
+        ADD COLUMN IF NOT EXISTS revision BIGINT NOT NULL DEFAULT 1;
+    `);
+  } catch (err) {
+    if (useInMemoryFallback) {
+      memoryMode = true;
+      syncSchemaReady = true;
+      console.warn('[sync] Falling back to in-memory store for local/dev mode:', err.message);
+      return;
+    }
+    throw err;
+  }
   syncSchemaReady = true;
 }
 
@@ -39,14 +74,22 @@ export default async function handler(req, res) {
         if (Buffer.byteLength(payload, 'utf8') > MAX_SYNC_PAYLOAD_BYTES) {
           return res.status(413).json({ error: 'Sync payload too large' });
         }
-        // Always use server time for sync row creation so all clients share
-        // one authoritative timeline. Client clocks can be skewed.
         const initialTs = Date.now();
         const initialRevision = 1;
 
-        // Generate a unique sync code with collision retry.
         for (let attempt = 0; attempt < 5; attempt += 1) {
           const code = generateCode();
+          if (memoryMode) {
+            if (memorySyncData.has(code)) continue;
+            memorySyncData.set(code, {
+              token: code,
+              encrypted_data: payload,
+              revision: initialRevision,
+              updated_at: initialTs,
+            });
+            return res.json({ ok: true, token: code, revision: initialRevision, updated_at: initialTs });
+          }
+
           const result = await query(
             `INSERT INTO sync_data (token, encrypted_data, revision, updated_at)
              VALUES ($1, $2, $3, $4)
@@ -78,22 +121,27 @@ export default async function handler(req, res) {
         // Use the server's clock so all devices share the same timestamp
         // reference — prevents clock skew between phone/PC causing one device
         // to permanently miss the other's pushes.
-        const serverTs = Date.now();
-        const { rows } = await query(
-          `INSERT INTO sync_data (token, encrypted_data, revision, updated_at)
-           VALUES ($1, $2, 1, $3)
-           ON CONFLICT (token)
-           DO UPDATE SET encrypted_data = EXCLUDED.encrypted_data,
-                         revision = COALESCE(sync_data.revision, 0) + 1,
-                         updated_at = EXCLUDED.updated_at
-           RETURNING revision, updated_at`,
-          [normalizedToken, encrypted_data, serverTs]
-        );
-        const row = rows[0] || {};
+        let row = {};
+        if (memoryMode) {
+          row = setMemoryRow(normalizedToken, encrypted_data);
+        } else {
+          const serverTs = Date.now();
+          const { rows } = await query(
+            `INSERT INTO sync_data (token, encrypted_data, revision, updated_at)
+             VALUES ($1, $2, 1, $3)
+             ON CONFLICT (token)
+             DO UPDATE SET encrypted_data = EXCLUDED.encrypted_data,
+                           revision = COALESCE(sync_data.revision, 0) + 1,
+                           updated_at = EXCLUDED.updated_at
+             RETURNING revision, updated_at`,
+            [normalizedToken, encrypted_data, serverTs]
+          );
+          row = rows[0] || {};
+        }
         return res.json({
           ok: true,
           revision: Number.parseInt(String(row.revision), 10) || 0,
-          updated_at: Number.parseInt(String(row.updated_at), 10) || serverTs,
+          updated_at: Number.parseInt(String(row.updated_at), 10) || Date.now(),
         });
       }
 
@@ -106,15 +154,21 @@ export default async function handler(req, res) {
       const normalizedToken = normalizeToken(token);
       if (!normalizedToken) return res.status(400).json({ error: 'Missing token' });
 
-      const { rows } = await query(
-        `SELECT encrypted_data, updated_at, revision FROM sync_data WHERE token = $1`,
-        [normalizedToken]
-      );
-      if (rows.length === 0) {
+      let row;
+      if (memoryMode) {
+        row = memorySyncData.get(normalizedToken);
+      } else {
+        const { rows } = await query(
+          `SELECT encrypted_data, updated_at, revision FROM sync_data WHERE token = $1`,
+          [normalizedToken]
+        );
+        row = rows[0];
+      }
+
+      if (!row) {
         return res.status(404).json({ error: 'Sync token not found' });
       }
 
-      const row = rows[0];
       const serverTs = Number.parseInt(String(row.updated_at), 10);
       const serverRevision = Number.parseInt(String(row.revision), 10) || 1;
 
@@ -147,7 +201,11 @@ export default async function handler(req, res) {
       const { token } = req.body;
       const normalizedToken = normalizeToken(token);
       if (normalizedToken) {
-        await query(`DELETE FROM sync_data WHERE token = $1`, [normalizedToken]);
+        if (memoryMode) {
+          memorySyncData.delete(normalizedToken);
+        } else {
+          await query(`DELETE FROM sync_data WHERE token = $1`, [normalizedToken]);
+        }
       }
       return res.json({ ok: true });
     }
