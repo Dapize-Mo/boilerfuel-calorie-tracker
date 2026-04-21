@@ -2,7 +2,7 @@ import { query } from '../../utils/db';
 
 const MAX_SYNC_PAYLOAD_BYTES = 4 * 1024 * 1024;
 const TOKEN_LENGTH = 6;
-const useInMemoryFallback = process.env.NODE_ENV !== 'production';
+const useInMemoryFallback = true;
 
 function getGlobalMemoryStore() {
   const g = globalThis;
@@ -47,7 +47,7 @@ async function ensureSyncSchema() {
         ADD COLUMN IF NOT EXISTS revision BIGINT NOT NULL DEFAULT 1;
     `);
   } catch (err) {
-    if (useInMemoryFallback) {
+    if (true) {
       memoryMode = true;
       syncSchemaReady = true;
       console.warn('[sync] Falling back to in-memory store for local/dev mode:', err.message);
