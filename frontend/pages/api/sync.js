@@ -216,8 +216,8 @@ export default async function handler(req, res) {
     console.error('[sync] Error:', err.message);
     res.status(500).json({ error: 'Internal server error' });
   }
-}
-
+    console.error('[sync] Error:', err.message, err.stack);
+    res.status(500).json({ error: 'Internal server error', details: err.message });
 function generateCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no I/O/0/1 to avoid confusion
   let code = '';
