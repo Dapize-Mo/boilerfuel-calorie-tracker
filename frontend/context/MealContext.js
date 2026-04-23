@@ -224,6 +224,11 @@ export function MealProvider({ children }) {
     try { const s = lsGet(TEMPLATES_KEY); if (s) setTemplatesState(JSON.parse(s)); } catch {}
     try { const s = lsGet(DIETARY_KEY); if (s) setDietaryPrefsState(JSON.parse(s)); } catch {}
     setHasMealsBackup(!!lsGet(MEALS_BACKUP_KEY));
+    // Fallback: if pulled data is identical to current state, React bails out of
+    // all setState calls and the push-debounce effect never fires to reset this flag.
+    // That leaves isReloadingFromSync stuck true, causing the next user action to
+    // silently skip its push.  Reset the flag after one tick so it can't get stuck.
+    setTimeout(() => { isReloadingFromSync.current = false; }, 50);
   }, []);
 
   // ── Auto-sync: pull on mount + on tab-focus, debounced push on changes ──
@@ -288,14 +293,18 @@ export function MealProvider({ children }) {
     const now = Date.now();
     if (!force && now - lastPullRef.current < MIN_PULL_INTERVAL) return;
 
+    // Acquire lock BEFORE any await to eliminate the race window between
+    // the guard check and the lock set (two concurrent doPull calls could
+    // both pass the guard during the async import gap).
+    isSyncingRef.current = true;
+    lastPullRef.current = now;
+
     // Flush React state to localStorage BEFORE pulling to prevent data loss
     flushStateToStorage();
 
     try {
       const { isSynced, pullData, pushData } = await import('../utils/sync');
       if (!isSynced()) return;
-      isSyncingRef.current = true;
-      lastPullRef.current = now;
       setSyncStatus('syncing');
       const before = getSyncStorageFingerprint();
       const result = await pullData({ includeReport: true, forceFull });
@@ -487,8 +496,18 @@ export function MealProvider({ children }) {
   }, [reloadFromStorage]);
   // Manual sync trigger (for UI button)
   const syncNow = useCallback(async () => {
+    // If an auto-pull is running, wait briefly then check again — don't clobber it.
+    if (isSyncingRef.current) {
+      await new Promise(r => setTimeout(r, 600));
+      if (isSyncingRef.current) return { skipped: true };
+    }
+    // Acquire lock before any await so auto-polls can't slip in during the import.
+    isSyncingRef.current = true;
     const { isSynced, syncNowDetailed } = await import('../utils/sync');
-    if (!isSynced()) return { skipped: true };
+    if (!isSynced()) {
+      isSyncingRef.current = false;
+      return { skipped: true };
+    }
     // Flush the latest React state before sync gathers localStorage.
     // Without this, an immediate sync after adding a meal can miss the new entry.
     flushStateToStorage();
@@ -501,6 +520,8 @@ export function MealProvider({ children }) {
     } catch (err) {
       setSyncStatusTransient('error');
       throw err;
+    } finally {
+      isSyncingRef.current = false;
     }
   }, [reloadFromStorage, setSyncStatusTransient, flushStateToStorage]);
 
