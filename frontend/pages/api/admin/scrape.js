@@ -1,10 +1,13 @@
 // Admin scraper trigger endpoint
+import { assertDatabaseHasHeadroom } from '../../../utils/db';
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
+    const dbGuard = await assertDatabaseHasHeadroom();
     const backendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || '';
 
     const ghToken = process.env.GH_ACTIONS_TOKEN || process.env.GITHUB_TOKEN;
@@ -47,6 +50,7 @@ export default async function handler(req, res) {
           status: 'scrape started',
           via: 'github-actions',
           message: 'Workflow dispatched. Status will update when the run starts.',
+          db_guard: dbGuard,
           debug: debugInfo,
         });
       }
@@ -123,9 +127,12 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('Error triggering scraper:', error);
-    return res.status(500).json({
-      error: 'Failed to trigger scraper. Please check if the backend is running.',
-      details: error.message
+    const status = error.status || 500;
+    return res.status(status).json({
+      error: status === 503 ? 'Scraping paused by DB capacity guard' : 'Failed to trigger scraper. Please check if the backend is running.',
+      details: error.message,
+      code: error.code,
+      db_guard: error.details,
     });
   }
 }

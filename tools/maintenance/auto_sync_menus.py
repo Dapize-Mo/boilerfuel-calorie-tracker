@@ -24,6 +24,58 @@ sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
 from scraper.dining_locations import DINING_LOCATIONS
 
+
+def parse_bytes_env(name):
+    value = os.getenv(name)
+    if not value:
+        return None
+    try:
+        n = int(value)
+        return n if n > 0 else None
+    except ValueError:
+        return None
+
+
+def strict_capacity_mode():
+    raw = (os.getenv('DB_CAPACITY_STRICT', 'true') or '').strip().lower()
+    return raw not in ('0', 'false', 'no', 'off')
+
+
+def check_db_capacity_guard(conn, stage):
+    max_bytes = (
+        parse_bytes_env('DB_CAPACITY_BYTES')
+        or parse_bytes_env('DATABASE_CAPACITY_BYTES')
+        or parse_bytes_env('POSTGRES_MAX_BYTES')
+    )
+    threshold_raw = os.getenv('DB_PAUSE_THRESHOLD_PERCENT', '95')
+    try:
+        threshold_percent = float(threshold_raw)
+    except ValueError:
+        threshold_percent = 95.0
+    if threshold_percent <= 0 or threshold_percent > 100:
+        threshold_percent = 95.0
+
+    if max_bytes is None:
+        if strict_capacity_mode():
+            raise RuntimeError(
+                'DB capacity guard is strict and no capacity limit is configured. '
+                'Set DB_CAPACITY_BYTES (or DATABASE_CAPACITY_BYTES/POSTGRES_MAX_BYTES).'
+            )
+        print('[db-guard] Capacity limit not configured; guard is running in non-strict mode.')
+        return
+
+    cursor = conn.cursor()
+    cursor.execute('SELECT pg_database_size(current_database())')
+    used_bytes = int(cursor.fetchone()[0])
+    cursor.close()
+
+    used_percent = (used_bytes / max_bytes) * 100.0
+    print(f"[db-guard] {stage}: using {used_percent:.2f}% ({used_bytes}/{max_bytes} bytes), threshold={threshold_percent:.2f}%")
+    if used_percent >= threshold_percent:
+        raise RuntimeError(
+            f"DB capacity guard triggered at {used_percent:.2f}% (threshold {threshold_percent:.2f}%). Scraping paused."
+        )
+
 def normalize_text(value):
     """Normalize text for comparison (matches frontend logic)."""
     if not value:
@@ -251,11 +303,14 @@ def main():
     try:
         conn = psycopg2.connect(database_url)
         cursor = conn.cursor()
+
+        check_db_capacity_guard(conn, 'before sync run')
         
         total_added = 0
         total_removed = 0
         
         for day_offset in range(args.days):
+            check_db_capacity_guard(conn, f'before day offset {day_offset}')
             date = datetime.now() + timedelta(days=day_offset)
             date_str = date.strftime('%Y-%m-%d')
             day_name = date.strftime('%A')

@@ -36,6 +36,9 @@ describe('/api/sync handler', () => {
 
   test('POST create returns token', async () => {
     query.mockImplementation(async sql => {
+      if (String(sql).includes('DELETE FROM sync_data')) {
+        return { rowCount: 0, rows: [] };
+      }
       if (String(sql).includes('RETURNING token')) {
         return { rows: [{ token: 'ABCD23', revision: 1, updated_at: 1234 }] };
       }
@@ -54,6 +57,8 @@ describe('/api/sync handler', () => {
     expect(res.body.ok).toBe(true);
     expect(res.body.token).toHaveLength(6);
     expect(res.body.revision).toBe(1);
+    const pruneCall = query.mock.calls.find(([sql]) => String(sql).includes('DELETE FROM sync_data'));
+    expect(pruneCall).toBeTruthy();
   });
 
   test('POST push rejects invalid token', async () => {

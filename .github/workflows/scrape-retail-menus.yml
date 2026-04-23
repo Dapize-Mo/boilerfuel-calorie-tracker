@@ -27,6 +27,9 @@ jobs:
       - name: Update chain restaurant menus
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DB_CAPACITY_BYTES: ${{ secrets.DB_CAPACITY_BYTES }}
+          DB_PAUSE_THRESHOLD_PERCENT: '95'
+          DB_CAPACITY_STRICT: 'true'
         run: |
           python scraper/retail_menu_scraper.py --chains-only
       

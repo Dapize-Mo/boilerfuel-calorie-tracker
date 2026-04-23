@@ -1,10 +1,13 @@
 // Trigger the retail menu scraper workflow
+import { assertDatabaseHasHeadroom } from '../../../utils/db';
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
+    const dbGuard = await assertDatabaseHasHeadroom();
     const ghToken = process.env.GH_ACTIONS_TOKEN || process.env.GITHUB_TOKEN;
     const ghRepo = process.env.GH_REPO || process.env.GITHUB_REPOSITORY || 'Dapize-Mo/boilerfuel-calorie-tracker';
     const workflowFile = 'scrape-retail-menus.yml';
@@ -36,6 +39,7 @@ export default async function handler(req, res) {
         status: 'scrape started',
         via: 'github-actions',
         message: 'Retail menu workflow dispatched. Beverages will appear once the run completes (~2 min).',
+        db_guard: dbGuard,
       });
     }
 
@@ -47,6 +51,12 @@ export default async function handler(req, res) {
     });
   } catch (error) {
     console.error('Error triggering retail scraper:', error);
-    return res.status(500).json({ error: 'Failed to trigger retail scraper', details: error.message });
+    const status = error.status || 500;
+    return res.status(status).json({
+      error: status === 503 ? 'Scraping paused by DB capacity guard' : 'Failed to trigger retail scraper',
+      details: error.message,
+      code: error.code,
+      db_guard: error.details,
+    });
   }
 }

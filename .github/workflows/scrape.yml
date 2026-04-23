@@ -11,6 +11,9 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      DB_CAPACITY_BYTES: ${{ secrets.DB_CAPACITY_BYTES }}
+      DB_PAUSE_THRESHOLD_PERCENT: '95'
+      DB_CAPACITY_STRICT: 'true'
       SCRAPE_BACK_DAYS: 1   # Re-check yesterday in case of late updates
       SCRAPE_FORWARD_DAYS: 7 # API posts ~7 days ahead; grab full upcoming Mon-Sun
     steps:

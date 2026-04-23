@@ -36,6 +36,58 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 
+def parse_bytes_env(name):
+    value = os.getenv(name)
+    if not value:
+        return None
+    try:
+        n = int(value)
+        return n if n > 0 else None
+    except ValueError:
+        return None
+
+
+def strict_capacity_mode():
+    raw = (os.getenv('DB_CAPACITY_STRICT', 'true') or '').strip().lower()
+    return raw not in ('0', 'false', 'no', 'off')
+
+
+def check_db_capacity_guard(conn, stage):
+    max_bytes = (
+        parse_bytes_env('DB_CAPACITY_BYTES')
+        or parse_bytes_env('DATABASE_CAPACITY_BYTES')
+        or parse_bytes_env('POSTGRES_MAX_BYTES')
+    )
+    threshold_raw = os.getenv('DB_PAUSE_THRESHOLD_PERCENT', '95')
+    try:
+        threshold_percent = float(threshold_raw)
+    except ValueError:
+        threshold_percent = 95.0
+    if threshold_percent <= 0 or threshold_percent > 100:
+        threshold_percent = 95.0
+
+    if max_bytes is None:
+        if strict_capacity_mode():
+            raise RuntimeError(
+                'DB capacity guard is strict and no capacity limit is configured. '
+                'Set DB_CAPACITY_BYTES (or DATABASE_CAPACITY_BYTES/POSTGRES_MAX_BYTES).'
+            )
+        logger.warning('[db-guard] Capacity limit not configured; guard is running in non-strict mode.')
+        return
+
+    cursor = conn.cursor()
+    cursor.execute('SELECT pg_database_size(current_database())')
+    used_bytes = int(cursor.fetchone()[0])
+    cursor.close()
+
+    used_percent = (used_bytes / max_bytes) * 100.0
+    logger.info('[db-guard] %s: using %.2f%% (%s/%s bytes), threshold=%.2f%%', stage, used_percent, used_bytes, max_bytes, threshold_percent)
+    if used_percent >= threshold_percent:
+        raise RuntimeError(
+            f"DB capacity guard triggered at {used_percent:.2f}% (threshold {threshold_percent:.2f}%). Scraping paused."
+        )
+
+
 def get_db_connection():
     """Get database connection from environment variables."""
     db_url = os.getenv('DATABASE_URL')
@@ -133,6 +185,7 @@ def insert_beverage_items(cursor, items, dining_court):
 def update_chain_restaurants(conn):
     """Update menu data for chain restaurants."""
     logger.info("Updating chain restaurant menus...")
+    check_db_capacity_guard(conn, 'before chain restaurant update')
 
     chains = [
         ("Panera", get_panera_items),
@@ -146,6 +199,7 @@ def update_chain_restaurants(conn):
 
     for dining_court, scraper_func in chains:
         try:
+            check_db_capacity_guard(conn, f'before {dining_court}')
             logger.info(f"Processing {dining_court}...")
             items = scraper_func()
 
@@ -163,6 +217,7 @@ def update_chain_restaurants(conn):
     beverage_items = get_dining_court_beverage_items()
     for court in DINING_COURTS:
         try:
+            check_db_capacity_guard(conn, f'before beverages {court}')
             logger.info(f"Adding beverages to {court}...")
             clear_location_menu(cursor, court)
             insert_beverage_items(cursor, beverage_items, court)
@@ -176,6 +231,7 @@ def update_chain_restaurants(conn):
     quick_bites_beverage_items = get_quick_bites_beverage_items()
     for location in QUICK_BITES_LOCATIONS:
         try:
+            check_db_capacity_guard(conn, f'before quick bites beverages {location}')
             logger.info(f"Adding beverages to {location}...")
             clear_location_menu(cursor, location)
             insert_beverage_items(cursor, quick_bites_beverage_items, location)
@@ -206,6 +262,7 @@ def main():
     try:
         conn = get_db_connection()
         logger.info("Connected to database")
+        check_db_capacity_guard(conn, 'startup')
         
         if args.pdfs_only:
             update_pdf_menus(conn)

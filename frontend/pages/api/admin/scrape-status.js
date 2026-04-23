@@ -1,3 +1,5 @@
+import { getDatabaseCapacityStatus } from '../../../utils/db';
+
 // Polls GitHub Actions for the latest scrape workflow run status
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -8,8 +10,10 @@ export default async function handler(req, res) {
   const ghRepo = process.env.GH_REPO || process.env.GITHUB_REPOSITORY || 'Dapize-Mo/boilerfuel-calorie-tracker';
   const workflowFile = process.env.GH_WORKFLOW_FILE || 'scrape.yml';
 
+  const dbGuard = await getDatabaseCapacityStatus().catch(() => null);
+
   if (!ghToken || !ghRepo) {
-    return res.status(200).json({ status: 'unknown', message: 'GitHub credentials not configured' });
+    return res.status(200).json({ status: 'unknown', message: 'GitHub credentials not configured', db_guard: dbGuard });
   }
 
   try {
@@ -28,14 +32,14 @@ export default async function handler(req, res) {
     );
 
     if (!runsResp.ok) {
-      return res.status(200).json({ status: 'unknown', message: 'Failed to fetch workflow runs' });
+      return res.status(200).json({ status: 'unknown', message: 'Failed to fetch workflow runs', db_guard: dbGuard });
     }
 
     const runsData = await runsResp.json();
     const run = runsData.workflow_runs?.[0];
 
     if (!run) {
-      return res.status(200).json({ status: 'unknown', message: 'No workflow runs found' });
+      return res.status(200).json({ status: 'unknown', message: 'No workflow runs found', db_guard: dbGuard });
     }
 
     const result = {
@@ -85,9 +89,9 @@ export default async function handler(req, res) {
       result.elapsed_seconds = elapsed;
     }
 
-    return res.status(200).json(result);
+    return res.status(200).json({ ...result, db_guard: dbGuard });
 
   } catch (err) {
-    return res.status(200).json({ status: 'unknown', message: err.message });
+    return res.status(200).json({ status: 'unknown', message: err.message, db_guard: dbGuard });
   }
 }

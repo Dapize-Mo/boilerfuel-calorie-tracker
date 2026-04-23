@@ -38,6 +38,19 @@ if (!connectionString) {
 let pool;
 let schemaInitialized = false;
 
+function parseBytesEnv(value) {
+  if (!value) return null;
+  const n = Number.parseInt(String(value), 10);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+function isStrictCapacityModeEnabled() {
+  const raw = (process.env.DB_CAPACITY_STRICT || '').trim().toLowerCase();
+  if (['1', 'true', 'yes', 'on'].includes(raw)) return true;
+  if (['0', 'false', 'no', 'off'].includes(raw)) return false;
+  return Boolean(process.env.VERCEL);
+}
+
 function getPool() {
   if (!connectionString) {
     throw new Error(
@@ -213,4 +226,68 @@ export async function ensureSchema() {
     schemaInitialized = false;
     throw error;
   }
+}
+
+export async function getDatabaseCapacityStatus() {
+  const maxBytes =
+    parseBytesEnv(process.env.DB_CAPACITY_BYTES)
+    || parseBytesEnv(process.env.DATABASE_CAPACITY_BYTES)
+    || parseBytesEnv(process.env.POSTGRES_MAX_BYTES)
+    || null;
+
+  const thresholdPctRaw = Number.parseFloat(process.env.DB_PAUSE_THRESHOLD_PERCENT || '95');
+  const thresholdPct = Number.isFinite(thresholdPctRaw) && thresholdPctRaw > 0 && thresholdPctRaw <= 100
+    ? thresholdPctRaw
+    : 95;
+
+  const sizeResult = await query(
+    `SELECT pg_database_size(current_database()) AS used_bytes`
+  );
+
+  const usedBytes = Number.parseInt(String(sizeResult.rows?.[0]?.used_bytes || 0), 10) || 0;
+  const thresholdRatio = thresholdPct / 100;
+
+  if (!maxBytes) {
+    return {
+      hasConfiguredLimit: false,
+      usedBytes,
+      maxBytes: null,
+      usedPercent: null,
+      thresholdPercent: thresholdPct,
+      shouldPauseScraping: false,
+    };
+  }
+
+  const usedPercent = (usedBytes / maxBytes) * 100;
+  return {
+    hasConfiguredLimit: true,
+    usedBytes,
+    maxBytes,
+    usedPercent,
+    thresholdPercent: thresholdPct,
+    shouldPauseScraping: usedBytes >= (maxBytes * thresholdRatio),
+  };
+}
+
+export async function assertDatabaseHasHeadroom() {
+  const status = await getDatabaseCapacityStatus();
+  if (!status.hasConfiguredLimit && isStrictCapacityModeEnabled()) {
+    const err = new Error(
+      'DB capacity limit is not configured. Set DB_CAPACITY_BYTES (or DATABASE_CAPACITY_BYTES/POSTGRES_MAX_BYTES) to enable scrape safety guard.'
+    );
+    err.status = 503;
+    err.code = 'DB_CAPACITY_LIMIT_NOT_CONFIGURED';
+    err.details = status;
+    throw err;
+  }
+
+  if (!status.shouldPauseScraping) return status;
+
+  const err = new Error(
+    `Scraping paused: database usage is ${status.usedPercent.toFixed(2)}% (threshold ${status.thresholdPercent}%).`
+  );
+  err.status = 503;
+  err.code = 'DB_CAPACITY_GUARD_TRIGGERED';
+  err.details = status;
+  throw err;
 }

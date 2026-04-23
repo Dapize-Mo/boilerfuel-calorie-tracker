@@ -3,6 +3,8 @@ import { query } from '../../utils/db';
 const MAX_SYNC_PAYLOAD_BYTES = 4 * 1024 * 1024;
 const TOKEN_LENGTH = 6;
 const useInMemoryFallback = true;
+const DEFAULT_SYNC_RETENTION_DAYS = 30;
+const PRUNE_INTERVAL_MS = 60 * 60 * 1000;
 
 function getGlobalMemoryStore() {
   const g = globalThis;
@@ -14,6 +16,32 @@ function getGlobalMemoryStore() {
 
 let memoryMode = false;
 const memorySyncData = getGlobalMemoryStore();
+let lastPruneAt = 0;
+
+function getSyncRetentionDays() {
+  const raw = Number.parseInt(process.env.SYNC_RETENTION_DAYS || '', 10);
+  if (Number.isFinite(raw) && raw > 0) return raw;
+  return DEFAULT_SYNC_RETENTION_DAYS;
+}
+
+async function maybePruneSyncData() {
+  const now = Date.now();
+  if ((now - lastPruneAt) < PRUNE_INTERVAL_MS) return;
+  lastPruneAt = now;
+
+  const retentionMs = getSyncRetentionDays() * 24 * 60 * 60 * 1000;
+  const cutoff = now - retentionMs;
+
+  if (memoryMode) {
+    for (const [token, row] of memorySyncData.entries()) {
+      const ts = Number.parseInt(String(row?.updated_at || 0), 10) || 0;
+      if (ts > 0 && ts < cutoff) memorySyncData.delete(token);
+    }
+    return;
+  }
+
+  await query(`DELETE FROM sync_data WHERE updated_at < $1`, [cutoff]);
+}
 
 function setMemoryRow(token, encryptedData) {
   const now = Date.now();
@@ -46,6 +74,7 @@ async function ensureSyncSchema() {
       ALTER TABLE sync_data
         ADD COLUMN IF NOT EXISTS revision BIGINT NOT NULL DEFAULT 1;
     `);
+    await query(`CREATE INDEX IF NOT EXISTS idx_sync_data_updated_at ON sync_data(updated_at);`);
   } catch (err) {
     if (true) {
       memoryMode = true;
@@ -61,6 +90,7 @@ async function ensureSyncSchema() {
 export default async function handler(req, res) {
   try {
     await ensureSyncSchema();
+    await maybePruneSyncData();
 
     // POST /api/sync — create new sync token or push data
     if (req.method === 'POST') {
