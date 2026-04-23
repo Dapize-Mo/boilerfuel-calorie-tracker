@@ -10,10 +10,10 @@ import { useSmartBack } from '../utils/useSmartBack';
 
 const VERSIONS = [
 
-  // ─── 3.9.x  Admin DB stats & maintenance  (Apr 23, 2026) ─────────────────
+  // ─── 3.9.x  Admin DB stats, sync hardening  (Apr 21–23, 2026) ──────────────
   {
     version: '3.9.0',
-    date: 'April 23, 2026',
+    date: 'April 21–23, 2026',
     latest: true,
     changes: [
       { cat: 'Feature', items: [
@@ -23,16 +23,30 @@ const VERSIONS = [
         'New /api/admin/auto-maintenance cron endpoint for scheduled DB cleanup (runs every 6h via Vercel cron)',
         'Admin Stats tab: Clean Database button to manually prune menu snapshots older than 7 days',
         '7-day menu snapshot retention enforced on ensureSchema; today\'s meal log backed up to cookie on each update',
+        'Multi-device sync: namespace isolation added so paired devices cannot cross-contaminate each other\'s data',
+        'Sync: in-memory fallback for production so sync continues working when the database is temporarily unavailable',
+        'Sync: error details now included in API responses for easier debugging',
       ]},
       { cat: 'Fix', items: [
         'Sync: resolved isReloadingFromSync stuck flag and doPull race condition that could leave sync in a permanent loading state',
+        'Sync: fixed syntax error in sync.js that was breaking the Vercel build',
         'Admin Stats tab: Quick Actions now visible even when food/activity stats fail to load',
         'Admin Foods tab: Run Scraper button correctly navigates to Stats tab instead of doing nothing',
       ]},
     ],
   },
 
-  // ─── 3.8.x  Admin polish & sync reliability  (Apr 15, 2026) ─────────────
+  // ─── 3.8.x  Admin polish & sync reliability  (Apr 15–16, 2026) ──────────
+  {
+    version: '3.8.6',
+    date: 'April 16, 2026',
+    latest: false,
+    changes: [
+      { cat: 'Fix', items: [
+        'Sync: fixed broken mount sync pull caused by an undefined interval reference on component mount',
+      ]},
+    ],
+  },
   {
     version: '3.8.5',
     date: 'April 15, 2026',
@@ -710,7 +724,7 @@ const VERSIONS = [
 ];
 
 const ERAS = [
-  { id: 'v3', prefix: '3', label: '3.x.x', name: 'Admin Tools & Sync', span: 'Feb 17 – Apr 23, 2026' },
+  { id: 'v3', prefix: '3', label: '3.x.x', name: 'Admin Tools & Sync', span: 'Feb 17 – Apr 23, 2026'  },
   { id: 'v2', prefix: '2', label: '2.x.x', name: 'Calorie Tracking System',       span: 'Feb 13–15, 2026' },
   { id: 'v1', prefix: '1', label: '1.x.x', name: 'Monochrome Brutalist Redesign', span: 'Feb 12–13, 2026' },
   { id: 'v0', prefix: '0', label: '0.x.x', name: 'Bootstrap Era',                 span: 'Sep 29 – Nov 22, 2025' },
