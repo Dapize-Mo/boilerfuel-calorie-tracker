@@ -521,6 +521,8 @@ AdminPanel.getLayout = (page) => page;
 function StatsTab() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [dbStats, setDbStats] = useState(null);
+  const [dbStatsLoading, setDbStatsLoading] = useState(true);
   const [retailScrapeStatus, setRetailScrapeStatus] = useState(null); // null | 'loading' | 'ok' | 'error'
   const [retailScrapeMsg, setRetailScrapeMsg] = useState('');
   const [hfsScrapeStatus, setHfsScrapeStatus] = useState(null);
@@ -554,7 +556,20 @@ function StatsTab() {
         setLoading(false);
       }
     }
+
+    async function loadDbStats() {
+      try {
+        const data = await apiCall('/api/admin/db-stats', {}, { requireAdmin: true });
+        setDbStats(data);
+      } catch (error) {
+        console.error('Failed to load DB stats:', error);
+      } finally {
+        setDbStatsLoading(false);
+      }
+    }
+
     loadStats();
+    loadDbStats();
   }, []);
 
   return (
@@ -601,6 +616,62 @@ function StatsTab() {
           </div>
         </div>
       </div>}
+
+      {/* Database Storage Stats */}
+      <div className="space-y-3">
+        <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-theme-text-primary/10 pb-2">
+          Storage
+        </h2>
+        {dbStatsLoading && <div className="text-xs uppercase tracking-widest text-theme-text-tertiary">Loading...</div>}
+        {!dbStatsLoading && !dbStats && <div className="text-xs uppercase tracking-widest text-theme-text-tertiary">Failed to load storage stats</div>}
+        {dbStats && (
+          <div className="space-y-3">
+            {/* DB size + capacity bar */}
+            <div className="border border-theme-text-primary/10 bg-theme-bg-primary p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-theme-text-secondary">Total DB Size</span>
+                <span className="text-lg font-bold tabular-nums">{dbStats.db_size}</span>
+              </div>
+              {dbStats.capacity?.hasConfiguredLimit && (
+                <>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-theme-text-tertiary">Capacity</span>
+                    <span className={`font-bold tabular-nums ${dbStats.capacity.shouldPauseScraping ? 'text-red-400' : dbStats.capacity.usedPercent > 75 ? 'text-yellow-400' : 'text-green-500'}`}>
+                      {dbStats.capacity.usedPercent.toFixed(1)}% of {(dbStats.capacity.maxBytes / 1073741824).toFixed(2)} GiB
+                    </span>
+                  </div>
+                  <div className="w-full h-1.5 bg-theme-text-primary/10 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${dbStats.capacity.shouldPauseScraping ? 'bg-red-400' : dbStats.capacity.usedPercent > 75 ? 'bg-yellow-400' : 'bg-green-500'}`}
+                      style={{ width: `${Math.min(dbStats.capacity.usedPercent, 100).toFixed(1)}%` }}
+                    />
+                  </div>
+                  {dbStats.capacity.shouldPauseScraping && (
+                    <div className="text-[10px] text-red-400 uppercase tracking-wider">Scraping paused — over {dbStats.capacity.thresholdPercent}% threshold</div>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* Per-table breakdown */}
+            {dbStats.tables?.length > 0 && (
+              <div className="border border-theme-text-primary/10 divide-y divide-theme-text-primary/5">
+                {dbStats.tables.map(t => (
+                  <div key={t.name} className="flex items-center justify-between px-4 py-2.5 bg-theme-bg-primary">
+                    <div>
+                      <span className="text-xs font-mono text-theme-text-secondary">{t.name}</span>
+                      {t.rows != null && (
+                        <span className="ml-2 text-[10px] text-theme-text-tertiary">{t.rows.toLocaleString()} rows</span>
+                      )}
+                    </div>
+                    <span className="text-xs tabular-nums text-theme-text-tertiary">{t.size}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* Quick Actions */}
       <div className="space-y-4">

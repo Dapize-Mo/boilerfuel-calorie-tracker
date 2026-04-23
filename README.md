@@ -181,6 +181,23 @@ All tests pass: **20/20 backend tests**
 
 ## Troubleshooting
 
+### Database safety guard (recommended)
+
+To prevent the database from filling up, configure these environment variables for frontend, backend, and GitHub Actions:
+
+```bash
+DB_CAPACITY_BYTES=1073741824      # Example: 1 GiB plan limit
+DB_PAUSE_THRESHOLD_PERCENT=95     # Pause scraping when usage >= 95%
+DB_CAPACITY_STRICT=true           # Block scraping if capacity limit is missing
+SYNC_RETENTION_DAYS=30            # Auto-prune stale sync rows
+CRON_SECRET=your-random-secret    # Protects /api/admin/auto-maintenance
+```
+
+Notes:
+- `DB_CAPACITY_BYTES` should match your provider's DB storage quota in bytes.
+- Vercel cron now runs `/api/admin/auto-maintenance` every 6 hours to prune old rows.
+- Scrape endpoints and scraping scripts will return/exit early when usage crosses the threshold.
+
 **Database connection error?**
 
 Check DATABASE_URL is set correctly:
@@ -225,6 +242,15 @@ python tools/maintenance/auto_sync_menus.py --days 1
 
 ### Recent Updates
 
+- **feat**: Add database storage stats panel to admin Stats tab (total DB size, per-table sizes/row counts, capacity bar)
+- **fix**: Sync — resolve `isReloadingFromSync` stuck flag and `doPull` race condition
+- **fix**: StatsTab — show Quick Actions even when food/activity stats fail to load
+- **feat**: Add Clean Database button to admin Stats tab
+- **feat**: Add 7-day DB retention and cookie backup for today's meal log
+- **fix**: Admin Foods tab — wire Run Scraper button to Stats tab
+- **feat**: Add database capacity guard (`DB_CAPACITY_BYTES`) to scrape endpoints
+- **feat**: Add `/api/admin/auto-maintenance` cron endpoint for scheduled DB cleanup
+- **feat**: Add scrape status polling with step-by-step GitHub Actions progress
 - **fix**: Load `retail_menu_seed.sql` in `init_db` for static beverage data
 - **feat**: Add beverages to Quick Bites locations and Lawson On-the-GO!
 - **feat**: Group logged foods, two-column profile layout, yellow accents
