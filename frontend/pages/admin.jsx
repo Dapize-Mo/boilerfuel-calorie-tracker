@@ -511,6 +511,41 @@ created_at    TIMESTAMPTZ`)}
           ))}
         </div>
       </Section>
+
+      <Section id="changelog" title="Changelog">
+        <div className="space-y-1">
+          {[
+            { type: 'feat', text: 'Add database storage stats panel to admin Stats tab (total DB size, per-table sizes/row counts, capacity bar)' },
+            { type: 'fix',  text: 'Sync — resolve isReloadingFromSync stuck flag and doPull race condition' },
+            { type: 'fix',  text: 'StatsTab — show Quick Actions even when food/activity stats fail to load' },
+            { type: 'feat', text: 'Add Clean Database button to admin Stats tab' },
+            { type: 'feat', text: 'Add 7-day DB retention and cookie backup for today\'s meal log' },
+            { type: 'fix',  text: 'Admin Foods tab — wire Run Scraper button to Stats tab' },
+            { type: 'feat', text: 'Add database capacity guard (DB_CAPACITY_BYTES) to scrape endpoints' },
+            { type: 'feat', text: 'Add /api/admin/auto-maintenance cron endpoint for scheduled DB cleanup' },
+            { type: 'feat', text: 'Add scrape status polling with step-by-step GitHub Actions progress' },
+            { type: 'fix',  text: 'Load retail_menu_seed.sql in init_db for static beverage data' },
+            { type: 'feat', text: 'Add beverages to Quick Bites locations and Lawson On-the-GO!' },
+            { type: 'feat', text: 'Group logged foods, two-column profile layout, yellow accents' },
+            { type: 'fix',  text: 'Improve expanded panel layout, add Late Lunch, fix select styling' },
+            { type: 'fix',  text: 'Ensure calories visible on mobile and fix tablet sidebar overlap' },
+            { type: 'fix',  text: 'Prevent mobile horizontal overflow clipping content' },
+            { type: 'feat', text: 'Add offline support with service worker and menu caching' },
+            { type: 'feat', text: 'Add line charts to stats, macro trends, and feedback form' },
+            { type: 'feat', text: 'Group beverages into milk/non-milk, move water tracker to sidebar' },
+            { type: 'feat', text: 'Add cross-device sync with encrypted data relay' },
+            { type: 'feat', text: 'Add live scraper progress tracking to admin panel' },
+            { type: 'feat', text: 'Add full macro goals editing + profile accessible from landing' },
+          ].map((entry, i) => (
+            <div key={i} className="flex items-start gap-3 px-3 py-2.5 border border-theme-text-primary/10 bg-theme-bg-primary">
+              <span className={`mt-0.5 shrink-0 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-sm ${
+                entry.type === 'feat' ? 'bg-green-500/10 text-green-500' : 'bg-yellow-400/10 text-yellow-400'
+              }`}>{entry.type}</span>
+              <span className="text-[11px] text-theme-text-secondary leading-relaxed">{entry.text}</span>
+            </div>
+          ))}
+        </div>
+      </Section>
     </div>
   );
 }
