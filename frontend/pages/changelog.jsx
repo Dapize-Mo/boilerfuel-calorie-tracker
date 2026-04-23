@@ -10,11 +10,33 @@ import { useSmartBack } from '../utils/useSmartBack';
 
 const VERSIONS = [
 
+  // ─── 3.9.x  Admin DB stats & maintenance  (Apr 23, 2026) ─────────────────
+  {
+    version: '3.9.0',
+    date: 'April 23, 2026',
+    latest: true,
+    changes: [
+      { cat: 'Feature', items: [
+        'Admin Stats tab: new Storage section shows total DB size, per-table sizes and row counts, and a capacity bar (green/yellow/red) when DB_CAPACITY_BYTES is configured',
+        'New GET /api/admin/db-stats endpoint — returns table sizes, row counts, and capacity status without running a cleanup',
+        'Database capacity guard (DB_CAPACITY_BYTES) added to scrape endpoints — scraping pauses automatically when usage crosses the configured threshold',
+        'New /api/admin/auto-maintenance cron endpoint for scheduled DB cleanup (runs every 6h via Vercel cron)',
+        'Admin Stats tab: Clean Database button to manually prune menu snapshots older than 7 days',
+        '7-day menu snapshot retention enforced on ensureSchema; today\'s meal log backed up to cookie on each update',
+      ]},
+      { cat: 'Fix', items: [
+        'Sync: resolved isReloadingFromSync stuck flag and doPull race condition that could leave sync in a permanent loading state',
+        'Admin Stats tab: Quick Actions now visible even when food/activity stats fail to load',
+        'Admin Foods tab: Run Scraper button correctly navigates to Stats tab instead of doing nothing',
+      ]},
+    ],
+  },
+
   // ─── 3.8.x  Admin polish & sync reliability  (Apr 15, 2026) ─────────────
   {
     version: '3.8.5',
     date: 'April 15, 2026',
-    latest: true,
+    latest: false,
     changes: [
       { cat: 'UI', items: [
         'Admin panel: added a more in-depth About BoilerFuel section inside the Docs tab to explain product goals, privacy model, and sync behavior',
@@ -688,7 +710,7 @@ const VERSIONS = [
 ];
 
 const ERAS = [
-  { id: 'v3', prefix: '3', label: '3.x.x', name: 'Beverages, Live Data & Sync',  span: 'Feb 17–20, 2026' },
+  { id: 'v3', prefix: '3', label: '3.x.x', name: 'Admin Tools & Sync', span: 'Feb 17 – Apr 23, 2026' },
   { id: 'v2', prefix: '2', label: '2.x.x', name: 'Calorie Tracking System',       span: 'Feb 13–15, 2026' },
   { id: 'v1', prefix: '1', label: '1.x.x', name: 'Monochrome Brutalist Redesign', span: 'Feb 12–13, 2026' },
   { id: 'v0', prefix: '0', label: '0.x.x', name: 'Bootstrap Era',                 span: 'Sep 29 – Nov 22, 2025' },
