@@ -51,8 +51,8 @@ export default async function handler(req, res) {
       run_id: run.id,
     };
 
-    // If the run is in progress, try to get job-level details for step progress
-    if (run.status === 'in_progress' || run.status === 'queued') {
+    // Get job-level details for step progress (all states, not just in-progress)
+    {
       const jobsResp = await fetch(
         `https://api.github.com/repos/${owner}/${repo}/actions/runs/${run.id}/jobs`,
         {

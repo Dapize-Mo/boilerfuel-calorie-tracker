@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -518,6 +518,111 @@ created_at    TIMESTAMPTZ`)}
 
 AdminPanel.getLayout = (page) => page;
 
+// ── Scrape Progress Panel ──
+function ScrapeProgressPanel({ data }) {
+  if (!data) {
+    return (
+      <div className="px-4 py-3 bg-theme-bg-secondary border-t border-theme-text-primary/10">
+        <div className="text-[10px] text-theme-text-tertiary animate-pulse">Waiting for workflow to start...</div>
+      </div>
+    );
+  }
+
+  if (data.status === 'unknown') {
+    return (
+      <div className="px-4 py-3 bg-theme-bg-secondary border-t border-theme-text-primary/10">
+        <div className="text-[10px] text-theme-text-tertiary">{data.message || 'Unable to fetch status'}</div>
+      </div>
+    );
+  }
+
+  const formatElapsed = (seconds) => {
+    if (!seconds || seconds < 0) return '';
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return m > 0 ? `${m}m ${s}s` : `${s}s`;
+  };
+
+  const stepIcon = (step) => {
+    if (step.status === 'completed') {
+      return step.conclusion === 'success'
+        ? <span className="text-green-500">&#10003;</span>
+        : step.conclusion === 'skipped'
+          ? <span className="text-theme-text-tertiary/40">&#8212;</span>
+          : <span className="text-red-400">&#10007;</span>;
+    }
+    if (step.status === 'in_progress') {
+      return <span className="text-yellow-400 animate-pulse">&#9679;</span>;
+    }
+    return <span className="text-theme-text-tertiary/20">&#9675;</span>;
+  };
+
+  const stepDuration = (step) => {
+    if (!step.started_at) return '';
+    const end = step.completed_at ? new Date(step.completed_at) : new Date();
+    const secs = Math.round((end - new Date(step.started_at)) / 1000);
+    return formatElapsed(secs);
+  };
+
+  const isRunning = data.status === 'in_progress' || data.status === 'queued';
+
+  return (
+    <div className="bg-theme-bg-secondary border-t border-theme-text-primary/10">
+      {/* Header bar */}
+      <div className="px-4 py-2 flex items-center justify-between border-b border-theme-text-primary/5">
+        <div className="flex items-center gap-2 text-[10px]">
+          {isRunning ? (
+            <span className="text-yellow-400 animate-pulse">&#9679; {data.status === 'queued' ? 'Queued' : 'Running'}</span>
+          ) : (
+            <span className={data.conclusion === 'success' ? 'text-green-500' : 'text-red-400'}>
+              {data.conclusion === 'success' ? '&#10003; Completed' : `&#10007; ${data.conclusion || 'Failed'}`}
+            </span>
+          )}
+          {data.total_steps && (
+            <span className="text-theme-text-tertiary">
+              Step {data.completed_steps}/{data.total_steps}
+            </span>
+          )}
+          {data.elapsed_seconds != null && (
+            <span className="text-theme-text-tertiary">{formatElapsed(data.elapsed_seconds)}</span>
+          )}
+        </div>
+        {data.html_url && (
+          <a
+            href={data.html_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[10px] text-theme-text-tertiary hover:text-theme-text-secondary transition-colors"
+          >
+            View on GitHub &rarr;
+          </a>
+        )}
+      </div>
+      {/* Steps list */}
+      {data.steps && data.steps.length > 0 && (
+        <div className="px-4 py-2 space-y-1">
+          {data.steps.map((step, i) => (
+            <div
+              key={i}
+              className={`flex items-center gap-2 text-[10px] font-mono ${
+                step.status === 'in_progress'
+                  ? 'text-theme-text-primary'
+                  : step.status === 'completed'
+                    ? 'text-theme-text-tertiary'
+                    : 'text-theme-text-tertiary/40'
+              }`}
+            >
+              <span className="w-3 text-center flex-shrink-0">{stepIcon(step)}</span>
+              <span className="flex-1 truncate">{step.name}</span>
+              <span className="text-theme-text-tertiary/40 tabular-nums">{stepDuration(step)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Stats Tab ──
 function StatsTab() {
   const [stats, setStats] = useState(null);
@@ -528,8 +633,39 @@ function StatsTab() {
   const [retailScrapeMsg, setRetailScrapeMsg] = useState('');
   const [hfsScrapeStatus, setHfsScrapeStatus] = useState(null);
   const [hfsScrapeMsg, setHfsScrapeMsg] = useState('');
+  const [hfsExpanded, setHfsExpanded] = useState(false);
+  const [hfsRunData, setHfsRunData] = useState(null);
+  const hfsPollRef = useRef(null);
   const [cleanupStatus, setCleanupStatus] = useState(null); // null | 'loading' | 'ok' | 'error'
   const [cleanupResult, setCleanupResult] = useState(null);
+
+  const pollScrapeStatus = useCallback(async () => {
+    try {
+      const data = await apiCall('/api/admin/scrape-status', {}, { requireAdmin: true });
+      setHfsRunData(data);
+      if (data.status === 'completed') {
+        clearInterval(hfsPollRef.current);
+        hfsPollRef.current = null;
+        setHfsScrapeStatus(data.conclusion === 'success' ? 'ok' : 'error');
+        setHfsScrapeMsg(data.conclusion === 'success' ? 'Scrape completed successfully' : `Scrape failed (${data.conclusion})`);
+      } else if (data.status === 'in_progress') {
+        setHfsScrapeStatus('ok');
+        setHfsScrapeMsg(data.current_step ? `Running: ${data.current_step}` : 'Running...');
+      }
+    } catch {
+      // silently ignore poll errors
+    }
+  }, []);
+
+  const startPolling = useCallback(() => {
+    if (hfsPollRef.current) clearInterval(hfsPollRef.current);
+    pollScrapeStatus();
+    hfsPollRef.current = setInterval(pollScrapeStatus, 5000);
+  }, [pollScrapeStatus]);
+
+  useEffect(() => {
+    return () => { if (hfsPollRef.current) clearInterval(hfsPollRef.current); };
+  }, []);
 
   useEffect(() => {
     async function loadStats() {
@@ -693,35 +829,55 @@ function StatsTab() {
           </Link>
 
           {/* HFS scraper trigger */}
-          <button
-            onClick={async () => {
-              setHfsScrapeStatus('loading');
-              setHfsScrapeMsg('');
-              try {
-                const res = await apiCall('/api/admin/scrape', { method: 'POST' }, { requireAdmin: true });
-                setHfsScrapeStatus('ok');
-                setHfsScrapeMsg(res?.message || 'Workflow dispatched');
-              } catch (err) {
-                setHfsScrapeStatus('error');
-                setHfsScrapeMsg(err.message || 'Failed to trigger workflow');
-              }
-            }}
-            disabled={hfsScrapeStatus === 'loading'}
-            className="w-full flex items-center justify-between px-4 py-4 bg-theme-bg-primary hover:bg-theme-text-primary/5 transition-colors group text-left disabled:opacity-50"
-          >
-            <div>
-              <div className="text-xs font-bold uppercase tracking-wider text-theme-text-primary">Scrape Dining Hall Menus</div>
-              <div className="text-[10px] text-theme-text-tertiary mt-0.5">
-                {hfsScrapeStatus === 'loading' && 'Dispatching workflow...'}
-                {hfsScrapeStatus === 'ok' && <span className="text-green-500">{hfsScrapeMsg}</span>}
-                {hfsScrapeStatus === 'error' && <span className="text-red-400">{hfsScrapeMsg}</span>}
-                {!hfsScrapeStatus && 'Import HFS dining court menus (runs scrape.yml)'}
-              </div>
+          <div>
+            <div className="flex">
+              <button
+                onClick={async () => {
+                  setHfsScrapeStatus('loading');
+                  setHfsScrapeMsg('');
+                  setHfsExpanded(true);
+                  setHfsRunData(null);
+                  try {
+                    const res = await apiCall('/api/admin/scrape', { method: 'POST' }, { requireAdmin: true });
+                    setHfsScrapeStatus('ok');
+                    setHfsScrapeMsg(res?.message || 'Workflow dispatched. Status will update when the run starts.');
+                    // Start polling after a short delay to let GH Actions queue the run
+                    setTimeout(() => startPolling(), 3000);
+                  } catch (err) {
+                    setHfsScrapeStatus('error');
+                    setHfsScrapeMsg(err.message || 'Failed to trigger workflow');
+                  }
+                }}
+                disabled={hfsScrapeStatus === 'loading'}
+                className="flex-1 flex items-center justify-between px-4 py-4 bg-theme-bg-primary hover:bg-theme-text-primary/5 transition-colors group text-left disabled:opacity-50"
+              >
+                <div>
+                  <div className="text-xs font-bold uppercase tracking-wider text-theme-text-primary">Scrape Dining Hall Menus</div>
+                  <div className="text-[10px] text-theme-text-tertiary mt-0.5">
+                    {hfsScrapeStatus === 'loading' && 'Dispatching workflow...'}
+                    {hfsScrapeStatus === 'ok' && <span className="text-green-500">{hfsScrapeMsg}</span>}
+                    {hfsScrapeStatus === 'error' && <span className="text-red-400">{hfsScrapeMsg}</span>}
+                    {!hfsScrapeStatus && 'Import HFS dining court menus (runs scrape.yml)'}
+                  </div>
+                </div>
+              </button>
+              <button
+                onClick={() => {
+                  setHfsExpanded(prev => !prev);
+                  if (!hfsExpanded && !hfsPollRef.current && hfsScrapeStatus) {
+                    pollScrapeStatus();
+                  }
+                }}
+                className="px-3 bg-theme-bg-primary hover:bg-theme-text-primary/5 transition-colors border-l border-theme-text-primary/10 flex items-center"
+                title={hfsExpanded ? 'Collapse' : 'Expand'}
+              >
+                <span className={`text-theme-text-tertiary/40 text-xs transition-transform ${hfsExpanded ? 'rotate-90' : ''}`}>&#9654;</span>
+              </button>
             </div>
-            <span className="text-theme-text-tertiary/40 group-hover:text-theme-text-tertiary transition-colors text-xs">
-              {hfsScrapeStatus === 'loading' ? '...' : '\u2192'}
-            </span>
-          </button>
+            {hfsExpanded && (
+              <ScrapeProgressPanel data={hfsRunData} />
+            )}
+          </div>
 
           {/* Retail scraper trigger */}
           <button
