@@ -313,24 +313,24 @@ function BeverageRow({ food, getCount, selectedDate, handleAddMeal, removeMeal, 
           {macros.carbs != null && <> · {macros.carbs}c</>}
         </div>
       </div>
-      <div className="flex items-center gap-1 shrink-0">
+      <div className="flex items-center gap-1.5 shrink-0">
         {count > 0 && (
-          <span className="text-[9px] font-bold bg-theme-text-primary text-theme-bg-primary px-1 py-0.5 tabular-nums">
+          <span className="text-[9px] font-bold bg-theme-text-primary text-theme-bg-primary px-1.5 py-0.5 tabular-nums">
             {count}
           </span>
         )}
         <button
           onClick={(e) => handleAddMeal(food, e)}
-          className="p-1 border border-theme-text-primary/20 text-theme-text-tertiary hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors"
+          className="p-2 border border-theme-text-primary/20 text-theme-text-tertiary hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors"
           title="Add to log">
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
         </button>
         <button
           onClick={(e) => { e.stopPropagation(); removeMeal(food, selectedDate); }}
           disabled={count === 0}
-          className={`p-1 border transition-colors ${count > 0 ? 'border-theme-text-primary/20 text-theme-text-tertiary hover:bg-theme-text-primary hover:text-theme-bg-primary' : 'border-theme-text-primary/10 text-theme-text-tertiary/20 cursor-not-allowed'}`}
+          className={`p-2 border transition-colors ${count > 0 ? 'border-theme-text-primary/20 text-theme-text-tertiary hover:bg-theme-text-primary hover:text-theme-bg-primary' : 'border-theme-text-primary/10 text-theme-text-tertiary/20 cursor-not-allowed'}`}
           title="Remove from log">
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="5" y1="12" x2="19" y2="12" /></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="5" y1="12" x2="19" y2="12" /></svg>
         </button>
       </div>
     </div>
@@ -394,7 +394,8 @@ export default function Home() {
   const [mealPickerFood, setMealPickerFood] = useState(null); // food waiting for meal selection
   const [mealPickerOptions, setMealPickerOptions] = useState(null); // restricted options for compound meal times
   const [infoFood, setInfoFood] = useState(null); // food for the ingredients/info modal
-  const [searchText, setSearchText] = useState(''); // food search filter
+  const [searchText, setSearchText] = useState(''); // food search filter (display)
+  const [debouncedSearch, setDebouncedSearch] = useState(''); // debounced for filtering
   const [servingsInput, setServingsInput] = useState({}); // { [foodId]: number }
   const [showFilters, setShowFilters] = useState(false); // dietary/nutrition filter panel
   const [nutritionFilter, setNutritionFilter] = useState({ minProtein: '', maxCalories: '', vegetarian: false, vegan: false, allergenFree: '' });
@@ -409,6 +410,12 @@ export default function Home() {
 
   const mealTimes = ['All', 'Breakfast', 'Brunch', 'Lunch', 'Late Lunch', 'Dinner'];
   const isLanding = view === 'landing';
+
+  // Debounce search text for filtering
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(searchText), 150);
+    return () => clearTimeout(t);
+  }, [searchText]);
 
   // ── Date navigation ──
   function prevDay() {
@@ -578,7 +585,11 @@ export default function Home() {
 
   // Re-fetch when filters change while in results view
   useEffect(() => {
-    if (view === 'results') fetchFoods();
+    if (view === 'results') {
+      fetchFoods();
+      // Reset scroll to top when filters change
+      if (resultsRef.current) resultsRef.current.scrollTop = 0;
+    }
   }, [view, fetchFoods]);
 
   // ── Scroll-based navigation: landing → results ──
@@ -694,8 +705,8 @@ export default function Home() {
     const regular = [];
     const bevs = [];
     for (const f of foods) {
-      // Text search filter
-      if (searchText && !f.name.toLowerCase().includes(searchText.toLowerCase())) continue;
+      // Text search filter (debounced)
+      if (debouncedSearch && !f.name.toLowerCase().includes(debouncedSearch.toLowerCase())) continue;
       // Favorites filter
       if (showFavsOnly && !isFavorite(f.id)) continue;
       // Dietary filters
@@ -722,7 +733,7 @@ export default function Home() {
       else regular.push(f);
     }
     return { regularFoods: regular, beverageFoods: bevs };
-  }, [foods, searchText, showFavsOnly, isFavorite, nutritionFilter, dietaryPrefs]);
+  }, [foods, debouncedSearch, showFavsOnly, isFavorite, nutritionFilter, dietaryPrefs]);
 
   // ── Frequently logged non-beverage foods (for quick-add panel) ──
   const frequentFoods = useMemo(() => {
@@ -1641,7 +1652,7 @@ export default function Home() {
                           onMouseEnter={(e) => { if (!isExpanded) onFoodMouseEnter(food, e); }}
                           onMouseMove={(e) => { if (!isExpanded) onFoodMouseMove(e); }}
                           onMouseLeave={onFoodMouseLeave}>
-                          <div className="py-2 pr-4 flex-1 min-w-0 overflow-hidden">
+                          <div className="py-2.5 pr-4 flex-1 min-w-0 overflow-hidden">
                             <div className="flex items-center gap-2 overflow-hidden">
                               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"
                                 className="shrink-0 text-theme-text-tertiary transition-transform duration-200"

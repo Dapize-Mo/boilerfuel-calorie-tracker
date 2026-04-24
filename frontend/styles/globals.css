@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -9,6 +11,10 @@
   }
   .pt-safe {
     padding-top: env(safe-area-inset-top, 0px);
+  }
+  .touch-target {
+    min-width: 44px;
+    min-height: 44px;
   }
 }
 
@@ -415,8 +421,15 @@ html {
 
 /* Custom scrollbar - light mode */
 ::-webkit-scrollbar {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
+}
+
+@media (max-width: 640px) {
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
 }
 
 ::-webkit-scrollbar-track {

@@ -963,18 +963,18 @@ export default function ProfilePage() {
                 <button
                   onClick={exportWeightCSV}
                   disabled={!Object.keys(weightByDate || {}).length}
-                  className="px-3 py-1.5 border border-theme-text-primary/30 text-theme-text-secondary text-[10px] font-bold uppercase tracking-wider hover:text-theme-text-primary hover:border-theme-text-primary transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                  className="px-3 py-2 border border-theme-text-primary/30 text-theme-text-secondary text-[10px] font-bold uppercase tracking-wider hover:text-theme-text-primary hover:border-theme-text-primary transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
                   Export CSV
                 </button>
                 <button
                   onClick={exportWeightJSON}
                   disabled={!Object.keys(weightByDate || {}).length}
-                  className="px-3 py-1.5 border border-theme-text-primary/30 text-theme-text-secondary text-[10px] font-bold uppercase tracking-wider hover:text-theme-text-primary hover:border-theme-text-primary transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                  className="px-3 py-2 border border-theme-text-primary/30 text-theme-text-secondary text-[10px] font-bold uppercase tracking-wider hover:text-theme-text-primary hover:border-theme-text-primary transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
                   Export JSON
                 </button>
                 <button
                   onClick={() => weightFileRef.current?.click()}
-                  className="px-3 py-1.5 border border-theme-text-primary/20 text-theme-text-tertiary text-[10px] font-bold uppercase tracking-wider hover:text-theme-text-primary hover:border-theme-text-primary transition-colors">
+                  className="px-3 py-2 border border-theme-text-primary/20 text-theme-text-tertiary text-[10px] font-bold uppercase tracking-wider hover:text-theme-text-primary hover:border-theme-text-primary transition-colors">
                   Import
                 </button>
                 <input

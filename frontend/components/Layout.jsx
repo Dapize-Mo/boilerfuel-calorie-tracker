@@ -40,7 +40,7 @@ export default function Layout({ children }) {
         <Footer />
       </div>
 
-      <div className="fixed bottom-6 right-6 z-50">
+      <div className="fixed right-6 z-50" style={{ bottom: 'max(1.5rem, env(safe-area-inset-bottom, 1.5rem))' }}>
         <ThemeToggleButton />
       </div>
     </>
@@ -71,19 +71,19 @@ const TopNav = memo(function TopNav() {
           </Link>
 
           <div className="flex items-center gap-1">
-            <nav className="flex items-center gap-1">
+            <nav aria-label="Main navigation" className="flex items-center gap-1">
               {navItems.map(item => (
                 <Link
                   key={item.href}
                   href={item.href}
                   title={item.label}
-                  className={`px-2 sm:px-3 py-2 rounded-lg text-sm font-medium transition-colors min-w-[40px] flex items-center justify-center sm:justify-start ${
+                  className={`px-2.5 sm:px-3 py-2.5 rounded-lg text-sm font-medium transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center sm:justify-start ${
                     router.pathname === item.href
                       ? 'bg-theme-accent text-white'
                       : 'text-theme-text-secondary hover:bg-theme-bg-hover'
                   }`}
                 >
-                  <span className="sm:mr-1">{item.icon}</span>
+                  <span className="sm:mr-1.5">{item.icon}</span>
                   <span className="hidden sm:inline">{item.label}</span>
                 </Link>
               ))}
@@ -94,7 +94,7 @@ const TopNav = memo(function TopNav() {
             {/* Profile button */}
             <Link
               href="/profile"
-              className={`ml-2 p-2 rounded-full transition-colors ${
+              className={`ml-2 p-2.5 rounded-full transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center ${
                 router.pathname === '/profile'
                   ? 'bg-theme-accent text-white'
                   : 'text-theme-text-secondary hover:bg-theme-bg-hover'
@@ -114,16 +114,16 @@ const TopNav = memo(function TopNav() {
 
 const Footer = memo(function Footer() {
   return (
-    <footer className="border-t border-theme-border-secondary mt-auto bg-theme-bg-secondary/30">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 text-xs text-theme-text-tertiary flex flex-wrap items-center justify-between gap-3">
+    <footer role="contentinfo" className="border-t border-theme-border-secondary mt-auto bg-theme-bg-secondary/30">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-safe text-xs text-theme-text-tertiary flex flex-wrap items-center justify-between gap-3">
         <p>
           Your data stays on this device. No accounts required.
         </p>
         <div className="flex items-center gap-4">
-          <Link href="/about" className="hover:text-yellow-400 transition-colors">About</Link>
-          <Link href="/changelog" className="hover:text-yellow-400 transition-colors">Changelog</Link>
-          <Link href="/privacy" className="hover:text-yellow-400 transition-colors">Privacy</Link>
-          <Link href="/admin" className="hover:text-yellow-400 transition-colors">Admin</Link>
+          <Link href="/about" className="hover:text-yellow-400 transition-colors py-1">About</Link>
+          <Link href="/changelog" className="hover:text-yellow-400 transition-colors py-1">Changelog</Link>
+          <Link href="/privacy" className="hover:text-yellow-400 transition-colors py-1">Privacy</Link>
+          <Link href="/admin" className="hover:text-yellow-400 transition-colors py-1">Admin</Link>
         </div>
       </div>
     </footer>
