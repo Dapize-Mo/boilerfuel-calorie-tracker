@@ -857,7 +857,7 @@ function StatsTab() {
                     {hfsScrapeStatus === 'loading' && 'Dispatching workflow...'}
                     {hfsScrapeStatus === 'ok' && <span className="text-green-500">{hfsScrapeMsg}</span>}
                     {hfsScrapeStatus === 'error' && <span className="text-red-400">{hfsScrapeMsg}</span>}
-                    {!hfsScrapeStatus && 'Import HFS dining court menus (runs scrape.yml)'}
+                    {!hfsScrapeStatus && 'Import HFS dining court menus (runs scrape.yml) — click ▼ to track progress'}
                   </div>
                 </div>
               </button>
@@ -868,10 +868,10 @@ function StatsTab() {
                     pollScrapeStatus();
                   }
                 }}
-                className="px-3 bg-theme-bg-primary hover:bg-theme-text-primary/5 transition-colors border-l border-theme-text-primary/10 flex items-center"
-                title={hfsExpanded ? 'Collapse' : 'Expand'}
+                className="px-4 bg-theme-bg-primary hover:bg-theme-text-primary/5 transition-colors border-l border-theme-text-primary/10 flex items-center"
+                title={hfsExpanded ? 'Collapse progress' : 'Show progress'}
               >
-                <span className={`text-theme-text-tertiary/40 text-xs transition-transform ${hfsExpanded ? 'rotate-90' : ''}`}>&#9654;</span>
+                <span className={`text-theme-text-secondary text-xs transition-transform duration-200 ${hfsExpanded ? 'rotate-180' : ''}`}>&#9660;</span>
               </button>
             </div>
             {hfsExpanded && (
