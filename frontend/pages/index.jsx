@@ -408,6 +408,7 @@ export default function Home() {
   const [saveComboFoodId, setSaveComboFoodId] = useState(null); // which food's inline combo-save form is open
   const [saveComboName, setSaveComboName] = useState(''); // name being typed for combo save
   const [showShortcutsHint, setShowShortcutsHint] = useState(false);
+  const [showQuickAdd, setShowQuickAdd] = useState(false);
 
   const mealTimes = ['All', 'Breakfast', 'Brunch', 'Lunch', 'Late Lunch', 'Dinner'];
   const isLanding = view === 'landing';
@@ -890,6 +891,32 @@ export default function Home() {
     );
   }, [mealsByDate, selectedDate]);
 
+  // ── Recent foods for quick-add (last 7 days, deduped by id, most recent first) ──
+  const recentFoods = useMemo(() => {
+    const seen = new Map(); // id → food entry (keep most recent)
+    const dates = Object.keys(mealsByDate).sort().reverse().slice(0, 7);
+    for (const date of dates) {
+      const dayMeals = mealsByDate[date] || [];
+      for (let i = dayMeals.length - 1; i >= 0; i--) {
+        const m = dayMeals[i];
+        if (!m.id || !m.name) continue;
+        if (!seen.has(m.id)) {
+          seen.set(m.id, {
+            id: m.id,
+            name: m.name,
+            calories: m.calories || 0,
+            macros: m.macros || {},
+            dining_court: m.dining_court || '',
+            station: m.station || '',
+            meal_time: m.meal_time || '',
+            servings: 1,
+          });
+        }
+      }
+    }
+    return Array.from(seen.values()).slice(0, 20);
+  }, [mealsByDate]);
+
   // ── Location display for summary bar ──
   const locationLabel = location.type === 'all' ? 'All locations'
     : location.type === 'category' ? location.value
@@ -1110,13 +1137,69 @@ export default function Home() {
         </div>
       </div>
 
+      {/* ── Quick Add — recent meals on landing page ── */}
+      {isLanding && recentFoods.length > 0 && (
+        <div style={{
+          position: 'fixed', zIndex: 20,
+          top: isMobile ? '62vh' : '58vh',
+          left: '50%', transform: 'translateX(-50%)',
+          width: isMobile ? 'calc(100vw - 2rem)' : 420,
+          maxWidth: 'calc(100vw - 2rem)',
+          transition: `opacity 0.4s ${EASE}`,
+          opacity: isLanding ? 1 : 0,
+          pointerEvents: isLanding ? 'auto' : 'none',
+        }}>
+          <button
+            onClick={() => setShowQuickAdd(prev => !prev)}
+            className="flex items-center gap-2 mx-auto text-theme-text-tertiary hover:text-theme-text-primary transition-colors"
+            style={{ fontSize: '0.65rem', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="opacity-60">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
+            </svg>
+            Quick Add
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+              className="opacity-40 transition-transform duration-200"
+              style={{ transform: showQuickAdd ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+          {showQuickAdd && (
+            <div className="mt-2 border border-theme-text-primary/15 bg-theme-bg-primary/95 backdrop-blur-sm overflow-hidden"
+              style={{ animation: `fadeInRow 0.2s ${EASE} both`, maxHeight: isMobile ? '20vh' : '24vh', overflowY: 'auto' }}>
+              <div className="p-2 flex flex-wrap gap-1.5">
+                {recentFoods.map(food => {
+                  const count = getCount(food.id, selectedDate);
+                  const fav = isFavorite(food.id);
+                  return (
+                    <button key={food.id}
+                      onClick={() => handleAddMeal(food)}
+                      className={`group flex items-center gap-1.5 border text-left transition-colors hover:bg-theme-bg-hover ${
+                        count > 0 ? 'border-yellow-500/40 bg-yellow-500/5' : 'border-theme-text-primary/10'
+                      }`}
+                      style={{ padding: '4px 8px', fontSize: '0.75rem', maxWidth: '100%' }}>
+                      {fav && <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor" className="shrink-0 text-yellow-500"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>}
+                      <span className="truncate text-theme-text-secondary group-hover:text-theme-text-primary">{food.name}</span>
+                      <span className="shrink-0 text-theme-text-tertiary tabular-nums" style={{ fontSize: '0.65rem' }}>{food.calories}</span>
+                      {count > 0 && (
+                        <span className="shrink-0 text-[9px] font-bold bg-theme-text-primary text-theme-bg-primary px-1 py-0 tabular-nums">{count}</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ── View Menu button — fades out ── */}
       <button onClick={handleViewMenu}
         className="border-2 border-theme-text-primary text-theme-text-primary font-bold uppercase hover:bg-theme-text-primary hover:text-theme-bg-primary"
         style={{
           position: 'fixed', zIndex: 20,
-          top: isMobile ? '72vh' : '64vh', left: '50%', transform: 'translateX(-50%)',
-          transition: `opacity 0.4s ${EASE}`,
+          top: isMobile ? (showQuickAdd && recentFoods.length > 0 ? '85vh' : '72vh') : '64vh',
+          left: '50%', transform: 'translateX(-50%)',
+          transition: `opacity 0.4s ${EASE}, top 0.4s ${EASE}`,
           opacity: isLanding ? 1 : 0,
           pointerEvents: isLanding ? 'auto' : 'none',
           padding: isMobile ? '10px 32px' : '12px 40px',
@@ -1131,7 +1214,7 @@ export default function Home() {
         position: 'fixed', zIndex: 20,
         top: isMobile ? '80vh' : '73vh', left: '50%',
         transition: `opacity 0.4s ${EASE}`,
-        opacity: isLanding ? 0.25 : 0,
+        opacity: isLanding && !showQuickAdd ? 0.25 : 0,
         pointerEvents: 'none',
         animation: isLanding ? `scrollHintBounce 2s ${EASE} infinite` : 'none',
       }}>

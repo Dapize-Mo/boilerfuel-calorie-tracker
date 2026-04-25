@@ -10,11 +10,36 @@ import { useSmartBack } from '../utils/useSmartBack';
 
 const VERSIONS = [
 
-  // ─── 3.10.x  Reliable multi-device sync  (Apr 23–25, 2026) ─────────────────
+  // ─── 3.10.x  Reliable multi-device sync + quick add  (Apr 23–25, 2026) ─────
+  {
+    version: '3.10.1',
+    date: 'April 25, 2026',
+    latest: true,
+    changes: [
+      { cat: 'Feature', items: [
+        'Quick Add on landing page — collapsible panel showing your recent meals (last 7 days, deduped) so you can re-log common foods with a single tap without opening the full menu',
+      ]},
+      { cat: 'Fix', items: [
+        'Theme key mismatch: FOUC-prevention script in _app.js now reads the correct `boilerfuel_theme` key instead of `theme`',
+        'Safari < 15.4 compatibility: replaced Array.findLastIndex with a manual reverse loop',
+        'Notification toggles: per-meal on/off settings are now properly read before firing each reminder',
+        'Barcode scanner custom foods now load from localStorage on mount so they persist across sessions',
+        'Meal backup dismiss uses namespaced storage key instead of raw key',
+        'Weight input no longer gets stuck in empty state after clearing and re-focusing',
+        'Sync polling gated on sync token existence — no more timer noise for unpaired users',
+        'Meal time "Now" button corrected to match official Purdue dining hours (Lunch 11am–2pm)',
+        'Sticky summary bar: increased bottom padding to prevent overlap on shorter screens',
+        'Removed dead `calcNutritionScore` import from stats page',
+      ]},
+      { cat: 'UI', items: [
+        'Footers standardized across all pages with consistent navigation links',
+      ]},
+    ],
+  },
   {
     version: '3.10.0',
-    date: 'April 23–25, 2026',
-    latest: true,
+    date: 'April 23–24, 2026',
+    latest: false,
     changes: [
       { cat: 'Feature', items: [
         'Optimistic concurrency control (OCC) for device sync — server rejects stale pushes with 409 Conflict and returns current data so the client can merge and retry, eliminating the last-write-wins race condition that caused paired devices to overwrite each other\'s meals',
