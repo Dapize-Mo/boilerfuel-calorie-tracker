@@ -94,7 +94,7 @@ export default async function handler(req, res) {
 
     // POST /api/sync — create new sync token or push data
     if (req.method === 'POST') {
-      const { action, token, encrypted_data, updated_at } = req.body;
+      const { action, token, encrypted_data, updated_at, expected_revision } = req.body;
 
       if (action === 'create') {
         if (encrypted_data != null && typeof encrypted_data !== 'string') {
@@ -148,14 +148,68 @@ export default async function handler(req, res) {
         if (Buffer.byteLength(encrypted_data, 'utf8') > MAX_SYNC_PAYLOAD_BYTES) {
           return res.status(413).json({ error: 'Sync payload too large' });
         }
-        // Use the server's clock so all devices share the same timestamp
-        // reference — prevents clock skew between phone/PC causing one device
-        // to permanently miss the other's pushes.
+
+        const expectedRev = Number.isFinite(Number(expected_revision)) ? Math.floor(Number(expected_revision)) : null;
+        const serverTs = Date.now();
+
+        // ── OCC path: client sends expected_revision to guard against overwrites ──
+        if (expectedRev !== null) {
+          if (memoryMode) {
+            const existing = memorySyncData.get(normalizedToken);
+            if (existing && existing.revision !== expectedRev) {
+              return res.status(409).json({
+                error: 'Revision conflict',
+                encrypted_data: existing.encrypted_data,
+                revision: existing.revision,
+                updated_at: existing.updated_at,
+              });
+            }
+            const row = setMemoryRow(normalizedToken, encrypted_data);
+            return res.json({
+              ok: true,
+              revision: row.revision,
+              updated_at: row.updated_at,
+            });
+          }
+
+          // Try conditional update: only succeed if revision matches
+          const { rows } = await query(
+            `UPDATE sync_data
+             SET encrypted_data = $2, revision = revision + 1, updated_at = $3
+             WHERE token = $1 AND revision = $4
+             RETURNING revision, updated_at`,
+            [normalizedToken, encrypted_data, serverTs, expectedRev]
+          );
+          if (rows.length > 0) {
+            const row = rows[0];
+            return res.json({
+              ok: true,
+              revision: Number.parseInt(String(row.revision), 10),
+              updated_at: Number.parseInt(String(row.updated_at), 10),
+            });
+          }
+          // Revision mismatch — return 409 with current server data for client merge
+          const { rows: currentRows } = await query(
+            `SELECT encrypted_data, revision, updated_at FROM sync_data WHERE token = $1`,
+            [normalizedToken]
+          );
+          if (currentRows.length > 0) {
+            const current = currentRows[0];
+            return res.status(409).json({
+              error: 'Revision conflict',
+              encrypted_data: current.encrypted_data,
+              revision: Number.parseInt(String(current.revision), 10),
+              updated_at: Number.parseInt(String(current.updated_at), 10),
+            });
+          }
+          // Token doesn't exist yet — fall through to unconditional insert below
+        }
+
+        // ── Legacy path: no expected_revision (backward compat) ──
         let row = {};
         if (memoryMode) {
           row = setMemoryRow(normalizedToken, encrypted_data);
         } else {
-          const serverTs = Date.now();
           const { rows } = await query(
             `INSERT INTO sync_data (token, encrypted_data, revision, updated_at)
              VALUES ($1, $2, 1, $3)

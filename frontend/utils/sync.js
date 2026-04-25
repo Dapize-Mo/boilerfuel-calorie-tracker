@@ -340,8 +340,8 @@ export async function pushData(options = {}) {
   }
 
   // Step 2: Gather the now-merged local data and push to server.
-  const data = gatherLocalData();
-  const pushedKeys = Object.keys(data).filter(k => SYNC_KEYS.includes(k));
+  let data = gatherLocalData();
+  let pushedKeys = Object.keys(data).filter(k => SYNC_KEYS.includes(k));
 
   // Safety guard: if local meals are empty AND the server had no new data to
   // offer (pulled=false), skip the push. Otherwise this device would silently
@@ -362,60 +362,103 @@ export async function pushData(options = {}) {
     return { pushed: false, pulled, skipped: true, transferred: [], pulledTransferred: pulledTransfer };
   }
 
-  const encrypted = await encrypt(data, secret);
-  const pushTimestamp = Date.now();
+  const MAX_OCC_RETRIES = 3;
+  let occRetries = 0;
 
   try {
-    const pushRes = await robustFetch('/api/sync', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+    while (true) {
+      const currentRevision = parseInt(storageGetItem(SYNC_LAST_REVISION_KEY) || '', 10);
+      const encrypted = await encrypt(data, secret);
+      const pushTimestamp = Date.now();
+
+      const pushBody = {
         action: 'push',
         token,
         encrypted_data: encrypted,
         updated_at: pushTimestamp,
-      }),
-    });
-    
-    if (!pushRes.ok) {
-      const msg = await parseErrorMessage(pushRes, 'Failed to push local sync data');
-      addSyncLogEntry({ direction: 'push', status: 'error', keys: pushedKeys, detail: msg });
-      throw new Error(msg);
-    }
+      };
+      // Send expected_revision for OCC guard (if we have one)
+      if (Number.isFinite(currentRevision)) {
+        pushBody.expected_revision = currentRevision;
+      }
 
-    // Use the server's authoritative timestamp (not our local Date.now()) so
-    // all devices share the same time reference.  Clock skew between phone and
-    // PC would otherwise cause one device to permanently miss the other's pushes.
-    const pushBody = await pushRes.json().catch(() => ({}));
-    if (Number.isFinite(Number(pushBody.revision))) {
-      storageSetItem(SYNC_LAST_REVISION_KEY, String(Math.floor(Number(pushBody.revision))));
+      const pushRes = await robustFetch('/api/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(pushBody),
+      });
+
+      // ── 409 Conflict: another device pushed first — merge and retry ──
+      if (pushRes.status === 409 && occRetries < MAX_OCC_RETRIES) {
+        occRetries++;
+        const conflictBody = await pushRes.json().catch(() => ({}));
+        console.log(`[sync] OCC conflict (attempt ${occRetries}/${MAX_OCC_RETRIES}), server revision:`, conflictBody.revision);
+
+        if (conflictBody.encrypted_data) {
+          const conflictData = await decrypt(conflictBody.encrypted_data, secret);
+          mergeRemoteData(conflictData);
+        }
+        // Update local revision cursor to the server's current revision
+        if (Number.isFinite(Number(conflictBody.revision))) {
+          storageSetItem(SYNC_LAST_REVISION_KEY, String(Math.floor(Number(conflictBody.revision))));
+        }
+        if (conflictBody.updated_at) {
+          storageSetItem(SYNC_LAST_PULL_KEY, String(conflictBody.updated_at));
+        }
+
+        // Re-gather local data (now includes merged conflict data) and retry
+        data = gatherLocalData();
+        pushedKeys = Object.keys(data).filter(k => SYNC_KEYS.includes(k));
+        addSyncLogEntry({
+          direction: 'push',
+          status: 'ok',
+          keys: pushedKeys,
+          detail: `OCC conflict resolved (attempt ${occRetries}), merging and retrying push`,
+        });
+        continue;
+      }
+
+      if (!pushRes.ok) {
+        const msg = await parseErrorMessage(pushRes, 'Failed to push local sync data');
+        addSyncLogEntry({ direction: 'push', status: 'error', keys: pushedKeys, detail: msg });
+        throw new Error(msg);
+      }
+
+      // Use the server's authoritative timestamp (not our local Date.now()) so
+      // all devices share the same time reference.
+      const respBody = await pushRes.json().catch(() => ({}));
+      if (Number.isFinite(Number(respBody.revision))) {
+        storageSetItem(SYNC_LAST_REVISION_KEY, String(Math.floor(Number(respBody.revision))));
+      }
+      const confirmedTs = respBody.updated_at || pushTimestamp;
+      storageSetItem(SYNC_LAST_PULL_KEY, String(confirmedTs));
+
+      addSyncLogEntry({
+        direction: 'push',
+        status: 'ok',
+        keys: pushedKeys,
+        detail: tokenRecovered
+          ? 'Recovered sync token on server and pushed latest encrypted data'
+          : occRetries > 0
+            ? `Push succeeded after ${occRetries} OCC conflict merge(s)`
+            : (pulledKeys.length > 0
+              ? `Merged remote changes for: ${pulledKeys.map(k => k.replace('boilerfuel_', '')).join(', ')}`
+              : 'No remote changes to merge'),
+      });
+      const pushedMealInfo = data.boilerfuel_meals ? Object.values(data.boilerfuel_meals).reduce((sum, m) => sum + (Array.isArray(m) ? m.length : 0), 0) : 0;
+      console.log('[sync] pushData successful:', { tokenRecovered, pulledKeys: pulledKeys.length, pushedMealCount: pushedMealInfo, confirmedTs, occRetries });
+
+      if (!includeReport) return;
+
+      return {
+        pushed: true,
+        pulled,
+        tokenRecovered,
+        pullUpdatedAt,
+        transferred: summarizeTransferredData(data),
+        pulledTransferred: pulledTransfer,
+      };
     }
-    const confirmedTs = pushBody.updated_at || pushTimestamp;
-    storageSetItem(SYNC_LAST_PULL_KEY, String(confirmedTs));
-    
-    addSyncLogEntry({
-      direction: 'push',
-      status: 'ok',
-      keys: pushedKeys,
-      detail: tokenRecovered
-        ? 'Recovered sync token on server and pushed latest encrypted data'
-        : (pulledKeys.length > 0
-          ? `Merged remote changes for: ${pulledKeys.map(k => k.replace('boilerfuel_', '')).join(', ')}`
-          : 'No remote changes to merge'),
-    });
-    const pushedMealInfo = data.boilerfuel_meals ? Object.values(data.boilerfuel_meals).reduce((sum, m) => sum + (Array.isArray(m) ? m.length : 0), 0) : 0;
-    console.log('[sync] pushData successful:', { tokenRecovered, pulledKeys: pulledKeys.length, pushedMealCount: pushedMealInfo, confirmedTs });
-    
-    if (!includeReport) return;
-    
-    return {
-      pushed: true,
-      pulled,
-      tokenRecovered,
-      pullUpdatedAt,
-      transferred: summarizeTransferredData(data),
-      pulledTransferred: pulledTransfer,
-    };
   } catch (err) {
     if (!includeReport) throw err;
     addSyncLogEntry({ direction: 'push', status: 'error', keys: pushedKeys, detail: String(err) });
