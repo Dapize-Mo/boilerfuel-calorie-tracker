@@ -235,9 +235,11 @@ export function MealProvider({ children }) {
   const syncPushTimer = useRef(null);
   const mountedRef = useRef(false);
   const isSyncingRef = useRef(false);      // prevent concurrent pulls
+  const syncLockAtRef = useRef(0);         // timestamp when isSyncingRef was set true (staleness guard)
   const lastPullRef = useRef(0);           // timestamp of last pull (ms)
-  const isReloadingFromSync = useRef(false); // suppress push debounce when state changes come from a sync pull
+  const isReloadingFromSync = useRef(false); // flag push debounce to use longer delay after sync pull
   const MIN_PULL_INTERVAL = 10_000;        // don't re-pull more than once per 10 s
+  const SYNC_LOCK_TIMEOUT = 45_000;        // forcefully release stuck sync lock after 45s
   const lastSyncNotifRef = useRef(0);      // throttle sync notifications
 
   // Force-flush current React state to localStorage before sync operations
@@ -289,6 +291,11 @@ export function MealProvider({ children }) {
   }, []);
 
   const doPull = useCallback(async (force = false, forceFull = false) => {
+    // Staleness guard: release a stuck sync lock after SYNC_LOCK_TIMEOUT
+    if (isSyncingRef.current && syncLockAtRef.current > 0 && Date.now() - syncLockAtRef.current > SYNC_LOCK_TIMEOUT) {
+      console.warn('[MealContext] Sync lock was stuck for', Date.now() - syncLockAtRef.current, 'ms — releasing');
+      isSyncingRef.current = false;
+    }
     if (isSyncingRef.current) return;
     const now = Date.now();
     if (!force && now - lastPullRef.current < MIN_PULL_INTERVAL) return;
@@ -297,6 +304,7 @@ export function MealProvider({ children }) {
     // the guard check and the lock set (two concurrent doPull calls could
     // both pass the guard during the async import gap).
     isSyncingRef.current = true;
+    syncLockAtRef.current = now;
     lastPullRef.current = now;
 
     // Flush React state to localStorage BEFORE pulling to prevent data loss
@@ -427,11 +435,13 @@ export function MealProvider({ children }) {
   useEffect(() => {
     if (!mountedRef.current) return;
     // If this state change was caused by reloadFromStorage (i.e. a pull just
-    // landed), clear the flag and skip — we must not push data straight back
-    // out and reset the server timestamp, which would break future pulls.
-    if (isReloadingFromSync.current) {
+    // landed), clear the flag.  We still allow the push to proceed so that
+    // merged data (local + remote) gets pushed back to the server — otherwise
+    // the other device never receives this device's local-only meals.
+    // The push uses a longer delay (8s) to let the pull cycle fully settle.
+    const fromSync = isReloadingFromSync.current;
+    if (fromSync) {
       isReloadingFromSync.current = false;
-      return;
     }
     if (syncPushTimer.current) clearTimeout(syncPushTimer.current);
     syncPushTimer.current = setTimeout(async () => {
@@ -460,7 +470,7 @@ export function MealProvider({ children }) {
         console.error('[MealContext] Background push error:', err);
         setSyncStatusTransient('error');
       }
-    }, 3000); // 3 second debounce
+    }, fromSync ? 8000 : 3000); // 8s after sync merge, 3s after user action
     return () => { if (syncPushTimer.current) clearTimeout(syncPushTimer.current); };
   }, [
     mealsByDate,
@@ -496,13 +506,23 @@ export function MealProvider({ children }) {
   }, [reloadFromStorage]);
   // Manual sync trigger (for UI button)
   const syncNow = useCallback(async () => {
-    // If an auto-pull is running, wait briefly then check again — don't clobber it.
+    // If an auto-pull is running, wait for it to finish (poll up to 5s).
+    // Also apply staleness guard: if the lock has been held for > SYNC_LOCK_TIMEOUT, release it.
     if (isSyncingRef.current) {
-      await new Promise(r => setTimeout(r, 600));
+      for (let i = 0; i < 10; i++) {
+        await new Promise(r => setTimeout(r, 500));
+        if (!isSyncingRef.current) break;
+        if (syncLockAtRef.current > 0 && Date.now() - syncLockAtRef.current > SYNC_LOCK_TIMEOUT) {
+          console.warn('[MealContext] syncNow: releasing stuck sync lock');
+          isSyncingRef.current = false;
+          break;
+        }
+      }
       if (isSyncingRef.current) return { skipped: true };
     }
     // Acquire lock before any await so auto-polls can't slip in during the import.
     isSyncingRef.current = true;
+    syncLockAtRef.current = Date.now();
     const { isSynced, syncNowDetailed } = await import('../utils/sync');
     if (!isSynced()) {
       isSyncingRef.current = false;
