@@ -96,6 +96,8 @@ export default function ProfilePage() {
   const [logFilter, setLogFilter] = useState(null); // null | meal-time string
   const [syncOrigin, setSyncOrigin] = useState('');
   const [copiedJoinLink, setCopiedJoinLink] = useState(false);
+  const [showDebug, setShowDebug] = useState(false);
+  const [debugData, setDebugData] = useState(null);
 
   // Notification settings
   const [notifSupported, setNotifSupported] = useState(false);
@@ -1461,23 +1463,77 @@ export default function ProfilePage() {
                     {forceResyncLoading ? 'Resyncing…' : 'Force Resync'}
                   </button>
                   <button
-                    onClick={() => {
-                      try {
-                        const meals = JSON.parse(getSyncStorageItem('boilerfuel_meals') || '{}');
-                        const days = Object.keys(meals).length;
-                        const entries = Object.values(meals).reduce((s, a) => s + (Array.isArray(a) ? a.length : 0), 0);
-                        const today = getTodayKey();
-                        const todayEntries = Array.isArray(meals[today]) ? meals[today].length : 0;
-                        const latestDates = Object.keys(meals).sort().slice(-5);
-                        alert(
-                          `localStorage meals: ${entries} entries across ${days} days\n` +
-                          `Today (${today}) entries: ${todayEntries}\n` +
-                          `Latest dates: ${latestDates.length ? latestDates.join(', ') : 'none'}`
-                        );
-                      } catch (e) { alert('Error reading localStorage: ' + e.message); }
+                    onClick={async () => {
+                      setShowDebug(prev => !prev);
+                      if (!showDebug) {
+                        try {
+                          const meals = JSON.parse(getSyncStorageItem('boilerfuel_meals') || '{}');
+                          const mealDays = Object.keys(meals).length;
+                          const mealEntries = Object.values(meals).reduce((s, a) => s + (Array.isArray(a) ? a.length : 0), 0);
+                          const today = getTodayKey();
+                          const todayMeals = Array.isArray(meals[today]) ? meals[today] : [];
+                          const latestDates = Object.keys(meals).sort().slice(-5);
+
+                          const localRevision = getSyncStorageItem('boilerfuel_sync_last_revision') || '(not set)';
+                          const localPullTs = getSyncStorageItem('boilerfuel_sync_last_pull') || '0';
+                          const pullDate = parseInt(localPullTs, 10) > 0 ? new Date(parseInt(localPullTs, 10)).toLocaleString() : '(never)';
+
+                          let serverInfo = null;
+                          const token = getSyncStorageItem('boilerfuel_sync_token');
+                          const secret = getSyncStorageItem('boilerfuel_sync_secret');
+                          if (token) {
+                            try {
+                              const res = await fetch(`/api/sync?token=${encodeURIComponent(token)}&since_revision=0&since=0`);
+                              const body = await res.json();
+                              if (body.ok || body.changed !== undefined) {
+                                serverInfo = {
+                                  revision: body.revision ?? '?',
+                                  updatedAt: body.updated_at ? new Date(parseInt(String(body.updated_at), 10)).toLocaleString() : '?',
+                                  hasData: !!(body.changed && body.encrypted_data),
+                                  dataSize: body.encrypted_data ? Math.round(body.encrypted_data.length / 1024) + ' KB' : '0 KB',
+                                };
+                                // Try decrypting to count server meals
+                                if (body.changed && body.encrypted_data && secret) {
+                                  try {
+                                    const { decrypt } = await import('../utils/sync');
+                                    const data = await decrypt(body.encrypted_data, secret);
+                                    const serverMeals = data.boilerfuel_meals || {};
+                                    const serverMealDays = Object.keys(serverMeals).length;
+                                    const serverMealEntries = Object.values(serverMeals).reduce((s, a) => s + (Array.isArray(a) ? a.length : 0), 0);
+                                    const serverDates = Object.keys(serverMeals).sort().slice(-5);
+                                    serverInfo.mealDays = serverMealDays;
+                                    serverInfo.mealEntries = serverMealEntries;
+                                    serverInfo.latestDates = serverDates;
+                                    serverInfo.keys = Object.keys(data).filter(k => !k.startsWith('_'));
+                                  } catch (e) {
+                                    serverInfo.decryptError = e.message;
+                                  }
+                                }
+                              } else {
+                                serverInfo = { error: body.error || 'Unknown error' };
+                              }
+                            } catch (e) {
+                              serverInfo = { error: e.message };
+                            }
+                          }
+
+                          const log = JSON.parse(getSyncStorageItem('boilerfuel_sync_log') || '[]');
+
+                          setDebugData({
+                            local: { mealDays, mealEntries, todayCount: todayMeals.length, latestDates, today },
+                            todayMealNames: todayMeals.map(m => `${m.name} (${m.calories} cal, added ${m.addedAt ? new Date(m.addedAt).toLocaleTimeString() : '?'})`),
+                            sync: { localRevision, lastPull: pullDate, token: token ? token.slice(0, 3) + '***' : '(none)' },
+                            server: serverInfo,
+                            log: log.slice(0, 10),
+                          });
+                        } catch (e) {
+                          setDebugData({ error: e.message });
+                        }
+                      }
                     }}
-                    className="px-4 py-2 border border-theme-text-primary/20 text-theme-text-tertiary text-xs uppercase tracking-wider hover:bg-theme-text-primary/10 transition-colors">
-                    Debug
+                    data-debug-btn=""
+                    className={`px-4 py-2 border text-xs uppercase tracking-wider transition-colors ${showDebug ? 'border-yellow-500/40 text-yellow-500 bg-yellow-500/10' : 'border-theme-text-primary/20 text-theme-text-tertiary hover:bg-theme-text-primary/10'}`}>
+                    {showDebug ? 'Hide Debug' : 'Debug'}
                   </button>
                   <button
                     onClick={async () => {
@@ -1560,6 +1616,102 @@ export default function ProfilePage() {
                         <p className="text-xs text-theme-text-tertiary">No newer remote changes were available.</p>
                       )}
                     </div>
+                  </div>
+                )}
+
+                {/* Debug panel */}
+                {showDebug && debugData && (
+                  <div className="space-y-3 border border-yellow-500/30 p-3 bg-yellow-500/5 font-mono text-[11px]">
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-yellow-500">Sync Debug</div>
+
+                    {debugData.error ? (
+                      <p className="text-red-400">Error: {debugData.error}</p>
+                    ) : (
+                      <>
+                        {/* Local vs Server comparison */}
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <div className="text-[9px] font-bold uppercase tracking-widest text-theme-text-tertiary">This Device (localStorage)</div>
+                            <div className="text-theme-text-secondary">Meals: <span className="text-theme-text-primary font-bold">{debugData.local.mealEntries}</span> entries across <span className="text-theme-text-primary font-bold">{debugData.local.mealDays}</span> days</div>
+                            <div className="text-theme-text-secondary">Today ({debugData.local.today}): <span className="text-theme-text-primary font-bold">{debugData.local.todayCount}</span> items</div>
+                            <div className="text-theme-text-secondary">Revision: <span className="text-theme-text-primary font-bold">{debugData.sync.localRevision}</span></div>
+                            <div className="text-theme-text-secondary">Last pull: <span className="text-theme-text-tertiary">{debugData.sync.lastPull}</span></div>
+                            <div className="text-theme-text-secondary">Dates: <span className="text-theme-text-tertiary">{debugData.local.latestDates.join(', ') || 'none'}</span></div>
+                          </div>
+                          <div className="space-y-1">
+                            <div className="text-[9px] font-bold uppercase tracking-widest text-theme-text-tertiary">Server (encrypted blob)</div>
+                            {debugData.server ? (
+                              debugData.server.error ? (
+                                <div className="text-red-400">Error: {debugData.server.error}</div>
+                              ) : (
+                                <>
+                                  <div className="text-theme-text-secondary">Meals: <span className="text-theme-text-primary font-bold">{debugData.server.mealEntries ?? '?'}</span> entries across <span className="text-theme-text-primary font-bold">{debugData.server.mealDays ?? '?'}</span> days</div>
+                                  <div className="text-theme-text-secondary">Revision: <span className="text-theme-text-primary font-bold">{debugData.server.revision}</span></div>
+                                  <div className="text-theme-text-secondary">Updated: <span className="text-theme-text-tertiary">{debugData.server.updatedAt}</span></div>
+                                  <div className="text-theme-text-secondary">Size: <span className="text-theme-text-tertiary">{debugData.server.dataSize}</span></div>
+                                  <div className="text-theme-text-secondary">Dates: <span className="text-theme-text-tertiary">{debugData.server.latestDates?.join(', ') || 'none'}</span></div>
+                                  <div className="text-theme-text-secondary">Keys: <span className="text-theme-text-tertiary">{debugData.server.keys?.join(', ') || '?'}</span></div>
+                                  {debugData.server.decryptError && (
+                                    <div className="text-red-400">Decrypt failed: {debugData.server.decryptError}</div>
+                                  )}
+                                  {/* Mismatch warning */}
+                                  {debugData.server.mealEntries !== undefined && debugData.server.mealEntries !== debugData.local.mealEntries && (
+                                    <div className="text-yellow-400 font-bold mt-1">
+                                      MISMATCH: local has {debugData.local.mealEntries} meals, server has {debugData.server.mealEntries}
+                                    </div>
+                                  )}
+                                  {debugData.sync.localRevision !== '(not set)' && String(debugData.server.revision) !== String(debugData.sync.localRevision) && (
+                                    <div className="text-yellow-400 font-bold">
+                                      REVISION MISMATCH: local={debugData.sync.localRevision} server={debugData.server.revision}
+                                    </div>
+                                  )}
+                                </>
+                              )
+                            ) : (
+                              <div className="text-theme-text-tertiary">Not paired</div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Today's meals detail */}
+                        {debugData.todayMealNames.length > 0 && (
+                          <div className="space-y-1 border-t border-yellow-500/20 pt-2">
+                            <div className="text-[9px] font-bold uppercase tracking-widest text-theme-text-tertiary">Today&apos;s Meals (localStorage)</div>
+                            {debugData.todayMealNames.map((name, i) => (
+                              <div key={i} className="text-theme-text-tertiary text-[10px] truncate">{i + 1}. {name}</div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Sync activity log */}
+                        {debugData.log.length > 0 && (
+                          <div className="space-y-1 border-t border-yellow-500/20 pt-2">
+                            <div className="text-[9px] font-bold uppercase tracking-widest text-theme-text-tertiary">Recent Sync Log (last 10)</div>
+                            {debugData.log.map((entry, i) => (
+                              <div key={i} className="text-[10px] flex gap-2">
+                                <span className={entry.direction === 'push' ? 'text-blue-400' : 'text-green-400'}>{entry.direction === 'push' ? '\u2191' : '\u2193'}</span>
+                                <span className={entry.status === 'ok' ? 'text-theme-text-tertiary' : 'text-red-400'}>{entry.status}</span>
+                                <span className="text-theme-text-tertiary truncate flex-1">{entry.detail}</span>
+                                <span className="text-theme-text-tertiary/50 shrink-0">{entry.ts ? new Date(entry.ts).toLocaleTimeString() : ''}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                    <button
+                      onClick={() => {
+                        // Re-fetch debug data
+                        setShowDebug(false);
+                        setTimeout(() => {
+                          const btn = document.querySelector('[data-debug-btn]');
+                          if (btn) btn.click();
+                        }, 100);
+                      }}
+                      className="text-[10px] text-yellow-500/70 hover:text-yellow-500 uppercase tracking-wider">
+                      Refresh
+                    </button>
                   </div>
                 )}
 
