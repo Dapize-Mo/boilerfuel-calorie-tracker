@@ -10,11 +10,37 @@ import { useSmartBack } from '../utils/useSmartBack';
 
 const VERSIONS = [
 
+  // ─── 4.0.0  Reliable multi-device sync  (Apr 23–25, 2026) ──────────────────
+  {
+    version: '4.0.0',
+    date: 'April 23–25, 2026',
+    latest: true,
+    changes: [
+      { cat: 'Feature', items: [
+        'Optimistic concurrency control (OCC) for device sync — server rejects stale pushes with 409 Conflict and returns current data so the client can merge and retry, eliminating the last-write-wins race condition that caused paired devices to overwrite each other\'s meals',
+        'Sync debug panel on Profile page — expandable panel showing local vs server data comparison, mismatch warnings, today\'s meals detail, and last 10 sync log entries with direction arrows',
+        'QR code now uses the battle-tested `qrcode` library instead of a hand-rolled generator — scan reliably works on phone cameras to open the join URL with code + secret prefilled',
+      ]},
+      { cat: 'Fix', items: [
+        'Fixed infinite mount-pull loop: useEffect depending on doPull re-fired endlessly because doPull\'s reference changed on every state update, preventing pushes from ever firing',
+        'Fixed bidirectional sync: isReloadingFromSync flag was completely suppressing push-back of merged data — now allows push with an 8-second delay after sync merge',
+        'Sync lock staleness guard: added 45-second timeout to release stuck isSyncingRef locks that could block all sync operations indefinitely',
+        'Improved syncNow lock wait: polls up to 5 seconds instead of 600ms, with staleness-aware release',
+        'Fixed Vercel cron schedule: changed from every-6-hours expression (rejected on Hobby plan) to daily at 6 AM UTC',
+      ]},
+      { cat: 'UI', items: [
+        'Admin page: scraper progress dropdown toggle made more visible',
+        'Admin page: added expandable scraper progress panel',
+        'Polish pass: improved touch targets, search debounce, mobile scrollbar styling, and font loading',
+      ]},
+    ],
+  },
+
   // ─── 3.9.x  Admin DB stats, sync hardening  (Apr 21–23, 2026) ──────────────
   {
     version: '3.9.0',
     date: 'April 21–23, 2026',
-    latest: true,
+    latest: false,
     changes: [
       { cat: 'Feature', items: [
         'Admin Stats tab: new Storage section shows total DB size, per-table sizes and row counts, and a capacity bar (green/yellow/red) when DB_CAPACITY_BYTES is configured',
