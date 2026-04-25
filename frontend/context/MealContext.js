@@ -339,14 +339,21 @@ export function MealProvider({ children }) {
     }
   }, [reloadFromStorage, setSyncStatusTransient, flushStateToStorage, getSyncStorageFingerprint, maybeShowSyncNotif]);
 
+  // Stable ref for doPull so the mount effect doesn't re-fire when doPull's
+  // callback dependencies change (which would cause an infinite pull loop:
+  // pull → reloadFromStorage → state change → doPull ref change → mount re-runs).
+  const doPullRef = useRef(doPull);
+  doPullRef.current = doPull;
+
   // Pull on mount — force=true bypasses cooldown, forceFull=true uses since=0
   // so we always get the latest server state on every page refresh.
   useEffect(() => {
     (async () => {
-      await doPull(true, true);
+      await doPullRef.current(true, true);
       mountedRef.current = true;
     })();
-  }, [doPull]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Re-pull whenever the user returns to the tab/app (mobile suspend/resume, tab switch)
   useEffect(() => {
