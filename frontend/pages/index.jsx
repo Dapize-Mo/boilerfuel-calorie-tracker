@@ -1091,7 +1091,7 @@ export default function Home() {
                 const isWeekend = now.getDay() === 0 || now.getDay() === 6;
                 if (h < 10) setMealTime('Breakfast');
                 else if (h < 11 && isWeekend) setMealTime('Brunch');
-                else if (h < 15) setMealTime('Lunch');
+                else if (h < 14) setMealTime('Lunch');
                 else if (h < 17) setMealTime('Late Lunch');
                 else setMealTime('Dinner');
               }}
