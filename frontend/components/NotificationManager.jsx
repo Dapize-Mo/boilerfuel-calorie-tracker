@@ -77,8 +77,14 @@ export default function NotificationManager() {
       // ── Meal reminders (only if enabled in profile settings) ──
       if (localStorage.getItem('boilerfuel_notif_meal') !== '1') return;
 
+      // Read per-meal toggle settings (default to enabled for backward compat)
+      const breakfastOn = localStorage.getItem('boilerfuel_notif_breakfast_on') !== '0';
+      const brunchOn = localStorage.getItem('boilerfuel_notif_brunch_on') !== '0';
+      const lunchOn = localStorage.getItem('boilerfuel_notif_lunch_on') !== '0';
+      const dinnerOn = localStorage.getItem('boilerfuel_notif_dinner_on') !== '0';
+
       // Breakfast reminder: at configured hour, nothing logged yet
-      if (todayMeals === 0 && hour >= breakfastHour && hour < breakfastHour + 1) {
+      if (breakfastOn && todayMeals === 0 && hour >= breakfastHour && hour < breakfastHour + 1) {
         const key = `boilerfuel_notif_breakfast_${today}`;
         if (!localStorage.getItem(key)) {
           try { localStorage.setItem(key, '1'); } catch {}
@@ -92,7 +98,7 @@ export default function NotificationManager() {
       }
 
       // Brunch reminder: at configured hour, nothing logged yet
-      if (todayMeals === 0 && hour >= brunchHour && hour < brunchHour + 1) {
+      if (brunchOn && todayMeals === 0 && hour >= brunchHour && hour < brunchHour + 1) {
         const key = `boilerfuel_notif_brunch_${today}`;
         if (!localStorage.getItem(key)) {
           try { localStorage.setItem(key, '1'); } catch {}
@@ -106,7 +112,7 @@ export default function NotificationManager() {
       }
 
       // Lunch reminder: at configured hour, nothing logged yet
-      if (todayMeals === 0 && hour >= lunchHour && hour < lunchHour + 1) {
+      if (lunchOn && todayMeals === 0 && hour >= lunchHour && hour < lunchHour + 1) {
         const key = `boilerfuel_notif_lunch_${today}`;
         if (!localStorage.getItem(key)) {
           try { localStorage.setItem(key, '1'); } catch {}
@@ -120,7 +126,7 @@ export default function NotificationManager() {
       }
 
       // Dinner reminder: at configured hour
-      if (hour >= dinnerHour && hour < dinnerHour + 1) {
+      if (dinnerOn && hour >= dinnerHour && hour < dinnerHour + 1) {
         const key = `boilerfuel_notif_dinner_${today}`;
         if (!localStorage.getItem(key)) {
           try { localStorage.setItem(key, '1'); } catch {}

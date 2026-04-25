@@ -103,7 +103,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
-                const theme = localStorage.getItem('theme') || 'system';
+                const theme = localStorage.getItem('boilerfuel_theme') || 'system';
                 let resolvedTheme = theme;
                 if (theme === 'system') {
                   resolvedTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';

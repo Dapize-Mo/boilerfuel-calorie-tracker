@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import { useSmartBack } from '../utils/useSmartBack';
+import { getNamespacedStorageKey } from '../utils/storageNamespace';
 
 export default function CustomFoods() {
   const router = useRouter();
@@ -26,6 +27,24 @@ export default function CustomFoods() {
     serving_size: '',
     notes: ''
   });
+
+  // Load barcode-scanner saved foods from localStorage (always available, no auth needed)
+  useEffect(() => {
+    try {
+      const key = getNamespacedStorageKey('boilerfuel_custom_foods');
+      const raw = localStorage.getItem(key);
+      if (raw) {
+        const localFoods = JSON.parse(raw);
+        if (Array.isArray(localFoods) && localFoods.length > 0) {
+          setCustomFoods(prev => {
+            const existingIds = new Set(prev.map(f => f.id));
+            const newFoods = localFoods.filter(f => !existingIds.has(f.id));
+            return newFoods.length > 0 ? [...prev, ...newFoods] : prev;
+          });
+        }
+      }
+    } catch {}
+  }, []);
 
   useEffect(() => {
     if (status === 'authenticated') {

@@ -427,8 +427,11 @@ export function MealProvider({ children }) {
   }, [reloadFromStorage, doPull]);
 
   // Pull more frequently while app is visible so paired devices update promptly.
-  // Hidden tabs pull less often to reduce unnecessary network traffic.
+  // Only register interval if sync credentials exist to avoid timer noise for non-synced users.
   useEffect(() => {
+    const hasSyncToken = typeof window !== 'undefined' &&
+      !!(localStorage.getItem(lsKey('boilerfuel_sync_token')));
+    if (!hasSyncToken) return;
     const interval = setInterval(() => {
       const visible = typeof document !== 'undefined' && document.visibilityState === 'visible';
       if (visible) {
@@ -591,8 +594,9 @@ export function MealProvider({ children }) {
     setMealsByDate(prev => {
       const key = dateOverride || getTodayKey();
       const existing = prev[key] || [];
-      // Remove the last occurrence of this food id
-      const idx = existing.findLastIndex(m => m.id === food.id);
+      // Remove the last occurrence of this food id (manual loop for Safari < 15.4 compat)
+      let idx = -1;
+      for (let i = existing.length - 1; i >= 0; i--) { if (existing[i].id === food.id) { idx = i; break; } }
       if (idx === -1) return prev;
       const next = [...existing];
       next.splice(idx, 1);

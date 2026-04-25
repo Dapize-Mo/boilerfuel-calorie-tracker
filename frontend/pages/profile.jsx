@@ -72,7 +72,7 @@ export default function ProfilePage() {
   const [editingGoals, setEditingGoals] = useState(false);
   const [draft, setDraft] = useState(goals);
   const [goalWarnings, setGoalWarnings] = useState(null); // null | { warnings: string[], suggestions: [{label, patch}] }
-  const [weightInput, setWeightInput] = useState('');
+  const [weightInput, setWeightInput] = useState(null);
   const [selectedDate, setSelectedDate] = useState(getTodayKey);
   const [syncStatus, setSyncStatus] = useState('idle'); // idle | creating | paired | joining | error
   const [syncCode, setSyncCode] = useState('');
@@ -942,14 +942,14 @@ export default function ProfilePage() {
                   type="number"
                   step="0.1"
                   min="0"
-                  value={weightInput || (getWeight(selectedDate) ?? '')}
+                  value={weightInput !== null && weightInput !== undefined ? weightInput : (getWeight(selectedDate) ?? '')}
                   onChange={e => setWeightInput(e.target.value)}
                   placeholder="Enter weight"
                   className="w-full border border-theme-text-primary/30 bg-theme-bg-secondary text-theme-text-primary px-3 py-2 font-mono text-sm focus:border-theme-text-primary focus:outline-none transition-colors"
                 />
               </div>
               <button
-                onClick={() => { if (weightInput) { setWeight(weightInput, selectedDate); setWeightInput(''); } }}
+                onClick={() => { if (weightInput) { setWeight(weightInput, selectedDate); setWeightInput(null); } }}
                 className="px-4 py-2 border border-theme-text-primary text-theme-text-primary text-xs font-bold uppercase tracking-wider hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors">
                 Save
               </button>

@@ -4,6 +4,7 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { LOCATION_CATEGORIES, FOOD_CO_LOCATIONS } from '../utils/diningLocations';
 import { useMeals } from '../context/MealContext';
+import { getNamespacedStorageKey } from '../utils/storageNamespace';
 import dynamic from 'next/dynamic';
 
 const BarcodeScanner = dynamic(() => import('../components/BarcodeScanner'), { ssr: false });
@@ -965,7 +966,7 @@ export default function Home() {
               Restore
             </button>
             <button
-              onClick={() => { localStorage.removeItem('boilerfuel_meals_backup'); window.location.reload(); }}
+              onClick={() => { localStorage.removeItem(getNamespacedStorageKey('boilerfuel_meals_backup')); window.location.reload(); }}
               className="px-3 py-1.5 bg-transparent border border-slate-900/30 text-slate-900 text-xs font-bold uppercase tracking-wider hover:bg-slate-900/10 transition-colors">
               Dismiss
             </button>
@@ -1090,8 +1091,8 @@ export default function Home() {
                 const isWeekend = now.getDay() === 0 || now.getDay() === 6;
                 if (h < 10) setMealTime('Breakfast');
                 else if (h < 11 && isWeekend) setMealTime('Brunch');
-                else if (h < 14) setMealTime('Lunch');
-                else if (h < 15) setMealTime('Late Lunch');
+                else if (h < 15) setMealTime('Lunch');
+                else if (h < 17) setMealTime('Late Lunch');
                 else setMealTime('Dinner');
               }}
               className="text-[9px] font-bold uppercase tracking-widest text-theme-text-tertiary/60 hover:text-theme-text-primary transition-colors border border-theme-text-primary/15 px-1 py-0.5 leading-tight"
@@ -1233,7 +1234,7 @@ export default function Home() {
           visibility: isLanding ? 'hidden' : 'visible',
           pointerEvents: isLanding ? 'none' : 'auto',
         }}>
-        <main className={`px-4 sm:px-6 md:px-12 lg:px-20 py-6 sm:py-8 ${selectedDateTotals.calories > 0 ? 'pb-16' : ''}`}>
+        <main className={`px-4 sm:px-6 md:px-12 lg:px-20 py-6 sm:py-8 ${selectedDateTotals.calories > 0 ? 'pb-20' : ''}`}>
           {error && (
             <div className="mb-6 p-4 border border-red-500/50 text-red-400 text-sm">{error}</div>
           )}
@@ -2146,25 +2147,19 @@ export default function Home() {
           </div>{/* end flex wrapper */}
         </main>
 
-        <footer className="border-t border-theme-text-primary/5 px-4 sm:px-6 md:px-12 lg:px-20 py-5 sm:py-6">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-            <p className="text-xs text-theme-text-tertiary tracking-wide text-center sm:text-left">
-              Boiler<span className="text-yellow-500/70">Fuel</span> &middot; Purdue Dining Data &middot; {new Date().getFullYear()}
-            </p>
-            <div className="flex gap-4 text-xs font-mono">
-              <Link href="/about" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">About</Link>
-              <span className="text-theme-text-tertiary/20">&middot;</span>
-              <Link href="/tools" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Tools</Link>
-              <span className="text-theme-text-tertiary/20">&middot;</span>
-              <Link href="/compare" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Compare</Link>
-              <span className="text-theme-text-tertiary/20">&middot;</span>
-              <Link href="/custom-foods" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Custom Foods</Link>
-              <span className="text-theme-text-tertiary/20">&middot;</span>
-              <Link href="/changelog" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Changelog</Link>
-              <span className="text-theme-text-tertiary/20">&middot;</span>
-              <Link href="/admin" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Admin</Link>
-            </div>
+        <footer className="border-t border-theme-text-primary/10 px-4 sm:px-6 md:px-12 lg:px-20 pt-8 pb-6 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs uppercase tracking-widest">
+            <Link href="/stats" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Stats</Link>
+            <Link href="/compare" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Compare</Link>
+            <Link href="/custom-foods" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Custom Foods</Link>
+            <Link href="/tools" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Tools</Link>
+            <Link href="/profile" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Profile</Link>
+            <Link href="/about" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">About</Link>
+            <Link href="/changelog" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Changelog</Link>
+            <Link href="/privacy" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Privacy</Link>
+            <Link href="/admin" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Admin</Link>
           </div>
+          <span className="text-[10px] uppercase tracking-widest text-theme-text-tertiary/40">BoilerFuel &middot; {new Date().getFullYear()}</span>
         </footer>
       </div>
 

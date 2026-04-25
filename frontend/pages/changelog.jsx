@@ -10,9 +10,9 @@ import { useSmartBack } from '../utils/useSmartBack';
 
 const VERSIONS = [
 
-  // ─── 4.0.0  Reliable multi-device sync  (Apr 23–25, 2026) ──────────────────
+  // ─── 3.10.x  Reliable multi-device sync  (Apr 23–25, 2026) ─────────────────
   {
-    version: '4.0.0',
+    version: '3.10.0',
     date: 'April 23–25, 2026',
     latest: true,
     changes: [
