@@ -210,7 +210,6 @@ export default function AdminPanel() {
             { key: 'stats', label: 'Stats' },
             { key: 'accuracy', label: 'Accuracy' },
             { key: 'foods', label: 'Foods' },
-            { key: 'design', label: 'Design' },
             { key: 'docs', label: 'Docs' },
           ].map(tab => (
             <button
@@ -232,7 +231,6 @@ export default function AdminPanel() {
           {activeTab === 'stats' && <StatsTab />}
           {activeTab === 'accuracy' && <MenuAccuracyTab />}
           {activeTab === 'foods' && <FoodsTab onOpenScraper={() => setActiveTab('stats')} />}
-          {activeTab === 'design' && <DesignTab />}
           {activeTab === 'docs' && <DocsTab />}
         </div>
 
@@ -519,88 +517,6 @@ created_at    TIMESTAMPTZ`)}
 }
 
 AdminPanel.getLayout = (page) => page;
-
-// ── Design Tab ──
-function DesignTab() {
-  const [currentLayout, setCurrentLayout] = useState(() => {
-    if (typeof window !== 'undefined') return localStorage.getItem('boilerfuel_drinks_layout') || 'sidebar';
-    return 'sidebar';
-  });
-
-  function applyLayout(value) {
-    localStorage.setItem('boilerfuel_drinks_layout', value);
-    setCurrentLayout(value);
-  }
-
-  const layouts = [
-    {
-      key: 'sidebar',
-      label: 'Always-Visible Sidebar',
-      tag: 'Recommended',
-      description: 'Water tracker + condiments always visible on the right. Beverages section appears below when menu data has drinks. Sidebar never disappears.',
-    },
-    {
-      key: 'strip',
-      label: 'Horizontal Strip',
-      tag: 'Compact',
-      description: 'Compact inline row above the food table: water counter + ketchup/BBQ chips + available beverages. No sidebar column, food list uses full width.',
-    },
-    {
-      key: 'floating',
-      label: 'Floating Panel',
-      tag: 'Minimal',
-      description: 'Small floating button in the bottom-right corner. Tap to expand a card with water, condiments, and beverages. Food list is full-width on all screen sizes.',
-    },
-    {
-      key: 'legacy',
-      label: 'Legacy + Condiments',
-      tag: 'Original',
-      description: 'Current sidebar behavior: only shown when the menu has beverage items. Condiments added at the bottom. Sidebar hides when no drinks are in menu data.',
-    },
-  ];
-
-  return (
-    <div className="space-y-6">
-      <div className="border border-theme-text-primary/10 bg-theme-bg-secondary/20 p-6 sm:p-8">
-        <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-primary mb-1">Drinks & Extras Layout</h2>
-        <p className="text-xs text-theme-text-tertiary mb-6 leading-relaxed">
-          Choose how water tracking, condiments (ketchup/BBQ sauce), and beverages appear on the food list page.
-          Changes take effect immediately — visit the home page to preview.
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {layouts.map(layout => (
-            <button
-              key={layout.key}
-              onClick={() => applyLayout(layout.key)}
-              className={`text-left p-5 border transition-all ${
-                currentLayout === layout.key
-                  ? 'border-theme-text-primary bg-theme-text-primary/[0.04]'
-                  : 'border-theme-text-primary/20 hover:border-theme-text-primary/60 hover:bg-theme-bg-secondary/40'
-              }`}
-            >
-              <div className="flex items-start justify-between gap-2 mb-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-theme-text-primary leading-tight">{layout.label}</span>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  {currentLayout === layout.key && (
-                    <span className="text-[9px] font-bold uppercase tracking-widest text-yellow-500 bg-yellow-500/10 px-1.5 py-0.5 border border-yellow-500/30">Active</span>
-                  )}
-                  <span className="text-[9px] font-bold uppercase tracking-widest text-theme-text-tertiary/60 border border-theme-text-primary/10 px-1.5 py-0.5">{layout.tag}</span>
-                </div>
-              </div>
-              <p className="text-xs text-theme-text-tertiary leading-relaxed">{layout.description}</p>
-            </button>
-          ))}
-        </div>
-        <Link
-          href="/"
-          className="mt-6 inline-flex items-center gap-2 text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors"
-        >
-          Open home page to preview &rarr;
-        </Link>
-      </div>
-    </div>
-  );
-}
 
 // ── Scrape Progress Panel ──
 function ScrapeProgressPanel({ data }) {
