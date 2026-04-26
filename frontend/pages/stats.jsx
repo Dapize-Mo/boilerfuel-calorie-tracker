@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import { useTheme } from '../context/ThemeContext';
 import { useMeals } from '../context/MealContext';
 import { useSmartBack } from '../utils/useSmartBack';
+import { calcNutritionScore } from '../utils/nutritionScore';
 
 
 function getTodayKey() {
