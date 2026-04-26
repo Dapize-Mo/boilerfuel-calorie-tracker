@@ -277,6 +277,14 @@ function ProgressRing({ value, goal, label, unit = '', size = 80, color = 'rgb(v
 
 const HISTORY_PER_PAGE = 20;
 
+const SPOTLIGHT_NUTRIENTS = [
+  { key: 'fat', label: 'Fat', unit: 'g', tip: 'Total fat consumed — aim to stay under your daily goal' },
+  { key: 'saturated_fat', label: 'Sat. Fat', unit: 'g', tip: 'Saturated fat is linked to heart disease — keep under ~20g/day' },
+  { key: 'sodium', label: 'Sodium', unit: 'mg', tip: 'High sodium raises blood pressure — limit 2300mg/day' },
+  { key: 'added_sugar', label: 'Added Sugar', unit: 'g', tip: 'Added sugar — limit 25–36g/day for better metabolic health' },
+  { key: 'cholesterol', label: 'Cholesterol', unit: 'mg', tip: 'Dietary cholesterol — limit 300mg/day' },
+];
+
 export default function StatsPage() {
   const router = useRouter();
   const goBack = useSmartBack();
@@ -286,6 +294,7 @@ export default function StatsPage() {
   const [chartType, setChartType] = useState('bar'); // bar | line
   const [historySearch, setHistorySearch] = useState('');
   const [historyPage, setHistoryPage] = useState(1);
+  const [spotlightNutrient, setSpotlightNutrient] = useState('fat');
   const today = getTodayKey();
 
   // Compute date ranges
@@ -388,6 +397,32 @@ export default function StatsPage() {
     }
     return Object.values(freq).sort((a, b) => b.count - a.count).slice(0, 10);
   }, [rangeData]);
+
+  // Top foods by nutrient (for spotlight section)
+  const topNutrientContributors = useMemo(() => {
+    const getVal = (m, key) => {
+      const mac = m.macros || {};
+      switch (key) {
+        case 'fat': return parseFloat(mac.fats || mac.fat || 0);
+        case 'saturated_fat': return parseFloat(mac.saturated_fat || 0);
+        case 'sodium': return parseFloat(mac.sodium || 0);
+        case 'added_sugar': return parseFloat(mac.added_sugar || 0);
+        case 'cholesterol': return parseFloat(mac.cholesterol || 0);
+        default: return 0;
+      }
+    };
+    const agg = {};
+    for (const d of rangeData) {
+      for (const m of d.meals) {
+        const key = m.name;
+        if (!agg[key]) agg[key] = { name: key, count: 0, total: 0, calories: 0 };
+        agg[key].count++;
+        agg[key].total += getVal(m, spotlightNutrient);
+        agg[key].calories += m.calories || 0;
+      }
+    }
+    return Object.values(agg).filter(f => f.total > 0).sort((a, b) => b.total - a.total).slice(0, 8);
+  }, [rangeData, spotlightNutrient]);
 
   // Weight trend
   const weightEntries = useMemo(() => {
@@ -740,6 +775,70 @@ export default function StatsPage() {
               )}
             </section>
           </div>
+
+          {/* ═══ TOP NUTRIENT CONTRIBUTORS ═══ */}
+          <section className="space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-theme-text-primary/10 pb-2">
+              <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary">
+                Top Food Contributors
+              </h2>
+              <div className="flex flex-wrap gap-px border border-theme-text-primary/20">
+                {SPOTLIGHT_NUTRIENTS.map(n => (
+                  <button key={n.key} onClick={() => setSpotlightNutrient(n.key)}
+                    className={`px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider transition-colors ${
+                      spotlightNutrient === n.key ? 'bg-theme-text-primary text-theme-bg-primary' : 'text-theme-text-tertiary hover:text-theme-text-primary'
+                    }`}>
+                    {n.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {(() => {
+              const nutrient = SPOTLIGHT_NUTRIENTS.find(n => n.key === spotlightNutrient);
+              const maxVal = topNutrientContributors[0]?.total || 1;
+              const dailyGoal = nutrient?.key === 'sodium' ? 2300 : nutrient?.key === 'cholesterol' ? 300 : nutrient?.key === 'added_sugar' ? 25 : nutrient?.key === 'saturated_fat' ? 20 : goals.fat;
+              const periodDays = activeDays || 1;
+              return (
+                <div className="border border-theme-text-primary/10">
+                  {topNutrientContributors.length === 0 ? (
+                    <div className="p-4 text-xs text-theme-text-tertiary uppercase tracking-widest text-center">No data for this period</div>
+                  ) : (
+                    <>
+                      <div className="flex items-center justify-between px-4 py-2 border-b border-theme-text-primary/10 bg-theme-bg-secondary/30">
+                        <span className="text-[9px] text-theme-text-tertiary/70 italic">{nutrient?.tip}</span>
+                        <span className="text-[9px] text-theme-text-tertiary shrink-0 ml-4">Avg/day goal: <span className="font-bold">{dailyGoal}{nutrient?.unit}</span></span>
+                      </div>
+                      {topNutrientContributors.map((f, i) => {
+                        const perDay = f.total / periodDays;
+                        const pctOfGoal = dailyGoal > 0 ? (perDay / dailyGoal) * 100 : 0;
+                        const barColor = pctOfGoal > 75 ? '#ef4444' : pctOfGoal > 40 ? '#f97316' : '#eab308';
+                        return (
+                          <div key={i} className="px-4 py-2.5 border-b border-theme-text-primary/5 last:border-0 hover:bg-theme-bg-secondary/20 transition-colors">
+                            <div className="flex items-center gap-3 mb-1.5">
+                              <span className="text-[10px] font-bold text-theme-text-tertiary/50 w-4 tabular-nums shrink-0">{i + 1}</span>
+                              <span className="flex-1 min-w-0 truncate text-sm">{f.name}</span>
+                              <span className="text-[10px] text-theme-text-tertiary tabular-nums shrink-0">{f.count}×</span>
+                              <span className="text-xs font-mono font-bold tabular-nums shrink-0" style={{ color: pctOfGoal > 75 ? '#ef4444' : 'inherit' }}>
+                                {Math.round(f.total * 10) / 10}{nutrient?.unit}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 ml-7">
+                              <div className="flex-1 h-1 bg-theme-text-primary/8 overflow-hidden">
+                                <div className="h-full transition-all duration-300" style={{ width: `${(f.total / maxVal) * 100}%`, backgroundColor: barColor }} />
+                              </div>
+                              <span className="text-[9px] text-theme-text-tertiary tabular-nums shrink-0">
+                                ~{Math.round(perDay * 10) / 10}{nutrient?.unit}/day
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </>
+                  )}
+                </div>
+              );
+            })()}
+          </section>
 
           {/* ═══ DETAILED MACROS ═══ */}
           <section className="space-y-4">
