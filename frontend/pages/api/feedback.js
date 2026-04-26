@@ -2,6 +2,26 @@ import { query } from '../../utils/db';
 import { requireAdmin } from '../../utils/jwt';
 import { csrfCheck } from '../../utils/csrf';
 
+// Rate limit feedback submissions: 5 per hour per IP
+const feedbackRateMap = new Map();
+function checkFeedbackRate(ip) {
+  const now = Date.now();
+  const window = 60 * 60 * 1000; // 1 hour
+  const max = 5;
+  let rec = feedbackRateMap.get(ip);
+  if (!rec || now > rec.resetAt) {
+    rec = { count: 0, resetAt: now + window };
+    feedbackRateMap.set(ip, rec);
+  }
+  if (rec.count >= max) return false;
+  rec.count += 1;
+  return true;
+}
+function getIp(req) {
+  const fwd = req.headers['x-forwarded-for'];
+  return (fwd ? fwd.split(',')[0].trim() : req.socket?.remoteAddress) || 'unknown';
+}
+
 let feedbackSchemaReady = false;
 async function ensureFeedbackSchema() {
   if (feedbackSchemaReady) return;
@@ -23,6 +43,9 @@ export default async function handler(req, res) {
     await ensureFeedbackSchema();
 
     if (req.method === 'POST') {
+      if (!checkFeedbackRate(getIp(req))) {
+        return res.status(429).json({ error: 'Too many submissions. Please wait before sending again.' });
+      }
       const { type, message, contact } = req.body;
       if (!message || !message.trim()) {
         return res.status(400).json({ error: 'Message is required' });

@@ -1,6 +1,26 @@
 import { query } from '../../utils/db';
 import { csrfCheck } from '../../utils/csrf';
 
+// Rate limit: 120 requests per 5 minutes per IP (covers paired devices polling every 5s)
+const syncRateMap = new Map();
+function checkSyncRate(ip) {
+  const now = Date.now();
+  const window = 5 * 60 * 1000;
+  const max = 120;
+  let rec = syncRateMap.get(ip);
+  if (!rec || now > rec.resetAt) {
+    rec = { count: 0, resetAt: now + window };
+    syncRateMap.set(ip, rec);
+  }
+  if (rec.count >= max) return false;
+  rec.count += 1;
+  return true;
+}
+function getSyncIp(req) {
+  const fwd = req.headers['x-forwarded-for'];
+  return (fwd ? fwd.split(',')[0].trim() : req.socket?.remoteAddress) || 'unknown';
+}
+
 const MAX_SYNC_PAYLOAD_BYTES = 4 * 1024 * 1024;
 const TOKEN_LENGTH = 6;
 const useInMemoryFallback = true;
@@ -90,6 +110,9 @@ async function ensureSyncSchema() {
 
 export default async function handler(req, res) {
   if (!csrfCheck(req, res)) return;
+  if (!checkSyncRate(getSyncIp(req))) {
+    return res.status(429).json({ error: 'Too many sync requests. Please slow down.' });
+  }
   try {
     await ensureSyncSchema();
     await maybePruneSyncData();

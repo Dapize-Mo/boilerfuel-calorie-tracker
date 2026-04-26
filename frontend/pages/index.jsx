@@ -338,6 +338,12 @@ function BeverageRow({ food, getCount, selectedDate, handleAddMeal, removeMeal, 
   );
 }
 
+const BUILTIN_CONDIMENTS = [
+  { id: 'condiment-ketchup', name: 'Ketchup', calories: 20, macros: { protein: '0', carbs: '5', fat: '0' }, dining_court: 'Condiments', station: 'Condiments', meal_time: 'All' },
+  { id: 'condiment-bbq', name: 'BBQ Sauce', calories: 45, macros: { protein: '0', carbs: '11', fat: '0' }, dining_court: 'Condiments', station: 'Condiments', meal_time: 'All' },
+];
+const DRINKS_LAYOUT_KEY = 'boilerfuel_drinks_layout';
+
 // ── Macro tooltip ──
 function MacroTooltip({ food, pos }) {
   if (!food || !pos) return null;
@@ -409,6 +415,12 @@ export default function Home() {
   const [saveComboName, setSaveComboName] = useState(''); // name being typed for combo save
   const [showShortcutsHint, setShowShortcutsHint] = useState(false);
   const [showQuickAdd, setShowQuickAdd] = useState(false);
+  const [drinksLayout, setDrinksLayout] = useState('sidebar');
+  const [floatingExtrasOpen, setFloatingExtrasOpen] = useState(false);
+
+  useEffect(() => {
+    setDrinksLayout(localStorage.getItem(DRINKS_LAYOUT_KEY) || 'sidebar');
+  }, []);
 
   const mealTimes = ['All', 'Breakfast', 'Brunch', 'Lunch', 'Late Lunch', 'Dinner'];
   const isLanding = view === 'landing';
@@ -1654,7 +1666,56 @@ export default function Home() {
             </div>
           )}
 
-          <div className={`${beverageFoods.length > 0 ? 'xl:flex xl:gap-6' : ''}`}>
+          {/* ── Layout B: Horizontal extras strip ── */}
+          {drinksLayout === 'strip' && (
+            <div className="mb-4 border border-theme-text-primary/10 bg-theme-bg-secondary/20">
+              <div className="px-3 py-1.5 border-b border-theme-text-primary/10">
+                <span className="text-[9px] font-bold uppercase tracking-widest text-theme-text-tertiary">Extras</span>
+              </div>
+              <div className="flex flex-wrap items-center divide-x divide-theme-text-primary/10">
+                <div className="flex items-center gap-1.5 px-3 py-2">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-400 shrink-0"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" /></svg>
+                  <button onClick={() => addWater(-1, selectedDate)} disabled={getWater(selectedDate) === 0} className={`px-1 text-sm font-mono transition-colors ${getWater(selectedDate) > 0 ? 'text-theme-text-tertiary hover:text-theme-text-primary' : 'text-theme-text-tertiary/20 cursor-not-allowed'}`}>−</button>
+                  <span className="text-xs font-mono tabular-nums text-blue-400 font-bold min-w-[18px] text-center">{getWater(selectedDate)}</span>
+                  <button onClick={() => addWater(1, selectedDate)} className="px-1 text-sm font-mono text-theme-text-tertiary hover:text-theme-text-primary transition-colors">+</button>
+                  <span className="text-[9px] text-theme-text-tertiary/60">cups</span>
+                </div>
+                {BUILTIN_CONDIMENTS.map(food => {
+                  const cnt = getCount(food.id, selectedDate);
+                  return (
+                    <div key={food.id} className="flex items-center gap-1.5 px-3 py-2">
+                      <span className="text-xs text-theme-text-primary">{food.name}</span>
+                      <span className="text-[10px] text-theme-text-tertiary/60">{food.calories}c</span>
+                      <button onClick={(e) => handleAddMeal(food, e)} className="p-0.5 border border-theme-text-primary/20 text-theme-text-tertiary hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                      </button>
+                      {cnt > 0 && <>
+                        <span className="text-[9px] font-bold bg-theme-text-primary text-theme-bg-primary px-1 tabular-nums">{cnt}</span>
+                        <button onClick={() => removeMeal(food, selectedDate)} className="p-0.5 border border-theme-text-primary/20 text-theme-text-tertiary hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors">
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                        </button>
+                      </>}
+                    </div>
+                  );
+                })}
+                {beverageFoods.slice(0, 6).map(food => {
+                  const cnt = getCount(food.id, selectedDate);
+                  return (
+                    <div key={food.id} className="flex items-center gap-1.5 px-3 py-2">
+                      <span className="text-xs text-theme-text-primary truncate max-w-[90px]">{food.name}</span>
+                      <span className="text-[10px] text-theme-text-tertiary/60">{food.calories}c</span>
+                      <button onClick={(e) => handleAddMeal(food, e)} className="p-0.5 border border-theme-text-primary/20 text-theme-text-tertiary hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                      </button>
+                      {cnt > 0 && <span className="text-[9px] font-bold bg-theme-text-primary text-theme-bg-primary px-1 tabular-nums">{cnt}</span>}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          <div className={`${(drinksLayout === 'sidebar' || (drinksLayout === 'legacy' && beverageFoods.length > 0)) ? 'xl:flex xl:gap-6' : ''}`}>
           {/* ── Main food table ── */}
           <div className="flex-1 min-w-0">
           <table className="w-full text-left border-collapse" style={{ tableLayout: 'fixed' }}>
@@ -2144,12 +2205,14 @@ export default function Home() {
           </table>
           </div>{/* end main food table wrapper */}
 
-          {/* ── Beverages sidebar (desktop) / bottom section (mobile) ── */}
-          {beverageFoods.length > 0 && (
+          {/* ── Drinks & Extras panel (layouts A and D; B uses strip above; C uses floating) ── */}
+          {(drinksLayout === 'sidebar' || (drinksLayout === 'legacy' && beverageFoods.length > 0)) && (
             <div className="w-full xl:w-72 shrink-0 mt-6 xl:mt-0">
               <div className="border border-theme-text-primary/10 sticky top-0">
                 <div className="px-3 py-2 bg-theme-bg-secondary/50 border-b border-theme-text-primary/10">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-theme-text-tertiary">Beverages</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-theme-text-tertiary">
+                    {drinksLayout === 'sidebar' ? 'Drinks & Extras' : 'Beverages'}
+                  </span>
                 </div>
                 <div className="max-h-[70vh] overflow-y-auto">
                   {/* Water tracker at the top */}
@@ -2175,6 +2238,18 @@ export default function Home() {
                     </div>
                   </div>
 
+                  {/* Condiments (layout A: sidebar) */}
+                  {drinksLayout === 'sidebar' && (
+                    <>
+                      <div className="px-3 py-1.5 bg-theme-bg-secondary/30 border-b border-theme-text-primary/5">
+                        <span className="text-[9px] font-bold uppercase tracking-widest text-theme-text-tertiary/60">Condiments</span>
+                      </div>
+                      {BUILTIN_CONDIMENTS.map((food) => (
+                        <BeverageRow key={food.id} food={food} getCount={getCount} selectedDate={selectedDate} handleAddMeal={handleAddMeal} removeMeal={removeMeal} />
+                      ))}
+                    </>
+                  )}
+
                   {/* Recent drinks section */}
                   {(() => {
                     const recentInCurrent = beverageFoods.filter(f => recentBeverageIds.includes(f.id));
@@ -2192,10 +2267,10 @@ export default function Home() {
                   })()}
 
                   {/* Grouped beverages: Milk, then Non-Milk */}
-                  {(() => {
-                    const isWater = (name) => /^water\b/i.test(name.trim());
+                  {beverageFoods.length > 0 && (() => {
+                    const isWaterName = (name) => /^water\b/i.test(name.trim());
                     const isMilk = (name) => /milk|chocolate\s*milk|skim|2%|1%|whole milk|buttermilk|oat\s*milk|almond\s*milk|soy\s*milk/i.test(name);
-                    const filtered = beverageFoods.filter(f => !isWater(f.name));
+                    const filtered = beverageFoods.filter(f => !isWaterName(f.name));
                     const milkDrinks = filtered.filter(f => isMilk(f.name));
                     const nonMilkDrinks = filtered.filter(f => !isMilk(f.name));
                     return (
@@ -2223,12 +2298,86 @@ export default function Home() {
                       </>
                     );
                   })()}
+
+                  {/* Condiments (layout D: legacy — at bottom after beverages) */}
+                  {drinksLayout === 'legacy' && (
+                    <>
+                      <div className="px-3 py-1.5 bg-theme-bg-secondary/30 border-b border-theme-text-primary/5 border-t border-theme-text-primary/10">
+                        <span className="text-[9px] font-bold uppercase tracking-widest text-theme-text-tertiary/60">Condiments</span>
+                      </div>
+                      {BUILTIN_CONDIMENTS.map((food) => (
+                        <BeverageRow key={food.id} food={food} getCount={getCount} selectedDate={selectedDate} handleAddMeal={handleAddMeal} removeMeal={removeMeal} />
+                      ))}
+                    </>
+                  )}
                 </div>
               </div>
             </div>
           )}
           </div>{/* end flex wrapper */}
         </main>
+
+        {/* ── Layout C: Floating extras panel ── */}
+        {drinksLayout === 'floating' && !isLanding && (
+          <div className="fixed bottom-16 right-4 z-30 font-mono">
+            {floatingExtrasOpen && (
+              <div className="mb-2 border border-theme-text-primary/20 bg-theme-bg-primary shadow-2xl w-64">
+                <div className="px-3 py-2 border-b border-theme-text-primary/10 bg-theme-bg-secondary/50 flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-theme-text-tertiary">Drinks & Extras</span>
+                  <button onClick={() => setFloatingExtrasOpen(false)} className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors p-1">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                  </button>
+                </div>
+                <div className="max-h-80 overflow-y-auto">
+                  <div className="flex items-center justify-between px-3 py-2.5 border-b border-theme-text-primary/10 bg-blue-500/[0.04]">
+                    <div className="flex items-center gap-2">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-400"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" /></svg>
+                      <span className="text-xs font-bold text-theme-text-primary">Water</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button onClick={() => addWater(-1, selectedDate)} disabled={getWater(selectedDate) === 0} className={`p-1 border transition-colors ${getWater(selectedDate) > 0 ? 'border-theme-text-primary/20 text-theme-text-tertiary hover:bg-theme-text-primary hover:text-theme-bg-primary' : 'border-theme-text-primary/10 text-theme-text-tertiary/20 cursor-not-allowed'}`}>
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                      </button>
+                      <span className="text-xs font-mono tabular-nums text-blue-400 font-bold min-w-[20px] text-center">{getWater(selectedDate)}</span>
+                      <button onClick={() => addWater(1, selectedDate)} className="p-1 border border-theme-text-primary/20 text-theme-text-tertiary hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                      </button>
+                      <span className="text-[9px] text-theme-text-tertiary ml-0.5">cups</span>
+                    </div>
+                  </div>
+                  <div className="px-3 py-1.5 bg-theme-bg-secondary/30 border-b border-theme-text-primary/5">
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-theme-text-tertiary/60">Condiments</span>
+                  </div>
+                  {BUILTIN_CONDIMENTS.map((food) => (
+                    <BeverageRow key={food.id} food={food} getCount={getCount} selectedDate={selectedDate} handleAddMeal={handleAddMeal} removeMeal={removeMeal} />
+                  ))}
+                  {beverageFoods.length > 0 && (
+                    <>
+                      <div className="px-3 py-1.5 bg-theme-bg-secondary/30 border-b border-theme-text-primary/5">
+                        <span className="text-[9px] font-bold uppercase tracking-widest text-theme-text-tertiary/60">Beverages</span>
+                      </div>
+                      {beverageFoods.map((food) => (
+                        <BeverageRow key={food.id} food={food} getCount={getCount} selectedDate={selectedDate} handleAddMeal={handleAddMeal} removeMeal={removeMeal} />
+                      ))}
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+            <button
+              onClick={() => setFloatingExtrasOpen(o => !o)}
+              className="flex items-center gap-2 px-3 py-2 border border-theme-text-primary/30 bg-theme-bg-secondary text-theme-text-tertiary hover:text-theme-text-primary hover:border-theme-text-primary transition-colors shadow-lg text-xs font-bold uppercase tracking-wider"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-400"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" /></svg>
+              Extras
+              {(getWater(selectedDate) > 0 || BUILTIN_CONDIMENTS.some(f => getCount(f.id, selectedDate) > 0)) && (
+                <span className="text-[9px] font-bold bg-theme-text-primary text-theme-bg-primary px-1 ml-0.5 tabular-nums">
+                  {getWater(selectedDate) + BUILTIN_CONDIMENTS.reduce((s, f) => s + getCount(f.id, selectedDate), 0)}
+                </span>
+              )}
+            </button>
+          </div>
+        )}
 
         <footer className="border-t border-theme-text-primary/10 px-4 sm:px-6 md:px-12 lg:px-20 pt-8 pb-6 flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs uppercase tracking-widest">

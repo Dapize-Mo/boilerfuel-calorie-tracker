@@ -12,19 +12,26 @@ function getApiBase() {
   return process.env.NEXT_PUBLIC_API_URL || '';
 }
 
+// In-memory token — cleared on page refresh, but the httpOnly cookie keeps the session alive.
+// Prefer memory over localStorage so the token isn't sitting in JS-accessible storage longer than needed.
+let _memoryToken = null;
+
 export function getAdminToken() {
   if (!isBrowser()) return null;
-  return window.localStorage.getItem(ADMIN_TOKEN_KEY);
+  // Try memory first, then localStorage as fallback for existing sessions
+  return _memoryToken || window.localStorage.getItem(ADMIN_TOKEN_KEY);
 }
 
 export function setAdminToken(token) {
-  if (!isBrowser()) return;
-  window.localStorage.setItem(ADMIN_TOKEN_KEY, token);
+  _memoryToken = token;
+  // Keep localStorage for the current session tab so page refreshes don't require re-login.
+  // The httpOnly cookie is the authoritative long-lived credential.
+  if (isBrowser()) window.localStorage.setItem(ADMIN_TOKEN_KEY, token);
 }
 
 export function clearAdminToken() {
-  if (!isBrowser()) return;
-  window.localStorage.removeItem(ADMIN_TOKEN_KEY);
+  _memoryToken = null;
+  if (isBrowser()) window.localStorage.removeItem(ADMIN_TOKEN_KEY);
 }
 
 export async function apiCall(endpoint, options = {}, { requireAdmin = false } = {}) {
@@ -46,6 +53,7 @@ export async function apiCall(endpoint, options = {}, { requireAdmin = false } =
   const response = await fetch(url, {
     ...options,
     headers,
+    credentials: 'include', // send httpOnly cookie on every request
   });
 
   let data = null;
@@ -121,6 +129,15 @@ export async function deleteActivity(activityId) {
   return apiCall(`/api/activities/${activityId}`, { method: 'DELETE' }, { requireAdmin: true });
 }
 
-export function logoutAdmin() {
+export async function logoutAdmin() {
   clearAdminToken();
+  // Clear the httpOnly cookie server-side
+  try {
+    await fetch(`${getApiBase()}/api/admin/logout`, {
+      method: 'POST',
+      credentials: 'include',
+    });
+  } catch {
+    // Best-effort — cookie will expire naturally after 7 days
+  }
 }

@@ -99,5 +99,16 @@ export default async function handler(req, res) {
     console.error('[admin/login] JWT signing error:', err.message);
     return res.status(500).json({ error: 'Authentication service unavailable' });
   }
+  // Set httpOnly cookie — immune to XSS; also return token for API clients
+  const isProd = process.env.NODE_ENV === 'production';
+  const cookieFlags = [
+    `adminToken=${token}`,
+    'HttpOnly',
+    isProd ? 'Secure' : '',
+    'SameSite=Strict',
+    'Path=/',
+    'Max-Age=604800',
+  ].filter(Boolean).join('; ');
+  res.setHeader('Set-Cookie', cookieFlags);
   return res.status(200).json({ token });
 }

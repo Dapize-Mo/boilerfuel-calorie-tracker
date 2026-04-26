@@ -28,8 +28,11 @@ export async function verifyToken(token) {
 }
 
 export function requireAdmin(req) {
+  // Prefer httpOnly cookie (immune to XSS); fall back to Bearer for API clients
+  const cookieToken = req.cookies?.adminToken;
   const auth = req.headers.authorization || '';
-  const [, token] = auth.split(' ');
+  const [, headerToken] = auth.split(' ');
+  const token = cookieToken || headerToken;
   if (!token) {
     const err = new Error('Missing token');
     err.status = 401;
