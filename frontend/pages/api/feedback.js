@@ -1,4 +1,6 @@
 import { query } from '../../utils/db';
+import { requireAdmin } from '../../utils/jwt';
+import { csrfCheck } from '../../utils/csrf';
 
 let feedbackSchemaReady = false;
 async function ensureFeedbackSchema() {
@@ -16,6 +18,7 @@ async function ensureFeedbackSchema() {
 }
 
 export default async function handler(req, res) {
+  if (!csrfCheck(req, res)) return;
   try {
     await ensureFeedbackSchema();
 
@@ -33,6 +36,7 @@ export default async function handler(req, res) {
 
     // GET — admin only (list feedback)
     if (req.method === 'GET') {
+      await requireAdmin(req);
       const { rows } = await query(`SELECT * FROM feedback ORDER BY created_at DESC LIMIT 100`);
       return res.json({ ok: true, feedback: rows });
     }
@@ -40,6 +44,9 @@ export default async function handler(req, res) {
     res.setHeader('Allow', 'GET, POST');
     res.status(405).end();
   } catch (err) {
+    if (err.status === 401 || err.status === 403) {
+      return res.status(err.status).json({ error: err.message });
+    }
     console.error('[feedback] Error:', err.message);
     res.status(500).json({ error: 'Internal server error' });
   }

@@ -62,7 +62,7 @@ function getPool() {
     pool = new Pool({
       connectionString,
       // Many free Postgres providers require SSL
-      ssl: shouldUseSSL(connectionString) ? { rejectUnauthorized: false } : undefined,
+      ssl: shouldUseSSL(connectionString) ? { rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false' } : undefined,
       max: 3,
       idleTimeoutMillis: 10000,
       connectionTimeoutMillis: 5000,

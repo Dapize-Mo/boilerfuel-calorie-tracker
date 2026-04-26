@@ -1,4 +1,5 @@
 import { query } from '../../utils/db';
+import { csrfCheck } from '../../utils/csrf';
 
 const MAX_SYNC_PAYLOAD_BYTES = 4 * 1024 * 1024;
 const TOKEN_LENGTH = 6;
@@ -88,6 +89,7 @@ async function ensureSyncSchema() {
 }
 
 export default async function handler(req, res) {
+  if (!csrfCheck(req, res)) return;
   try {
     await ensureSyncSchema();
     await maybePruneSyncData();
@@ -298,7 +300,7 @@ export default async function handler(req, res) {
     res.status(405).end();
   } catch (err) {
     console.error('[sync] Error:', err.message, err.stack);
-    res.status(500).json({ error: 'Internal server error', details: err.message });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
 function generateCode() {

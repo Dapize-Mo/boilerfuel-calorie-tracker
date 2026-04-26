@@ -1,7 +1,9 @@
 // Admin scraper trigger endpoint
 import { assertDatabaseHasHeadroom } from '../../../utils/db';
+import { csrfCheck } from '../../../utils/csrf';
 
 export default async function handler(req, res) {
+  if (!csrfCheck(req, res)) return;
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -19,7 +21,7 @@ export default async function handler(req, res) {
     const debugInfo = {
       isVercel: Boolean(process.env.VERCEL),
       hasGhToken: Boolean(ghToken),
-      ghTokenPrefix: ghToken ? ghToken.slice(0, 8) + '...' : null,
+      ghTokenPrefix: ghToken ? '***' : null,
       ghRepo,
       workflowFile,
       ref,

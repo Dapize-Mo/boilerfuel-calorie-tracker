@@ -1,10 +1,23 @@
 import { signAdminToken } from '../../../utils/jwt';
+import { csrfCheck } from '../../../utils/csrf';
 
 const MAX_ATTEMPTS = 5;
-const BLOCK_DURATION_MS = 15 * 60 * 1000; // 15 minutes
+const BASE_BLOCK_MS = 60 * 1000; // 1 minute base
+const MAX_BLOCK_MS = 60 * 60 * 1000; // 1 hour max
 
-// Module-level store: ip -> { count, resetAt }
+// Module-level store: ip -> { count, blockedUntil }
 const attempts = new Map();
+
+// Prune stale entries every 10 minutes to prevent memory leak
+let lastPrune = 0;
+function maybePrune() {
+  const now = Date.now();
+  if (now - lastPrune < 10 * 60 * 1000) return;
+  lastPrune = now;
+  for (const [ip, rec] of attempts.entries()) {
+    if (now > rec.blockedUntil && rec.count === 0) attempts.delete(ip);
+  }
+}
 
 function getIp(req) {
   const forwarded = req.headers['x-forwarded-for'];
@@ -13,25 +26,33 @@ function getIp(req) {
 
 function getRecord(ip) {
   const now = Date.now();
-  const rec = attempts.get(ip);
-  if (!rec || now >= rec.resetAt) {
-    const fresh = { count: 0, resetAt: now + BLOCK_DURATION_MS };
-    attempts.set(ip, fresh);
-    return fresh;
+  let rec = attempts.get(ip);
+  if (!rec) {
+    rec = { count: 0, blockedUntil: 0 };
+    attempts.set(ip, rec);
+  }
+  // Reset count if block period has fully expired
+  if (now > rec.blockedUntil && rec.blockedUntil > 0) {
+    rec.count = 0;
+    rec.blockedUntil = 0;
   }
   return rec;
 }
 
 export default async function handler(req, res) {
+  if (!csrfCheck(req, res)) return;
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  maybePrune();
 
   const ip = getIp(req);
   const rec = getRecord(ip);
+  const now = Date.now();
 
-  if (rec.count >= MAX_ATTEMPTS) {
-    const retryAfter = Math.ceil((rec.resetAt - Date.now()) / 1000);
+  // Check if currently blocked
+  if (rec.count >= MAX_ATTEMPTS && now < rec.blockedUntil) {
+    const retryAfter = Math.ceil((rec.blockedUntil - now) / 1000);
     res.setHeader('Retry-After', retryAfter);
-    res.setHeader('X-RateLimit-Remaining', 0);
     return res.status(429).json({ error: `Too many failed attempts. Try again in ${Math.ceil(retryAfter / 60)} minute(s).` });
   }
 
@@ -42,9 +63,25 @@ export default async function handler(req, res) {
     return res.status(503).json({ error: 'Admin authentication is not configured' });
   }
 
-  if (!password || `${password}`.trim() !== adminPassword) {
+  // Constant-time comparison to prevent timing attacks
+  const input = `${password || ''}`.trim();
+  const expected = adminPassword;
+  let match = input.length === expected.length;
+  const len = Math.max(input.length, expected.length);
+  for (let i = 0; i < len; i++) {
+    if ((input.charCodeAt(i) || 0) !== (expected.charCodeAt(i) || 0)) {
+      match = false;
+    }
+  }
+
+  if (!match) {
     rec.count += 1;
-    const remaining = MAX_ATTEMPTS - rec.count;
+    // Exponential backoff: 1min, 2min, 4min, 8min... capped at 1 hour
+    const blockMs = Math.min(BASE_BLOCK_MS * Math.pow(2, rec.count - MAX_ATTEMPTS), MAX_BLOCK_MS);
+    if (rec.count >= MAX_ATTEMPTS) {
+      rec.blockedUntil = now + blockMs;
+    }
+    const remaining = Math.max(0, MAX_ATTEMPTS - rec.count);
     res.setHeader('X-RateLimit-Remaining', remaining);
     return res.status(401).json({
       error: 'Invalid password',
@@ -54,6 +91,13 @@ export default async function handler(req, res) {
 
   // Success — clear the record
   attempts.delete(ip);
-  const token = await signAdminToken();
+
+  let token;
+  try {
+    token = await signAdminToken();
+  } catch (err) {
+    console.error('[admin/login] JWT signing error:', err.message);
+    return res.status(500).json({ error: 'Authentication service unavailable' });
+  }
   return res.status(200).json({ token });
 }

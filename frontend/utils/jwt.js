@@ -3,7 +3,10 @@ import { SignJWT, jwtVerify } from 'jose';
 const alg = 'HS256';
 
 function getSecret() {
-  const secret = process.env.JWT_SECRET_KEY || process.env.JWT_SECRET || process.env.ADMIN_PASSWORD || 'change-me';
+  const secret = process.env.JWT_SECRET_KEY || process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('JWT_SECRET_KEY or JWT_SECRET environment variable must be set');
+  }
   return new TextEncoder().encode(secret);
 }
 
