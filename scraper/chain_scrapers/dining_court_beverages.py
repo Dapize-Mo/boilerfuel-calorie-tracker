@@ -47,7 +47,7 @@ def get_dining_court_beverage_items():
             "ingredients": "Reduced fat milk, vitamin A palmitate, vitamin D3.",
             "serving_size": "8 oz",
             "station": "Beverages",
-            "meal_time": "breakfast/lunch/dinner",
+            "meal_time": "breakfast/brunch/lunch/late lunch/dinner",
         },
         {
             "name": "Fat Free Skim Milk (8 oz)",
@@ -67,7 +67,7 @@ def get_dining_court_beverage_items():
             "ingredients": "Fat free milk, vitamin A palmitate, vitamin D3.",
             "serving_size": "8 oz",
             "station": "Beverages",
-            "meal_time": "breakfast/lunch/dinner",
+            "meal_time": "breakfast/brunch/lunch/late lunch/dinner",
         },
         {
             "name": "1% Lowfat Chocolate Milk (8 oz)",
@@ -89,7 +89,7 @@ def get_dining_court_beverage_items():
                            "palmitate, vitamin D3.",
             "serving_size": "8 oz",
             "station": "Beverages",
-            "meal_time": "breakfast/lunch/dinner",
+            "meal_time": "breakfast/brunch/lunch/late lunch/dinner",
         },
 
         # ── Coca-Cola Fountain Drinks (8 oz, no ice) ──
@@ -113,7 +113,7 @@ def get_dining_court_beverage_items():
                            "caffeine.",
             "serving_size": "8 oz",
             "station": "Beverages",
-            "meal_time": "breakfast/lunch/dinner",
+            "meal_time": "breakfast/brunch/lunch/late lunch/dinner",
         },
         {
             "name": "Diet Coke (8 oz)",
@@ -135,7 +135,7 @@ def get_dining_court_beverage_items():
                            "flavors, citric acid, caffeine.",
             "serving_size": "8 oz",
             "station": "Beverages",
-            "meal_time": "breakfast/lunch/dinner",
+            "meal_time": "breakfast/brunch/lunch/late lunch/dinner",
         },
         {
             "name": "Coca-Cola Zero Sugar (8 oz)",
@@ -157,7 +157,7 @@ def get_dining_court_beverage_items():
                            "potassium citrate, acesulfame potassium, caffeine.",
             "serving_size": "8 oz",
             "station": "Beverages",
-            "meal_time": "breakfast/lunch/dinner",
+            "meal_time": "breakfast/brunch/lunch/late lunch/dinner",
         },
         {
             "name": "Sprite (8 oz)",
@@ -179,7 +179,7 @@ def get_dining_court_beverage_items():
                            "sodium benzoate.",
             "serving_size": "8 oz",
             "station": "Beverages",
-            "meal_time": "breakfast/lunch/dinner",
+            "meal_time": "breakfast/brunch/lunch/late lunch/dinner",
         },
         {
             "name": "Sprite Zero (8 oz)",
@@ -201,7 +201,7 @@ def get_dining_court_beverage_items():
                            "sodium benzoate.",
             "serving_size": "8 oz",
             "station": "Beverages",
-            "meal_time": "breakfast/lunch/dinner",
+            "meal_time": "breakfast/brunch/lunch/late lunch/dinner",
         },
         {
             "name": "Dr Pepper (8 oz)",
@@ -223,7 +223,7 @@ def get_dining_court_beverage_items():
                            "artificial flavors, sodium benzoate, caffeine.",
             "serving_size": "8 oz",
             "station": "Beverages",
-            "meal_time": "breakfast/lunch/dinner",
+            "meal_time": "breakfast/brunch/lunch/late lunch/dinner",
         },
         {
             "name": "Fanta Orange (8 oz)",
@@ -246,7 +246,7 @@ def get_dining_court_beverage_items():
                            "yellow 6, red 40.",
             "serving_size": "8 oz",
             "station": "Beverages",
-            "meal_time": "breakfast/lunch/dinner",
+            "meal_time": "breakfast/brunch/lunch/late lunch/dinner",
         },
         {
             "name": "Barq's Root Beer (8 oz)",
@@ -269,7 +269,7 @@ def get_dining_court_beverage_items():
                            "acacia.",
             "serving_size": "8 oz",
             "station": "Beverages",
-            "meal_time": "breakfast/lunch/dinner",
+            "meal_time": "breakfast/brunch/lunch/late lunch/dinner",
         },
         {
             "name": "Mello Yello (8 oz)",
@@ -293,7 +293,7 @@ def get_dining_court_beverage_items():
                            "yellow 5.",
             "serving_size": "8 oz",
             "station": "Beverages",
-            "meal_time": "breakfast/lunch/dinner",
+            "meal_time": "breakfast/brunch/lunch/late lunch/dinner",
         },
         {
             "name": "Hi-C Flashin' Fruit Punch (8 oz)",
@@ -316,7 +316,7 @@ def get_dining_court_beverage_items():
                            "ascorbic acid (vitamin C).",
             "serving_size": "8 oz",
             "station": "Beverages",
-            "meal_time": "breakfast/lunch/dinner",
+            "meal_time": "breakfast/brunch/lunch/late lunch/dinner",
         },
         {
             "name": "Powerade Mountain Berry Blast (8 oz)",
@@ -340,7 +340,7 @@ def get_dining_court_beverage_items():
                            "isobutyrate, blue 1.",
             "serving_size": "8 oz",
             "station": "Beverages",
-            "meal_time": "breakfast/lunch/dinner",
+            "meal_time": "breakfast/brunch/lunch/late lunch/dinner",
         },
         {
             "name": "Minute Maid Lemonade (8 oz)",
@@ -362,7 +362,7 @@ def get_dining_court_beverage_items():
                            "sodium citrate, ascorbic acid (vitamin C).",
             "serving_size": "8 oz",
             "station": "Beverages",
-            "meal_time": "breakfast/lunch/dinner",
+            "meal_time": "breakfast/brunch/lunch/late lunch/dinner",
         },
         {
             "name": "Water (8 oz)",
@@ -382,7 +382,7 @@ def get_dining_court_beverage_items():
             "ingredients": "Water.",
             "serving_size": "8 oz",
             "station": "Beverages",
-            "meal_time": "breakfast/lunch/dinner",
+            "meal_time": "breakfast/brunch/lunch/late lunch/dinner",
         },
     ]
 
