@@ -464,7 +464,8 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [view, setView] = useState('landing');
-  const [calorieSort, setCalorieSort] = useState(null); // null | 'asc' | 'desc'
+  const [sortField, setSortField] = useState(null); // null | 'calories' | 'protein' | 'carbs' | 'fats'
+  const [sortDir, setSortDir] = useState(null); // null | 'asc' | 'desc'
   const [hoveredFood, setHoveredFood] = useState(null);
   const [tooltipPos, setTooltipPos] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
@@ -898,9 +899,26 @@ export default function Home() {
 
   // ── Sorted + grouped foods (excluding beverages) ──
   const sortedFoods = useMemo(() => {
-    if (!calorieSort) return regularFoods;
-    return [...regularFoods].sort((a, b) => calorieSort === 'asc' ? a.calories - b.calories : b.calories - a.calories);
-  }, [regularFoods, calorieSort]);
+    if (!sortField || !sortDir) return regularFoods;
+    return [...regularFoods].sort((a, b) => {
+      let av, bv;
+      if (sortField === 'calories') {
+        av = a.calories || 0;
+        bv = b.calories || 0;
+      } else {
+        const am = a.macros || {};
+        const bm = b.macros || {};
+        if (sortField === 'fats') {
+          av = parseFloat(am.fats ?? am.fat ?? 0) || 0;
+          bv = parseFloat(bm.fats ?? bm.fat ?? 0) || 0;
+        } else {
+          av = parseFloat(am[sortField] ?? 0) || 0;
+          bv = parseFloat(bm[sortField] ?? 0) || 0;
+        }
+      }
+      return sortDir === 'asc' ? av - bv : bv - av;
+    });
+  }, [regularFoods, sortField, sortDir]);
 
   // Group by dining court → station (for multi-court views), or just station (single court)
   // "By Request" station is always placed last within each court
@@ -938,9 +956,15 @@ export default function Home() {
     return groups;
   }, [sortedFoods, location.type]);
 
-  // ── Calorie sort toggle ──
-  function toggleCalorieSort() {
-    setCalorieSort(prev => prev === null ? 'asc' : prev === 'asc' ? 'desc' : null);
+  // ── Column sort toggle ──
+  function toggleSort(field) {
+    if (sortField !== field) { setSortField(field); setSortDir('asc'); }
+    else if (sortDir === 'asc') setSortDir('desc');
+    else { setSortField(null); setSortDir(null); }
+  }
+  function sortArrowFor(field) {
+    if (sortField !== field) return '';
+    return sortDir === 'asc' ? ' ▲' : ' ▼';
   }
 
   // ── Tooltip handlers (RAF-throttled, disabled on touch devices) ──
@@ -1035,7 +1059,7 @@ export default function Home() {
   };
 
   // ── Sort arrow indicator ──
-  const sortArrow = calorieSort === 'asc' ? ' ▲' : calorieSort === 'desc' ? ' ▼' : '';
+  const sortArrow = sortArrowFor('calories');
 
   // ── Progressive rendering: show items in chunks ──
   const [visibleCount, setVisibleCount] = useState(CHUNK_SIZE);
@@ -1695,9 +1719,20 @@ export default function Home() {
                 <th className="py-3 font-bold uppercase text-xs tracking-wider text-theme-text-secondary">Food Item</th>
                 <th className="py-3 font-bold uppercase text-xs tracking-wider text-theme-text-secondary hidden sm:table-cell w-52">Location</th>
                 <th className="py-3 font-bold uppercase text-xs tracking-wider text-theme-text-secondary hidden md:table-cell w-28">Meal</th>
-                <th className="py-3 font-bold uppercase text-xs tracking-wider text-yellow-500/70 text-right cursor-pointer select-none hover:text-yellow-500 transition-colors w-16"
-                  onClick={toggleCalorieSort}
-                  title="Click to sort by calories">
+                <th className={`py-3 font-bold uppercase text-xs tracking-wider text-right cursor-pointer select-none transition-colors w-12 hidden lg:table-cell ${sortField === 'protein' ? 'text-blue-400' : 'text-theme-text-tertiary/50 hover:text-blue-400'}`}
+                  onClick={() => toggleSort('protein')} title="Sort by protein">
+                  P{sortArrowFor('protein')}
+                </th>
+                <th className={`py-3 font-bold uppercase text-xs tracking-wider text-right cursor-pointer select-none transition-colors w-12 hidden lg:table-cell ${sortField === 'carbs' ? 'text-orange-400' : 'text-theme-text-tertiary/50 hover:text-orange-400'}`}
+                  onClick={() => toggleSort('carbs')} title="Sort by carbs">
+                  C{sortArrowFor('carbs')}
+                </th>
+                <th className={`py-3 font-bold uppercase text-xs tracking-wider text-right cursor-pointer select-none transition-colors w-12 hidden lg:table-cell ${sortField === 'fats' ? 'text-red-400' : 'text-theme-text-tertiary/50 hover:text-red-400'}`}
+                  onClick={() => toggleSort('fats')} title="Sort by fat">
+                  F{sortArrowFor('fats')}
+                </th>
+                <th className={`py-3 font-bold uppercase text-xs tracking-wider text-right cursor-pointer select-none transition-colors w-16 ${sortField === 'calories' ? 'text-yellow-500' : 'text-yellow-500/70 hover:text-yellow-500'}`}
+                  onClick={() => toggleSort('calories')} title="Sort by calories">
                   Cal{sortArrow}
                 </th>
               </tr>
@@ -1713,6 +1748,9 @@ export default function Home() {
                       </td>
                       <td className="py-2 hidden sm:table-cell w-52"><div className="h-3 bg-theme-text-primary/8 rounded-sm w-2/3" /></td>
                       <td className="py-2 hidden md:table-cell w-28"><div className="h-3 bg-theme-text-primary/8 rounded-sm w-1/2" /></td>
+                      <td className="py-2 hidden lg:table-cell w-12"><div className="h-3 bg-theme-text-primary/8 rounded-sm w-full ml-auto" /></td>
+                      <td className="py-2 hidden lg:table-cell w-12"><div className="h-3 bg-theme-text-primary/8 rounded-sm w-full ml-auto" /></td>
+                      <td className="py-2 hidden lg:table-cell w-12"><div className="h-3 bg-theme-text-primary/8 rounded-sm w-full ml-auto" /></td>
                       <td className="py-2 pl-4 w-16"><div className="h-3 bg-theme-text-primary/8 rounded-sm w-full ml-auto" /></td>
                     </tr>
                   ))}
@@ -1723,7 +1761,7 @@ export default function Home() {
                   if (item.type === 'court-header') {
                     return (
                       <tr key={`court-${item.label}-${i}`}>
-                        <td colSpan={4} className="pt-6 pb-2 px-0">
+                        <td colSpan={7} className="pt-6 pb-2 px-0">
                           <div className="text-sm font-bold uppercase tracking-widest text-theme-text-primary border-b-2 border-yellow-500/30 pb-1">
                             {item.label}
                           </div>
@@ -1734,7 +1772,7 @@ export default function Home() {
                   if (item.type === 'station-header') {
                     return (
                       <tr key={`station-${item.court}-${item.label}-${i}`}>
-                        <td colSpan={4} className="pt-4 pb-1 px-0">
+                        <td colSpan={7} className="pt-4 pb-1 px-0">
                           <div className="text-xs font-bold uppercase tracking-wider text-theme-text-tertiary pl-1"
                             style={{ borderLeft: '3px solid', borderColor: 'rgb(var(--color-accent-primary))', paddingLeft: 8 }}>
                             {item.label}
@@ -1761,7 +1799,7 @@ export default function Home() {
                   return (
                     <tr key={rowKey}
                       className={`border-b border-theme-text-primary/5 transition-colors group ${fav ? 'bg-yellow-500/[0.03]' : ''}`}>
-                      <td colSpan={4} className="p-0">
+                      <td colSpan={7} className="p-0">
                         {/* Clickable summary row — hover shows tooltip, click expands */}
                         <div className="flex items-center cursor-pointer hover:bg-theme-bg-secondary/50 transition-colors overflow-hidden"
                           onClick={() => setExpandedId(isExpanded ? null : rowKey)}
@@ -1805,6 +1843,9 @@ export default function Home() {
                           </div>
                           <div className="py-2 px-4 text-theme-text-secondary capitalize hidden sm:block w-52 shrink-0 whitespace-nowrap overflow-hidden text-ellipsis">{food.dining_court}</div>
                           <div className="py-2 px-4 text-theme-text-tertiary capitalize hidden md:block w-28 shrink-0">{food.meal_time}</div>
+                          <div className="py-2 text-right font-mono tabular-nums w-12 shrink-0 text-theme-text-tertiary/60 hidden lg:block">{macros.protein != null ? Math.round(macros.protein) : '—'}</div>
+                          <div className="py-2 text-right font-mono tabular-nums w-12 shrink-0 text-theme-text-tertiary/60 hidden lg:block">{macros.carbs != null ? Math.round(macros.carbs) : '—'}</div>
+                          <div className="py-2 text-right font-mono tabular-nums w-12 shrink-0 text-theme-text-tertiary/60 hidden lg:block">{(macros.fats ?? macros.fat) != null ? Math.round(macros.fats ?? macros.fat) : '—'}</div>
                           <div className={`py-2 pl-4 text-right font-mono tabular-nums w-16 shrink-0 ${noNutrition && !estimatedCal ? 'text-amber-500/60' : noNutrition && estimatedCal ? 'text-theme-text-tertiary' : 'text-theme-text-secondary'}`}>
                             {noNutrition ? (estimatedCal ? `~${estimatedCal}` : 'N/A') : (food.calories || '—')}
                           </div>
@@ -2115,7 +2156,7 @@ export default function Home() {
                 })}
                 {hasMore && (
                   <tr>
-                    <td colSpan={4} className="py-6 text-center">
+                    <td colSpan={7} className="py-6 text-center">
                       <button
                         onClick={() => setVisibleCount(c => c + CHUNK_SIZE)}
                         className="px-6 py-2 text-sm uppercase tracking-wider border border-theme-text-primary/30 text-theme-text-secondary hover:bg-theme-bg-secondary hover:text-theme-text-primary transition-colors font-mono">
@@ -2127,7 +2168,7 @@ export default function Home() {
                 </>
               ) : (
                 <tr>
-                  <td colSpan={4} className="py-12 text-center">
+                  <td colSpan={7} className="py-12 text-center">
                     {(location.type === 'all-foodco' || location.source === 'foodco') ? (
                       <div className="space-y-2 text-theme-text-tertiary italic">
                         <div className="text-base not-italic font-bold text-theme-text-secondary">Purdue Food Co</div>
