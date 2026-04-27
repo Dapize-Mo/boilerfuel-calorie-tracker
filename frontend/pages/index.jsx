@@ -121,11 +121,14 @@ function CalendarPicker({ value, onChange, compact = false, hideIcon = false }) 
 }
 
 // ── Custom grouped location dropdown with two top-level groups ──
+const HOVER_DELAY = 400; // ms before hover opens a dropdown
+
 function LocationDropdown({ value, onChange, availableLocations, retailLocations, compact = false }) {
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState(null); // 'purdue' | 'foodco' | null
   const [dropdownMaxH, setDropdownMaxH] = useState('24rem');
   const ref = useRef(null);
+  const hoverTimer = useRef(null);
 
   useEffect(() => {
     function handleClick(e) {
@@ -135,13 +138,28 @@ function LocationDropdown({ value, onChange, availableLocations, retailLocations
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  function handleToggle() {
-    if (!open && ref.current) {
+  function computeMaxH() {
+    if (ref.current) {
       const rect = ref.current.getBoundingClientRect();
       const available = window.innerHeight - rect.bottom - 8;
       setDropdownMaxH(`${Math.max(180, available)}px`);
     }
+  }
+
+  function handleToggle() {
+    if (!open) computeMaxH();
     setOpen(o => !o);
+  }
+
+  function handleMouseEnter() {
+    clearTimeout(hoverTimer.current);
+    hoverTimer.current = setTimeout(() => {
+      if (!open) { computeMaxH(); setOpen(true); }
+    }, HOVER_DELAY);
+  }
+
+  function handleMouseLeave() {
+    clearTimeout(hoverTimer.current);
   }
 
   // Filter HFS categories to only show locations that exist in DB
@@ -175,7 +193,7 @@ function LocationDropdown({ value, onChange, availableLocations, retailLocations
   }
 
   return (
-    <div ref={ref} className="relative" data-location-dropdown>
+    <div ref={ref} className="relative" data-location-dropdown onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
       <button type="button" onClick={handleToggle}
         className={`w-full border bg-theme-bg-secondary text-theme-text-primary text-left font-mono flex items-center justify-between hover:bg-theme-bg-hover transition-all ${
           compact ? 'px-2 py-1.5 border-theme-text-primary/30 text-sm gap-2' : 'p-2 border-theme-text-primary gap-3'
@@ -294,6 +312,58 @@ function LocationDropdown({ value, onChange, availableLocations, retailLocations
               </div>
             )}
           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MealTimeDropdown({ value, onChange, options, compact = false }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const hoverTimer = useRef(null);
+
+  useEffect(() => {
+    function handleClick(e) {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  function handleMouseEnter() {
+    clearTimeout(hoverTimer.current);
+    hoverTimer.current = setTimeout(() => { if (!open) setOpen(true); }, HOVER_DELAY);
+  }
+
+  function handleMouseLeave() {
+    clearTimeout(hoverTimer.current);
+  }
+
+  return (
+    <div ref={ref} className="relative" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+      <button type="button" onClick={() => setOpen(o => !o)}
+        className={`w-full border bg-theme-bg-secondary text-theme-text-primary text-left font-mono flex items-center justify-between hover:bg-theme-bg-hover transition-all ${
+          compact ? 'px-2 py-1.5 border-theme-text-primary/30 text-sm gap-2' : 'p-2 border-theme-text-primary gap-3'
+        }`}>
+        <span className="whitespace-nowrap truncate">{value}</span>
+        <svg width={compact ? 12 : 14} height={compact ? 12 : 14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="opacity-50 shrink-0"
+          style={{ transform: open ? 'rotate(180deg)' : 'rotate(0)', transition: `transform 0.2s ${EASE}` }}>
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
+      {open && (
+        <div className="absolute z-50 mt-1 left-0 w-full overflow-y-auto border border-theme-text-primary bg-theme-bg-primary"
+          style={{ animation: `fadeInTooltip 0.15s ${EASE} both` }}>
+          {options.map(m => (
+            <button key={m} type="button"
+              onClick={() => { onChange(m); setOpen(false); }}
+              className={`w-full text-left px-3 py-2 text-sm transition-colors ${
+                value === m ? 'bg-theme-text-primary text-theme-bg-primary font-bold' : 'hover:bg-theme-bg-hover text-theme-text-primary'
+              }`}>
+              {m}
+            </button>
+          ))}
         </div>
       )}
     </div>
@@ -1138,13 +1208,7 @@ export default function Home() {
               Now
             </button>
           </div>
-          <select value={mealTime} onChange={(e) => setMealTime(e.target.value)}
-            className={`border bg-theme-bg-secondary text-theme-text-primary focus:border-theme-text-primary ${
-              isLanding ? 'border-theme-text-primary' : 'border-theme-text-primary/30'
-            }`}
-            style={selectStyle}>
-            {mealTimes.map(m => <option key={m} value={m}>{m}</option>)}
-          </select>
+          <MealTimeDropdown value={mealTime} onChange={setMealTime} options={mealTimes} compact={!isLanding} />
         </div>
       </div>
 
@@ -2108,7 +2172,7 @@ export default function Home() {
                     Drinks & Extras
                   </span>
                 </div>
-                <div className="max-h-[70vh] overflow-y-auto">
+                <div>
                   {/* Water tracker at the top */}
                   <div className="flex items-center justify-between px-3 py-2.5 border-b border-theme-text-primary/10 bg-blue-500/[0.04]">
                     <div className="flex items-center gap-2">
