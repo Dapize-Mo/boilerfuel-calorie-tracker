@@ -806,7 +806,17 @@ export default function Home() {
       if ((f.station || '').toLowerCase() === 'beverages') bevs.push(f);
       else regular.push(f);
     }
-    return { regularFoods: regular, beverageFoods: bevs };
+    // Deduplicate beverages by name (same drinks appear at every dining court)
+    const seenBevNames = new Set();
+    const uniqueBevs = [];
+    for (const b of bevs) {
+      const key = b.name.toLowerCase();
+      if (!seenBevNames.has(key)) {
+        seenBevNames.add(key);
+        uniqueBevs.push(b);
+      }
+    }
+    return { regularFoods: regular, beverageFoods: uniqueBevs };
   }, [foods, debouncedSearch, showFavsOnly, isFavorite, nutritionFilter, dietaryPrefs]);
 
   // ── Frequently logged non-beverage foods (for quick-add panel) ──
