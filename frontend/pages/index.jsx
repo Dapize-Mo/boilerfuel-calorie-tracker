@@ -160,6 +160,7 @@ function LocationDropdown({ value, onChange, availableLocations, retailLocations
 
   function handleMouseLeave() {
     clearTimeout(hoverTimer.current);
+    setOpen(false);
   }
 
   // Filter HFS categories to only show locations that exist in DB
@@ -338,6 +339,7 @@ function MealTimeDropdown({ value, onChange, options, compact = false }) {
 
   function handleMouseLeave() {
     clearTimeout(hoverTimer.current);
+    setOpen(false);
   }
 
   return (
