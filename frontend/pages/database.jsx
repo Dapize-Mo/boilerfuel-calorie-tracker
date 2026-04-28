@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import Head from 'next/head';
-import Layout from '../components/Layout';
+import Link from 'next/link';
 import { ALL_PURDUE_CATEGORIES, FOOD_CO_LOCATIONS } from '../utils/diningLocations';
 
 const EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
@@ -267,7 +267,7 @@ export default function DatabasePage() {
   const activeSortField = SORT_FIELDS.find(f => f.key === sortField);
 
   return (
-    <Layout>
+    <>
       <Head>
         <title>Food Database | BoilerFuel</title>
       </Head>
@@ -277,13 +277,20 @@ export default function DatabasePage() {
         @keyframes fadeInRow { from { opacity: 0; max-height: 0; } to { opacity: 1; max-height: 600px; } }
       `}</style>
 
+      <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary font-mono">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-16 py-10 sm:py-20">
+
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-xl sm:text-2xl font-bold text-theme-text-primary tracking-tight font-mono uppercase">
-          Food Database
-        </h1>
-        <p className="text-xs text-theme-text-tertiary mt-1 tracking-wide">Rank and compare all Purdue dining foods by any nutrient</p>
-      </div>
+      <header className="space-y-4 mb-8">
+        <Link href="/" className="text-xs uppercase tracking-widest text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
+          &larr; Back
+        </Link>
+        <h1 className="text-3xl sm:text-5xl font-bold uppercase tracking-[0.2em]">Food Database</h1>
+        <div className="w-12 h-px bg-theme-text-primary/30" />
+        <p className="text-sm uppercase tracking-widest text-theme-text-tertiary">
+          Rank and compare all Purdue dining foods by any nutrient
+        </p>
+      </header>
 
       {/* Filter bar */}
       <div className="flex flex-wrap items-end gap-3 mb-5">
@@ -558,6 +565,27 @@ export default function DatabasePage() {
           <p className="text-xs mt-2 text-theme-text-tertiary/50">Try selecting &ldquo;All&rdquo; for Meal, or enable more locations.</p>
         </div>
       )}
-    </Layout>
+
+      {/* Footer */}
+      <footer className="border-t border-theme-text-primary/10 pt-8 mt-10 flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs uppercase tracking-widest">
+          <Link href="/" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Home</Link>
+          <Link href="/compare" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Compare</Link>
+          <Link href="/profile" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Profile</Link>
+          <Link href="/custom-foods" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Custom Foods</Link>
+          <Link href="/tools" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Tools</Link>
+          <Link href="/about" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">About</Link>
+          <Link href="/changelog" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Changelog</Link>
+          <Link href="/privacy" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Privacy</Link>
+          <Link href="/admin" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Admin</Link>
+        </div>
+        <span className="text-[10px] uppercase tracking-widest text-theme-text-tertiary/40">BoilerFuel · {new Date().getFullYear()}</span>
+      </footer>
+
+        </div>
+      </div>
+    </>
   );
 }
+
+DatabasePage.getLayout = (page) => page;

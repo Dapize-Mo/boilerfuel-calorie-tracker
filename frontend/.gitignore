@@ -1,6 +1,7 @@
 .vercel
 .next
 node_modules
-.env*
+.env.local
+.env.production
 # Ignore stray Windows device-name artifact
 nul
