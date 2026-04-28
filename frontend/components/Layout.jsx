@@ -51,6 +51,7 @@ const TopNav = memo(function TopNav() {
   const router = useRouter();
   const navItems = [
     { href: '/', label: 'Home', icon: '🏠' },
+    { href: '/database', label: 'Database', icon: '📊' },
     { href: '/about', label: 'About', icon: 'ℹ️' },
     { href: '/changelog', label: 'Changelog', icon: '📝' },
     { href: '/admin', label: 'Admin', icon: '⚙️' },

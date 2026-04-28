@@ -1418,6 +1418,9 @@ export default function Home() {
                 <Link href="/tools" className="text-[10px] uppercase tracking-widest text-theme-text-tertiary/60 hover:text-theme-text-primary transition-colors hidden sm:inline">
                   Tools
                 </Link>
+                <Link href="/database" className="text-[10px] uppercase tracking-widest text-theme-text-tertiary/60 hover:text-theme-text-primary transition-colors hidden sm:inline">
+                  Database
+                </Link>
               </div>
             </div>
 
@@ -2322,6 +2325,7 @@ export default function Home() {
             <Link href="/compare" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Compare</Link>
             <Link href="/custom-foods" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Custom Foods</Link>
             <Link href="/tools" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Tools</Link>
+            <Link href="/database" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Database</Link>
             <Link href="/profile" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Profile</Link>
             <Link href="/about" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">About</Link>
             <Link href="/changelog" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Changelog</Link>
