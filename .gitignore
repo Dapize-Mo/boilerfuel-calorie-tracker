@@ -77,3 +77,6 @@ Users/
 # Git
 .git/
 .vercel
+
+# Deploy bundle (source files already applied to frontend/)
+deploy/
