@@ -6,6 +6,7 @@ import { LOCATION_CATEGORIES, FOOD_CO_LOCATIONS } from '../utils/diningLocations
 import { useMeals } from '../context/MealContext';
 import { getNamespacedStorageKey } from '../utils/storageNamespace';
 import dynamic from 'next/dynamic';
+import Layout from '../components/Layout';
 
 const BarcodeScanner = dynamic(() => import('../components/BarcodeScanner'), { ssr: false });
 
@@ -1011,6 +1012,7 @@ export default function Home() {
       )}
 
 
+      <Layout>
       {/* ── Filters bar ── */}
       <div className="flex items-end gap-2 sm:gap-3 flex-wrap mb-6 pb-4 border-b border-theme-text-primary/20">
         <div style={{ width: 175 }}>
@@ -1994,6 +1996,7 @@ export default function Home() {
           </div>{/* end flex wrapper */}
         </div>
       </div>
+      </Layout>
 
       {/* ── Sticky daily summary bar (bottom, results view only) ── */}
       {!isLanding && selectedDateTotals.calories > 0 && (() => {
