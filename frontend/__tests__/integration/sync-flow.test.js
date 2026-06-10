@@ -87,6 +87,7 @@ describe('Complete sync flow between two devices', () => {
     // Step 1: Device A creates sync pair
     const createReq = {
       method: 'POST',
+      headers: {},
       body: {
         action: 'create',
         encrypted_data: 'device-a-initial-data',
@@ -109,6 +110,7 @@ describe('Complete sync flow between two devices', () => {
     // Step 2: Device A pulls after creation (should get no changes)
     const pullAfterCreateReq = {
       method: 'GET',
+      headers: {},
       query: { token: syncToken, since_revision: String(serverRevisionAfterCreate), since: String(createResponse.body.updated_at) },
     };
     const pullAfterCreateResponse = createRes();
@@ -121,6 +123,7 @@ describe('Complete sync flow between two devices', () => {
     // Step 3: Device A pushes new data (simulating adding a meal)
     const pushReq = {
       method: 'POST',
+      headers: {},
       body: {
         action: 'push',
         token: syncToken,
@@ -142,6 +145,7 @@ describe('Complete sync flow between two devices', () => {
     // Step 4: Device B pulls from the same token (simulating joining)
     const deviceBPullReq = {
       method: 'GET',
+      headers: {},
       query: { token: syncToken, since_revision: '0', since: '0' }, // Full pull
     };
     const deviceBPullResponse = createRes();
@@ -155,6 +159,7 @@ describe('Complete sync flow between two devices', () => {
     // Step 5: Device B pushes its merged data back
     const deviceBPushReq = {
       method: 'POST',
+      headers: {},
       body: {
         action: 'push',
         token: syncToken,
@@ -176,6 +181,7 @@ describe('Complete sync flow between two devices', () => {
     // Step 6: Device A pulls again (should see Device B's changes)
     const deviceAPullAfterBPushReq = {
       method: 'GET',
+      headers: {},
       query: { token: syncToken, since_revision: String(serverRevisionAfterPush), since: String(pushResponse.body.updated_at) },
     };
     const deviceAPullAfterBPushResponse = createRes();
@@ -219,6 +225,7 @@ describe('Complete sync flow between two devices', () => {
     // Create sync pair with a specific timestamp
     const createReq = {
       method: 'POST',
+      headers: {},
       body: { action: 'create', encrypted_data: 'data', updated_at: 5000 },
     };
     const createResponse = createRes();
@@ -229,6 +236,7 @@ describe('Complete sync flow between two devices', () => {
     // Pull with since_revision = current revision (no changes expected)
     const pullExactMatchReq = {
       method: 'GET',
+      headers: {},
       query: { token, since_revision: String(createResponse.body.revision), since: String(createResponse.body.updated_at) },
     };
     const pullExactMatchResponse = createRes();
@@ -239,6 +247,7 @@ describe('Complete sync flow between two devices', () => {
     // Pull with since_revision > updated_at-equivalent (no changes expected)
     const pullBehindReq = {
       method: 'GET',
+      headers: {},
       query: { token, since_revision: String(createResponse.body.revision + 1), since: String(createResponse.body.updated_at + 1000) },
     };
     const pullBehindResponse = createRes();
@@ -248,6 +257,7 @@ describe('Complete sync flow between two devices', () => {
     // Pull with since_revision < current revision (changes expected after push)
     const pushReq = {
       method: 'POST',
+      headers: {},
       body: { action: 'push', token, encrypted_data: 'data-2', updated_at: 6000 },
     };
     const pushResponse = createRes();
@@ -256,6 +266,7 @@ describe('Complete sync flow between two devices', () => {
 
     const pullAheadReq = {
       method: 'GET',
+      headers: {},
       query: { token, since_revision: String(createResponse.body.revision), since: String(createResponse.body.updated_at - 1000) },
     };
     const pullAheadResponse = createRes();

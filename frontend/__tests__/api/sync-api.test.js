@@ -47,6 +47,7 @@ describe('/api/sync handler', () => {
 
     const req = {
       method: 'POST',
+      headers: {},
       body: { action: 'create', encrypted_data: 'enc', updated_at: 1234 },
     };
     const res = createRes();
@@ -66,6 +67,7 @@ describe('/api/sync handler', () => {
 
     const req = {
       method: 'POST',
+      headers: {},
       body: { action: 'push', token: 'bad token!!', encrypted_data: 'enc' },
     };
     const res = createRes();
@@ -86,6 +88,7 @@ describe('/api/sync handler', () => {
 
     const req = {
       method: 'GET',
+      headers: {},
       query: { token: 'ABCD23', since: '1000' },
     };
     const res = createRes();
@@ -107,6 +110,7 @@ describe('/api/sync handler', () => {
 
     const req = {
       method: 'GET',
+      headers: {},
       query: { token: 'ABCD23', since_revision: '7', since: '0' },
     };
     const res = createRes();
@@ -128,6 +132,7 @@ describe('/api/sync handler', () => {
 
     const req = {
       method: 'GET',
+      headers: {},
       query: { token: 'ABCD23', since: '0' },
     };
     const res = createRes();
