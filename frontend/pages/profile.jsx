@@ -8,7 +8,6 @@ import { useTheme } from '../context/ThemeContext';
 import { useMeals } from '../context/MealContext';
 import { useSmartBack } from '../utils/useSmartBack';
 import { getNamespacedStorageKey } from '../utils/storageNamespace';
-import MenuLayoutSetting from '../components/MenuLayoutSetting';
 
 const QRCode = dynamic(() => import('../components/QRCode'), { ssr: false });
 
@@ -929,7 +928,6 @@ export default function ProfilePage() {
                 </button>
               </div>
             </div>
-            <MenuLayoutSetting />
           </section>
 
           {/* ═══ WEIGHT TRACKING ═══ */}

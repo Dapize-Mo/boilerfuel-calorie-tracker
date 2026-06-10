@@ -6,7 +6,6 @@ import { LOCATION_CATEGORIES, FOOD_CO_LOCATIONS } from '../utils/diningLocations
 import { useMeals } from '../context/MealContext';
 import { getNamespacedStorageKey } from '../utils/storageNamespace';
 import dynamic from 'next/dynamic';
-import Layout from '../components/Layout';
 
 const BarcodeScanner = dynamic(() => import('../components/BarcodeScanner'), { ssr: false });
 
@@ -464,7 +463,7 @@ export default function Home() {
   const [retailLocations, setRetailLocations] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [view, setView] = useState('results');
+  const [view, setView] = useState('landing');
   const [sortField, setSortField] = useState(null); // null | 'calories' | 'protein' | 'carbs' | 'fats'
   const [sortDir, setSortDir] = useState(null); // null | 'asc' | 'desc'
   const [hoveredFood, setHoveredFood] = useState(null);
@@ -670,6 +669,113 @@ export default function Home() {
     }
   }, [view, fetchFoods]);
 
+  // ── Scroll-based navigation: landing → results ──
+  useEffect(() => {
+    if (view !== 'landing') return;
+
+    function onWheel(e) {
+      // Don't trigger if inside calendar or dropdown
+      if (e.target.closest('[data-calendar]') || e.target.closest('[data-location-dropdown]')) return;
+      if (transitioning.current) return;
+
+      // Accumulate delta
+      scrollDeltaRef.current += e.deltaY;
+      clearTimeout(scrollTimeoutRef.current);
+      scrollTimeoutRef.current = setTimeout(() => { scrollDeltaRef.current = 0; }, 300);
+
+      if (scrollDeltaRef.current > 80) {
+        scrollDeltaRef.current = 0;
+        handleViewMenu();
+      }
+      // Prevent native overscroll on landing
+      e.preventDefault();
+    }
+
+    // Touch events
+    function onTouchStart(e) {
+      touchStartY.current = e.touches[0].clientY;
+      touchStartX.current = e.touches[0].clientX;
+    }
+    function onTouchMove(e) {
+      if (transitioning.current || touchStartY.current === null) return;
+      const delta = touchStartY.current - e.touches[0].clientY;
+      if (delta > 60) {
+        touchStartY.current = null;
+        handleViewMenu();
+      }
+    }
+    function onTouchEnd(e) {
+      if (view !== 'results' || touchStartX.current === null) { touchStartX.current = null; return; }
+      const dx = e.changedTouches[0].clientX - touchStartX.current;
+      const dy = Math.abs(e.changedTouches[0].clientY - (touchStartY.current || 0));
+      touchStartX.current = null;
+      // Only swipe if horizontal movement dominates and is large enough
+      if (Math.abs(dx) > 60 && Math.abs(dx) > dy * 1.5) {
+        if (dx < 0) nextDay(); else prevDay();
+      }
+    }
+
+    window.addEventListener('wheel', onWheel, { passive: false });
+    window.addEventListener('touchstart', onTouchStart, { passive: true });
+    window.addEventListener('touchmove', onTouchMove, { passive: true });
+    window.addEventListener('touchend', onTouchEnd, { passive: true });
+    return () => {
+      window.removeEventListener('wheel', onWheel);
+      window.removeEventListener('touchstart', onTouchStart);
+      window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchend', onTouchEnd);
+      clearTimeout(scrollTimeoutRef.current);
+    };
+  }, [view]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Scroll-based navigation: results → landing (scroll up at top) ──
+  useEffect(() => {
+    if (view !== 'results') return;
+    const el = resultsRef.current;
+    if (!el) return;
+
+    let upDelta = 0;
+    let upTimeout = null;
+
+    function onWheel(e) {
+      if (transitioning.current) return;
+      if (el.scrollTop > 1) { upDelta = 0; return; }
+      if (e.deltaY < 0) {
+        upDelta += Math.abs(e.deltaY);
+        clearTimeout(upTimeout);
+        upTimeout = setTimeout(() => { upDelta = 0; }, 300);
+        if (upDelta > 60) {
+          upDelta = 0;
+          handleBack();
+          e.preventDefault();
+        }
+      } else {
+        upDelta = 0;
+      }
+    }
+
+    let tStartY = null;
+    function onTouchStart(e) { tStartY = e.touches[0].clientY; }
+    function onTouchMove(e) {
+      if (transitioning.current || tStartY === null) return;
+      if (el.scrollTop > 1) { tStartY = null; return; }
+      const delta = e.touches[0].clientY - tStartY;
+      if (delta > 60) {
+        tStartY = null;
+        handleBack();
+      }
+    }
+
+    el.addEventListener('wheel', onWheel, { passive: false });
+    el.addEventListener('touchstart', onTouchStart, { passive: true });
+    el.addEventListener('touchmove', onTouchMove, { passive: true });
+    return () => {
+      el.removeEventListener('wheel', onWheel);
+      el.removeEventListener('touchstart', onTouchStart);
+      el.removeEventListener('touchmove', onTouchMove);
+      clearTimeout(upTimeout);
+    };
+  }, [view]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Split beverages from regular foods + apply filters ──
   const { regularFoods, beverageFoods } = useMemo(() => {
@@ -966,7 +1072,8 @@ export default function Home() {
   let rowIndex = 0;
 
   return (
-    <>
+    <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary font-mono"
+         style={{ position: 'relative', overflow: 'hidden', maxWidth: '100vw' }}>
       <Head>
         <title>BoilerFuel — Purdue Dining Menus & Calorie Tracker</title>
         <meta name="description" content="Browse Purdue University dining hall menus, track calories and macros, and log meals for free. Real-time data from Wiley, Earhart, Ford, Hillenbrand, and more." />
@@ -1011,23 +1118,116 @@ export default function Home() {
         </div>
       )}
 
-
-      <Layout>
-      {/* ── Filters bar ── */}
-      <div className="flex items-end gap-2 sm:gap-3 flex-wrap mb-6 pb-4 border-b border-theme-text-primary/20">
-        <div style={{ width: 175 }}>
-          <div className="flex items-stretch gap-0.5">
-            <button onClick={prevDay} className="border border-theme-text-primary/30 px-1.5 text-sm font-bold text-theme-text-secondary hover:bg-theme-bg-hover hover:text-theme-text-primary transition-colors">&#8249;</button>
-            <div className="flex-1 min-w-0"><CalendarPicker value={selectedDate} onChange={setSelectedDate} compact={true} hideIcon={true} /></div>
-            <button onClick={nextDay} className="border border-theme-text-primary/30 px-1.5 text-sm font-bold text-theme-text-secondary hover:bg-theme-bg-hover hover:text-theme-text-primary transition-colors">&#8250;</button>
+      {/* ── Calorie progress bar — thin line at very top ── */}
+      {(() => {
+        const pct = Math.min((selectedDateTotals.calories / (goals?.calories || 2000)) * 100, 100);
+        const over = selectedDateTotals.calories > (goals?.calories || 2000);
+        return (
+          <div style={{
+            position: 'fixed', top: 0, left: 0, right: 0, height: 2, zIndex: 100,
+            background: 'rgba(var(--color-text-primary), 0.06)',
+            transition: `opacity 0.4s ${EASE}`,
+            opacity: isLanding ? 0 : 1,
+            pointerEvents: 'none',
+          }}>
+            <div style={{
+              height: '100%',
+              width: `${pct}%`,
+              background: over ? 'rgb(239 68 68)' : selectedDateTotals.calories > 0 ? 'rgb(234 179 8)' : 'transparent',
+              transition: `width 0.6s ${EASE}, background 0.3s`,
+            }} />
           </div>
+        );
+      })()}
+
+      {/* ── Back arrow ── */}
+      <button onClick={handleBack}
+        className="text-theme-text-tertiary hover:text-theme-text-primary"
+        style={{
+          position: 'fixed', top: isMobile ? 12 : 16, left: isMobile ? 12 : 24, zIndex: 30,
+          transition: `opacity 0.4s ${EASE}`,
+          opacity: isLanding ? 0 : 1,
+          pointerEvents: isLanding ? 'none' : 'auto',
+          background: 'none', border: 'none', cursor: 'pointer', padding: 4,
+        }}
+        title="Back">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" />
+        </svg>
+      </button>
+
+      {/* ── Title — slides from center to top-left (GPU-composited) ── */}
+      <h1 className="font-bold uppercase"
+        onClick={() => { if (!isLanding) handleBack(); }}
+        style={{
+          position: 'fixed', zIndex: 20, whiteSpace: 'nowrap', lineHeight: 1.1,
+          willChange: 'transform, opacity',
+          cursor: isLanding ? 'default' : 'pointer',
+          top: 0, left: 0,
+          transition: `transform 0.85s ${EASE}, font-size 0.7s ${EASE}, letter-spacing 0.7s ${EASE}`,
+          transform: isLanding
+            ? `translate(calc(50vw - 50%), ${isMobile ? '18vh' : '35vh'})`
+            : isMobile ? 'translate(38px, 12px)' : 'translate(64px, 16px)',
+          fontSize: isLanding ? 'clamp(1.75rem, 5vw, 3.5rem)' : isMobile ? '0.85rem' : '1.25rem',
+          letterSpacing: isLanding ? '0.25em' : '0.15em',
+        }}>
+        Boiler<span style={{ color: 'rgb(var(--color-accent-primary))' }}>Fuel</span>
+      </h1>
+
+      {/* ── Subtitle — fades out ── */}
+      <p className="text-theme-text-tertiary"
+        style={{
+          position: 'fixed', zIndex: 20,
+          top: isMobile ? 'calc(18vh + clamp(2rem, 5vw, 3.5rem))' : 'calc(35vh + clamp(2.5rem, 5.5vw, 4rem))',
+          left: '50%', transform: 'translateX(-50%)',
+          transition: `opacity 0.4s ${EASE}`,
+          opacity: isLanding ? 1 : 0,
+          pointerEvents: 'none',
+          fontSize: isMobile ? '0.65rem' : '0.875rem', letterSpacing: '0.15em', textTransform: 'uppercase',
+          whiteSpace: 'nowrap',
+        }}>
+        Purdue Dining Court Menus
+      </p>
+
+      {/* ── Filters — slide from center to top-right (GPU-composited) ── */}
+      <div style={{
+        position: 'fixed', zIndex: 40,
+        display: 'flex',
+        alignItems: isLanding && isMobile ? 'stretch' : 'flex-end',
+        flexDirection: isLanding && isMobile ? 'column' : 'row',
+        willChange: 'transform',
+        top: 0,
+        ...(isLanding ? { right: 0 } : isMobile ? { left: 0, right: 0, paddingLeft: 12, paddingRight: 12 } : { right: 0 }),
+        transition: `transform 0.85s ${EASE}, gap 0.6s ${EASE}`,
+        transform: isLanding
+          ? isMobile
+            ? 'translate(calc(-50vw + 50%), 34vh)'
+            : 'translate(calc(-50vw + 50%), 50vh)'
+          : isMobile
+            ? 'translate(0, 44px)'
+            : 'translate(-72px, 13px)',
+        gap: isLanding ? (isMobile ? 10 : 16) : (isMobile ? 6 : 10),
+        justifyContent: !isLanding && isMobile ? 'space-between' : undefined,
+      }}>
+        <div style={{ flex: !isLanding && isMobile ? '1 1 0' : undefined, width: isLanding ? (isMobile ? 220 : 180) : (isMobile ? undefined : 175), transition: `width 0.7s ${EASE}` }}>
+          <label style={labelStyle} className="text-theme-text-secondary">Date</label>
+          {isLanding ? (
+            <CalendarPicker value={selectedDate} onChange={setSelectedDate} compact={false} />
+          ) : (
+            <div className="flex items-stretch gap-0.5">
+              <button onClick={prevDay} className="border border-theme-text-primary/30 px-1.5 text-sm font-bold text-theme-text-secondary hover:bg-theme-bg-hover hover:text-theme-text-primary transition-colors">&#8249;</button>
+              <div className="flex-1 min-w-0"><CalendarPicker value={selectedDate} onChange={setSelectedDate} compact={true} hideIcon={true} /></div>
+              <button onClick={nextDay} className="border border-theme-text-primary/30 px-1.5 text-sm font-bold text-theme-text-secondary hover:bg-theme-bg-hover hover:text-theme-text-primary transition-colors">&#8250;</button>
+            </div>
+          )}
         </div>
-        <div style={{ width: 170 }}>
-          <LocationDropdown value={location} onChange={setLocation} availableLocations={availableLocations} retailLocations={retailLocations} compact={true} />
+        <div style={{ flex: !isLanding && isMobile ? '1 1 0' : undefined, width: isLanding ? (isMobile ? 220 : 200) : (isMobile ? undefined : 170), transition: `width 0.7s ${EASE}` }}>
+          <label style={labelStyle} className="text-theme-text-secondary">Location</label>
+          <LocationDropdown value={location} onChange={setLocation} availableLocations={availableLocations} retailLocations={retailLocations} compact={!isLanding} />
         </div>
-        <div style={{ width: 130 }}>
-          <div className="flex items-center gap-2">
-            <MealTimeDropdown value={mealTime} onChange={setMealTime} options={mealTimes} compact={true} />
+        <div style={{ flex: !isLanding && isMobile ? '1 1 0' : undefined, width: isLanding ? (isMobile ? 220 : 180) : (isMobile ? undefined : 130), transition: `width 0.7s ${EASE}` }}>
+          <div className="flex items-center justify-between" style={labelStyle}>
+            <span className="text-theme-text-secondary">Meal Time</span>
             <button
               onClick={() => {
                 const now = new Date();
@@ -1039,23 +1239,146 @@ export default function Home() {
                 else if (h < 17) setMealTime('Late Lunch');
                 else setMealTime('Dinner');
               }}
-              className="text-[9px] font-bold uppercase tracking-widest text-theme-text-tertiary/60 hover:text-theme-text-primary transition-colors border border-theme-text-primary/15 px-1 py-0.5 leading-tight shrink-0"
+              className="text-[9px] font-bold uppercase tracking-widest text-theme-text-tertiary/60 hover:text-theme-text-primary transition-colors border border-theme-text-primary/15 px-1 py-0.5 leading-tight"
               title="Auto-select based on current time">
               Now
             </button>
           </div>
+          <MealTimeDropdown value={mealTime} onChange={setMealTime} options={mealTimes} compact={!isLanding} />
         </div>
       </div>
 
+      {/* ── View Menu button — fades out ── */}
+      <button onClick={handleViewMenu}
+        className="border-2 border-theme-text-primary text-theme-text-primary font-bold uppercase hover:bg-theme-text-primary hover:text-theme-bg-primary"
+        style={{
+          position: 'fixed', zIndex: 20,
+          top: isMobile ? '72vh' : '64vh',
+          left: '50%', transform: 'translateX(-50%)',
+          transition: `opacity 0.4s ${EASE}, top 0.4s ${EASE}`,
+          opacity: isLanding ? 1 : 0,
+          pointerEvents: isLanding ? 'auto' : 'none',
+          padding: isMobile ? '10px 32px' : '12px 40px',
+          letterSpacing: '0.2em', fontSize: isMobile ? '0.8rem' : '0.875rem',
+          background: 'transparent', cursor: 'pointer',
+        }}>
+        View Menu
+      </button>
+
+      {/* ── Scroll hint ── */}
+      <div style={{
+        position: 'fixed', zIndex: 20,
+        top: isMobile ? '80vh' : '73vh', left: '50%',
+        transition: `opacity 0.4s ${EASE}`,
+        opacity: isLanding ? 0.25 : 0,
+        pointerEvents: 'none',
+        animation: isLanding ? `scrollHintBounce 2s ${EASE} infinite` : 'none',
+      }}>
+        <div className="flex flex-col items-center gap-1">
+          <span className="text-theme-text-tertiary" style={{ fontSize: '0.65rem', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
+            or scroll
+          </span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-theme-text-tertiary">
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </div>
+      </div>
+
+      {/* ── Feature nav links — fades out on results ── */}
+      <div style={{
+        position: 'fixed', zIndex: 20,
+        bottom: isMobile ? '5vh' : 'auto',
+        top: isMobile ? 'auto' : '80vh',
+        left: '50%', transform: 'translateX(-50%)',
+        transition: `opacity 0.4s ${EASE}`,
+        opacity: isLanding ? 0.45 : 0,
+        pointerEvents: isLanding ? 'auto' : 'none',
+        whiteSpace: 'nowrap',
+      }}>
+        <div className="flex items-center gap-4 text-[10px] uppercase tracking-widest font-mono">
+          <Link href="/stats" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Stats</Link>
+          <span className="text-theme-text-tertiary/20">·</span>
+          <Link href="/custom-foods" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Custom Foods</Link>
+          <span className="text-theme-text-tertiary/20">·</span>
+          <Link href="/tools" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Tools</Link>
+          <span className="text-theme-text-tertiary/20">·</span>
+          <Link href="/admin" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Admin</Link>
+        </div>
+      </div>
+
+      {/* ── Profile icon — always visible, top-right ── */}
+      <div
+        onClick={() => router.push('/profile')}
+        onMouseEnter={() => !isTouchDevice && setShowProfileTooltip(true)}
+        onMouseLeave={() => setShowProfileTooltip(false)}
+        title="Profile"
+        className="group cursor-pointer"
+        style={{
+          position: 'fixed', zIndex: 50,
+          willChange: 'transform, opacity',
+          transition: `top 0.5s ${EASE}, right 0.5s ${EASE}, opacity 0.4s ${EASE}`,
+          top: isLanding ? (isMobile ? 16 : 24) : (isMobile ? 8 : 12),
+          right: isMobile ? 12 : 24,
+          opacity: 1,
+        }}>
+        <div className={`flex items-center justify-center border text-theme-text-primary hover:bg-theme-bg-hover transition-all ${
+          isLanding ? 'border-theme-text-primary/30 bg-transparent' : 'border-theme-text-primary bg-theme-bg-secondary'
+        }`}
+          style={{ width: 36, height: 36 }}>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-[18px] h-[18px]">
+            <path fillRule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clipRule="evenodd" />
+          </svg>
+        </div>
+        {showProfileTooltip && (
+          <div className="absolute right-0 top-full mt-1.5 w-44 border border-theme-text-primary/20 bg-theme-bg-secondary p-3 font-mono pointer-events-none"
+            style={{ animation: `fadeInTooltip 0.15s ${EASE} both` }}>
+            <div className="text-[9px] uppercase tracking-widest text-theme-text-tertiary mb-2">{dateLabel}</div>
+            {selectedDateTotals.calories > 0 ? (
+              <>
+                <div className="text-2xl font-bold tabular-nums leading-none">{selectedDateTotals.calories}</div>
+                <div className="text-[9px] text-theme-text-tertiary mb-2">calories</div>
+                <div className="flex gap-2 text-[10px] tabular-nums">
+                  <div><span className="font-bold">{Math.round(selectedDateTotals.protein)}</span><span className="text-theme-text-tertiary">g P</span></div>
+                  <div><span className="font-bold">{Math.round(selectedDateTotals.carbs)}</span><span className="text-theme-text-tertiary">g C</span></div>
+                  <div><span className="font-bold">{Math.round(selectedDateTotals.fat)}</span><span className="text-theme-text-tertiary">g F</span></div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="text-2xl font-bold tabular-nums leading-none text-theme-text-tertiary/40">0</div>
+                <div className="text-[9px] text-theme-text-tertiary/60 mb-1">calories logged</div>
+                <div className="text-[9px] text-theme-text-tertiary/40 italic">No meals tracked yet</div>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* ── Header divider line ── */}
+      <div style={{
+        position: 'fixed', top: isMobile ? 82 : 52, left: 0, right: 0, height: 1, zIndex: 15,
+        transition: `opacity 0.5s ${EASE}`,
+        opacity: isLanding ? 0 : 0.1,
+        background: 'currentColor',
+      }} />
 
       {/* ── Results table area ── */}
-      <div ref={resultsRef}>
-        <div className={`${selectedDateTotals.calories > 0 ? 'pb-20' : ''}`}>
+      <div ref={resultsRef}
+        style={{
+          position: 'fixed', top: isMobile ? 83 : 53, left: 0, right: 0, bottom: 0, zIndex: 10,
+          overflowY: 'auto', overflowX: 'hidden',
+          willChange: 'opacity',
+          transition: `opacity 0.5s ${EASE} ${isLanding ? '0s' : '0.2s'}, visibility 0s ${isLanding ? '0.5s' : '0s'}`,
+          opacity: isLanding ? 0 : 1,
+          visibility: isLanding ? 'hidden' : 'visible',
+          pointerEvents: isLanding ? 'none' : 'auto',
+        }}>
+        <main className={`px-4 sm:px-6 md:px-12 lg:px-20 py-6 sm:py-8 ${selectedDateTotals.calories > 0 ? 'pb-20' : ''}`}>
           {error && (
             <div className="mb-6 p-4 border border-red-500/50 text-red-400 text-sm">{error}</div>
           )}
 
-          {!loading && (
+          {!loading && !isLanding && (
             <>
             {/* Past-date logging banner */}
             {selectedDate !== localDateStr() && (
@@ -1994,9 +2317,24 @@ export default function Home() {
               </div>
             </div>
           </div>{/* end flex wrapper */}
-        </div>
+        </main>
+
+        <footer className="border-t border-theme-text-primary/10 px-4 sm:px-6 md:px-12 lg:px-20 pt-8 pb-6 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs uppercase tracking-widest">
+            <Link href="/stats" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Stats</Link>
+            <Link href="/compare" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Compare</Link>
+            <Link href="/custom-foods" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Custom Foods</Link>
+            <Link href="/tools" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Tools</Link>
+            <Link href="/database" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Database</Link>
+            <Link href="/profile" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Profile</Link>
+            <Link href="/about" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">About</Link>
+            <Link href="/changelog" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Changelog</Link>
+            <Link href="/privacy" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Privacy</Link>
+            <Link href="/admin" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Admin</Link>
+          </div>
+          <span className="text-[10px] uppercase tracking-widest text-theme-text-tertiary/40">BoilerFuel &middot; {new Date().getFullYear()}</span>
+        </footer>
       </div>
-      </Layout>
 
       {/* ── Sticky daily summary bar (bottom, results view only) ── */}
       {!isLanding && selectedDateTotals.calories > 0 && (() => {
@@ -2221,6 +2559,9 @@ export default function Home() {
         />
       )}
 
-    </>
+    </div>
   );
 }
+
+// index has its own layout — skip the shared Layout wrapper
+Home.getLayout = (page) => page;

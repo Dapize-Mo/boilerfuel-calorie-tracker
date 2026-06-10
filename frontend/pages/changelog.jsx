@@ -10,11 +10,46 @@ import { useSmartBack } from '../utils/useSmartBack';
 
 const VERSIONS = [
 
+  // ─── 3.12.x  Design experiment & rollback  (Jun 9–10, 2026) ─────────────────
+  {
+    version: '3.12.0',
+    date: 'June 9–10, 2026',
+    latest: true,
+    changes: [
+      { cat: 'Technical', items: [
+        'Attempted a full brutalist redesign: shared sticky nav shell (Layout.jsx), new /menu Nutrition Facts page with Ledger and Spread layout modes, brutalist globals.css overrides (square corners, hairline rules, no shadows), and ThemeToggleButton restyle',
+        'Home page refactored to use shared Layout instead of its own full-screen animated shell',
+        'Reverted all brutalist changes and restored the original design — no net change to user-visible functionality',
+      ]},
+    ],
+  },
+
+  // ─── 3.11.x  Food Database page  (May–Jun 2026) ──────────────────────────────
+  {
+    version: '3.11.0',
+    date: 'May–June 2026',
+    latest: false,
+    changes: [
+      { cat: 'Feature', items: [
+        'New /database page — flat ranked list of all menu items sortable by calories, protein, carbs, or fat',
+        'Location category multi-select filter (Dining Courts, Quick Bites, On-the-GO!, Food Co)',
+        'Meal time filter and date picker; click any row to expand full macro breakdown',
+        'Search bar with instant filtering across all food names',
+      ]},
+      { cat: 'UI', items: [
+        'P / C / F / Cal sortable column headers with asc/desc toggle',
+        'Active sort column values highlighted in data rows; yellow accent for active category pill',
+        'Labeled filter bar with consistent border/hover styles matching the rest of the app',
+        'Removed duplicate container wrapper; inline food count next to sort controls',
+      ]},
+    ],
+  },
+
   // ─── 3.10.x  Reliable multi-device sync + quick add  (Apr 23–25, 2026) ─────
   {
     version: '3.10.1',
     date: 'April 25, 2026',
-    latest: true,
+    latest: false,
     changes: [
       { cat: 'Feature', items: [
         'Quick Add on landing page — collapsible panel showing your recent meals (last 7 days, deduped) so you can re-log common foods with a single tap without opening the full menu',
@@ -782,7 +817,7 @@ const VERSIONS = [
 ];
 
 const ERAS = [
-  { id: 'v3', prefix: '3', label: '3.x.x', name: 'Admin Tools & Sync', span: 'Feb 17 – Apr 23, 2026'  },
+  { id: 'v3', prefix: '3', label: '3.x.x', name: 'Admin Tools & Sync', span: 'Feb 17, 2026 – Jun 10, 2026'  },
   { id: 'v2', prefix: '2', label: '2.x.x', name: 'Calorie Tracking System',       span: 'Feb 13–15, 2026' },
   { id: 'v1', prefix: '1', label: '1.x.x', name: 'Monochrome Brutalist Redesign', span: 'Feb 12–13, 2026' },
   { id: 'v0', prefix: '0', label: '0.x.x', name: 'Bootstrap Era',                 span: 'Sep 29 – Nov 22, 2025' },
