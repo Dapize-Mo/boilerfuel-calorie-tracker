@@ -506,10 +506,10 @@ export default function ProfilePage() {
         <title>Profile — BoilerFuel</title>
         <meta name="description" content="Manage your BoilerFuel nutrition goals, preferences, data export, and device sync settings." />
         <meta name="robots" content="noindex, nofollow" />
-        <link rel="canonical" href="https://boilerfuel.vercel.app/profile" />
+        <link rel="canonical" href="https://boiler-calorie-tracker-v3.vercel.app/profile" />
         <meta property="og:title" content="Profile — BoilerFuel" />
         <meta property="og:description" content="Manage your nutrition goals, preferences, and sync settings." />
-        <meta property="og:url" content="https://boilerfuel.vercel.app/profile" />
+        <meta property="og:url" content="https://boiler-calorie-tracker-v3.vercel.app/profile" />
       </Head>
 
       <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary font-mono">

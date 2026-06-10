@@ -1,7 +1,7 @@
 import { Html, Head, Main, NextScript } from 'next/document';
 
 export default function Document() {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://boilerfuel.vercel.app';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://boiler-calorie-tracker-v3.vercel.app';
 
   return (
     <Html lang="en">

@@ -11,10 +11,10 @@ export default function PrivacyPage() {
       <Head>
         <title>Privacy Policy — BoilerFuel</title>
         <meta name="description" content="BoilerFuel privacy policy. Your meal data stays on your device — we never see it. No tracking, no ads, no accounts required." />
-        <link rel="canonical" href="https://boilerfuel.vercel.app/privacy" />
+        <link rel="canonical" href="https://boiler-calorie-tracker-v3.vercel.app/privacy" />
         <meta property="og:title" content="Privacy Policy — BoilerFuel" />
         <meta property="og:description" content="Your data stays on your device. No tracking, no ads, no accounts required." />
-        <meta property="og:url" content="https://boilerfuel.vercel.app/privacy" />
+        <meta property="og:url" content="https://boiler-calorie-tracker-v3.vercel.app/privacy" />
       </Head>
 
       <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary font-mono">

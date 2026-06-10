@@ -58,16 +58,16 @@ export default function About() {
       <Head>
         <title>About — BoilerFuel</title>
         <meta name="description" content="Learn about BoilerFuel — the free, private calorie and nutrition tracker built for Purdue University students." />
-        <link rel="canonical" href="https://boilerfuel.vercel.app/about" />
+        <link rel="canonical" href="https://boiler-calorie-tracker-v3.vercel.app/about" />
         <meta property="og:title" content="About — BoilerFuel" />
         <meta property="og:description" content="Free, private calorie tracker for Purdue students. No account required. Your data stays on your device." />
-        <meta property="og:url" content="https://boilerfuel.vercel.app/about" />
+        <meta property="og:url" content="https://boiler-calorie-tracker-v3.vercel.app/about" />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
           "@context": "https://schema.org",
           "@type": "AboutPage",
           "name": "About BoilerFuel",
           "description": "Learn about BoilerFuel — the free, private calorie and nutrition tracker built for Purdue University students.",
-          "url": "https://boilerfuel.vercel.app/about",
+          "url": "https://boiler-calorie-tracker-v3.vercel.app/about",
           "mainEntity": {
             "@type": "SoftwareApplication",
             "name": "BoilerFuel",

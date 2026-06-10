@@ -171,10 +171,10 @@ export default function CustomFoods() {
         <title>Custom Foods — BoilerFuel</title>
         <meta name="description" content="Add and manage custom food entries in BoilerFuel. Track any food not in the Purdue dining database." />
         <meta name="robots" content="noindex, nofollow" />
-        <link rel="canonical" href="https://boilerfuel.vercel.app/custom-foods" />
+        <link rel="canonical" href="https://boiler-calorie-tracker-v3.vercel.app/custom-foods" />
         <meta property="og:title" content="Custom Foods — BoilerFuel" />
         <meta property="og:description" content="Add and manage custom food entries for tracking in BoilerFuel." />
-        <meta property="og:url" content="https://boilerfuel.vercel.app/custom-foods" />
+        <meta property="og:url" content="https://boiler-calorie-tracker-v3.vercel.app/custom-foods" />
       </Head>
 
       <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary font-mono">

@@ -1,5 +1,5 @@
 # robots.txt for BoilerFuel - Purdue Calorie Tracker
-# https://boilerfuel.vercel.app
+# https://boiler-calorie-tracker-v3.vercel.app
 
 # Allow all good bots by default
 User-agent: *
@@ -45,4 +45,4 @@ User-agent: Bingbot
 Crawl-delay: 1
 
 # Sitemap location
-Sitemap: https://boilerfuel.vercel.app/sitemap.xml
+Sitemap: https://boiler-calorie-tracker-v3.vercel.app/sitemap.xml

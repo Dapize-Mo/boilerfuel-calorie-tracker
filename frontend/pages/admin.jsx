@@ -497,7 +497,7 @@ created_at    TIMESTAMPTZ`)}
             ['DATABASE_URL', 'PostgreSQL connection string (Neon). Required for all API routes.'],
             ['ADMIN_PASSWORD_HASH', 'bcrypt hash of admin panel password (legacy login).'],
             ['JWT_SECRET', 'Secret for signing admin JWTs. Min 32 chars.'],
-            ['NEXTAUTH_URL', 'Full URL of the site (e.g. https://boilerfuel.vercel.app). Required for NextAuth.'],
+            ['NEXTAUTH_URL', 'Full URL of the site (e.g. https://boiler-calorie-tracker-v3.vercel.app). Required for NextAuth.'],
             ['NEXTAUTH_SECRET', 'Random secret for NextAuth session encryption.'],
             ['GOOGLE_CLIENT_ID', 'OAuth 2.0 client ID from Google Cloud Console.'],
             ['GOOGLE_CLIENT_SECRET', 'OAuth 2.0 client secret.'],

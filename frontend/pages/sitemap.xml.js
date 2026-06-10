@@ -1,4 +1,4 @@
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://boilerfuel.vercel.app';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://boiler-calorie-tracker-v3.vercel.app';
 
 const staticPages = [
   { url: '/', changefreq: 'daily', priority: '1.0' },
