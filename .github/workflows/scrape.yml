@@ -18,17 +18,17 @@ jobs:
       SCRAPE_FORWARD_DAYS: 7 # API posts ~7 days ahead; grab full upcoming Mon-Sun
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.11'
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r scraper/requirements.txt
 
       - name: Preflight - show target DB host (masked)
         shell: bash
