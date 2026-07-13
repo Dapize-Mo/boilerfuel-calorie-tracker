@@ -1,4 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
+
+const debug = process.env.NODE_ENV !== 'production' ? (...args) => console.log(...args) : () => {};
 import { getNamespacedStorageKey } from '../utils/storageNamespace';
 
 const MealContext = createContext({
@@ -316,16 +318,16 @@ export function MealProvider({ children }) {
       setSyncStatus('syncing');
       const before = getSyncStorageFingerprint();
       const result = await pullData({ includeReport: true, forceFull });
-      console.log('[MealContext] doPull result:', { changed: result?.changed, error: result?.error });
+      debug('[MealContext] doPull result:', { changed: result?.changed, error: result?.error });
       // If the server row was pruned, recover it by pushing our local data back up
       if (result?.error && /sync token not found/i.test(result.error)) {
         await pushData({ strict: false });
       }
       const after = getSyncStorageFingerprint();
       const storageChanged = before !== after;
-      console.log('[MealContext] doPull storage changed:', storageChanged);
+      debug('[MealContext] doPull storage changed:', storageChanged);
       if (storageChanged || result?.changed) {
-        console.log('[MealContext] doPull -> reloading from storage');
+        debug('[MealContext] doPull -> reloading from storage');
         reloadFromStorage();
         // Show notification on mobile so user knows sync happened
         maybeShowSyncNotif();
@@ -463,14 +465,14 @@ export function MealProvider({ children }) {
         if (!isSynced()) return;
         setSyncStatus('syncing');
         const before = getSyncStorageFingerprint();
-        console.log('[MealContext] Background push starting...');
+        debug('[MealContext] Background push starting...');
         const result = await pushData({ includeReport: true });
-        console.log('[MealContext] Background push result:', { pushed: result?.pushed, pulled: result?.pulled, skipped: result?.skipped });
+        debug('[MealContext] Background push result:', { pushed: result?.pushed, pulled: result?.pulled, skipped: result?.skipped });
         const after = getSyncStorageFingerprint();
         const storageChanged = before !== after;
-        console.log('[MealContext] Background push storage changed:', storageChanged);
+        debug('[MealContext] Background push storage changed:', storageChanged);
         if (storageChanged) {
-          console.log('[MealContext] Background push detected merge -> reloading from storage');
+          debug('[MealContext] Background push detected merge -> reloading from storage');
           reloadFromStorage();
           // Show notification on mobile if data changed during push
           maybeShowSyncNotif();

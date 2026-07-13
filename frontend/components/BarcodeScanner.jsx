@@ -10,6 +10,7 @@ export default function BarcodeScanner({ onFoodFound, onClose }) {
   const [manualCode, setManualCode] = useState('');
   const [scannedCode, setScannedCode] = useState('');
   const [savedAsCustom, setSavedAsCustom] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const scannerRef = useRef(null); // Html5Qrcode instance
   const manualRef = useRef(null);
 
@@ -128,6 +129,8 @@ export default function BarcodeScanner({ onFoodFound, onClose }) {
     }
   }, [status]);
 
+  useEffect(() => { setImgError(false); }, [foundFood]);
+
   const handleManualSubmit = (e) => {
     e.preventDefault();
     const code = manualCode.trim();
@@ -184,8 +187,8 @@ export default function BarcodeScanner({ onFoodFound, onClose }) {
             </svg>
             <span className="text-sm font-bold tracking-wide">Barcode Scanner</span>
           </div>
-          <button onClick={onClose} className="p-1 text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <button onClick={onClose} aria-label="Close barcode scanner" className="p-1 text-theme-text-tertiary hover:text-theme-text-primary transition-colors">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
               <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
@@ -251,11 +254,16 @@ export default function BarcodeScanner({ onFoodFound, onClose }) {
           {status === 'found' && foundFood && (
             <div className="space-y-4" style={{ animation: `fadeInTooltip 0.2s ${EASE} both` }}>
               <div className="flex gap-3 items-start">
-                {foundFood.image ? (
-                  <img src={foundFood.image} alt={foundFood.name} className="w-16 h-16 object-contain border border-theme-text-primary/10 shrink-0 bg-theme-bg-secondary" />
+                {foundFood.image && !imgError ? (
+                  <img
+                    src={foundFood.image}
+                    alt={foundFood.name}
+                    className="w-16 h-16 object-contain border border-theme-text-primary/10 shrink-0 bg-theme-bg-secondary"
+                    onError={() => setImgError(true)}
+                  />
                 ) : (
                   <div className="w-16 h-16 border border-theme-text-primary/10 shrink-0 flex items-center justify-center bg-theme-bg-secondary">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-theme-text-tertiary/30">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-theme-text-tertiary/30" aria-hidden="true">
                       <rect x="2" y="4" width="20" height="16" rx="1" />
                     </svg>
                   </div>

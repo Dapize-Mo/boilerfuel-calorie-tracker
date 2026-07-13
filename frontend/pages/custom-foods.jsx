@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useSession } from 'next-auth/react';
+import { useSession, signIn } from 'next-auth/react';
 import { useSmartBack } from '../utils/useSmartBack';
 import { getNamespacedStorageKey } from '../utils/storageNamespace';
 
@@ -16,6 +16,7 @@ export default function CustomFoods() {
   const [success, setSuccess] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -79,7 +80,7 @@ export default function CustomFoods() {
     setSuccess('');
 
     if (!formData.name.trim()) { setError('Food name is required'); return; }
-    if (!formData.calories || formData.calories < 0) { setError('Valid calories value is required'); return; }
+    if (formData.calories === '' || !Number.isFinite(Number(formData.calories)) || Number(formData.calories) < 0) { setError('Valid calories value is required (0 or more)'); return; }
 
     const payload = {
       name: formData.name.trim(),
@@ -135,7 +136,6 @@ export default function CustomFoods() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this food?')) return;
     try {
       setLoading(true);
       const res = await fetch(`/api/custom-foods/${id}`, {
@@ -228,12 +228,12 @@ export default function CustomFoods() {
             <>
               {/* Status messages */}
               {error && (
-                <div className="border border-theme-text-primary/30 px-4 py-3 text-xs text-theme-text-secondary uppercase tracking-wider">
+                <div id="cf-error-msg" role="alert" aria-live="polite" className="border border-theme-text-primary/30 px-4 py-3 text-xs text-theme-text-secondary uppercase tracking-wider">
                   {error}
                 </div>
               )}
               {success && (
-                <div className="border border-theme-text-primary/20 px-4 py-3 text-xs text-theme-text-tertiary uppercase tracking-wider">
+                <div id="cf-success-msg" role="status" aria-live="polite" className="border border-theme-text-primary/20 px-4 py-3 text-xs text-theme-text-tertiary uppercase tracking-wider">
                   {success}
                 </div>
               )}
@@ -253,7 +253,7 @@ export default function CustomFoods() {
                 </div>
 
                 {showForm && (
-                  <form onSubmit={handleSubmit} className="border border-theme-text-primary/10 p-6 space-y-5">
+                  <form onSubmit={handleSubmit} aria-describedby={error ? 'cf-error-msg' : undefined} className="border border-theme-text-primary/10 p-6 space-y-5">
                     {/* Name */}
                     <div>
                       <label className={labelCls}>Food Name *</label>
@@ -374,19 +374,43 @@ export default function CustomFoods() {
                               <p className="text-[10px] text-theme-text-tertiary/50 mt-1 italic truncate">{food.notes}</p>
                             )}
                           </div>
-                          <div className="flex gap-3 shrink-0 pt-0.5">
-                            <button
-                              onClick={() => handleEdit(food)}
-                              className="text-[10px] uppercase tracking-wider text-theme-text-tertiary/50 hover:text-theme-text-primary transition-colors"
-                            >
-                              Edit
-                            </button>
-                            <button
-                              onClick={() => handleDelete(food.id)}
-                              className="text-[10px] uppercase tracking-wider text-theme-text-tertiary/40 hover:text-theme-text-primary transition-colors"
-                            >
-                              Delete
-                            </button>
+                          <div className="flex gap-3 shrink-0 pt-0.5 items-center">
+                            {deletingId === food.id ? (
+                              <>
+                                <span className="text-[10px] text-theme-text-tertiary uppercase tracking-wider">Delete?</span>
+                                <button
+                                  onClick={() => { handleDelete(food.id); setDeletingId(null); }}
+                                  className="text-[10px] uppercase tracking-wider text-red-500 hover:text-red-400 transition-colors font-bold"
+                                  aria-label={`Confirm delete ${food.name}`}
+                                >
+                                  Yes
+                                </button>
+                                <button
+                                  onClick={() => setDeletingId(null)}
+                                  className="text-[10px] uppercase tracking-wider text-theme-text-tertiary/50 hover:text-theme-text-primary transition-colors"
+                                  aria-label="Cancel delete"
+                                >
+                                  No
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <button
+                                  onClick={() => handleEdit(food)}
+                                  className="text-[10px] uppercase tracking-wider text-theme-text-tertiary/50 hover:text-theme-text-primary transition-colors"
+                                  aria-label={`Edit ${food.name}`}
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  onClick={() => setDeletingId(food.id)}
+                                  className="text-[10px] uppercase tracking-wider text-theme-text-tertiary/40 hover:text-theme-text-primary transition-colors"
+                                  aria-label={`Delete ${food.name}`}
+                                >
+                                  Delete
+                                </button>
+                              </>
+                            )}
                           </div>
                         </div>
                       ))}

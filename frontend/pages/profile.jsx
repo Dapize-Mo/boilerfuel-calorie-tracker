@@ -122,6 +122,10 @@ export default function ProfilePage() {
   const [fitStartDate, setFitStartDate] = useState(thirtyDaysAgo);
   const [fitEndDate, setFitEndDate] = useState(todayStr);
 
+  // Template save inline form state
+  const [showTemplateSaveForm, setShowTemplateSaveForm] = useState(false);
+  const [templateSaveName, setTemplateSaveName] = useState('');
+
   const getJoinUrl = useCallback((code, secret) => {
     if (!code || !secret || !syncOrigin) return '';
     const encodedCode = encodeURIComponent(code);
@@ -1167,15 +1171,56 @@ export default function ProfilePage() {
               <span className="text-[9px] font-bold border border-theme-text-primary/30 text-theme-text-tertiary px-1.5 py-0.5 uppercase tracking-wider">Beta</span>
             </div>
             {meals.length > 0 && (
-              <div>
-                <button
-                  onClick={() => {
-                    const name = prompt('Template name:');
-                    if (name) saveTemplate(name, meals);
-                  }}
-                  className="px-4 py-2 border border-theme-text-primary/30 text-theme-text-tertiary text-xs uppercase tracking-wider hover:text-theme-text-primary hover:border-theme-text-primary transition-colors">
-                  Save today&rsquo;s meals as template
-                </button>
+              <div className="space-y-2">
+                {!showTemplateSaveForm ? (
+                  <button
+                    onClick={() => setShowTemplateSaveForm(true)}
+                    className="px-4 py-2 border border-theme-text-primary/30 text-theme-text-tertiary text-xs uppercase tracking-wider hover:text-theme-text-primary hover:border-theme-text-primary transition-colors">
+                    Save today&rsquo;s meals as template
+                  </button>
+                ) : (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <label htmlFor="template-name-input" className="sr-only">Template name</label>
+                    <input
+                      id="template-name-input"
+                      type="text"
+                      aria-label="Template name"
+                      placeholder="Template name"
+                      value={templateSaveName}
+                      onChange={e => setTemplateSaveName(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' && templateSaveName.trim()) {
+                          saveTemplate(templateSaveName.trim(), meals);
+                          setShowTemplateSaveForm(false);
+                          setTemplateSaveName('');
+                        } else if (e.key === 'Escape') {
+                          setShowTemplateSaveForm(false);
+                          setTemplateSaveName('');
+                        }
+                      }}
+                      autoFocus
+                      className="border border-theme-text-primary/30 bg-theme-bg-secondary text-theme-text-primary text-xs px-3 py-2 focus:outline-none focus:border-theme-text-primary transition-colors w-48"
+                    />
+                    <button
+                      onClick={() => {
+                        saveTemplate(templateSaveName.trim(), meals);
+                        setShowTemplateSaveForm(false);
+                        setTemplateSaveName('');
+                      }}
+                      disabled={!templateSaveName.trim()}
+                      className="px-3 py-2 border border-theme-text-primary/30 text-xs uppercase tracking-wider text-theme-text-secondary hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+                      Save
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowTemplateSaveForm(false);
+                        setTemplateSaveName('');
+                      }}
+                      className="px-3 py-2 border border-theme-text-primary/20 text-xs uppercase tracking-wider text-theme-text-tertiary hover:border-theme-text-primary/50 hover:text-theme-text-secondary transition-colors">
+                      Cancel
+                    </button>
+                  </div>
+                )}
               </div>
             )}
             {templates.length > 0 ? (

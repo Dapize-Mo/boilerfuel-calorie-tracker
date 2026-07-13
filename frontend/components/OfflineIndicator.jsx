@@ -30,7 +30,7 @@ export default function OfflineIndicator() {
   if (!status) return null;
 
   return (
-    <div className="fixed top-16 inset-x-0 z-50 flex justify-center pointer-events-none">
+    <div className="fixed top-16 inset-x-0 z-50 flex justify-center pointer-events-none" aria-live="polite" aria-atomic="true">
       <div
         className={`flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-widest font-mono pointer-events-auto border-b border-x ${
           status === 'offline'

@@ -12,10 +12,9 @@ export function csrfCheck(req, res) {
 
   if (!host) return true; // Can't validate without host
 
-  // Allow requests from GitHub Actions / cron (no origin or referer)
+  // Allow requests from Vercel cron (identified by user-agent, not just any Bearer token)
   const userAgent = req.headers['user-agent'] || '';
-  if (userAgent.includes('vercel-cron') || req.headers['authorization']?.startsWith('Bearer ')) {
-    // Server-to-server calls (cron, GitHub Actions) won't have origin headers
+  if (userAgent.includes('vercel-cron')) {
     if (!origin && !referer) return true;
   }
 

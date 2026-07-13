@@ -17,11 +17,13 @@ function SyncIndicator() {
 
   return (
     <div
-      title={label}
+      role="status"
+      aria-label={label}
+      aria-live="polite"
       className="flex items-center gap-1.5 text-xs text-theme-text-tertiary px-2"
     >
-      <span className={`w-2 h-2 rounded-full ${dotClass}`} />
-      <span className="hidden sm:inline">{label}</span>
+      <span className={`w-2 h-2 rounded-full ${dotClass}`} aria-hidden="true" />
+      <span className="hidden sm:inline" aria-hidden="true">{label}</span>
     </div>
   );
 }

@@ -81,17 +81,17 @@ function CalendarPicker({ value, onChange, compact = false, hideIcon = false }) 
         )}
       </button>
       {open && (
-        <div className="absolute z-50 mt-1 left-0 w-[min(18rem,calc(100vw-1rem))] border border-theme-text-primary bg-theme-bg-primary">
+        <div className="absolute z-50 mt-1 left-0 w-[min(18rem,calc(100vw-1rem))] border border-theme-text-primary bg-theme-bg-primary" role="dialog" aria-label="Date picker" aria-modal="true">
           <div className="flex items-center justify-between p-3 border-b border-theme-text-primary/20">
-            <button type="button" onClick={prevMonth} className="px-2 py-1 hover:bg-theme-bg-hover text-theme-text-primary font-bold">&lt;</button>
-            <span className="font-bold text-sm uppercase tracking-wider">{monthNames[viewMonth]} {viewYear}</span>
-            <button type="button" onClick={nextMonth} className="px-2 py-1 hover:bg-theme-bg-hover text-theme-text-primary font-bold">&gt;</button>
+            <button type="button" onClick={prevMonth} aria-label="Previous month" className="px-2 py-1 hover:bg-theme-bg-hover text-theme-text-primary font-bold">&lt;</button>
+            <span className="font-bold text-sm uppercase tracking-wider" aria-live="polite">{monthNames[viewMonth]} {viewYear}</span>
+            <button type="button" onClick={nextMonth} aria-label="Next month" className="px-2 py-1 hover:bg-theme-bg-hover text-theme-text-primary font-bold">&gt;</button>
           </div>
-          <div className="grid grid-cols-7 text-center text-xs font-bold uppercase text-theme-text-secondary border-b border-theme-text-primary/10 py-2 px-2">
+          <div className="grid grid-cols-7 text-center text-xs font-bold uppercase text-theme-text-secondary border-b border-theme-text-primary/10 py-2 px-2" aria-hidden="true">
             {dayNames.map(d => <div key={d}>{d}</div>)}
           </div>
           <div className="grid grid-cols-7 text-center text-sm p-2 gap-y-1">
-            {Array.from({ length: firstDay }, (_, i) => <div key={'e' + i} />)}
+            {Array.from({ length: firstDay }, (_, i) => <div key={'e' + i} aria-hidden="true" />)}
             {Array.from({ length: daysInMonth }, (_, i) => {
               const day = i + 1;
               const dateStr = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -99,6 +99,8 @@ function CalendarPicker({ value, onChange, compact = false, hideIcon = false }) 
               const isToday = dateStr === todayStr;
               return (
                 <button key={day} type="button" onClick={() => pick(day)}
+                  aria-label={`${day} ${monthNames[viewMonth]} ${viewYear}${isSelected ? ', selected' : ''}${isToday ? ', today' : ''}`}
+                  aria-pressed={isSelected}
                   className={`py-1.5 font-mono text-sm transition-colors ${
                     isSelected ? 'bg-theme-text-primary text-theme-bg-primary font-bold'
                     : isToday ? 'border border-theme-text-primary font-bold hover:bg-theme-bg-hover'
@@ -128,7 +130,6 @@ function LocationDropdown({ value, onChange, availableLocations, retailLocations
   const [expanded, setExpanded] = useState(null); // 'purdue' | 'foodco' | null
   const [dropdownMaxH, setDropdownMaxH] = useState('24rem');
   const ref = useRef(null);
-  const hoverTimer = useRef(null);
 
   useEffect(() => {
     function handleClick(e) {
@@ -149,18 +150,6 @@ function LocationDropdown({ value, onChange, availableLocations, retailLocations
   function handleToggle() {
     if (!open) computeMaxH();
     setOpen(o => !o);
-  }
-
-  function handleMouseEnter() {
-    clearTimeout(hoverTimer.current);
-    hoverTimer.current = setTimeout(() => {
-      if (!open) { computeMaxH(); setOpen(true); }
-    }, HOVER_DELAY);
-  }
-
-  function handleMouseLeave() {
-    clearTimeout(hoverTimer.current);
-    setOpen(false);
   }
 
   // Filter HFS categories to only show locations that exist in DB
@@ -194,8 +183,8 @@ function LocationDropdown({ value, onChange, availableLocations, retailLocations
   }
 
   return (
-    <div ref={ref} className="relative" data-location-dropdown onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
-      <button type="button" onClick={handleToggle}
+    <div ref={ref} className="relative" data-location-dropdown>
+      <button type="button" onClick={handleToggle} aria-expanded={open} aria-haspopup="listbox"
         className={`w-full border bg-theme-bg-secondary text-theme-text-primary text-left font-mono flex items-center justify-between hover:bg-theme-bg-hover transition-all ${
           compact ? 'px-2 py-1.5 border-theme-text-primary/30 text-sm gap-2' : 'p-2 border-theme-text-primary gap-3'
         }`}>
@@ -207,10 +196,10 @@ function LocationDropdown({ value, onChange, availableLocations, retailLocations
       </button>
 
       {open && (
-        <div className="absolute z-50 mt-1 left-0 w-[min(18rem,calc(100vw-1rem))] overflow-y-auto border border-theme-text-primary bg-theme-bg-primary"
+        <div role="listbox" className="absolute z-50 mt-1 left-0 w-[min(18rem,calc(100vw-1rem))] overflow-y-auto border border-theme-text-primary bg-theme-bg-primary"
           style={{ animation: `fadeInTooltip 0.15s ${EASE} both`, maxHeight: dropdownMaxH }}>
           {/* All Locations */}
-          <button type="button" onClick={() => select({ type: 'all', value: 'All' })}
+          <button type="button" role="option" aria-selected={value.type === 'all'} onClick={() => select({ type: 'all', value: 'All' })}
             className={`w-full text-left px-3 py-2 text-sm font-bold uppercase tracking-wider transition-colors ${
               isActive('all', 'All') ? 'bg-theme-text-primary text-theme-bg-primary' : 'hover:bg-theme-bg-hover text-theme-text-primary'
             }`}>
@@ -236,7 +225,7 @@ function LocationDropdown({ value, onChange, availableLocations, retailLocations
             {expanded === 'purdue' && (
               <div>
                 {/* Select all HFS locations */}
-                <button type="button"
+                <button type="button" role="option" aria-selected={isActive('all-purdue', 'All Purdue')}
                   onClick={() => select({ type: 'all-purdue', value: 'All Purdue', locations: filteredCategories.flatMap(c => c.locations) })}
                   className={`w-full text-left px-5 py-1.5 text-sm font-bold transition-colors ${
                     isActive('all-purdue', 'All Purdue') ? 'bg-theme-text-primary text-theme-bg-primary' : 'hover:bg-theme-bg-hover text-theme-text-primary'
@@ -246,7 +235,7 @@ function LocationDropdown({ value, onChange, availableLocations, retailLocations
 
                 {filteredCategories.map(cat => (
                   <div key={cat.label}>
-                    <button type="button"
+                    <button type="button" role="option" aria-selected={isActive('category', cat.label)}
                       onClick={() => select({ type: 'category', value: cat.label, locations: cat.locations })}
                       className={`w-full text-left px-5 py-1.5 text-[11px] font-bold uppercase tracking-widest transition-colors ${
                         isActive('category', cat.label)
@@ -256,7 +245,7 @@ function LocationDropdown({ value, onChange, availableLocations, retailLocations
                       {cat.label}
                     </button>
                     {cat.locations.map(loc => (
-                      <button key={loc} type="button"
+                      <button key={loc} type="button" role="option" aria-selected={isActive('single', loc)}
                         onClick={() => select({ type: 'single', value: loc })}
                         className={`w-full text-left px-8 py-1 text-sm transition-colors ${
                           isActive('single', loc)
@@ -291,7 +280,7 @@ function LocationDropdown({ value, onChange, availableLocations, retailLocations
             {expanded === 'foodco' && (
               <div>
                 {/* Select all Food Co locations */}
-                <button type="button"
+                <button type="button" role="option" aria-selected={isActive('all-foodco', 'Purdue Food Co')}
                   onClick={() => select({ type: 'all-foodco', value: 'Purdue Food Co', locations: foodCoList })}
                   className={`w-full text-left px-5 py-1.5 text-sm font-bold transition-colors ${
                     isActive('all-foodco', 'Purdue Food Co') ? 'bg-theme-text-primary text-theme-bg-primary' : 'hover:bg-theme-bg-hover text-theme-text-primary'
@@ -300,7 +289,7 @@ function LocationDropdown({ value, onChange, availableLocations, retailLocations
                 </button>
 
                 {foodCoList.map(name => (
-                  <button key={name} type="button"
+                  <button key={name} type="button" role="option" aria-selected={isActive('single', name)}
                     onClick={() => select({ type: 'single', value: name, source: 'foodco' })}
                     className={`w-full text-left px-8 py-1 text-sm transition-colors ${
                       isActive('single', name)
@@ -322,7 +311,6 @@ function LocationDropdown({ value, onChange, availableLocations, retailLocations
 function MealTimeDropdown({ value, onChange, options, compact = false }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
-  const hoverTimer = useRef(null);
 
   useEffect(() => {
     function handleClick(e) {
@@ -332,19 +320,9 @@ function MealTimeDropdown({ value, onChange, options, compact = false }) {
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  function handleMouseEnter() {
-    clearTimeout(hoverTimer.current);
-    hoverTimer.current = setTimeout(() => { if (!open) setOpen(true); }, HOVER_DELAY);
-  }
-
-  function handleMouseLeave() {
-    clearTimeout(hoverTimer.current);
-    setOpen(false);
-  }
-
   return (
-    <div ref={ref} className="relative" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
-      <button type="button" onClick={() => setOpen(o => !o)}
+    <div ref={ref} className="relative">
+      <button type="button" onClick={() => setOpen(o => !o)} aria-expanded={open} aria-haspopup="listbox"
         className={`w-full border bg-theme-bg-secondary text-theme-text-primary text-left font-mono flex items-center justify-between hover:bg-theme-bg-hover transition-all ${
           compact ? 'px-2 py-1.5 border-theme-text-primary/30 text-sm gap-2' : 'p-2 border-theme-text-primary gap-3'
         }`}>
@@ -355,10 +333,10 @@ function MealTimeDropdown({ value, onChange, options, compact = false }) {
         </svg>
       </button>
       {open && (
-        <div className="absolute z-50 mt-1 left-0 w-full overflow-y-auto border border-theme-text-primary bg-theme-bg-primary"
+        <div role="listbox" className="absolute z-50 mt-1 left-0 w-full overflow-y-auto border border-theme-text-primary bg-theme-bg-primary"
           style={{ animation: `fadeInTooltip 0.15s ${EASE} both` }}>
           {options.map(m => (
-            <button key={m} type="button"
+            <button key={m} type="button" role="option" aria-selected={value === m}
               onClick={() => { onChange(m); setOpen(false); }}
               className={`w-full text-left px-3 py-2 text-sm transition-colors ${
                 value === m ? 'bg-theme-text-primary text-theme-bg-primary font-bold' : 'hover:bg-theme-bg-hover text-theme-text-primary'
@@ -395,14 +373,16 @@ function BeverageRow({ food, getCount, selectedDate, handleAddMeal, removeMeal, 
         <button
           onClick={(e) => handleAddMeal(food, e)}
           className="p-2 border border-theme-text-primary/20 text-theme-text-tertiary hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors"
-          title="Add to log">
+          title="Add to log"
+          aria-label="Add to log">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
         </button>
         <button
           onClick={(e) => { e.stopPropagation(); removeMeal(food, selectedDate); }}
           disabled={count === 0}
           className={`p-2 border transition-colors ${count > 0 ? 'border-theme-text-primary/20 text-theme-text-tertiary hover:bg-theme-text-primary hover:text-theme-bg-primary' : 'border-theme-text-primary/10 text-theme-text-tertiary/20 cursor-not-allowed'}`}
-          title="Remove from log">
+          title="Remove from log"
+          aria-label="Remove from log">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="5" y1="12" x2="19" y2="12" /></svg>
         </button>
       </div>
@@ -509,7 +489,7 @@ export default function Home() {
   // ── Add meal handler (shows picker if mealTime is All) ──
   function handleAddMeal(food, e, servingsOverride) {
     if (e) e.stopPropagation();
-    const servings = servingsOverride || servingsInput[food.id] || 1;
+    const servings = Math.max(0.25, parseFloat(servingsOverride || servingsInput[food.id]) || 1);
     if (mealTime !== 'All') {
       addMeal(food, mealTime.toLowerCase(), selectedDate, servings);
     } else if (food.meal_time && food.meal_time.toLowerCase() !== 'all') {
@@ -536,6 +516,14 @@ export default function Home() {
   const scrollTimeoutRef = useRef(null);
   const touchStartY = useRef(null);
   const touchStartX = useRef(null);
+  const mealPickerRef = useRef(null);
+
+  // ── Focus first button in meal picker modal when it opens ──
+  useEffect(() => {
+    if (mealPickerFood) {
+      mealPickerRef.current?.querySelector('button')?.focus();
+    }
+  }, [mealPickerFood]);
 
   // ── Keyboard shortcuts ──
   useEffect(() => {
@@ -685,10 +673,9 @@ export default function Home() {
 
       if (scrollDeltaRef.current > 80) {
         scrollDeltaRef.current = 0;
+        e.preventDefault();
         handleViewMenu();
       }
-      // Prevent native overscroll on landing
-      e.preventDefault();
     }
 
     // Touch events
@@ -1123,13 +1110,19 @@ export default function Home() {
         const pct = Math.min((selectedDateTotals.calories / (goals?.calories || 2000)) * 100, 100);
         const over = selectedDateTotals.calories > (goals?.calories || 2000);
         return (
-          <div style={{
-            position: 'fixed', top: 0, left: 0, right: 0, height: 2, zIndex: 100,
-            background: 'rgba(var(--color-text-primary), 0.06)',
-            transition: `opacity 0.4s ${EASE}`,
-            opacity: isLanding ? 0 : 1,
-            pointerEvents: 'none',
-          }}>
+          <div
+            role="progressbar"
+            aria-valuenow={Math.round(pct)}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label="Daily calorie progress"
+            style={{
+              position: 'fixed', top: 0, left: 0, right: 0, height: 2, zIndex: 100,
+              background: 'rgba(var(--color-text-primary), 0.06)',
+              transition: `opacity 0.4s ${EASE}`,
+              opacity: isLanding ? 0 : 1,
+              pointerEvents: 'none',
+            }}>
             <div style={{
               height: '100%',
               width: `${pct}%`,
@@ -1143,6 +1136,7 @@ export default function Home() {
       {/* ── Back arrow ── */}
       <button onClick={handleBack}
         className="text-theme-text-tertiary hover:text-theme-text-primary"
+        aria-label="Back to landing"
         style={{
           position: 'fixed', top: isMobile ? 12 : 16, left: isMobile ? 12 : 24, zIndex: 30,
           transition: `opacity 0.4s ${EASE}`,
@@ -1150,7 +1144,7 @@ export default function Home() {
           pointerEvents: isLanding ? 'none' : 'auto',
           background: 'none', border: 'none', cursor: 'pointer', padding: 4,
         }}
-        title="Back">
+        tabIndex={isLanding ? -1 : 0}>
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" />
         </svg>
@@ -1251,6 +1245,8 @@ export default function Home() {
       {/* ── View Menu button — fades out ── */}
       <button onClick={handleViewMenu}
         className="border-2 border-theme-text-primary text-theme-text-primary font-bold uppercase hover:bg-theme-text-primary hover:text-theme-bg-primary"
+        tabIndex={isLanding ? 0 : -1}
+        aria-hidden={!isLanding}
         style={{
           position: 'fixed', zIndex: 20,
           top: isMobile ? '72vh' : '64vh',
@@ -1307,12 +1303,13 @@ export default function Home() {
       </div>
 
       {/* ── Profile icon — always visible, top-right ── */}
-      <div
+      <button
+        type="button"
         onClick={() => router.push('/profile')}
         onMouseEnter={() => !isTouchDevice && setShowProfileTooltip(true)}
         onMouseLeave={() => setShowProfileTooltip(false)}
-        title="Profile"
-        className="group cursor-pointer"
+        aria-label="Profile"
+        className="group cursor-pointer relative"
         style={{
           position: 'fixed', zIndex: 50,
           willChange: 'transform, opacity',
@@ -1320,6 +1317,7 @@ export default function Home() {
           top: isLanding ? (isMobile ? 16 : 24) : (isMobile ? 8 : 12),
           right: isMobile ? 12 : 24,
           opacity: 1,
+          background: 'none', border: 'none', padding: 0,
         }}>
         <div className={`flex items-center justify-center border text-theme-text-primary hover:bg-theme-bg-hover transition-all ${
           isLanding ? 'border-theme-text-primary/30 bg-transparent' : 'border-theme-text-primary bg-theme-bg-secondary'
@@ -1330,7 +1328,7 @@ export default function Home() {
           </svg>
         </div>
         {showProfileTooltip && (
-          <div className="absolute right-0 top-full mt-1.5 w-44 border border-theme-text-primary/20 bg-theme-bg-secondary p-3 font-mono pointer-events-none"
+          <div className="absolute right-0 top-full mt-1.5 w-44 border border-theme-text-primary/20 bg-theme-bg-secondary p-3 font-mono pointer-events-none" aria-hidden="true"
             style={{ animation: `fadeInTooltip 0.15s ${EASE} both` }}>
             <div className="text-[9px] uppercase tracking-widest text-theme-text-tertiary mb-2">{dateLabel}</div>
             {selectedDateTotals.calories > 0 ? (
@@ -1352,7 +1350,7 @@ export default function Home() {
             )}
           </div>
         )}
-      </div>
+      </button>
 
       {/* ── Header divider line ── */}
       <div style={{
@@ -1373,7 +1371,7 @@ export default function Home() {
           visibility: isLanding ? 'hidden' : 'visible',
           pointerEvents: isLanding ? 'none' : 'auto',
         }}>
-        <main className={`px-4 sm:px-6 md:px-12 lg:px-20 py-6 sm:py-8 ${selectedDateTotals.calories > 0 ? 'pb-20' : ''}`}>
+        <main id="main-content" className={`px-4 sm:px-6 md:px-12 lg:px-20 py-6 sm:py-8 ${selectedDateTotals.calories > 0 ? 'pb-20' : ''}`}>
           {error && (
             <div className="mb-6 p-4 border border-red-500/50 text-red-400 text-sm">{error}</div>
           )}
@@ -1439,13 +1437,14 @@ export default function Home() {
                   <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
                 </svg>
                 {searchText && (
-                  <button onClick={() => setSearchText('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-theme-text-tertiary hover:text-theme-text-primary text-xs">&times;</button>
+                  <button onClick={() => setSearchText('')} aria-label="Clear search" className="absolute right-2 top-1/2 -translate-y-1/2 text-theme-text-tertiary hover:text-theme-text-primary text-xs">&times;</button>
                 )}
               </div>
               <button
                 onClick={() => setShowFavsOnly(f => !f)}
                 className={`px-2 py-1.5 border text-xs transition-colors ${showFavsOnly ? 'border-yellow-500 text-yellow-500 bg-yellow-500/10' : 'border-theme-text-primary/20 text-theme-text-tertiary hover:text-theme-text-primary'}`}
-                title="Show favorites only"
+                aria-label={showFavsOnly ? 'Show all foods' : 'Show favorites only'}
+                aria-pressed={showFavsOnly}
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill={showFavsOnly ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
                   <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
@@ -1472,7 +1471,7 @@ export default function Home() {
               <button
                 onClick={() => setShowBarcodeScanner(true)}
                 className="px-2 py-1.5 border border-theme-text-primary/20 text-theme-text-tertiary hover:text-theme-text-primary hover:border-theme-text-primary/40 transition-colors"
-                title="Scan barcode to look up nutrition"
+                aria-label="Scan barcode to look up nutrition"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <rect x="2" y="4" width="20" height="16" rx="1" /><line x1="6" y1="8" x2="6" y2="16" /><line x1="9" y1="8" x2="9" y2="16" strokeWidth="1" /><line x1="11" y1="8" x2="11" y2="16" /><line x1="14" y1="8" x2="14" y2="16" strokeWidth="1" /><line x1="16" y1="8" x2="16" y2="16" /><line x1="18" y1="8" x2="18" y2="16" strokeWidth="1" />
@@ -1485,7 +1484,8 @@ export default function Home() {
                   onMouseLeave={() => setShowShortcutsHint(false)}
                   onClick={() => setShowShortcutsHint(f => !f)}
                   className="px-2 py-1.5 border border-theme-text-primary/10 text-theme-text-tertiary/40 hover:text-theme-text-tertiary hover:border-theme-text-primary/20 transition-colors text-[10px] font-mono"
-                  title="Keyboard shortcuts"
+                  aria-label="Keyboard shortcuts"
+                  aria-expanded={showShortcutsHint}
                 >
                   ?
                 </button>
@@ -1653,6 +1653,8 @@ export default function Home() {
                           const next = active ? current.filter(s => s.toLowerCase() !== a.toLowerCase()) : [...current, a];
                           setNutritionFilter(p => ({ ...p, allergenFree: next.join(', ') }));
                         }}
+                          aria-pressed={active}
+                          aria-label={`${active ? 'Stop excluding' : 'Exclude'} ${a}`}
                           className={`px-2 py-0.5 text-[10px] font-bold border transition-colors ${active ? 'border-red-500/60 bg-red-500/10 text-red-500' : 'border-theme-text-primary/20 text-theme-text-tertiary hover:border-theme-text-primary/40 hover:text-theme-text-primary'}`}>
                           {a}
                         </button>
@@ -1804,8 +1806,13 @@ export default function Home() {
                       className={`border-b border-theme-text-primary/5 transition-colors group ${fav ? 'bg-yellow-500/[0.03]' : ''}`}>
                       <td colSpan={7} className="p-0">
                         {/* Clickable summary row — hover shows tooltip, click expands */}
-                        <div className="flex items-center cursor-pointer hover:bg-theme-bg-secondary/50 transition-colors overflow-hidden"
+                        <div
+                          role="button"
+                          tabIndex={0}
+                          aria-expanded={isExpanded}
+                          className="flex items-center cursor-pointer hover:bg-theme-bg-secondary/50 transition-colors overflow-hidden"
                           onClick={() => setExpandedId(isExpanded ? null : rowKey)}
+                          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setExpandedId(isExpanded ? null : rowKey); } }}
                           onMouseEnter={(e) => { if (!isExpanded) onFoodMouseEnter(food, e); }}
                           onMouseMove={(e) => { if (!isExpanded) onFoodMouseMove(e); }}
                           onMouseLeave={onFoodMouseLeave}>
@@ -2416,7 +2423,24 @@ export default function Home() {
           onClick={() => setMealPickerFood(null)}>
           <div className="absolute inset-0 bg-black/50" />
           <div className="relative bg-theme-bg-primary border border-theme-text-primary max-w-xs w-full mx-4"
+            ref={mealPickerRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Select meal time"
             onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => {
+              if (e.key === 'Tab') {
+                const buttons = Array.from(mealPickerRef.current?.querySelectorAll('button') || []);
+                if (buttons.length === 0) return;
+                const first = buttons[0];
+                const last = buttons[buttons.length - 1];
+                if (e.shiftKey) {
+                  if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+                } else {
+                  if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+                }
+              }
+            }}
             style={{ animation: `fadeInTooltip 0.15s ${EASE} both` }}>
             <div className="px-5 py-4 border-b border-theme-text-primary/20">
               <div className="text-xs uppercase tracking-widest text-theme-text-tertiary mb-1">Adding</div>

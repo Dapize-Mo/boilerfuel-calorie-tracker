@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useMeals } from '../context/MealContext';
 
 const ONBOARDED_KEY = 'boilerfuel_onboarded';
@@ -25,6 +25,7 @@ export default function Onboarding() {
   const [visible, setVisible] = useState(false);
   const [step, setStep] = useState(0);
   const [calorieInput, setCalorieInput] = useState('2000');
+  const dialogRef = useRef(null);
 
   useEffect(() => {
     // Don't show if already onboarded
@@ -54,6 +55,30 @@ export default function Onboarding() {
     setVisible(false);
   }
 
+  // Move focus into dialog on open; trap focus inside while open
+  useEffect(() => {
+    if (!visible || !dialogRef.current) return;
+    const dialog = dialogRef.current;
+    const firstFocusable = dialog.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    firstFocusable?.focus();
+
+    function trapFocus(e) {
+      if (!dialog.contains(e.target)) return;
+      const focusable = Array.from(dialog.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'));
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.key === 'Tab') {
+        if (e.shiftKey) {
+          if (document.activeElement === first) { e.preventDefault(); last?.focus(); }
+        } else {
+          if (document.activeElement === last) { e.preventDefault(); first?.focus(); }
+        }
+      }
+    }
+    document.addEventListener('keydown', trapFocus);
+    return () => document.removeEventListener('keydown', trapFocus);
+  }, [visible, step]);
+
   if (!visible) return null;
 
   return (
@@ -62,6 +87,7 @@ export default function Onboarding() {
       role="dialog"
       aria-modal="true"
       aria-label="Welcome to BoilerFuel"
+      ref={dialogRef}
     >
       <div className="w-full max-w-xl bg-theme-bg-primary border border-theme-text-primary/20 shadow-2xl">
         <div className="h-0.5 bg-theme-text-primary/20" />

@@ -47,12 +47,6 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
     }
   }, []);
 
-  useEffect(() => {
-    if (typeof document !== 'undefined') {
-      document.documentElement.lang = 'en';
-    }
-  }, []);
-
   // Listen for route changes to trigger transitions
   useEffect(() => {
     const handleStart = () => {

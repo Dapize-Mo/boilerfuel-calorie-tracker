@@ -76,7 +76,9 @@ function PieChart({ data, size = 160 }) {
 
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}
+        role="img"
+        aria-label={`Macro breakdown: ${data.map(d => `${d.label} ${Math.round(d.value)}g`).join(', ')}`}>
         {slices.map((s, i) => (
           <path key={i} d={s.path} fill={s.color} stroke="rgb(var(--color-bg-primary))" strokeWidth="2" />
         ))}
