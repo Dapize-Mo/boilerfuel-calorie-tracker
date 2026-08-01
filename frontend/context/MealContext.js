@@ -91,6 +91,11 @@ export function MealProvider({ children }) {
   // Dietary preferences: { vegetarian: bool, vegan: bool, excludeAllergens: string[] }
   const [dietaryPrefs, setDietaryPrefsState] = useState({ vegetarian: false, vegan: false, excludeAllergens: [] });
 
+  // Guards the persist effects below: on first mount they would otherwise run
+  // with the initial default state (before the load effect's setState lands)
+  // and overwrite saved localStorage with empty defaults.
+  const [isLoaded, setIsLoaded] = useState(false);
+
   // Load from localStorage on mount (with cookie fallback for today)
   useEffect(() => {
     try {
@@ -135,10 +140,12 @@ export function MealProvider({ children }) {
       const savedDietary = lsGet(DIETARY_KEY);
       if (savedDietary) setDietaryPrefsState(JSON.parse(savedDietary));
     } catch {}
+    setIsLoaded(true);
   }, []);
 
   // Persist meals (with quota-exceeded fallback: trim to last 90 days)
   useEffect(() => {
+    if (!isLoaded) return;
     // Always persist, even if empty - removing this prevents sync from working correctly
     // if (Object.keys(mealsByDate).length === 0) return;
     try {
@@ -167,39 +174,45 @@ export function MealProvider({ children }) {
         }
       });
     } catch {}
-  }, [mealsByDate]);
+  }, [mealsByDate, isLoaded]);
 
   // Persist goals
   useEffect(() => {
+    if (!isLoaded) return;
     try { lsSet(GOALS_KEY, JSON.stringify(goals)); } catch {}
-  }, [goals]);
+  }, [goals, isLoaded]);
 
   // Persist favorites
   useEffect(() => {
+    if (!isLoaded) return;
     try { lsSet(FAVORITES_KEY, JSON.stringify([...favorites])); } catch {}
-  }, [favorites]);
+  }, [favorites, isLoaded]);
 
   // Persist water
   useEffect(() => {
+    if (!isLoaded) return;
     // Always persist to keep React state and localStorage in sync
     try { lsSet(WATER_KEY, JSON.stringify(waterByDate)); } catch {}
-  }, [waterByDate]);
+  }, [waterByDate, isLoaded]);
 
   // Persist weight
   useEffect(() => {
+    if (!isLoaded) return;
     // Always persist to keep React state and localStorage in sync
     try { lsSet(WEIGHT_KEY, JSON.stringify(weightByDate)); } catch {}
-  }, [weightByDate]);
+  }, [weightByDate, isLoaded]);
 
   // Persist templates
   useEffect(() => {
+    if (!isLoaded) return;
     try { lsSet(TEMPLATES_KEY, JSON.stringify(templates)); } catch {}
-  }, [templates]);
+  }, [templates, isLoaded]);
 
   // Persist dietary prefs
   useEffect(() => {
+    if (!isLoaded) return;
     try { lsSet(DIETARY_KEY, JSON.stringify(dietaryPrefs)); } catch {}
-  }, [dietaryPrefs]);
+  }, [dietaryPrefs, isLoaded]);
 
   // ── Sync status: 'idle' | 'syncing' | 'success' | 'error' ──
   const [syncStatus, setSyncStatus] = useState('idle');
