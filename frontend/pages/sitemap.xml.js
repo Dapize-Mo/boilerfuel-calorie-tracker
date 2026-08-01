@@ -2,6 +2,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://boiler-calorie-tra
 
 const staticPages = [
   { url: '/', changefreq: 'daily', priority: '1.0' },
+  { url: '/menu', changefreq: 'daily', priority: '0.9' },
   { url: '/database', changefreq: 'daily', priority: '0.8' },
   { url: '/about', changefreq: 'monthly', priority: '0.9' },
   { url: '/tools', changefreq: 'monthly', priority: '0.8' },

@@ -8,6 +8,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useMeals } from '../context/MealContext';
 import { useSmartBack } from '../utils/useSmartBack';
 import { getNamespacedStorageKey } from '../utils/storageNamespace';
+import MenuLayoutSetting from '../components/MenuLayoutSetting';
 
 const QRCode = dynamic(() => import('../components/QRCode'), { ssr: false });
 
@@ -741,6 +742,9 @@ export default function ProfilePage() {
             <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-yellow-500/20 pb-2">
               Settings
             </h2>
+
+            {/* Nutrition Facts menu layout (/menu) */}
+            <MenuLayoutSetting />
 
             {/* Daily Goals */}
             <div>
