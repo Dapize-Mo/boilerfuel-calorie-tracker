@@ -19,10 +19,6 @@ export default function MenuPage() {
           name="description"
           content="Browse today’s dining-court menu as a Nutrition Facts label — every percentage measured against the calories and macros you have left to eat today."
         />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800;900&display=swap"
-          rel="stylesheet"
-        />
       </Head>
 
       <Layout>

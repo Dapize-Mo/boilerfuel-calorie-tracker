@@ -1292,6 +1292,8 @@ export default function Home() {
         whiteSpace: 'nowrap',
       }}>
         <div className="flex items-center gap-4 text-[10px] uppercase tracking-widest font-mono">
+          <Link href="/menu" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Menu</Link>
+          <span className="text-theme-text-tertiary/20">·</span>
           <Link href="/stats" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Stats</Link>
           <span className="text-theme-text-tertiary/20">·</span>
           <Link href="/custom-foods" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Custom Foods</Link>
@@ -1410,6 +1412,9 @@ export default function Home() {
                   );
                 })()}
                 {/* Nav links */}
+                <Link href="/menu" className="text-[10px] uppercase tracking-widest text-theme-text-tertiary/60 hover:text-yellow-500 transition-colors">
+                  Menu
+                </Link>
                 <Link href="/stats" className="text-[10px] uppercase tracking-widest text-theme-text-tertiary/60 hover:text-yellow-500 transition-colors">
                   Stats
                 </Link>
@@ -2328,6 +2333,7 @@ export default function Home() {
 
         <footer className="border-t border-theme-text-primary/10 px-4 sm:px-6 md:px-12 lg:px-20 pt-8 pb-6 flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs uppercase tracking-widest">
+            <Link href="/menu" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Menu</Link>
             <Link href="/stats" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Stats</Link>
             <Link href="/compare" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Compare</Link>
             <Link href="/custom-foods" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Custom Foods</Link>

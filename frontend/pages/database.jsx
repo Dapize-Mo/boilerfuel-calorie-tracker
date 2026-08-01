@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { ALL_PURDUE_CATEGORIES, FOOD_CO_LOCATIONS } from '../utils/diningLocations';
+import Layout from '../components/Layout';
 
 const EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
 const PAGE_SIZE = 100;
@@ -277,8 +278,8 @@ export default function DatabasePage() {
         @keyframes fadeInRow { from { opacity: 0; max-height: 0; } to { opacity: 1; max-height: 600px; } }
       `}</style>
 
-      <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary font-mono">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-16 py-10 sm:py-20">
+      <div className="font-mono">
+        <div className="max-w-7xl mx-auto">
 
       {/* Header */}
       <header className="space-y-4 mb-8">
@@ -566,26 +567,10 @@ export default function DatabasePage() {
         </div>
       )}
 
-      {/* Footer */}
-      <footer className="border-t border-theme-text-primary/10 pt-8 mt-10 flex flex-wrap items-center justify-between gap-4">
-        <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs uppercase tracking-widest">
-          <Link href="/" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Home</Link>
-          <Link href="/compare" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Compare</Link>
-          <Link href="/profile" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Profile</Link>
-          <Link href="/custom-foods" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Custom Foods</Link>
-          <Link href="/tools" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Tools</Link>
-          <Link href="/about" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">About</Link>
-          <Link href="/changelog" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Changelog</Link>
-          <Link href="/privacy" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Privacy</Link>
-          <Link href="/admin" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Admin</Link>
-        </div>
-        <span className="text-[10px] uppercase tracking-widest text-theme-text-tertiary/40">BoilerFuel · {new Date().getFullYear()}</span>
-      </footer>
-
         </div>
       </div>
     </>
   );
 }
 
-DatabasePage.getLayout = (page) => page;
+DatabasePage.getLayout = (page) => <Layout>{page}</Layout>;

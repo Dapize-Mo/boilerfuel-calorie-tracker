@@ -2053,6 +2053,7 @@ export default function ProfilePage() {
           <footer className="border-t border-theme-text-primary/10 pt-8 space-y-3">
             <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs uppercase tracking-widest">
               <Link href="/" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Home</Link>
+              <Link href="/menu" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Menu</Link>
               <Link href="/stats" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Stats</Link>
               <Link href="/compare" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Compare</Link>
               <Link href="/custom-foods" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Custom Foods</Link>
