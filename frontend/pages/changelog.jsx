@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useSmartBack } from '../utils/useSmartBack';
+import Layout from '../components/Layout';
 
 // Versioning system — built from actual git commit dates:
 //   x.0.0  Major — complete redesign or architectural overhaul
@@ -10,11 +11,31 @@ import { useSmartBack } from '../utils/useSmartBack';
 
 const VERSIONS = [
 
+  // ─── 3.13.x  Menu page, custom foods, shared nav  (Jul 31, 2026) ────────────
+  {
+    version: '3.13.0',
+    date: 'July 31, 2026',
+    latest: true,
+    changes: [
+      { cat: 'Feature', items: [
+        'New /menu Nutrition Facts page — dining menus as printed nutrition labels with Ledger and Spread layouts, dietary chips, and one-tap logging (restored selectively from the 3.12 design experiment, without the site-wide restyle)',
+        'Custom Foods now actually works: API rewritten to store foods in the app\'s own database instead of proxying to a backend that was never deployed',
+        'Shared top navigation and footer on Menu, Database, Stats, Tools, About, Changelog, Privacy, Custom Foods, Compare, and 404 pages — every feature is now reachable from the header',
+        'Menu layout preference (Ledger vs Spread) added to Profile → Settings',
+      ]},
+      { cat: 'Fix', items: [
+        'Data-loss bug: on first page load the app could overwrite saved goals, favorites, templates, water, and weight with empty defaults before the saved data finished loading (persist effects are now gated until the initial load completes; supersedes the triple-redundant-storage approach explored on a side branch)',
+        'Admin “Settings” quick action pointed at a page that does not exist — now goes to Profile',
+        'Sitemap now lists /menu and /database',
+      ]},
+    ],
+  },
+
   // ─── 3.12.x  Design experiment & rollback  (Jun 9–10, 2026) ─────────────────
   {
     version: '3.12.0',
     date: 'June 9–10, 2026',
-    latest: true,
+    latest: false,
     changes: [
       { cat: 'Technical', items: [
         'Attempted a full brutalist redesign: shared sticky nav shell (Layout.jsx), new /menu Nutrition Facts page with Ledger and Spread layout modes, brutalist globals.css overrides (square corners, hairline rules, no shadows), and ThemeToggleButton restyle',
@@ -842,8 +863,8 @@ export default function Changelog() {
         <meta property="og:url" content="https://boiler-calorie-tracker-v3.vercel.app/changelog" />
       </Head>
 
-      <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary font-mono">
-        <div className="max-w-7xl mx-auto px-6 lg:px-12 py-16 sm:py-24">
+      <div className="font-mono">
+        <div className="max-w-7xl mx-auto">
 
           {/* Header */}
           <header className="mb-12 space-y-4">
@@ -908,7 +929,7 @@ export default function Changelog() {
             </aside>
 
             {/* Main content */}
-            <main className="flex-1 min-w-0 space-y-24">
+            <div className="flex-1 min-w-0 space-y-24">
               {grouped.map(era => (
                 <section key={era.id} id={era.id}>
 
@@ -973,22 +994,7 @@ export default function Changelog() {
                 </section>
               ))}
 
-              {/* Footer */}
-              <footer className="border-t border-theme-text-primary/10 pt-8 flex flex-wrap items-center justify-between gap-4">
-                <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs uppercase tracking-widest">
-                  <Link href="/" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Home</Link>
-                  <Link href="/stats" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Stats</Link>
-                  <Link href="/compare" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Compare</Link>
-                  <Link href="/custom-foods" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Custom Foods</Link>
-                  <Link href="/tools" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Tools</Link>
-                  <Link href="/about" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">About</Link>
-                  <Link href="/profile" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Profile</Link>
-                  <Link href="/privacy" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Privacy</Link>
-                  <Link href="/admin" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Admin</Link>
-                </div>
-                <span className="text-[10px] uppercase tracking-widest text-theme-text-tertiary/40">BoilerFuel · {new Date().getFullYear()}</span>
-              </footer>
-            </main>
+            </div>
           </div>
 
         </div>
@@ -997,4 +1003,4 @@ export default function Changelog() {
   );
 }
 
-Changelog.getLayout = (page) => page;
+Changelog.getLayout = (page) => <Layout>{page}</Layout>;

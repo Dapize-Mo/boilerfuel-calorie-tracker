@@ -8,6 +8,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useMeals } from '../context/MealContext';
 import { useSmartBack } from '../utils/useSmartBack';
 import { getNamespacedStorageKey } from '../utils/storageNamespace';
+import MenuLayoutSetting from '../components/MenuLayoutSetting';
 
 const QRCode = dynamic(() => import('../components/QRCode'), { ssr: false });
 
@@ -741,6 +742,9 @@ export default function ProfilePage() {
             <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-theme-text-tertiary border-b border-yellow-500/20 pb-2">
               Settings
             </h2>
+
+            {/* Nutrition Facts menu layout (/menu) */}
+            <MenuLayoutSetting />
 
             {/* Daily Goals */}
             <div>
@@ -2049,6 +2053,7 @@ export default function ProfilePage() {
           <footer className="border-t border-theme-text-primary/10 pt-8 space-y-3">
             <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs uppercase tracking-widest">
               <Link href="/" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Home</Link>
+              <Link href="/menu" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Menu</Link>
               <Link href="/stats" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Stats</Link>
               <Link href="/compare" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Compare</Link>
               <Link href="/custom-foods" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Custom Foods</Link>

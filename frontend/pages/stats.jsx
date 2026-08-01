@@ -6,6 +6,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useMeals } from '../context/MealContext';
 import { useSmartBack } from '../utils/useSmartBack';
 import { calcNutritionScore } from '../utils/nutritionScore';
+import Layout from '../components/Layout';
 
 
 function getTodayKey() {
@@ -501,8 +502,8 @@ export default function StatsPage() {
         })}} />
       </Head>
 
-      <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary font-mono">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-16 py-10 sm:py-20 space-y-12">
+      <div className="font-mono">
+        <div className="max-w-7xl mx-auto space-y-12">
 
           {/* Header */}
           <header className="space-y-4">
@@ -1014,21 +1015,6 @@ export default function StatsPage() {
           {/* ═══ DEBUG PANEL ═══ */}
           <DebugPanel />
 
-          {/* Footer */}
-          <footer className="border-t border-theme-text-primary/10 pt-8 flex flex-wrap items-center justify-between gap-4">
-            <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs uppercase tracking-widest">
-              <Link href="/" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Home</Link>
-              <Link href="/profile" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Profile</Link>
-              <Link href="/compare" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Compare</Link>
-              <Link href="/custom-foods" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Custom Foods</Link>
-              <Link href="/tools" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Tools</Link>
-              <Link href="/about" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">About</Link>
-              <Link href="/changelog" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Changelog</Link>
-              <Link href="/privacy" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Privacy</Link>
-              <Link href="/admin" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Admin</Link>
-            </div>
-            <span className="text-[10px] uppercase tracking-widest text-theme-text-tertiary/40">BoilerFuel · {new Date().getFullYear()}</span>
-          </footer>
         </div>
       </div>
     </>
@@ -1244,4 +1230,4 @@ function DebugPanel() {
   );
 }
 
-StatsPage.getLayout = (page) => page;
+StatsPage.getLayout = (page) => <Layout>{page}</Layout>;

@@ -218,7 +218,24 @@ export async function ensureSchema() {
       END IF;
     END $$;
   `);
-  
+
+  await query(`
+    CREATE TABLE IF NOT EXISTS custom_foods (
+      id SERIAL PRIMARY KEY,
+      user_email VARCHAR(255) NOT NULL,
+      user_sub VARCHAR(255),
+      name VARCHAR(255) NOT NULL,
+      calories INT NOT NULL,
+      macros JSONB NOT NULL DEFAULT '{"protein":0,"carbs":0,"fats":0}'::jsonb,
+      serving_size VARCHAR(100),
+      notes TEXT,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    );
+  `);
+
+  await query(`CREATE INDEX IF NOT EXISTS idx_custom_foods_user_email ON custom_foods(user_email);`);
+
     schemaInitialized = true;
   } catch (error) {
     console.error('[db] Schema initialization error:', error.message);

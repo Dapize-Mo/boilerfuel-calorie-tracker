@@ -343,7 +343,7 @@ function DocsTab() {
 
       <Section id="arch" title="Frontend Architecture">
         <div className="space-y-3 text-xs text-theme-text-secondary leading-relaxed">
-          <p><strong className="text-theme-text-primary">Framework:</strong> Next.js (pages router, no App Router). All pages in <code className="font-mono bg-theme-bg-secondary px-1">frontend/pages/</code>. Every page uses <code className="font-mono bg-theme-bg-secondary px-1">Page.getLayout = (page) =&gt; page</code> to bypass the Layout component (currently unused).</p>
+          <p><strong className="text-theme-text-primary">Framework:</strong> Next.js (pages router, no App Router). All pages in <code className="font-mono bg-theme-bg-secondary px-1">frontend/pages/</code>. Most pages wrap themselves in the shared <code className="font-mono bg-theme-bg-secondary px-1">Layout</code> component via <code className="font-mono bg-theme-bg-secondary px-1">Page.getLayout</code>; the home page, profile, and admin keep their own full-screen shells with <code className="font-mono bg-theme-bg-secondary px-1">(page) =&gt; page</code>.</p>
           <p><strong className="text-theme-text-primary">State:</strong> MealContext (<code className="font-mono bg-theme-bg-secondary px-1">context/MealContext.js</code>) holds all user data — meals by date, goals, water, weight, favorites, templates, dietary prefs. All persisted to localStorage. Synced to server when Device Sync is enabled (encrypted blob).</p>
           <p><strong className="text-theme-text-primary">Theming:</strong> CSS variables defined in <code className="font-mono bg-theme-bg-secondary px-1">styles/globals.css</code> under <code className="font-mono bg-theme-bg-secondary px-1">:root</code> (light) and <code className="font-mono bg-theme-bg-secondary px-1">.dark</code>. Tailwind classes map to these via <code className="font-mono bg-theme-bg-secondary px-1">tailwind.config.js</code> theme extension (e.g. <code className="font-mono bg-theme-bg-secondary px-1">bg-theme-bg-primary</code>).</p>
           <p><strong className="text-theme-text-primary">PWA:</strong> Service worker (<code className="font-mono bg-theme-bg-secondary px-1">public/sw.js</code>) handles offline caching. <code className="font-mono bg-theme-bg-secondary px-1">manifest.json</code> in public/. iOS install prompt uses <code className="font-mono bg-theme-bg-secondary px-1">beforeinstallprompt</code> (Android) or manual Safari share flow (iOS).</p>
@@ -818,12 +818,12 @@ function StatsTab() {
         <div className="space-y-px border border-theme-text-primary/10">
           {/* Settings link */}
           <Link
-            href="/settings"
+            href="/profile"
             className="flex items-center justify-between px-4 py-4 bg-theme-bg-primary hover:bg-theme-text-primary/5 transition-colors group"
           >
             <div>
               <div className="text-xs font-bold uppercase tracking-wider text-theme-text-primary">Settings</div>
-              <div className="text-[10px] text-theme-text-tertiary mt-0.5">Configure app settings</div>
+              <div className="text-[10px] text-theme-text-tertiary mt-0.5">Goals &amp; app settings live in your profile</div>
             </div>
             <span className="text-theme-text-tertiary/40 group-hover:text-theme-text-tertiary transition-colors text-xs">&rarr;</span>
           </Link>

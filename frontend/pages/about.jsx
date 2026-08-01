@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useSmartBack } from '../utils/useSmartBack';
+import Layout from '../components/Layout';
 
 export default function About() {
   const router = useRouter();
@@ -79,8 +80,8 @@ export default function About() {
         })}} />
       </Head>
 
-      <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary font-mono">
-        <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 py-12 sm:py-20 space-y-12">
+      <div className="font-mono">
+        <div className="max-w-7xl mx-auto space-y-12">
 
           {/* Header */}
           <header className="space-y-4 border-b border-theme-text-primary/10 pb-10">
@@ -267,26 +268,10 @@ export default function About() {
             </div>
           </div>
 
-          {/* Footer */}
-          <footer className="border-t border-theme-text-primary/10 pt-8 flex flex-wrap items-center justify-between gap-4">
-            <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs uppercase tracking-widest">
-              <Link href="/" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Home</Link>
-              <Link href="/stats" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Stats</Link>
-              <Link href="/compare" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Compare</Link>
-              <Link href="/custom-foods" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Custom Foods</Link>
-              <Link href="/tools" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Tools</Link>
-              <Link href="/profile" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Profile</Link>
-              <Link href="/changelog" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Changelog</Link>
-              <Link href="/privacy" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Privacy</Link>
-              <Link href="/admin" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Admin</Link>
-            </div>
-            <span className="text-[10px] uppercase tracking-widest text-theme-text-tertiary/40">BoilerFuel · {new Date().getFullYear()}</span>
-          </footer>
-
         </div>
       </div>
     </>
   );
 }
 
-About.getLayout = (page) => page;
+About.getLayout = (page) => <Layout>{page}</Layout>;

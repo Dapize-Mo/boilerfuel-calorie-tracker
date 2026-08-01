@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import { useSession, signIn } from 'next-auth/react';
 import { useSmartBack } from '../utils/useSmartBack';
 import { getNamespacedStorageKey } from '../utils/storageNamespace';
+import Layout from '../components/Layout';
 
 export default function CustomFoods() {
   const router = useRouter();
@@ -177,8 +178,8 @@ export default function CustomFoods() {
         <meta property="og:url" content="https://boiler-calorie-tracker-v3.vercel.app/custom-foods" />
       </Head>
 
-      <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary font-mono">
-        <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 py-12 sm:py-20 space-y-10">
+      <div className="font-mono">
+        <div className="max-w-7xl mx-auto space-y-10">
 
           {/* Header */}
           <header className="space-y-4">
@@ -421,26 +422,10 @@ export default function CustomFoods() {
             </>
           )}
 
-          {/* Footer */}
-          <footer className="border-t border-theme-text-primary/10 pt-8 flex flex-wrap items-center justify-between gap-4">
-            <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs uppercase tracking-widest">
-              <Link href="/" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Home</Link>
-              <Link href="/stats" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Stats</Link>
-              <Link href="/compare" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Compare</Link>
-              <Link href="/profile" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Profile</Link>
-              <Link href="/tools" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Tools</Link>
-              <Link href="/about" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">About</Link>
-              <Link href="/changelog" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Changelog</Link>
-              <Link href="/privacy" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Privacy</Link>
-              <Link href="/admin" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Admin</Link>
-            </div>
-            <span className="text-[10px] uppercase tracking-widest text-theme-text-tertiary/40">BoilerFuel · {new Date().getFullYear()}</span>
-          </footer>
-
         </div>
       </div>
     </>
   );
 }
 
-CustomFoods.getLayout = (page) => page;
+CustomFoods.getLayout = (page) => <Layout>{page}</Layout>;

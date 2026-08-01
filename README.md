@@ -195,7 +195,7 @@ CRON_SECRET=your-random-secret    # Protects /api/admin/auto-maintenance
 
 Notes:
 - `DB_CAPACITY_BYTES` should match your provider's DB storage quota in bytes.
-- Vercel cron now runs `/api/admin/auto-maintenance` every 6 hours to prune old rows.
+- Vercel cron runs `/api/admin/auto-maintenance` daily at 06:00 UTC to prune old rows.
 - Scrape endpoints and scraping scripts will return/exit early when usage crosses the threshold.
 
 **Database connection error?**

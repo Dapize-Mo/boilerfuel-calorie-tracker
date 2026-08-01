@@ -1,5 +1,6 @@
 import Head from 'next/head';
 import Link from 'next/link';
+import Layout from '../components/Layout';
 
 export default function NotFound() {
   return (
@@ -8,7 +9,7 @@ export default function NotFound() {
         <title>404 — BoilerFuel</title>
         <meta name="robots" content="noindex" />
       </Head>
-      <div className="min-h-screen bg-theme-bg-primary text-theme-text-primary font-mono flex items-center justify-center px-6">
+      <div className="font-mono flex items-center justify-center px-6 min-h-[60vh]">
         <div className="max-w-md w-full space-y-8 text-center">
           <div className="space-y-3">
             <p className="text-[10px] uppercase tracking-[0.3em] text-theme-text-tertiary">Error 404</p>
@@ -47,4 +48,4 @@ export default function NotFound() {
   );
 }
 
-NotFound.getLayout = (page) => page;
+NotFound.getLayout = (page) => <Layout>{page}</Layout>;
