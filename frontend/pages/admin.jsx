@@ -818,12 +818,12 @@ function StatsTab() {
         <div className="space-y-px border border-theme-text-primary/10">
           {/* Settings link */}
           <Link
-            href="/settings"
+            href="/profile"
             className="flex items-center justify-between px-4 py-4 bg-theme-bg-primary hover:bg-theme-text-primary/5 transition-colors group"
           >
             <div>
               <div className="text-xs font-bold uppercase tracking-wider text-theme-text-primary">Settings</div>
-              <div className="text-[10px] text-theme-text-tertiary mt-0.5">Configure app settings</div>
+              <div className="text-[10px] text-theme-text-tertiary mt-0.5">Goals &amp; app settings live in your profile</div>
             </div>
             <span className="text-theme-text-tertiary/40 group-hover:text-theme-text-tertiary transition-colors text-xs">&rarr;</span>
           </Link>
