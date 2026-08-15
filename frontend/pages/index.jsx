@@ -24,9 +24,14 @@ const TRANSITION_MS = 900; // cooldown for scroll-triggered transitions
 function CalendarPicker({ value, onChange, compact = false, hideIcon = false }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
-  const current = value ? new Date(value + 'T00:00:00') : new Date();
+  const [todayStr, setTodayStr] = useState('1970-01-01');
+  const current = value ? new Date(value + 'T00:00:00') : new Date('1970-01-01T00:00:00');
   const [viewYear, setViewYear] = useState(current.getFullYear());
   const [viewMonth, setViewMonth] = useState(current.getMonth());
+
+  useEffect(() => {
+    setTodayStr(localDateStr());
+  }, []);
 
   useEffect(() => {
     function handleClick(e) {
@@ -42,7 +47,6 @@ function CalendarPicker({ value, onChange, compact = false, hideIcon = false }) 
   const dayNames = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
   const selectedDay = current.getFullYear() === viewYear && current.getMonth() === viewMonth ? current.getDate() : null;
-  const todayStr = localDateStr();
 
   function pick(day) {
     const m = String(viewMonth + 1).padStart(2, '0');
@@ -60,7 +64,7 @@ function CalendarPicker({ value, onChange, compact = false, hideIcon = false }) 
   }
 
   const dayNames7 = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  const isToday = value === localDateStr();
+  const isToday = value === todayStr;
   const displayDate = value
     ? compact
       ? (isToday ? 'Today' : `${dayNames7[current.getDay()]} · ${monthNames[current.getMonth()]} ${current.getDate()}`)
@@ -437,8 +441,14 @@ export default function Home() {
   // ── State ──
   const [location, setLocation] = useState({ type: 'all', value: 'All' });
   const [mealTime, setMealTime] = useState('All');
-  const [selectedDate, setSelectedDate] = useState(() => localDateStr());
+  const [selectedDate, setSelectedDate] = useState('1970-01-01');
+  const [todayKey, setTodayKey] = useState('1970-01-01');
   const [foods, setFoods] = useState([]);
+  useEffect(() => {
+    const next = localDateStr();
+    setTodayKey(next);
+    setSelectedDate(next);
+  }, []);
   const [availableLocations, setAvailableLocations] = useState([]);
   const [retailLocations, setRetailLocations] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -467,6 +477,7 @@ export default function Home() {
   const [showShortcutsHint, setShowShortcutsHint] = useState(false);
   const mealTimes = ['All', 'Breakfast', 'Brunch', 'Lunch', 'Late Lunch', 'Dinner'];
   const isLanding = view === 'landing';
+  const effectiveToday = todayKey || '1970-01-01';
 
   // Debounce search text for filtering
   useEffect(() => {
@@ -1381,14 +1392,14 @@ export default function Home() {
           {!loading && !isLanding && (
             <>
             {/* Past-date logging banner */}
-            {selectedDate !== localDateStr() && (
+            {selectedDate !== todayKey && (
               <div className="flex items-center justify-between gap-3 mb-4 px-3 py-2 border border-theme-text-primary/20 bg-theme-bg-secondary text-theme-text-secondary text-xs font-mono">
                 <span className="flex items-center gap-2">
                   <span className="text-theme-text-primary/30 font-bold">›</span>
                   Logging meals to <strong className="text-theme-text-primary ml-1">{new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</strong>
                 </span>
                 <button
-                  onClick={() => setSelectedDate(localDateStr())}
+                  onClick={() => setSelectedDate(todayKey)}
                   className="shrink-0 text-theme-text-tertiary hover:text-theme-text-primary transition-colors uppercase tracking-widest text-[10px]"
                 >
                   Return to today
@@ -2198,7 +2209,7 @@ export default function Home() {
                           {searchText && <> No results matched &ldquo;<strong>{searchText}</strong>&rdquo;.</>}
                         </p>
                         <div className="flex flex-wrap gap-2 justify-center">
-                          {selectedDate !== localDateStr() && (
+                          {selectedDate !== (todayKey || '1970-01-01') && (
                             <button
                               onClick={() => setSelectedDate(localDateStr())}
                               className="px-3 py-1.5 border border-theme-text-primary/30 text-xs text-theme-text-secondary hover:bg-theme-text-primary hover:text-theme-bg-primary transition-colors font-mono uppercase tracking-wider">
@@ -2345,7 +2356,7 @@ export default function Home() {
             <Link href="/privacy" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Privacy</Link>
             <Link href="/admin" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Admin</Link>
           </div>
-          <span className="text-[10px] uppercase tracking-widest text-theme-text-tertiary/40">BoilerFuel &middot; {new Date().getFullYear()}</span>
+          <span className="text-[10px] uppercase tracking-widest text-theme-text-tertiary/40">BoilerFuel &middot; 2025</span>
         </footer>
       </div>
 
