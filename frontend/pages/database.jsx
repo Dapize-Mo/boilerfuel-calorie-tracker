@@ -17,9 +17,14 @@ function localDateStr(d = new Date()) {
 function CalendarPicker({ value, onChange }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
-  const current = value ? new Date(value + 'T00:00:00') : new Date();
+  const [todayStr, setTodayStr] = useState('1970-01-01');
+  const current = value ? new Date(value + 'T00:00:00') : new Date('1970-01-01T00:00:00');
   const [viewYear, setViewYear] = useState(current.getFullYear());
   const [viewMonth, setViewMonth] = useState(current.getMonth());
+
+  useEffect(() => {
+    setTodayStr(localDateStr());
+  }, []);
 
   useEffect(() => {
     function handleClick(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }
@@ -32,7 +37,6 @@ function CalendarPicker({ value, onChange }) {
   const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const dayNames = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
   const selectedDay = current.getFullYear() === viewYear && current.getMonth() === viewMonth ? current.getDate() : null;
-  const todayStr = localDateStr();
 
   function pick(day) {
     const m = String(viewMonth + 1).padStart(2, '0');
@@ -43,7 +47,7 @@ function CalendarPicker({ value, onChange }) {
   function prevMonth() { if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y - 1); } else setViewMonth(m => m - 1); }
   function nextMonth() { if (viewMonth === 11) { setViewMonth(0); setViewYear(y => y + 1); } else setViewMonth(m => m + 1); }
 
-  const isToday = value === localDateStr();
+  const isToday = value === todayStr;
   const dayNames7 = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   const displayDate = value
     ? (isToday ? 'Today' : `${monthNames[current.getMonth()]} ${current.getDate()}`)
@@ -174,7 +178,10 @@ function getMacroVal(food, field) {
 
 // ── Main page ──
 export default function DatabasePage() {
-  const [selectedDate, setSelectedDate] = useState(() => localDateStr());
+  const [selectedDate, setSelectedDate] = useState('1970-01-01');
+  useEffect(() => {
+    setSelectedDate(localDateStr());
+  }, []);
   const [mealTime, setMealTime] = useState('All');
   const [selectedGroups, setSelectedGroups] = useState(() => new Set(['Dining Courts']));
   const [includeBeverages, setIncludeBeverages] = useState(false);
@@ -384,7 +391,7 @@ export default function DatabasePage() {
           {Array.from({ length: 10 }, (_, i) => (
             <div key={i} className="flex items-center gap-4 py-3 border-b border-theme-text-primary/5 animate-pulse">
               <div className="w-8 h-3 bg-theme-text-primary/8 rounded-sm" />
-              <div className="flex-1 h-3 bg-theme-text-primary/8 rounded-sm" style={{ maxWidth: `${40 + Math.random() * 30}%` }} />
+              <div className="flex-1 h-3 bg-theme-text-primary/8 rounded-sm" style={{ maxWidth: '72%' }} />
               <div className="w-20 h-3 bg-theme-text-primary/5 rounded-sm hidden sm:block" />
               <div className="w-16 h-3 bg-theme-text-primary/5 rounded-sm hidden md:block" />
               <div className="w-10 h-3 bg-theme-text-primary/5 rounded-sm" />

@@ -89,7 +89,7 @@ export default function Onboarding() {
       aria-label="Welcome to BoilerFuel"
       ref={dialogRef}
     >
-      <div className="w-full max-w-xl bg-theme-bg-primary border border-theme-text-primary/20 shadow-2xl">
+      <div className="w-full max-w-xl bg-theme-bg-primary border border-theme-text-primary/20 rounded-none">
         <div className="h-0.5 bg-theme-text-primary/20" />
 
         {/* Step indicators */}
@@ -109,7 +109,7 @@ export default function Onboarding() {
           {step === 0 && (
             <>
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-theme-bg-secondary border border-theme-text-primary/20 flex items-center justify-center shrink-0">
+                <div className="w-14 h-14 bg-theme-bg-secondary border border-theme-text-primary/20 flex items-center justify-center shrink-0 rounded-none">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8 text-yellow-500/80">
                     <path fillRule="evenodd" d="M12.963 2.286a.75.75 0 00-1.071-.136 9.742 9.742 0 00-3.539 6.177A7.547 7.547 0 016.648 6.61a.75.75 0 00-1.152.082A9 9 0 1015.68 4.534a7.46 7.46 0 01-2.717-2.248zM15.75 14.25a3.75 3.75 0 11-7.313-1.172c.628.465 1.35.81 2.133 1.001a3.75 3.75 0 011.89-3.334 3.75 3.75 0 013.29 3.505z" clipRule="evenodd" />
                   </svg>
@@ -120,7 +120,7 @@ export default function Onboarding() {
                 </div>
               </div>
 
-              <ul className="space-y-2.5 text-sm text-theme-text-secondary border border-theme-text-primary/10 bg-theme-bg-secondary/30 p-4">
+              <ul className="space-y-2.5 text-sm text-theme-text-secondary border border-theme-text-primary/10 bg-theme-bg-secondary/30 p-4 rounded-none">
                 {[
                   'Search real menus from Purdue dining halls and retail',
                   'Track calories, protein, carbs, fat, and more',
@@ -136,7 +136,7 @@ export default function Onboarding() {
 
               <button
                 onClick={() => setStep(1)}
-                className="w-full py-3 bg-yellow-400 hover:bg-yellow-500 active:bg-yellow-600 text-slate-900 font-bold text-sm uppercase tracking-[0.16em] transition-colors"
+                className="w-full py-3 bg-yellow-400 hover:bg-yellow-500 active:bg-yellow-600 text-slate-900 font-bold text-sm uppercase tracking-[0.16em] transition-colors rounded-none border border-yellow-400"
               >
                 Get Started
               </button>
@@ -157,7 +157,7 @@ export default function Onboarding() {
                     <button
                       key={p}
                       onClick={() => setCalorieInput(String(p))}
-                      className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider border transition-colors ${
+                      className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider border rounded-none transition-colors ${
                         calorieInput === String(p)
                           ? 'border-yellow-400 bg-yellow-400/10 text-yellow-400'
                           : 'border-theme-text-primary/20 text-theme-text-tertiary hover:border-theme-text-primary/50'
@@ -176,7 +176,7 @@ export default function Onboarding() {
                     step="50"
                     value={calorieInput}
                     onChange={e => setCalorieInput(e.target.value)}
-                    className="w-full border border-theme-text-primary/30 bg-theme-bg-secondary text-theme-text-primary px-4 py-3 font-mono text-lg text-center focus:border-yellow-400 focus:outline-none transition-colors"
+                    className="w-full border border-theme-text-primary/30 bg-theme-bg-secondary text-theme-text-primary px-4 py-3 font-mono text-lg text-center focus:border-yellow-400 focus:outline-none transition-colors rounded-none"
                   />
                   <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-theme-text-tertiary">kcal/day</span>
                 </div>
@@ -189,7 +189,7 @@ export default function Onboarding() {
               <div className="flex gap-2">
                 <button
                   onClick={() => setStep(0)}
-                  className="px-4 py-2.5 border border-theme-text-primary/20 text-theme-text-tertiary text-xs font-bold uppercase tracking-wider hover:text-theme-text-primary transition-colors"
+                  className="px-4 py-2.5 border border-theme-text-primary/20 text-theme-text-tertiary text-xs font-bold uppercase tracking-wider hover:text-theme-text-primary transition-colors rounded-none"
                 >
                   Back
                 </button>
@@ -198,7 +198,7 @@ export default function Onboarding() {
                     handleFinish(calorieInput);
                     setStep(2);
                   }}
-                  className="flex-1 py-2.5 bg-yellow-400 hover:bg-yellow-500 text-slate-900 font-bold text-sm uppercase tracking-[0.16em] transition-colors"
+                  className="flex-1 py-2.5 bg-yellow-400 hover:bg-yellow-500 text-slate-900 font-bold text-sm uppercase tracking-[0.16em] transition-colors rounded-none border border-yellow-400"
                 >
                   Continue
                 </button>
@@ -232,7 +232,7 @@ export default function Onboarding() {
 
               <button
                 onClick={() => setVisible(false)}
-                className="w-full py-3 bg-yellow-400 hover:bg-yellow-500 text-slate-900 font-bold text-sm uppercase tracking-[0.16em] transition-colors"
+                className="w-full py-3 bg-yellow-400 hover:bg-yellow-500 text-slate-900 font-bold text-sm uppercase tracking-[0.16em] transition-colors rounded-none border border-yellow-400"
               >
                 Start Tracking
               </button>
@@ -244,7 +244,7 @@ export default function Onboarding() {
           <div className="px-6 pb-5 text-center">
             <button
               onClick={handleSkip}
-              className="text-xs text-theme-text-tertiary hover:text-theme-text-primary transition-colors"
+              className="text-xs text-theme-text-tertiary hover:text-theme-text-primary transition-colors rounded-none"
             >
               Skip setup
             </button>
