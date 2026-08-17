@@ -10,12 +10,27 @@ import Layout from '../components/Layout';
 //   x.y.z  Patch — bug fix, ESLint cleanup, or single-line correction
 
 const VERSIONS = [
+  // ─── 3.13.1 Patch — Hydration fix & onboarding utilitarian (Aug 17, 2026) ─────────
+  {
+    version: '3.13.1',
+    date: 'August 17, 2026',
+    latest: true,
+    changes: [
+      { cat: 'Fix', items: [
+        'Fix SSR/client hydration mismatches that caused React hydration errors by removing render-time date and Math.random() usage from server-rendered components.',
+      ]},
+      { cat: 'UI', items: [
+        'Onboarding dialog (intro & set your goals) restyled to a boxier, utilitarian appearance (square corners, bordered controls) while preserving existing behavior.',
+      ]},
+    ],
+  },
+
 
   // ─── 3.13.x  Menu page, custom foods, shared nav  (Jul 31, 2026) ────────────
   {
     version: '3.13.0',
     date: 'July 31, 2026',
-    latest: true,
+    latest: false,
     changes: [
       { cat: 'Feature', items: [
         'New /menu Nutrition Facts page — dining menus as printed nutrition labels with Ledger and Spread layouts, dietary chips, and one-tap logging (restored selectively from the 3.12 design experiment, without the site-wide restyle)',
