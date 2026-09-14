@@ -10,11 +10,27 @@ import Layout from '../components/Layout';
 //   x.y.z  Patch — bug fix, ESLint cleanup, or single-line correction
 
 const VERSIONS = [
+  // ─── 3.13.2 Patch — Comprehensive hydration stability & retail schema (Sep 13, 2026) ─
+  {
+    version: '3.13.2',
+    date: 'September 13, 2026',
+    latest: true,
+    changes: [
+      { cat: 'Fix', items: [
+        'Eliminate React hydration errors (#418, #425) on Stats, Profile, Compare, and 404 pages by decoupling chart x-axis date labels and initial date states from render-time clocks.',
+        'Initialize retail_locations table schema automatically during API query initialization to prevent cold-start query exceptions.',
+      ]},
+      { cat: 'Testing', items: [
+        'Add comprehensive Jest hydration test coverage across UTC midnight for Menu, Stats, Profile, and Compare pages.',
+      ]},
+    ],
+  },
+
   // ─── 3.13.1 Patch — Hydration fix & onboarding utilitarian (Aug 17, 2026) ─────────
   {
     version: '3.13.1',
     date: 'August 17, 2026',
-    latest: true,
+    latest: false,
     changes: [
       { cat: 'Fix', items: [
         'Fix SSR/client hydration mismatches that caused React hydration errors by removing render-time date and Math.random() usage from server-rendered components.',
