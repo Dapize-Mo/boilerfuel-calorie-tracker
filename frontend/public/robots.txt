@@ -4,6 +4,8 @@
 # Allow all good bots by default
 User-agent: *
 Allow: /
+Allow: /menu
+Allow: /database
 Allow: /about
 Allow: /tools
 Allow: /compare
