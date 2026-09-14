@@ -10,18 +10,26 @@ import Layout from '../components/Layout';
 //   x.y.z  Patch — bug fix, ESLint cleanup, or single-line correction
 
 const VERSIONS = [
-  // ─── 3.13.2 Patch — Comprehensive hydration stability & retail schema (Sep 13, 2026) ─
+  // ─── 3.13.2 Patch — Hydration stability, retail schema, and asset polish (Sep 13, 2026) ─
   {
     version: '3.13.2',
     date: 'September 13, 2026',
     latest: true,
     changes: [
       { cat: 'Fix', items: [
-        'Eliminate React hydration errors (#418, #425) on Stats, Profile, Compare, and 404 pages by decoupling chart x-axis date labels and initial date states from render-time clocks.',
-        'Initialize retail_locations table schema automatically during API query initialization to prevent cold-start query exceptions.',
+        'Hydration mismatch fixes: resolved React errors #418 and #425 across Stats, Profile, Compare, and 404 pages.',
+        'Stats page: decoupled chart x-axis date labels in BarChart, LineChart, and StackedBarChart from render-time clocks, accepting parent todayKey to ensure identical server markup and initial client hydration regardless of visitor time zones.',
+        'Profile & Compare pages: initialized date states with stable fallback on server, updating with client localDateStr() on mount via useEffect.',
+        'Footer year stabilization: replaced dynamic new Date().getFullYear() in 404, Admin, and Profile footers with static text to avoid year-boundary mismatch with static caching.',
+        'Retail locations: initialize retail_locations table schema automatically during API query initialization (ensureSchema) to prevent cold-start query failures.',
+      ]},
+      { cat: 'Assets & SEO', items: [
+        'Favicon: generated a valid multi-resolution favicon.ico (16x16, 32x32, 48x48) from high-res icon assets, replacing the legacy 1-byte placeholder.',
+        'Search indexing: updated robots.txt to explicitly allow /menu and /database for web crawlers, aligning with sitemap.xml.',
       ]},
       { cat: 'Testing', items: [
-        'Add comprehensive Jest hydration test coverage across UTC midnight for Menu, Stats, Profile, and Compare pages.',
+        'Added Jest hydration regression test suites simulating server and client across UTC midnight for Menu, Stats, Profile, and Compare pages (33/33 tests passing).',
+        'End-to-end headless Chrome verification across all 11 routes confirming zero console exceptions, working food add/remove flows, unauthenticated cookie backup restoration, and pairing sync.',
       ]},
     ],
   },
