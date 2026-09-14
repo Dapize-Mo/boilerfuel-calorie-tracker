@@ -236,6 +236,21 @@ export async function ensureSchema() {
 
   await query(`CREATE INDEX IF NOT EXISTS idx_custom_foods_user_email ON custom_foods(user_email);`);
 
+  await query(`
+    CREATE TABLE IF NOT EXISTS retail_locations (
+      id VARCHAR(20) PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      url VARCHAR(512),
+      address VARCHAR(255),
+      city_state_zip VARCHAR(255),
+      hours VARCHAR(255),
+      is_open BOOLEAN DEFAULT FALSE,
+      is_food_court BOOLEAN DEFAULT FALSE,
+      child_locations JSONB,
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    );
+  `);
+
     schemaInitialized = true;
   } catch (error) {
     console.error('[db] Schema initialization error:', error.message);
