@@ -90,7 +90,7 @@ function PieChart({ data, size = 160 }) {
 }
 
 // ── Bar Chart (for daily overview) ──
-function BarChart({ data, max, height = 120, label = '' }) {
+function BarChart({ data, max, height = 120, label = '', todayKey }) {
   const actualMax = max || Math.max(...data.map(d => d.value), 1);
   return (
     <div>
@@ -98,7 +98,7 @@ function BarChart({ data, max, height = 120, label = '' }) {
       <div className="flex items-end gap-1" style={{ height }}>
         {data.map((d, i) => {
           const pct = Math.min((d.value / actualMax) * 100, 100);
-          const isToday = d.date === getTodayKey();
+          const isToday = todayKey ? d.date === todayKey : false;
           return (
             <div key={i} className="flex-1 flex flex-col items-center gap-1" title={`${d.label}: ${Math.round(d.value)}`}>
               <div className="text-[10px] font-mono tabular-nums text-theme-text-tertiary/70" style={{ opacity: d.value > 0 ? 1 : 0 }}>
@@ -120,7 +120,7 @@ function BarChart({ data, max, height = 120, label = '' }) {
 }
 
 // ── Line Chart ──
-function LineChart({ data, max, height = 120, label = '', color = 'rgb(var(--color-text-primary))', goalLine }) {
+function LineChart({ data, max, height = 120, label = '', color = 'rgb(var(--color-text-primary))', goalLine, todayKey }) {
   const actualMax = max || Math.max(...data.map(d => d.value), 1);
   const padding = { top: 20, right: 8, bottom: 24, left: 8 };
   const chartW = 100; // percentage-based
@@ -151,13 +151,13 @@ function LineChart({ data, max, height = 120, label = '', color = 'rgb(var(--col
         )}
         {/* Data points */}
         {points.map((p, i) => (
-          <circle key={i} cx={p.x} cy={p.y} r={data.length <= 14 ? 1.2 : 0.6} fill={p.date === getTodayKey() ? color : 'currentColor'} className={p.date === getTodayKey() ? '' : 'text-theme-text-primary/40'} />
+          <circle key={i} cx={p.x} cy={p.y} r={data.length <= 14 ? 1.2 : 0.6} fill={todayKey && p.date === todayKey ? color : 'currentColor'} className={todayKey && p.date === todayKey ? '' : 'text-theme-text-primary/40'} />
         ))}
       </svg>
       {/* X-axis labels */}
       <div className="flex justify-between mt-1">
         {data.length <= 14 ? data.map((d, i) => (
-          <div key={i} className={`text-[10px] flex-1 text-center ${d.date === getTodayKey() ? 'font-bold text-theme-text-primary' : 'text-theme-text-tertiary'}`}>
+          <div key={i} className={`text-[10px] flex-1 text-center ${todayKey && d.date === todayKey ? 'font-bold text-theme-text-primary' : 'text-theme-text-tertiary'}`}>
             {d.dayLabel}
           </div>
         )) : (
@@ -173,7 +173,7 @@ function LineChart({ data, max, height = 120, label = '', color = 'rgb(var(--col
 }
 
 // ── Stacked Bar Chart (for meal-time breakdown) ──
-function StackedBarChart({ data, height = 120 }) {
+function StackedBarChart({ data, height = 120, todayKey }) {
   const mealKeys = ['breakfast', 'brunch', 'lunch', 'dinner', 'other'];
   const colors = { breakfast: '#3b82f6', brunch: '#8b5cf6', lunch: '#f59e0b', dinner: '#f97316', other: 'rgba(128,128,128,0.25)' };
   const maxVal = Math.max(...data.map(d => mealKeys.reduce((s, k) => s + (d[k] || 0), 0)), 1);
@@ -185,7 +185,7 @@ function StackedBarChart({ data, height = 120 }) {
         {data.map((d, i) => {
           const total = mealKeys.reduce((s, k) => s + (d[k] || 0), 0);
           const filled = Math.round((total / maxVal) * barH);
-          const isToday = d.date === getTodayKey();
+          const isToday = todayKey ? d.date === todayKey : false;
           return (
             <div key={i} className="flex-1 flex flex-col justify-end" style={{ height: '100%' }} title={`${d.dayLabel}: ${Math.round(total)} cal`}>
               <div className={`w-full flex flex-col-reverse overflow-hidden ${isToday ? 'ring-1 ring-theme-text-primary/30' : ''}`} style={{ height: filled }}>
@@ -199,7 +199,7 @@ function StackedBarChart({ data, height = 120 }) {
       </div>
       <div className="flex justify-between mt-1.5">
         {data.map((d, i) => (
-          <div key={i} className={`text-[9px] flex-1 text-center ${d.date === getTodayKey() ? 'font-bold text-theme-text-primary' : 'text-theme-text-tertiary'}`}>{d.dayLabel}</div>
+          <div key={i} className={`text-[9px] flex-1 text-center ${todayKey && d.date === todayKey ? 'font-bold text-theme-text-primary' : 'text-theme-text-tertiary'}`}>{d.dayLabel}</div>
         ))}
       </div>
       <div className="flex flex-wrap gap-3 mt-2">
@@ -299,7 +299,10 @@ export default function StatsPage() {
   const [historySearch, setHistorySearch] = useState('');
   const [historyPage, setHistoryPage] = useState(1);
   const [spotlightNutrient, setSpotlightNutrient] = useState('fat');
-  const today = getTodayKey();
+  const [today, setToday] = useState('1970-01-01');
+  useEffect(() => {
+    setToday(getTodayKey());
+  }, []);
 
   // Compute date ranges
   const weekStart = shiftDate(today, -6);
@@ -610,9 +613,9 @@ export default function StatsPage() {
             </div>
             <div className="border border-theme-text-primary/10 p-4">
               {chartType === 'bar' ? (
-                <BarChart data={barData} max={goals.calories * 1.3} height={140} />
+                <BarChart data={barData} max={goals.calories * 1.3} height={140} todayKey={today} />
               ) : (
-                <LineChart data={barData} max={goals.calories * 1.3} height={140} goalLine={goals.calories} />
+                <LineChart data={barData} max={goals.calories * 1.3} height={140} goalLine={goals.calories} todayKey={today} />
               )}
               <div className="flex items-center gap-4 mt-3 text-[10px] text-theme-text-tertiary">
                 <span>Goal: <span className="font-bold text-theme-text-secondary">{goals.calories} kcal</span></span>
@@ -630,7 +633,7 @@ export default function StatsPage() {
               </h2>
               <div className="border border-theme-text-primary/10 p-4">
                 {daysWithData.length > 0 ? (
-                  <StackedBarChart data={mealTimeBreakdown} height={140} />
+                  <StackedBarChart data={mealTimeBreakdown} height={140} todayKey={today} />
                 ) : (
                   <div className="text-xs text-theme-text-tertiary uppercase tracking-widest py-6 text-center">No data</div>
                 )}

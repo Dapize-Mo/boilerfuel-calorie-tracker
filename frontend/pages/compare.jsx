@@ -28,11 +28,17 @@ function avgCal(foods) {
 export default function ComparePage() {
   const router = useRouter();
   const goBack = useSmartBack();
-  const today = localDateStr();
+  const [today, setToday] = useState('1970-01-01');
   const [courtA, setCourtA] = useState('Ford');
   const [courtB, setCourtB] = useState('Wiley');
   const [mealTime, setMealTime] = useState('All');
-  const [date, setDate] = useState(today);
+  const [date, setDate] = useState('1970-01-01');
+
+  useEffect(() => {
+    const next = localDateStr();
+    setToday(next);
+    setDate(next);
+  }, []);
   const [foodsA, setFoodsA] = useState([]);
   const [foodsB, setFoodsB] = useState([]);
   const [loadingA, setLoadingA] = useState(false);

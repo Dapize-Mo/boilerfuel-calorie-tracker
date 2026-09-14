@@ -74,7 +74,10 @@ export default function ProfilePage() {
   const [draft, setDraft] = useState(goals);
   const [goalWarnings, setGoalWarnings] = useState(null); // null | { warnings: string[], suggestions: [{label, patch}] }
   const [weightInput, setWeightInput] = useState(null);
-  const [selectedDate, setSelectedDate] = useState(getTodayKey);
+  const [selectedDate, setSelectedDate] = useState('1970-01-01');
+  useEffect(() => {
+    setSelectedDate(getTodayKey());
+  }, []);
   const [syncStatus, setSyncStatus] = useState('idle'); // idle | creating | paired | joining | error
   const [syncCode, setSyncCode] = useState('');
   const [syncSecret, setSyncSecret] = useState('');
@@ -2063,7 +2066,7 @@ export default function ProfilePage() {
               <Link href="/privacy" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Privacy</Link>
               <Link href="/admin" className="text-theme-text-tertiary hover:text-theme-text-primary transition-colors">Admin</Link>
             </div>
-            <span className="text-[10px] uppercase tracking-widest text-theme-text-tertiary/40">BoilerFuel · {new Date().getFullYear()}</span>
+            <span className="text-[10px] uppercase tracking-widest text-theme-text-tertiary/40">BoilerFuel</span>
           </footer>
 
         </div>

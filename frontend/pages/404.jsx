@@ -40,7 +40,7 @@ export default function NotFound() {
           </div>
 
           <p className="text-[10px] uppercase tracking-widest text-theme-text-tertiary/40">
-            BoilerFuel &middot; {new Date().getFullYear()}
+            BoilerFuel
           </p>
         </div>
       </div>
