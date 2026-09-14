@@ -10,11 +10,26 @@ import Layout from '../components/Layout';
 //   x.y.z  Patch — bug fix, ESLint cleanup, or single-line correction
 
 const VERSIONS = [
+  // ─── 3.14.0 Minor — One-tap inline food logging & table quick actions (Sep 13, 2026) ─
+  {
+    version: '3.14.0',
+    date: 'September 13, 2026',
+    latest: true,
+    changes: [
+      { cat: 'Feature', items: [
+        'One-tap inline food logging: added instant + and - buttons directly on each food row in the main menu table so users can log or remove meals immediately without expanding the details panel.',
+        'Adaptive Log column: introduced a dedicated, responsive "Log" column matching table headers and loading skeletons across mobile and desktop breakpoints.',
+        'Event isolation: clicking inline + or - buttons updates the meal count immediately while preventing row expansion, keeping users anchored to their position in the menu.',
+        'Smart BYO handling: clicking + on regular foods logs the meal directly, while Build-Your-Own collection stations intelligently expand the ingredient picker for custom portions.',
+      ]},
+    ],
+  },
+
   // ─── 3.13.2 Patch — Hydration stability, retail schema, and asset polish (Sep 13, 2026) ─
   {
     version: '3.13.2',
     date: 'September 13, 2026',
-    latest: true,
+    latest: false,
     changes: [
       { cat: 'Fix', items: [
         'Hydration mismatch fixes: resolved React errors #418 and #425 across Stats, Profile, Compare, and 404 pages.',

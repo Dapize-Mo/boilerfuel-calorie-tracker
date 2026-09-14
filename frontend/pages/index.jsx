@@ -1756,6 +1756,9 @@ export default function Home() {
                   onClick={() => toggleSort('calories')} title="Sort by calories">
                   Cal{sortArrow}
                 </th>
+                <th className="py-3 font-bold uppercase text-xs tracking-wider text-right pr-1 sm:pr-2 w-16 sm:w-20 text-theme-text-secondary select-none">
+                  Log
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -1773,6 +1776,7 @@ export default function Home() {
                       <td className="py-2 hidden lg:table-cell w-12"><div className="h-3 bg-theme-text-primary/8 rounded-sm w-full ml-auto" /></td>
                       <td className="py-2 hidden lg:table-cell w-12"><div className="h-3 bg-theme-text-primary/8 rounded-sm w-full ml-auto" /></td>
                       <td className="py-2 pl-4 w-16"><div className="h-3 bg-theme-text-primary/8 rounded-sm w-full ml-auto" /></td>
+                      <td className="py-2 pl-2 pr-1 sm:pr-2 w-16 sm:w-20"><div className="h-3 bg-theme-text-primary/8 rounded-sm w-full ml-auto" /></td>
                     </tr>
                   ))}
                 </>
@@ -1782,7 +1786,7 @@ export default function Home() {
                   if (item.type === 'court-header') {
                     return (
                       <tr key={`court-${item.label}-${i}`}>
-                        <td colSpan={7} className="pt-6 pb-2 px-0">
+                        <td colSpan={8} className="pt-6 pb-2 px-0">
                           <div className="text-sm font-bold uppercase tracking-widest text-theme-text-primary border-b-2 border-yellow-500/30 pb-1">
                             {item.label}
                           </div>
@@ -1793,7 +1797,7 @@ export default function Home() {
                   if (item.type === 'station-header') {
                     return (
                       <tr key={`station-${item.court}-${item.label}-${i}`}>
-                        <td colSpan={7} className="pt-4 pb-1 px-0">
+                        <td colSpan={8} className="pt-4 pb-1 px-0">
                           <div className="text-xs font-bold uppercase tracking-wider text-theme-text-tertiary pl-1"
                             style={{ borderLeft: '3px solid', borderColor: 'rgb(var(--color-accent-primary))', paddingLeft: 8 }}>
                             {item.label}
@@ -1810,6 +1814,8 @@ export default function Home() {
                   const count = getCount(food.id, selectedDate);
                   const macros = food.macros || {};
                   const noNutrition = food.calories === 0 && !macros.protein && !macros.carbs && !(macros.fats || macros.fat);
+                  const components = noNutrition ? getCollectionComponents(food) : [];
+                  const isCollection = noNutrition && components.length > 0;
                   // Estimate calories from component data for BYO items — sum all non-zero components
                   const estimatedCal = noNutrition ? (() => {
                     const comps = (macros.components || []).filter(c => c.calories > 0);
@@ -1820,7 +1826,7 @@ export default function Home() {
                   return (
                     <tr key={rowKey}
                       className={`border-b border-theme-text-primary/5 transition-colors group ${fav ? 'bg-yellow-500/[0.03]' : ''}`}>
-                      <td colSpan={7} className="p-0">
+                      <td colSpan={8} className="p-0">
                         {/* Clickable summary row — hover shows tooltip, click expands */}
                         <div
                           role="button"
@@ -1832,7 +1838,7 @@ export default function Home() {
                           onMouseEnter={(e) => { if (!isExpanded) onFoodMouseEnter(food, e); }}
                           onMouseMove={(e) => { if (!isExpanded) onFoodMouseMove(e); }}
                           onMouseLeave={onFoodMouseLeave}>
-                          <div className="py-2.5 pr-4 flex-1 min-w-0 overflow-hidden">
+                          <div className="py-2.5 pr-2 sm:pr-4 flex-1 min-w-0 overflow-hidden">
                             <div className="flex items-center gap-2 overflow-hidden">
                               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"
                                 className="shrink-0 text-theme-text-tertiary transition-transform duration-200"
@@ -1853,10 +1859,10 @@ export default function Home() {
                                   {macros.allergens.slice(0, 3).map(a => a.replace('Tree Nuts', 'Nuts').replace('Shellfish', 'Shell')).join(' · ')}{macros.allergens.length > 3 ? ' …' : ''}
                                 </span>
                               )}
-                              {noNutrition && getCollectionComponents(food).length > 0 && (
+                              {isCollection && (
                                 <span className="shrink-0 text-[9px] font-bold border border-theme-text-primary/40 text-theme-text-secondary px-1 py-0 leading-tight" title="Click to see components">Build Your Own</span>
                               )}
-                              {noNutrition && getCollectionComponents(food).length === 0 && (
+                              {noNutrition && !isCollection && (
                                 <span className="shrink-0 text-[9px] font-bold border border-amber-500/50 text-amber-500/80 px-1 py-0 leading-tight" title="Nutrition data not available from Purdue">N/A</span>
                               )}
                               {count > 0 && (
@@ -1872,16 +1878,59 @@ export default function Home() {
                           <div className="py-2 text-right font-mono tabular-nums w-12 shrink-0 text-theme-text-tertiary/60 hidden lg:block">{macros.protein != null ? Math.round(macros.protein) : '—'}</div>
                           <div className="py-2 text-right font-mono tabular-nums w-12 shrink-0 text-theme-text-tertiary/60 hidden lg:block">{macros.carbs != null ? Math.round(macros.carbs) : '—'}</div>
                           <div className="py-2 text-right font-mono tabular-nums w-12 shrink-0 text-theme-text-tertiary/60 hidden lg:block">{(macros.fats ?? macros.fat) != null ? Math.round(macros.fats ?? macros.fat) : '—'}</div>
-                          <div className={`py-2 pl-4 text-right font-mono tabular-nums w-16 shrink-0 ${noNutrition && !estimatedCal ? 'text-amber-500/60' : noNutrition && estimatedCal ? 'text-theme-text-tertiary' : 'text-theme-text-secondary'}`}>
+                          <div className={`py-2 pl-2 sm:pl-4 text-right font-mono tabular-nums w-16 shrink-0 ${noNutrition && !estimatedCal ? 'text-amber-500/60' : noNutrition && estimatedCal ? 'text-theme-text-tertiary' : 'text-theme-text-secondary'}`}>
                             {noNutrition ? (estimatedCal ? `~${estimatedCal}` : 'N/A') : (food.calories || '—')}
+                          </div>
+                          {/* Quick action buttons: Add / Remove without expanding */}
+                          <div
+                            className="py-2 pr-1 sm:pr-2 w-16 sm:w-20 shrink-0 flex items-center justify-end gap-1"
+                            onClick={(e) => e.stopPropagation()}
+                            onMouseEnter={onFoodMouseLeave}>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (isCollection) {
+                                  setExpandedId(isExpanded ? null : rowKey);
+                                } else {
+                                  handleAddMeal(food, e);
+                                }
+                              }}
+                              className={`w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center border transition-colors ${
+                                count > 0
+                                  ? 'border-theme-text-primary text-theme-text-primary font-bold hover:bg-theme-text-primary hover:text-theme-bg-primary'
+                                  : 'border-theme-text-primary/20 text-theme-text-tertiary group-hover:border-theme-text-primary/40 group-hover:text-theme-text-secondary hover:!bg-theme-text-primary hover:!text-theme-bg-primary hover:!border-theme-text-primary'
+                              }`}
+                              title={isCollection ? 'Customize components' : 'Add to log'}
+                              aria-label={`Add ${food.name} to log`}>
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                                <line x1="12" y1="5" x2="12" y2="19" />
+                                <line x1="5" y1="12" x2="19" y2="12" />
+                              </svg>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (count > 0) removeMeal(food, selectedDate);
+                              }}
+                              disabled={count === 0}
+                              className={`w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center border transition-colors ${
+                                count > 0
+                                  ? 'border-theme-text-primary/30 text-theme-text-secondary hover:bg-theme-text-primary hover:text-theme-bg-primary hover:border-theme-text-primary cursor-pointer'
+                                  : 'border-theme-text-primary/10 text-theme-text-tertiary/20 cursor-not-allowed'
+                              }`}
+                              title={count > 0 ? 'Remove from log' : 'Not logged'}
+                              aria-label={`Remove ${food.name} from log`}>
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                                <line x1="5" y1="12" x2="19" y2="12" />
+                              </svg>
+                            </button>
                           </div>
                         </div>
 
                         {/* Expanded detail panel */}
-                        {isExpanded && (() => {
-                          const components = noNutrition ? getCollectionComponents(food) : [];
-                          const isCollection = noNutrition && components.length > 0;
-                          return (
+                        {isExpanded && (
                           <div className="border-t border-theme-text-primary/10 bg-theme-bg-secondary/30"
                             style={{ animation: `fadeInRow 0.2s ${EASE} both` }}>
 
@@ -2174,15 +2223,14 @@ export default function Home() {
                               </>
                             )}
                           </div>
-                          );
-                        })()}
+                        )}
                       </td>
                     </tr>
                   );
                 })}
                 {hasMore && (
                   <tr>
-                    <td colSpan={7} className="py-6 text-center">
+                    <td colSpan={8} className="py-6 text-center">
                       <button
                         onClick={() => setVisibleCount(c => c + CHUNK_SIZE)}
                         className="px-6 py-2 text-sm uppercase tracking-wider border border-theme-text-primary/30 text-theme-text-secondary hover:bg-theme-bg-secondary hover:text-theme-text-primary transition-colors font-mono">
@@ -2194,7 +2242,7 @@ export default function Home() {
                 </>
               ) : (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center">
+                  <td colSpan={8} className="py-12 text-center">
                     {(location.type === 'all-foodco' || location.source === 'foodco') ? (
                       <div className="space-y-2 text-theme-text-tertiary italic">
                         <div className="text-base not-italic font-bold text-theme-text-secondary">Purdue Food Co</div>
