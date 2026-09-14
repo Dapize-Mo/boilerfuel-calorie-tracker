@@ -20,6 +20,7 @@ import MenuSpread, { Banner, Card, Spread } from './MenuSpread';
 
 const MEALS = ['Breakfast', 'Lunch', 'Dinner'];
 function defaultMeal() {
+  if (typeof window === 'undefined') return 'Lunch';
   const h = new Date().getHours();
   if (h < 11) return 'Breakfast';
   if (h < 16) return 'Lunch';
@@ -74,14 +75,18 @@ export default function NutritionMenu({ layout = 'ledger', onLayoutChange }) {
 
   const [courts, setCourts] = useState(['Wiley', 'Earhart', 'Ford', 'Hillenbrand', 'Windsor']);
   const [court, setCourt] = useState('Wiley');
-  const [meal, setMeal] = useState(defaultMeal());
+  const [meal, setMeal] = useState('Lunch');
   const [grouped, setGrouped] = useState(null);
+  const [date, setDate] = useState(null);
+  useEffect(() => {
+    setMeal(defaultMeal());
+    setDate(todayKey());
+  }, []);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selected, setSelected] = useState(null);
   const [activeStation, setActiveStation] = useState(null);
   const [activeTab, setActiveTab] = useState('All');
-  const date = useMemo(() => todayKey(), []);
   const reqId = useRef(0);
 
   const budget = useMemo(() => buildBudget(goals, totals), [goals, totals]);
@@ -108,6 +113,7 @@ export default function NutritionMenu({ layout = 'ledger', onLayoutChange }) {
 
   // menu for the selected court + date
   useEffect(() => {
+    if (!date) return;
     const id = ++reqId.current;
     setLoading(true);
     setError(null);
@@ -160,7 +166,7 @@ export default function NutritionMenu({ layout = 'ledger', onLayoutChange }) {
   const header = (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', padding: '0 0 14px' }}>
       <div>
-        <Eyebrow>Menu · {date}</Eyebrow>
+        <Eyebrow>Menu · {date || '—'}</Eyebrow>
         <div style={{ ...T.display, fontSize: 26, color: C.ink, marginTop: 2 }}>Nutrition Facts</div>
       </div>
       <div style={{ flex: 1 }} />
